@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "ausecon": {
+      "command": "uv",
+      "args": [
+        "--directory",
+        "/Users/anthonyp/Desktop/Coding/rba_abs_mcp",
+        "run",
+        "ausecon-mcp-server"
+      ]
+    }
+  }
+}
