@@ -11,18 +11,22 @@ research, policy, and analytical workflows.
 
 ## Status
 
-This repository is currently at `v0.1.0`.
+This repository is currently at `v0.2.0`.
 
-The initial release includes:
+The current release includes:
 
 - curated discovery across a small ABS and RBA catalogue
 - ABS dataset structure retrieval
 - ABS data retrieval in a normalised response shape
 - RBA table listing and retrieval
 - a small semantic resolver for a few high-value economic concepts
+- stricter validation for tool inputs and parameter ranges
+- source-aware upstream and parse error messages
+- retry logic for transient ABS and RBA upstream failures
+- provider caching keyed to upstream requests rather than client-side filters
 
-At this stage, the server should be treated as an opinionated first release rather than a complete
-coverage layer for all ABS and RBA content.
+At this stage, the server should still be treated as an opinionated early release rather than a
+complete coverage layer for all ABS and RBA content.
 
 ## Tool Surface
 
@@ -56,6 +60,22 @@ Data retrieval tools return a normalised payload with three top-level sections:
 
 This design keeps source provenance explicit while making downstream processing simpler in Python,
 R, or other analytical environments.
+
+## Validation And Failure Behaviour
+
+`v0.2.0` adds stricter validation and more explicit failure handling across the existing tool
+surface.
+
+- empty identifiers and empty search queries are rejected before any network call
+- `last_n` must be positive when provided
+- `get_abs_data` validates annual, quarterly, monthly, and half-yearly ABS period strings
+- `get_rba_table` validates ISO date bounds
+- `get_economic_series` validates `start` and `end` after resolving the target source
+- transient ABS and RBA upstream failures are retried automatically
+- malformed upstream payloads are surfaced as source-aware parse failures
+
+`list_rba_tables(include_discontinued=...)` still accepts the parameter for interface stability,
+but it remains a no-op in `v0.2.0`.
 
 ## Requirements
 
@@ -207,11 +227,10 @@ tests/
 examples/
 ```
 
-## Release Notes For `v0.1`
+## Release Notes For `v0.2`
 
-The intended `v0.1` release is the initial public baseline for the MCP server. It provides the
-core architecture, the first six tools, normalised response models, local development workflow, and
-test coverage for parsing, provider behaviour, and server-level integration.
+`v0.2.0` is a hardening release for the initial MCP server baseline. It keeps the same six-tool
+surface while improving validation, error reporting, retry behaviour, and caching efficiency.
 
 ## Releasing
 
@@ -219,16 +238,16 @@ If you want to publish a release from this repository:
 
 1. ensure `pyproject.toml` contains the intended version
 2. commit the release-ready state
-3. create an annotated git tag such as `v0.1.0`
+3. create an annotated git tag such as `v0.2.0`
 4. push the branch and the tag to GitHub
 5. create a GitHub Release from that tag with release notes
 
 An example tag command is:
 
 ```bash
-git tag -a v0.1.0 -m "v0.1.0"
+git tag -a v0.2.0 -m "v0.2.0"
 git push origin main
-git push origin v0.1.0
+git push origin v0.2.0
 ```
 
 Once the tag is on GitHub, you can create the release in the GitHub interface under

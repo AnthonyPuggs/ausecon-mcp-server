@@ -5,8 +5,20 @@ from typing import Any
 from fastmcp import FastMCP
 
 from ausecon_mcp.catalogue.search import search_catalogue
+from ausecon_mcp.errors import AuseconValidationError
 from ausecon_mcp.providers.abs import ABSProvider
 from ausecon_mcp.providers.rba import RBAProvider
+from ausecon_mcp.validation import (
+    require_non_empty,
+    validate_abs_period_range,
+    validate_iso_date_range,
+    validate_iso_datetime,
+    validate_positive_int,
+    validate_rba_category,
+    validate_search_query,
+    validate_series_ids,
+    validate_source,
+)
 
 CURATED_SERIES = {
     "cash_rate_target": {"source": "rba", "dataset_id": "a2"},
@@ -42,10 +54,13 @@ class AuseconService:
         self.rba_provider = rba_provider or RBAProvider()
 
     async def search_datasets(self, query: str, source: str | None = None) -> list[dict]:
-        return search_catalogue(query, source=source)
+        validated_query = validate_search_query(query)
+        validated_source = validate_source(source)
+        return search_catalogue(validated_query, source=validated_source)
 
     async def get_abs_dataset_structure(self, dataflow_id: str) -> dict:
-        return await self.abs_provider.get_dataset_structure(dataflow_id)
+        validated_dataflow_id = require_non_empty("dataflow_id", dataflow_id)
+        return await self.abs_provider.get_dataset_structure(validated_dataflow_id)
 
     async def get_abs_data(
         self,
@@ -56,13 +71,23 @@ class AuseconService:
         last_n: int | None = None,
         updated_after: str | None = None,
     ) -> dict:
+        validated_dataflow_id = require_non_empty("dataflow_id", dataflow_id)
+        validated_key = require_non_empty("key", key)
+        validated_start_period, validated_end_period = validate_abs_period_range(
+            start_period,
+            end_period,
+            start_name="start_period",
+            end_name="end_period",
+        )
+        validated_last_n = validate_positive_int("last_n", last_n)
+        validated_updated_after = validate_iso_datetime("updated_after", updated_after)
         return await self.abs_provider.get_data(
-            dataflow_id=dataflow_id,
-            key=key,
-            start_period=start_period,
-            end_period=end_period,
-            last_n=last_n,
-            updated_after=updated_after,
+            dataflow_id=validated_dataflow_id,
+            key=validated_key,
+            start_period=validated_start_period,
+            end_period=validated_end_period,
+            last_n=validated_last_n,
+            updated_after=validated_updated_after,
         )
 
     async def list_rba_tables(
@@ -70,8 +95,9 @@ class AuseconService:
         category: str | None = None,
         include_discontinued: bool = False,
     ) -> list[dict]:
+        validated_category = validate_rba_category(category)
         return self.rba_provider.list_tables(
-            category=category,
+            category=validated_category,
             include_discontinued=include_discontinued,
         )
 
@@ -83,12 +109,21 @@ class AuseconService:
         end_date: str | None = None,
         last_n: int | None = None,
     ) -> dict:
+        validated_table_id = require_non_empty("table_id", table_id)
+        validated_series_ids = validate_series_ids(series_ids)
+        validated_start_date, validated_end_date = validate_iso_date_range(
+            start_date,
+            end_date,
+            start_name="start_date",
+            end_name="end_date",
+        )
+        validated_last_n = validate_positive_int("last_n", last_n)
         return await self.rba_provider.get_table(
-            table_id=table_id,
-            series_ids=series_ids,
-            start_date=start_date,
-            end_date=end_date,
-            last_n=last_n,
+            table_id=validated_table_id,
+            series_ids=validated_series_ids,
+            start_date=validated_start_date,
+            end_date=validated_end_date,
+            last_n=validated_last_n,
         )
 
     async def get_economic_series(
@@ -100,6 +135,14 @@ class AuseconService:
         start: str | None = None,
         end: str | None = None,
     ) -> dict:
+        validated_concept = require_non_empty("concept", concept)
+        mapping = CURATED_SERIES.get(validated_concept)
+        if mapping is None:
+            supported = ", ".join(sorted(CURATED_SERIES))
+            raise AuseconValidationError(
+                f"Unsupported concept {validated_concept!r}. Supported concepts: {supported}."
+            )
+
         unsupported = _unsupported_semantic_options(
             variant=variant,
             geography=geography,
@@ -108,27 +151,32 @@ class AuseconService:
         if unsupported:
             provided = ", ".join(f"{key}={value!r}" for key, value in unsupported.items())
             raise ValueError(
-                "Unsupported semantic options for v0.1.0: "
+                "Unsupported semantic options for v0.2.0: "
                 f"{provided}. Only concept, start, and end are currently supported."
             )
-
-        mapping = CURATED_SERIES.get(concept)
-        if mapping is None:
-            supported = ", ".join(sorted(CURATED_SERIES))
-            raise ValueError(
-                f"Unsupported concept {concept!r}. Supported concepts: {supported}."
-            )
         if mapping["source"] == "rba":
+            validated_start, validated_end = validate_iso_date_range(
+                start,
+                end,
+                start_name="start",
+                end_name="end",
+            )
             return await self.get_rba_table(
                 mapping["dataset_id"],
-                start_date=start,
-                end_date=end,
+                start_date=validated_start,
+                end_date=validated_end,
                 last_n=None,
             )
+        validated_start, validated_end = validate_abs_period_range(
+            start,
+            end,
+            start_name="start",
+            end_name="end",
+        )
         return await self.get_abs_data(
             mapping["dataset_id"],
-            start_period=start,
-            end_period=end,
+            start_period=validated_start,
+            end_period=validated_end,
         )
 
 
