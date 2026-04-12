@@ -1,0 +1,4 @@
+DATAFLOW,MEASURE: Measure,INDEX: Index,TSEST: Adjustment Type,REGION: Region,FREQ: Frequency,TIME_PERIOD: Time Period,OBS_VALUE,UNIT_MEASURE: Unit of Measure,OBS_STATUS: Observation Status,DECIMALS: Decimals,OBS_COMMENT: Observation Comment,BASE_PERIOD: Reference Base Period
+ABS:CPI(2.0.0),3: Percentage change from previous year,30002: Bread and cereal products,10: Original,50: Australia,M: Monthly,2024-01,7.4,PCT: Percent,,,,25: Sep 2025 = 100.0
+ABS:CPI(2.0.0),3: Percentage change from previous year,30002: Bread and cereal products,10: Original,50: Australia,M: Monthly,2024-02,7.0,PCT: Percent,,,,25: Sep 2025 = 100.0
+ABS:CPI(2.0.0),1: Index numbers,131183: Household textiles,10: Original,1: Sydney,M: Monthly,2024-04,101.97,IN: Index Numbers,,,,25: Sep 2025 = 100.0

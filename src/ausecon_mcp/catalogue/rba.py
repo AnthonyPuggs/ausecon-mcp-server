@@ -1,0 +1,45 @@
+RBA_CATALOGUE = {
+    "a2": {
+        "id": "a2",
+        "source": "rba",
+        "name": "Changes in Monetary Policy and Administered Rates",
+        "description": "Historical changes in the cash rate target and administered policy rates.",
+        "frequency": "Event-driven",
+        "category": "monetary_policy",
+        "aliases": [
+            "cash rate",
+            "cash rate target",
+            "monetary policy",
+            "interest rate decisions",
+        ],
+    },
+    "g1": {
+        "id": "g1",
+        "source": "rba",
+        "name": "Consumer Price Inflation",
+        "description": "CPI, weighted median inflation, and trimmed mean inflation measures.",
+        "frequency": "Quarterly",
+        "category": "inflation",
+        "aliases": [
+            "inflation",
+            "trimmed mean inflation",
+            "core inflation",
+            "weighted median inflation",
+            "cpi",
+        ],
+    },
+    "h1": {
+        "id": "h1",
+        "source": "rba",
+        "name": "Gross Domestic Product and Income",
+        "description": "Output, expenditure, and income indicators from the national accounts.",
+        "frequency": "Quarterly",
+        "category": "output_labour",
+        "aliases": [
+            "gdp",
+            "output",
+            "income",
+            "economic growth",
+        ],
+    },
+}

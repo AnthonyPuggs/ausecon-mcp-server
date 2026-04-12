@@ -1,0 +1,14 @@
+﻿G1 CONSUMER PRICE INFLATION
+Title,Consumer price index,Year-ended inflation,Quarterly inflation
+Description,Consumer price index; All groups,Consumer price index; All groups; Year-ended change (in per cent),Consumer price index; All groups; Quarterly change (in per cent)
+Frequency,Quarterly,Quarterly,Quarterly
+Type,Original,Original,Seasonally adjusted
+Units,"Index, September 2025 month = 100",Per cent,Per cent
+
+
+Source,ABS / RBA,ABS / RBA,ABS / RBA
+Publication date,29-Jan-2026,29-Jan-2026,29-Jan-2026
+Series ID,GCPIAG,GCPIAGYP,GCPIAGSAQP
+30/06/1922,1.93,,
+30/09/1922,1.93,, -0.1
+30/06/1923,1.98,2.3,3.1

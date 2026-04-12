@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<message:Structure xmlns:message="http://www.sdmx.org/resources/sdmxml/schemas/v2_1/message" xmlns:structure="http://www.sdmx.org/resources/sdmxml/schemas/v2_1/structure" xmlns:common="http://www.sdmx.org/resources/sdmxml/schemas/v2_1/common">
+  <message:Structures>
+    <structure:Codelists>
+      <structure:Codelist id="CL_MEASURE" agencyID="ABS" version="2.0.0">
+        <common:Name xml:lang="en">Measure</common:Name>
+        <structure:Code id="1">
+          <common:Name xml:lang="en">Index numbers</common:Name>
+        </structure:Code>
+        <structure:Code id="3">
+          <common:Name xml:lang="en">Percentage change from previous year</common:Name>
+        </structure:Code>
+      </structure:Codelist>
+      <structure:Codelist id="CL_REGION" agencyID="ABS" version="2.0.0">
+        <common:Name xml:lang="en">Region</common:Name>
+        <structure:Code id="1">
+          <common:Name xml:lang="en">Sydney</common:Name>
+        </structure:Code>
+        <structure:Code id="2">
+          <common:Name xml:lang="en">Melbourne</common:Name>
+        </structure:Code>
+        <structure:Code id="50">
+          <common:Name xml:lang="en">Australia</common:Name>
+        </structure:Code>
+      </structure:Codelist>
+      <structure:Codelist id="CL_FREQ" agencyID="ABS" version="2.0.0">
+        <common:Name xml:lang="en">Frequency</common:Name>
+        <structure:Code id="M">
+          <common:Name xml:lang="en">Monthly</common:Name>
+        </structure:Code>
+        <structure:Code id="Q">
+          <common:Name xml:lang="en">Quarterly</common:Name>
+        </structure:Code>
+      </structure:Codelist>
+    </structure:Codelists>
+    <structure:DataStructures>
+      <structure:DataStructure id="CPI" agencyID="ABS" version="2.0.0">
+        <common:Name xml:lang="en">Consumer Price Index</common:Name>
+        <structure:DataStructureComponents>
+          <structure:DimensionList id="DimensionDescriptor">
+            <structure:Dimension id="MEASURE" position="1">
+              <common:Name xml:lang="en">Measure</common:Name>
+              <structure:Enumeration>
+                <Ref id="CL_MEASURE" />
+              </structure:Enumeration>
+            </structure:Dimension>
+            <structure:Dimension id="REGION" position="2">
+              <common:Name xml:lang="en">Region</common:Name>
+              <structure:Enumeration>
+                <Ref id="CL_REGION" />
+              </structure:Enumeration>
+            </structure:Dimension>
+            <structure:Dimension id="FREQ" position="3">
+              <common:Name xml:lang="en">Frequency</common:Name>
+              <structure:Enumeration>
+                <Ref id="CL_FREQ" />
+              </structure:Enumeration>
+            </structure:Dimension>
+          </structure:DimensionList>
+        </structure:DataStructureComponents>
+      </structure:DataStructure>
+    </structure:DataStructures>
+  </message:Structures>
+</message:Structure>

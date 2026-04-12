@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "ausecon": {
+      "command": "uv",
+      "args": [
+        "--directory",
+        "/absolute/path/to/rba_abs_mcp",
+        "run",
+        "ausecon-mcp-server"
+      ]
+    }
+  }
+}

@@ -1,0 +1,1 @@
+"""ausecon-mcp-server package."""
