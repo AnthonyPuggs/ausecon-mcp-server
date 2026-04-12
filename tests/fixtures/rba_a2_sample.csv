@@ -1,0 +1,14 @@
+﻿A2 RESERVE BANK OF AUSTRALIA – CHANGES IN MONETARY POLICY AND ADMINISTERED RATES
+Title,Change in Cash Rate Target,New Cash Rate Target,Change in ES Rate,New ES Rate,Change in Overnight Repo Rate,New Overnight Repo Rate
+Description,Change in Cash Rate Target (in percentage points),The Cash Rate Target As Announced,Change in Rate Paid on Exchange Settlement Balances (in percentage points),The New Rate Paid on Exchange Settlement Balances,Change in Pricing Rate on RBA Overnight Standing Facility Repos (in percentage points),The New Pricing Rate on RBA Overnight Standing Facility Repos
+Frequency,As announced,As announced,As announced,As announced,As announced,As announced
+Type,Original,Original,Original,Original,Original,Original
+Units,Per cent,Per cent,Per cent,Per cent,Per cent,Per cent
+
+
+Source,RBA,RBA,RBA,RBA,RBA,RBA
+Publication date,17-Mar-2026,17-Mar-2026,17-Mar-2026,17-Mar-2026,17-Mar-2026,17-Mar-2026
+Series ID,ARBAMPCCCR,ARBAMPCNCRT,ARBAMPCRPESB,ARBAMPNRPESB,ARBAMPCORR,ARBAMPNORR
+23-Jan-1990,-0.50 to -1.00,17.00 to 17.50
+15-Feb-1990,-0.50,16.50 to 17.00
+31-Jul-1996,-0.50,7.00,-0.50,6.90,-0.50,7.25

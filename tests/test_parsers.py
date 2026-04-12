@@ -49,3 +49,22 @@ def test_parse_rba_csv_extracts_metadata_and_long_observations() -> None:
     assert parsed["observations"][0]["date"] == "1922-06-30"
     assert parsed["observations"][-1]["series_id"] == "GCPIAGSAQP"
     assert parsed["observations"][-1]["value"] == 3.1
+
+
+def test_parse_rba_csv_supports_a2_event_format_and_range_cells() -> None:
+    parsed = parse_rba_csv((FIXTURES / "rba_a2_sample.csv").read_text(), table_id="a2")
+
+    assert parsed["metadata"]["source"] == "rba"
+    assert parsed["metadata"]["dataset_id"] == "a2"
+    assert parsed["metadata"]["title"] == (
+        "A2 RESERVE BANK OF AUSTRALIA – CHANGES IN MONETARY POLICY AND ADMINISTERED RATES"
+    )
+    assert len(parsed["series"]) == 6
+    assert parsed["observations"][0]["date"] == "1990-01-23"
+    assert parsed["observations"][0]["series_id"] == "ARBAMPCCCR"
+    assert parsed["observations"][0]["value"] is None
+    assert parsed["observations"][0]["raw_value"] == "-0.50 to -1.00"
+    assert parsed["observations"][1]["series_id"] == "ARBAMPCNCRT"
+    assert parsed["observations"][1]["raw_value"] == "17.00 to 17.50"
+    assert parsed["observations"][-1]["series_id"] == "ARBAMPNORR"
+    assert parsed["observations"][-1]["value"] == 7.25

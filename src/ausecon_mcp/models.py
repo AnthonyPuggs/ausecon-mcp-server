@@ -44,14 +44,18 @@ class Observation:
     date: str
     series_id: str
     value: float | None
+    raw_value: str | None = None
     dimensions: dict[str, dict[str, str]] = field(default_factory=dict)
     status: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
-        return {
+        payload = {
             "date": self.date,
             "series_id": self.series_id,
             "value": self.value,
             "dimensions": self.dimensions,
             "status": self.status,
         }
+        if self.raw_value is not None:
+            payload["raw_value"] = self.raw_value
+        return payload

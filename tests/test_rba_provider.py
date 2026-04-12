@@ -118,3 +118,22 @@ async def test_rba_provider_does_not_retry_client_errors() -> None:
             await provider.get_table("g1")
 
     assert route.call_count == 1
+
+
+@pytest.mark.asyncio
+async def test_rba_provider_supports_a2_event_tables() -> None:
+    provider = RBAProvider()
+    csv_payload = (FIXTURES / "rba_a2_sample.csv").read_text()
+
+    with respx.mock(assert_all_called=True) as router:
+        router.get("https://www.rba.gov.au/statistics/tables/csv/a2-data.csv").mock(
+            return_value=Response(200, text=csv_payload)
+        )
+
+        result = await provider.get_table("a2")
+
+    assert result["metadata"]["dataset_id"] == "a2"
+    assert result["observations"][0]["date"] == "1990-01-23"
+    assert result["observations"][0]["raw_value"] == "-0.50 to -1.00"
+    assert result["observations"][-1]["series_id"] == "ARBAMPNORR"
+    assert result["observations"][-1]["value"] == 7.25

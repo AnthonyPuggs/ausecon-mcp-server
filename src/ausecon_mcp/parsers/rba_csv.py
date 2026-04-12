@@ -70,16 +70,17 @@ def parse_rba_csv(csv_text: str, table_id: str) -> dict:
     for row in rows[data_start:]:
         if not row or not row[0].strip():
             continue
-        date = datetime.strptime(row[0].strip(), "%d/%m/%Y").date().isoformat()
+        date = _parse_rba_date(row[0].strip())
         for idx, raw_value in enumerate(row[1:]):
-            value = parse_float(raw_value)
-            if value is None:
+            value, non_numeric_value = _parse_rba_observation_value(raw_value)
+            if value is None and non_numeric_value is None:
                 continue
             observations.append(
                 Observation(
                     date=date,
                     series_id=series_ids[idx],
                     value=value,
+                    raw_value=non_numeric_value,
                 ).to_dict()
             )
 
@@ -97,10 +98,30 @@ def parse_rba_csv(csv_text: str, table_id: str) -> dict:
 
 def _looks_like_date(value: str) -> bool:
     try:
-        datetime.strptime(value, "%d/%m/%Y")
+        _parse_rba_date(value)
     except ValueError:
         return False
     return True
+
+
+def _parse_rba_date(value: str) -> str:
+    for fmt in ("%d/%m/%Y", "%d-%b-%Y"):
+        try:
+            return datetime.strptime(value, fmt).date().isoformat()
+        except ValueError:
+            continue
+    raise ValueError(f"Unsupported RBA date format: {value}")
+
+
+def _parse_rba_observation_value(value: str) -> tuple[float | None, str | None]:
+    text = (value or "").strip()
+    if not text:
+        return None, None
+
+    try:
+        return parse_float(text), None
+    except ValueError:
+        return None, text
 
 
 def _at(values: list[str], index: int) -> str | None:
