@@ -24,6 +24,7 @@ The current release includes:
 - source-aware upstream and parse error messages
 - retry logic for transient ABS and RBA upstream failures
 - provider caching keyed to upstream requests rather than client-side filters
+- support for RBA event-style tables such as `a2`
 
 At this stage, the server should still be treated as an opinionated early release rather than a
 complete coverage layer for all ABS and RBA content.
@@ -56,7 +57,8 @@ Data retrieval tools return a normalised payload with three top-level sections:
 
 - `metadata`: source, dataset or table identifier, retrieval URL, and related retrieval metadata
 - `series`: long-form series descriptors including labels, units, frequency, and dimensions
-- `observations`: long-form observations keyed by `date`, `series_id`, and `value`
+- `observations`: long-form observations keyed by `date`, `series_id`, and `value`; some RBA
+  observations may also include `raw_value` when the upstream cell is non-numeric
 
 This design keeps source provenance explicit while making downstream processing simpler in Python,
 R, or other analytical environments.
@@ -184,6 +186,15 @@ get_rba_table(
 )
 ```
 
+Fetch an event-style RBA policy table:
+
+```text
+get_rba_table(
+  table_id="a2",
+  last_n=8
+)
+```
+
 Resolve a curated economic concept:
 
 ```text
@@ -230,7 +241,8 @@ examples/
 ## Release Notes For `v0.2`
 
 `v0.2.0` is a hardening release for the initial MCP server baseline. It keeps the same six-tool
-surface while improving validation, error reporting, retry behaviour, and caching efficiency.
+surface while improving validation, error reporting, retry behaviour, caching efficiency, and RBA
+table parsing coverage.
 
 ## Releasing
 

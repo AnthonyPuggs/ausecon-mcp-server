@@ -7,3 +7,5 @@ build/
 *.egg-info/
 coverage.xml
 .coverage
+ausecon-mcp-server-future-releases.png
+.DS_Store
