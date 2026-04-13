@@ -1,5 +1,7 @@
 # ausecon-mcp-server
 
+[![CI](https://github.com/AnthonyPuggs/ausecon-mcp-server/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/AnthonyPuggs/ausecon-mcp-server/actions/workflows/ci.yml)
+
 `ausecon-mcp-server` is a Python Model Context Protocol (MCP) server for structured Australian
 macroeconomic and financial data. It exposes a small, source-aware tool surface over Australian
 Bureau of Statistics (ABS) and Reserve Bank of Australia (RBA) datasets and returns
@@ -89,8 +91,8 @@ but it remains a no-op in `v0.2.0`.
 Clone the repository and install the project environment:
 
 ```bash
-git clone <your-repo-url>
-cd rba_abs_mcp
+git clone https://github.com/AnthonyPuggs/ausecon-mcp-server.git
+cd ausecon-mcp-server
 uv sync --python 3.12
 ```
 
@@ -112,25 +114,14 @@ as a standalone command-line application.
 An example Claude Desktop configuration is included at
 [examples/claude_desktop_config.json](examples/claude_desktop_config.json).
 
-The core shape is:
+That file is the source of truth. The only value you need to customise is the absolute checkout
+path passed to `uv --directory`:
 
 ```json
-{
-  "mcpServers": {
-    "ausecon": {
-      "command": "uv",
-      "args": [
-        "--directory",
-        "/absolute/path/to/rba_abs_mcp",
-        "run",
-        "ausecon-mcp-server"
-      ]
-    }
-  }
-}
+"/absolute/path/to/ausecon-mcp-server"
 ```
 
-Replace `/absolute/path/to/rba_abs_mcp` with the absolute path to your local checkout.
+Replace `/absolute/path/to/ausecon-mcp-server` with the absolute path to your local checkout.
 
 ## How To Use The Server
 

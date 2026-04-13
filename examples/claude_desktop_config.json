@@ -4,7 +4,7 @@
       "command": "uv",
       "args": [
         "--directory",
-        "/absolute/path/to/rba_abs_mcp",
+        "/absolute/path/to/ausecon-mcp-server",
         "run",
         "ausecon-mcp-server"
       ]
