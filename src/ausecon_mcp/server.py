@@ -151,7 +151,7 @@ class AuseconService:
         if unsupported:
             provided = ", ".join(f"{key}={value!r}" for key, value in unsupported.items())
             raise ValueError(
-                "Unsupported semantic options for v0.2.0: "
+                "Unsupported semantic options for v0.3.0: "
                 f"{provided}. Only concept, start, and end are currently supported."
             )
         if mapping["source"] == "rba":

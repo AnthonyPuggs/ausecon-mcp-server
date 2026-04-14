@@ -13,15 +13,17 @@ research, policy, and analytical workflows.
 
 ## Status
 
-This repository is currently at `v0.2.0`.
+This repository is currently at `v0.3.0`.
 
 The current release includes:
 
-- curated discovery across a small ABS and RBA catalogue
+- curated discovery across expanded ABS and RBA catalogues
+- deterministic search ranking across dataset IDs, aliases, names, tags, and descriptions
+- active-only RBA table discovery by default, with optional inclusion of discontinued tables
 - ABS dataset structure retrieval
 - ABS data retrieval in a normalised response shape
 - RBA table listing and retrieval
-- a small semantic resolver for a few high-value economic concepts
+- a deliberately small semantic resolver for a few high-value economic concepts
 - stricter validation for tool inputs and parameter ranges
 - source-aware upstream and parse error messages
 - retry logic for transient ABS and RBA upstream failures
@@ -37,7 +39,7 @@ The MCP server currently exposes the following tools:
 
 | Tool | Purpose | Key inputs |
 | --- | --- | --- |
-| `search_datasets` | Search the curated ABS and RBA catalogue | `query`, `source` |
+| `search_datasets` | Search the curated ABS and RBA catalogue with deterministic ranking | `query`, `source` |
 | `get_abs_dataset_structure` | Retrieve ABS SDMX dimensions and code lists | `dataflow_id` |
 | `get_abs_data` | Retrieve ABS data in a normalised response shape | `dataflow_id`, `key`, `start_period`, `end_period`, `last_n`, `updated_after` |
 | `list_rba_tables` | List curated RBA statistical tables | `category`, `include_discontinued` |
@@ -53,6 +55,21 @@ The MCP server currently exposes the following tools:
 - `trimmed_mean_inflation`
 - `gdp_growth`
 
+`variant`, `geography`, and `frequency` remain intentionally unsupported in `v0.3.0`.
+
+## Discovery Behaviour
+
+`v0.3.0` is a discovery release rather than a semantic-expansion release.
+
+- `search_datasets` now prioritises exact dataset or table IDs, then exact aliases, then exact
+  names, then broader multi-term matches.
+- common economist phrasing is normalised for ranking, including terms such as “jobless”,
+  “mortgage”, “rates”, and “fx”.
+- discontinued RBA tables are excluded from `search_datasets` in `v0.3.0`.
+- `list_rba_tables` excludes discontinued tables by default and returns a `discontinued` boolean
+  field on every row.
+- `get_economic_series` still only accepts `concept`, `start`, and `end`.
+
 ## Response Shape
 
 Data retrieval tools return a normalised payload with three top-level sections:
@@ -67,8 +84,8 @@ R, or other analytical environments.
 
 ## Validation And Failure Behaviour
 
-`v0.2.0` adds stricter validation and more explicit failure handling across the existing tool
-surface.
+`v0.3.0` retains the hardened validation and failure behaviour introduced earlier and adds clearer
+discovery semantics across the existing tool surface.
 
 - empty identifiers and empty search queries are rejected before any network call
 - `last_n` must be positive when provided
@@ -77,9 +94,18 @@ surface.
 - `get_economic_series` validates `start` and `end` after resolving the target source
 - transient ABS and RBA upstream failures are retried automatically
 - malformed upstream payloads are surfaced as source-aware parse failures
+- `list_rba_tables(include_discontinued=...)` now changes behaviour as documented
+- `search_datasets` scores should be treated as ranking metadata rather than a stable contract
 
-`list_rba_tables(include_discontinued=...)` still accepts the parameter for interface stability,
-but it remains a no-op in `v0.2.0`.
+## Discovery Coverage
+
+The curated catalogue is still intentionally selective, but `v0.3.0` now covers the main analyst
+workflows more credibly:
+
+- ABS prices and inflation, labour, national accounts, activity, housing and construction,
+  external sector, and lending indicators
+- RBA monetary policy, payments, money and credit, interest rates and yields, exchange rates,
+  inflation, output and labour, and external sector tables
 
 ## Requirements
 
@@ -148,6 +174,12 @@ Discover relevant datasets:
 
 ```text
 search_datasets(query="cash rate")
+```
+
+Inspect active inflation tables and optionally include discontinued RBA coverage:
+
+```text
+list_rba_tables(category="inflation", include_discontinued=True)
 ```
 
 Inspect ABS dataset structure before querying:
@@ -229,11 +261,11 @@ tests/
 examples/
 ```
 
-## Release Notes For `v0.2`
+## Release Notes For `v0.3`
 
-`v0.2.0` is a hardening release for the initial MCP server baseline. It keeps the same six-tool
-surface while improving validation, error reporting, retry behaviour, caching efficiency, and RBA
-table parsing coverage.
+`v0.3.0` is a discovery release. It keeps the same six-tool surface while materially expanding the
+curated ABS and RBA catalogues, improving search ranking, and making discontinued-table handling
+real for RBA discovery.
 
 ## Releasing
 
@@ -241,16 +273,16 @@ If you want to publish a release from this repository:
 
 1. ensure `pyproject.toml` contains the intended version
 2. commit the release-ready state
-3. create an annotated git tag such as `v0.2.0`
+3. create an annotated git tag such as `v0.3.0`
 4. push the branch and the tag to GitHub
 5. create a GitHub Release from that tag with release notes
 
 An example tag command is:
 
 ```bash
-git tag -a v0.2.0 -m "v0.2.0"
+git tag -a v0.3.0 -m "v0.3.0"
 git push origin main
-git push origin v0.2.0
+git push origin v0.3.0
 ```
 
 Once the tag is on GitHub, you can create the release in the GitHub interface under

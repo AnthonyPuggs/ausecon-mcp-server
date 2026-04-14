@@ -14,7 +14,23 @@ def test_rba_provider_lists_tables_by_category() -> None:
 
     results = provider.list_tables(category="inflation")
 
-    assert [item["id"] for item in results] == ["g1"]
+    ids = [item["id"] for item in results]
+
+    assert "g1" in ids
+    assert "g3" not in ids
+    assert all(item["discontinued"] is False for item in results)
+
+
+def test_rba_provider_can_include_discontinued_tables() -> None:
+    provider = RBAProvider()
+
+    results = provider.list_tables(category="inflation", include_discontinued=True)
+
+    ids = [item["id"] for item in results]
+
+    assert "g1" in ids
+    assert "g3" in ids
+    assert any(item["id"] == "g3" and item["discontinued"] is True for item in results)
 
 
 @pytest.mark.asyncio

@@ -29,15 +29,31 @@ class StubRBAProvider:
         category: str | None = None,
         include_discontinued: bool = False,
     ) -> list[dict]:
-        del include_discontinued
         tables = [
             {
                 "id": "a2",
                 "name": "Changes in Monetary Policy and Administered Rates",
                 "category": "monetary_policy",
+                "frequency": "Event-driven",
+                "discontinued": False,
             },
-            {"id": "g1", "name": "Consumer Price Inflation", "category": "inflation"},
+            {
+                "id": "g1",
+                "name": "Consumer Price Inflation",
+                "category": "inflation",
+                "frequency": "Quarterly",
+                "discontinued": False,
+            },
+            {
+                "id": "g3",
+                "name": "Producer and Import Prices",
+                "category": "inflation",
+                "frequency": "Quarterly",
+                "discontinued": True,
+            },
         ]
+        if not include_discontinued:
+            tables = [table for table in tables if not table["discontinued"]]
         if category is None:
             return tables
         return [table for table in tables if table["category"] == category]
@@ -72,7 +88,25 @@ async def test_service_lists_rba_tables() -> None:
 
     results = await service.list_rba_tables(category="inflation")
 
-    assert results == [{"id": "g1", "name": "Consumer Price Inflation", "category": "inflation"}]
+    assert results == [
+        {
+            "id": "g1",
+            "name": "Consumer Price Inflation",
+            "category": "inflation",
+            "frequency": "Quarterly",
+            "discontinued": False,
+        }
+    ]
+
+
+@pytest.mark.asyncio
+async def test_service_lists_rba_tables_with_discontinued_entries() -> None:
+    service = AuseconService(abs_provider=StubABSProvider(), rba_provider=StubRBAProvider())
+
+    results = await service.list_rba_tables(category="inflation", include_discontinued=True)
+
+    assert [item["id"] for item in results] == ["g1", "g3"]
+    assert results[-1]["discontinued"] is True
 
 
 @pytest.mark.asyncio

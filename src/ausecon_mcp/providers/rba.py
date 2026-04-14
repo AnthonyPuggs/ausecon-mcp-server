@@ -30,10 +30,11 @@ class RBAProvider:
         category: str | None = None,
         include_discontinued: bool = False,
     ) -> list[dict[str, Any]]:
-        del include_discontinued
         tables = []
         for table in RBA_CATALOGUE.values():
             if category and table.get("category") != category:
+                continue
+            if table.get("discontinued", False) and not include_discontinued:
                 continue
             tables.append(
                 {
@@ -41,6 +42,7 @@ class RBAProvider:
                     "name": table["name"],
                     "category": table["category"],
                     "frequency": table["frequency"],
+                    "discontinued": table.get("discontinued", False),
                 }
             )
         return tables
