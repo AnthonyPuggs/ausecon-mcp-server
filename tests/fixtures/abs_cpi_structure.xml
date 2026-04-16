@@ -2,32 +2,50 @@
 <message:Structure xmlns:message="http://www.sdmx.org/resources/sdmxml/schemas/v2_1/message" xmlns:structure="http://www.sdmx.org/resources/sdmxml/schemas/v2_1/structure" xmlns:common="http://www.sdmx.org/resources/sdmxml/schemas/v2_1/common">
   <message:Structures>
     <structure:Codelists>
-      <structure:Codelist id="CL_MEASURE" agencyID="ABS" version="2.0.0">
-        <common:Name xml:lang="en">Measure</common:Name>
+      <structure:Codelist id="CL_CPI_MEASURES" agencyID="ABS" version="1.1.0">
+        <common:Name xml:lang="en">Consumer Price Index Measures</common:Name>
         <structure:Code id="1">
           <common:Name xml:lang="en">Index numbers</common:Name>
+        </structure:Code>
+        <structure:Code id="2">
+          <common:Name xml:lang="en">Percentage change from previous period</common:Name>
         </structure:Code>
         <structure:Code id="3">
           <common:Name xml:lang="en">Percentage change from previous year</common:Name>
         </structure:Code>
       </structure:Codelist>
-      <structure:Codelist id="CL_REGION" agencyID="ABS" version="2.0.0">
+      <structure:Codelist id="CL_CPI_INDEX" agencyID="ABS" version="1.0.0">
+        <common:Name xml:lang="en">Consumer Price Index</common:Name>
+        <structure:Code id="10001">
+          <common:Name xml:lang="en">All groups CPI</common:Name>
+        </structure:Code>
+        <structure:Code id="999901">
+          <common:Name xml:lang="en">All groups CPI, seasonally adjusted</common:Name>
+        </structure:Code>
+        <structure:Code id="999902">
+          <common:Name xml:lang="en">Trimmed Mean</common:Name>
+        </structure:Code>
+        <structure:Code id="999903">
+          <common:Name xml:lang="en">Weighted Median</common:Name>
+        </structure:Code>
+      </structure:Codelist>
+      <structure:Codelist id="CL_TSEST" agencyID="ABS" version="1.0.0">
+        <common:Name xml:lang="en">Time Series Estimate</common:Name>
+        <structure:Code id="10">
+          <common:Name xml:lang="en">Original</common:Name>
+        </structure:Code>
+        <structure:Code id="20">
+          <common:Name xml:lang="en">Seasonally Adjusted</common:Name>
+        </structure:Code>
+      </structure:Codelist>
+      <structure:Codelist id="CL_CPI_REGION" agencyID="ABS" version="1.1.0">
         <common:Name xml:lang="en">Region</common:Name>
-        <structure:Code id="1">
-          <common:Name xml:lang="en">Sydney</common:Name>
-        </structure:Code>
-        <structure:Code id="2">
-          <common:Name xml:lang="en">Melbourne</common:Name>
-        </structure:Code>
         <structure:Code id="50">
           <common:Name xml:lang="en">Australia</common:Name>
         </structure:Code>
       </structure:Codelist>
-      <structure:Codelist id="CL_FREQ" agencyID="ABS" version="2.0.0">
+      <structure:Codelist id="CL_FREQ" agencyID="ABS" version="1.0.0">
         <common:Name xml:lang="en">Frequency</common:Name>
-        <structure:Code id="M">
-          <common:Name xml:lang="en">Monthly</common:Name>
-        </structure:Code>
         <structure:Code id="Q">
           <common:Name xml:lang="en">Quarterly</common:Name>
         </structure:Code>
@@ -39,24 +57,75 @@
         <structure:DataStructureComponents>
           <structure:DimensionList id="DimensionDescriptor">
             <structure:Dimension id="MEASURE" position="1">
-              <common:Name xml:lang="en">Measure</common:Name>
-              <structure:Enumeration>
-                <Ref id="CL_MEASURE" />
-              </structure:Enumeration>
+              <structure:ConceptIdentity>
+                <Ref id="MEASURE" maintainableParentID="CS_COMMON" maintainableParentVersion="1.0.0" agencyID="ABS" package="conceptscheme" class="Concept" />
+              </structure:ConceptIdentity>
+              <structure:LocalRepresentation>
+                <structure:Enumeration>
+                  <Ref id="CL_CPI_MEASURES" version="1.1.0" agencyID="ABS" package="codelist" class="Codelist" />
+                </structure:Enumeration>
+              </structure:LocalRepresentation>
             </structure:Dimension>
-            <structure:Dimension id="REGION" position="2">
-              <common:Name xml:lang="en">Region</common:Name>
-              <structure:Enumeration>
-                <Ref id="CL_REGION" />
-              </structure:Enumeration>
+            <structure:Dimension id="INDEX" position="2">
+              <structure:ConceptIdentity>
+                <Ref id="INDEX" maintainableParentID="CS_INDEX" maintainableParentVersion="1.0.0" agencyID="ABS" package="conceptscheme" class="Concept" />
+              </structure:ConceptIdentity>
+              <structure:LocalRepresentation>
+                <structure:Enumeration>
+                  <Ref id="CL_CPI_INDEX" version="1.0.0" agencyID="ABS" package="codelist" class="Codelist" />
+                </structure:Enumeration>
+              </structure:LocalRepresentation>
             </structure:Dimension>
-            <structure:Dimension id="FREQ" position="3">
-              <common:Name xml:lang="en">Frequency</common:Name>
-              <structure:Enumeration>
-                <Ref id="CL_FREQ" />
-              </structure:Enumeration>
+            <structure:Dimension id="TSEST" position="3">
+              <structure:ConceptIdentity>
+                <Ref id="TSEST" maintainableParentID="CS_COMMON" maintainableParentVersion="1.0.0" agencyID="ABS" package="conceptscheme" class="Concept" />
+              </structure:ConceptIdentity>
+              <structure:LocalRepresentation>
+                <structure:Enumeration>
+                  <Ref id="CL_TSEST" version="1.0.0" agencyID="ABS" package="codelist" class="Codelist" />
+                </structure:Enumeration>
+              </structure:LocalRepresentation>
             </structure:Dimension>
+            <structure:Dimension id="REGION" position="4">
+              <structure:ConceptIdentity>
+                <Ref id="REGION" maintainableParentID="CS_GEOGRAPHY" maintainableParentVersion="1.0.0" agencyID="ABS" package="conceptscheme" class="Concept" />
+              </structure:ConceptIdentity>
+              <structure:LocalRepresentation>
+                <structure:Enumeration>
+                  <Ref id="CL_CPI_REGION" version="1.1.0" agencyID="ABS" package="codelist" class="Codelist" />
+                </structure:Enumeration>
+              </structure:LocalRepresentation>
+            </structure:Dimension>
+            <structure:Dimension id="FREQ" position="5">
+              <structure:ConceptIdentity>
+                <Ref id="FREQ" maintainableParentID="CS_COMMON" maintainableParentVersion="1.0.0" agencyID="ABS" package="conceptscheme" class="Concept" />
+              </structure:ConceptIdentity>
+              <structure:LocalRepresentation>
+                <structure:Enumeration>
+                  <Ref id="CL_FREQ" version="1.0.0" agencyID="ABS" package="codelist" class="Codelist" />
+                </structure:Enumeration>
+              </structure:LocalRepresentation>
+            </structure:Dimension>
+            <structure:TimeDimension id="TIME_PERIOD" position="6">
+              <structure:ConceptIdentity>
+                <Ref id="TIME_PERIOD" maintainableParentID="CS_COMMON" maintainableParentVersion="1.0.0" agencyID="ABS" package="conceptscheme" class="Concept" />
+              </structure:ConceptIdentity>
+            </structure:TimeDimension>
           </structure:DimensionList>
+          <structure:AttributeList id="AttributeDescriptor">
+            <structure:Attribute id="OBS_STATUS" assignmentStatus="Conditional">
+              <structure:ConceptIdentity>
+                <Ref id="OBS_STATUS" maintainableParentID="CS_OBS_ATTRIBUTES" maintainableParentVersion="1.0.0" agencyID="ABS" package="conceptscheme" class="Concept" />
+              </structure:ConceptIdentity>
+              <structure:AttributeRelationship>
+                <structure:Group>
+                  <structure:Dimension>
+                    <Ref id="TIME_PERIOD" />
+                  </structure:Dimension>
+                </structure:Group>
+              </structure:AttributeRelationship>
+            </structure:Attribute>
+          </structure:AttributeList>
         </structure:DataStructureComponents>
       </structure:DataStructure>
     </structure:DataStructures>

@@ -4,6 +4,32 @@ All notable changes to `ausecon-mcp-server` are recorded here. The format follow
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres
 to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - 2026-04-17
+
+Semantic-defaults and release-readiness release. Curated
+`get_economic_series` concepts now resolve to concrete series by default, and
+the public onboarding docs now cover the main local MCP clients.
+
+### Changed
+- `cash_rate_target`, `headline_cpi`, `trimmed_mean_inflation`, and
+  `gdp_growth` now resolve to narrowed default series instead of broad ABS
+  datasets or RBA tables.
+- Curated catalogue entries for `CPI`, `ANA_AGG`, `a2`, and `g1` now include
+  populated default semantic variants used by the resolver.
+- `README.md` now documents the actual `get_economic_series` inputs and
+  provides self-serve local setup instructions for Claude Desktop, Claude Code,
+  and Codex.
+
+### Fixed
+- ABS structure parsing now handles the current SDMX structure shape where
+  dimension metadata is nested under `ConceptIdentity` / `LocalRepresentation`
+  and includes `TimeDimension` entries.
+- ABS CSV parsing now handles current upstream column names such as
+  `TIME_PERIOD`, `UNIT_MEASURE`, `UNIT_MULT`, and `OBS_STATUS`, rather than
+  only the older labelled column variants.
+- Repository hygiene and behavioural tests now pin the `v0.5.0` semantic
+  shortcut contract and public onboarding text.
+
 ## [0.4.0] - 2026-04-17
 
 Semantic resolver release. `get_economic_series` accepts variant / geography /
@@ -110,6 +136,7 @@ Initial public release.
 - Initial curated catalogues for ABS and RBA, plus a four-concept
   `CURATED_SERIES` semantic shortcut map.
 
+[0.5.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v0.3.2...v0.4.0
 [0.3.2]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v0.3.0...v0.3.1

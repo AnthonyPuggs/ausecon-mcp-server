@@ -12,8 +12,10 @@ class StubABSProvider:
             "id": dataflow_id,
             "dimensions": [
                 {"id": "MEASURE", "position": 1, "values": [{"code": "1"}, {"code": "3"}]},
-                {"id": "REGION", "position": 2, "values": [{"code": "50"}]},
-                {"id": "FREQ", "position": 3, "values": [{"code": "Q"}, {"code": "M"}]},
+                {"id": "INDEX", "position": 2, "values": [{"code": "10001"}, {"code": "999902"}]},
+                {"id": "TSEST", "position": 3, "values": [{"code": "10"}, {"code": "20"}]},
+                {"id": "REGION", "position": 4, "values": [{"code": "50"}, {"code": "AUS"}]},
+                {"id": "FREQ", "position": 5, "values": [{"code": "Q"}, {"code": "M"}]},
             ],
         }
 
@@ -139,11 +141,14 @@ async def test_service_lists_rba_tables_with_discontinued_entries() -> None:
 
 @pytest.mark.asyncio
 async def test_service_resolves_curated_economic_series() -> None:
-    service = AuseconService(abs_provider=StubABSProvider(), rba_provider=StubRBAProvider())
+    rba = StubRBAProvider()
+    service = AuseconService(abs_provider=StubABSProvider(), rba_provider=rba)
 
     result = await service.get_economic_series("cash_rate_target")
 
     assert result["metadata"]["dataset_id"] == "a2"
+    assert rba.last_get_table_kwargs is not None
+    assert rba.last_get_table_kwargs["series_ids"] == ["ARBAMPCNCRT"]
 
 
 @pytest.mark.asyncio
@@ -184,6 +189,18 @@ async def test_service_forwards_rba_series_ids_for_resolved_variant() -> None:
 
 
 @pytest.mark.asyncio
+async def test_service_forwards_default_rba_series_ids_for_trimmed_mean() -> None:
+    rba = StubRBAProvider()
+    service = AuseconService(abs_provider=StubABSProvider(), rba_provider=rba)
+
+    await service.get_economic_series("trimmed_mean_inflation")
+
+    assert rba.last_get_table_kwargs is not None
+    assert rba.last_get_table_kwargs["table_id"] == "g1"
+    assert rba.last_get_table_kwargs["series_ids"] == ["GCPIOCPMTMYP"]
+
+
+@pytest.mark.asyncio
 async def test_service_forwards_abs_key_composed_from_frequency() -> None:
     abs_provider = StubABSProvider()
     service = AuseconService(abs_provider=abs_provider, rba_provider=StubRBAProvider())
@@ -192,8 +209,31 @@ async def test_service_forwards_abs_key_composed_from_frequency() -> None:
 
     assert abs_provider.last_get_data_kwargs is not None
     assert abs_provider.last_get_data_kwargs["dataflow_id"] == "CPI"
-    # StubABSProvider dimensions: MEASURE(1), REGION(2), FREQ(3) — only FREQ pinned.
-    assert abs_provider.last_get_data_kwargs["key"] == "..Q"
+    assert abs_provider.last_get_data_kwargs["key"] == "1.10001.10.50.Q"
+
+
+@pytest.mark.asyncio
+async def test_service_forwards_default_abs_key_for_headline_cpi() -> None:
+    abs_provider = StubABSProvider()
+    service = AuseconService(abs_provider=abs_provider, rba_provider=StubRBAProvider())
+
+    await service.get_economic_series("headline_cpi")
+
+    assert abs_provider.last_get_data_kwargs is not None
+    assert abs_provider.last_get_data_kwargs["dataflow_id"] == "CPI"
+    assert abs_provider.last_get_data_kwargs["key"] == "1.10001.10.50.Q"
+
+
+@pytest.mark.asyncio
+async def test_service_forwards_default_abs_key_for_gdp_growth() -> None:
+    abs_provider = StubABSProvider()
+    service = AuseconService(abs_provider=abs_provider, rba_provider=StubRBAProvider())
+
+    await service.get_economic_series("gdp_growth")
+
+    assert abs_provider.last_get_data_kwargs is not None
+    assert abs_provider.last_get_data_kwargs["dataflow_id"] == "ANA_AGG"
+    assert abs_provider.last_get_data_kwargs["key"] == "M2.GPM.20.AUS.Q"
 
 
 @pytest.mark.asyncio
@@ -201,7 +241,7 @@ async def test_service_rejects_unpopulated_rba_variant() -> None:
     service = AuseconService(abs_provider=StubABSProvider(), rba_provider=StubRBAProvider())
 
     with pytest.raises(ValueError, match="rba_series_ids populated"):
-        await service.get_economic_series("trimmed_mean_inflation", variant="trimmed_mean")
+        await service.get_economic_series("trimmed_mean_inflation", variant="weighted_median")
 
 
 @pytest.mark.asyncio

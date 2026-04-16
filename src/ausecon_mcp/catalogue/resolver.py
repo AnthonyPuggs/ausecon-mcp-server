@@ -34,10 +34,10 @@ _FRAGMENT_PIECE_RE = re.compile(r"^([A-Z_][A-Z0-9_]*)=([0-9A-Z_+]+)$")
 _LITERAL_KEY_RE = re.compile(r"^[0-9A-Z_+]+(\.[0-9A-Z_+]+)*$")
 
 CURATED_SHORTCUTS: dict[str, dict[str, Any]] = {
-    "cash_rate_target": {"source": "rba", "dataset_id": "a2"},
-    "headline_cpi": {"source": "abs", "dataset_id": "CPI"},
-    "trimmed_mean_inflation": {"source": "rba", "dataset_id": "g1"},
-    "gdp_growth": {"source": "abs", "dataset_id": "ANA_AGG"},
+    "cash_rate_target": {"source": "rba", "dataset_id": "a2", "variant": "target"},
+    "headline_cpi": {"source": "abs", "dataset_id": "CPI", "variant": "headline"},
+    "trimmed_mean_inflation": {"source": "rba", "dataset_id": "g1", "variant": "trimmed_mean"},
+    "gdp_growth": {"source": "abs", "dataset_id": "ANA_AGG", "variant": "gdp_growth"},
 }
 
 

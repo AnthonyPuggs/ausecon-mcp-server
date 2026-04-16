@@ -40,7 +40,13 @@ RBA_CATALOGUE = {
         ],
         "frequencies": ["E"],
         "geographies": ["national"],
-        "variants": [],
+        "variants": [
+            {
+                "name": "target",
+                "aliases": ["cash rate target", "new cash rate target"],
+                "rba_series_ids": ["ARBAMPCNCRT"],
+            }
+        ],
     },
     "a3": {
         "id": "a3",
@@ -645,7 +651,7 @@ RBA_CATALOGUE = {
             {
                 "name": "trimmed_mean",
                 "aliases": ["core", "trimmed mean inflation"],
-                "rba_series_ids": None,
+                "rba_series_ids": ["GCPIOCPMTMYP"],
             },
             {
                 "name": "weighted_median",

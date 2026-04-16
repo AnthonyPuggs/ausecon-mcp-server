@@ -14,6 +14,8 @@ def test_parse_abs_structure_extracts_dimensions_and_codelists() -> None:
     assert structure["name"] == "Consumer Price Index"
     assert [dimension["id"] for dimension in structure["dimensions"]] == [
         "MEASURE",
+        "INDEX",
+        "TSEST",
         "REGION",
         "FREQ",
     ]
@@ -21,7 +23,8 @@ def test_parse_abs_structure_extracts_dimensions_and_codelists() -> None:
         "code": "1",
         "label": "Index numbers",
     }
-    assert structure["dimensions"][1]["values"][-1]["label"] == "Australia"
+    assert structure["dimensions"][1]["values"][-1]["label"] == "Weighted Median"
+    assert structure["dimensions"][3]["values"][-1]["label"] == "Australia"
 
 
 def test_parse_abs_csv_normalises_series_and_observations() -> None:
@@ -29,12 +32,27 @@ def test_parse_abs_csv_normalises_series_and_observations() -> None:
 
     assert parsed["metadata"]["source"] == "abs"
     assert parsed["metadata"]["dataset_id"] == "CPI"
-    assert parsed["metadata"]["frequency"] == "Monthly"
-    assert len(parsed["series"]) == 2
-    assert parsed["series"][0]["unit"] == "Percent"
-    assert parsed["observations"][0]["date"] == "2024-01"
-    assert parsed["observations"][0]["value"] == 7.4
-    assert parsed["observations"][0]["dimensions"]["REGION"]["label"] == "Australia"
+    assert parsed["metadata"]["frequency"] == "Q"
+    assert len(parsed["series"]) == 1
+    assert parsed["series"][0]["unit"] == "IN"
+    assert parsed["series"][0]["series_id"] == "MEASURE=1|INDEX=10001|TSEST=10|REGION=50|FREQ=Q"
+    assert parsed["observations"][0]["date"] == "2025-Q2"
+    assert parsed["observations"][0]["value"] == 140.2
+    assert parsed["observations"][0]["dimensions"]["REGION"]["label"] == "50"
+    assert parsed["observations"][0]["dimensions"]["INDEX"]["code"] == "10001"
+
+
+def test_parse_abs_csv_ignores_unit_multiplier_columns_in_live_ana_payload() -> None:
+    parsed = parse_abs_csv((FIXTURES / "abs_ana_agg_sample.csv").read_text())
+
+    assert parsed["metadata"]["dataset_id"] == "ANA_AGG"
+    assert parsed["metadata"]["frequency"] == "Q"
+    assert len(parsed["series"]) == 1
+    assert parsed["series"][0]["unit"] == "PCT"
+    assert "UNIT_MULT" not in parsed["series"][0]["dimensions"]
+    assert parsed["observations"][0]["value"] is None
+    assert parsed["observations"][0]["status"] == "m"
+    assert parsed["observations"][1]["value"] == 0.9
 
 
 def test_parse_rba_csv_extracts_metadata_and_long_observations() -> None:

@@ -23,7 +23,11 @@ ABS_CATALOGUE = {
         "frequencies": ["Q"],
         "geographies": ["national"],
         "variants": [
-            {"name": "headline", "aliases": ["headline cpi", "all groups"], "abs_key": None},
+            {
+                "name": "headline",
+                "aliases": ["headline cpi", "all groups"],
+                "abs_key": "1.10001.10.50.Q",
+            },
             {"name": "trimmed_mean", "aliases": ["core", "trimmed mean"], "abs_key": None},
             {"name": "weighted_median", "aliases": ["weighted median"], "abs_key": None},
         ],
@@ -350,7 +354,13 @@ ABS_CATALOGUE = {
         ],
         "frequencies": ["Q"],
         "geographies": ["national"],
-        "variants": [],
+        "variants": [
+            {
+                "name": "gdp_growth",
+                "aliases": ["gdp growth", "economic growth", "real gdp growth"],
+                "abs_key": "M2.GPM.20.AUS.Q",
+            }
+        ],
     },
     "ANA_EXP": {
         "id": "ANA_EXP",

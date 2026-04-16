@@ -14,7 +14,7 @@ research, policy, and analytical workflows.
 
 ## Status
 
-This repository is currently at `v0.4.0`. See [`CHANGELOG.md`](CHANGELOG.md) for release history.
+This repository is currently at `v0.5.0`. See [`CHANGELOG.md`](CHANGELOG.md) for release history.
 
 The current release includes:
 
@@ -23,8 +23,9 @@ The current release includes:
 - active-only RBA table discovery by default, with optional inclusion of discontinued tables
 - ABS dataset structure retrieval
 - ABS data retrieval in a normalised response shape
+- compatibility with current live ABS structure and CSV payload shapes
 - RBA table listing and retrieval
-- a deliberately small semantic resolver for a few high-value economic concepts
+- a semantic resolver whose curated default concepts now narrow to concrete series
 - stricter validation for tool inputs and parameter ranges
 - source-aware upstream and parse error messages
 - retry logic for transient ABS and RBA upstream failures
@@ -45,7 +46,7 @@ The MCP server currently exposes the following tools:
 | `get_abs_data` | Retrieve ABS data in a normalised response shape | `dataflow_id`, `key`, `start_period`, `end_period`, `last_n`, `updated_after` |
 | `list_rba_tables` | List curated RBA statistical tables | `category`, `include_discontinued` |
 | `get_rba_table` | Retrieve an RBA statistical table in a normalised response shape | `table_id`, `series_ids`, `start_date`, `end_date`, `last_n` |
-| `get_economic_series` | Resolve a small set of high-value economic concepts to ABS or RBA retrievals | `concept`, `start`, `end` |
+| `get_economic_series` | Resolve a small set of high-value economic concepts to ABS or RBA retrievals | `concept`, `variant`, `geography`, `frequency`, `start`, `end` |
 
 ### Currently supported semantic concepts
 
@@ -56,29 +57,35 @@ The MCP server currently exposes the following tools:
 - `trimmed_mean_inflation`
 - `gdp_growth`
 
-`get_economic_series` now accepts optional `variant`, `geography`, and `frequency` arguments.
-The resolver validates these against the catalogue entry, composes an ABS SDMX key from the
-dataset's live dimensions, or narrows an RBA response to the variant's declared series IDs.
-Variants whose keys are not yet populated raise a clear "not yet wired" error; variant
-population is progressive across point releases.
+By default, these currently resolve to the following narrowed series:
 
-## Discovery Coverage
+- `cash_rate_target` -> RBA `a2` cash rate target series (`ARBAMPCNCRT`)
+- `headline_cpi` -> ABS `CPI` all groups CPI index for Australia, quarterly (`1.10001.10.50.Q`)
+- `trimmed_mean_inflation` -> RBA `g1` year-ended trimmed mean inflation (`GCPIOCPMTMYP`)
+- `gdp_growth` -> ABS `ANA_AGG` quarterly real GDP growth (`M2.GPM.20.AUS.Q`)
 
-- ABS prices and inflation, labour, national accounts, activity, housing and construction,
-  external sector, and lending indicators
-- RBA monetary policy, payments, money and credit, interest rates and yields, exchange rates,
-  inflation, output and labour, and external sector tables
+`variant`, `geography`, and `frequency` are validated against the catalogue entry. For ABS
+datasets, populated variants can be literal SDMX keys or partial fragments that are completed
+against the live structure. For RBA tables, populated variants narrow the response to the declared
+series IDs. Variants that are declared but not yet populated raise a clear "not yet wired" error.
 
-## Discovery Behaviour
+## Discovery And Validation
 
-- `search_datasets` now prioritises exact dataset or table IDs, then exact aliases, then exact
-  names, then broader multi-term matches.
-- common economist phrasing is normalised for ranking, including terms such as “jobless”,
-  “mortgage”, “rates”, and “fx”.
+- `search_datasets` prioritises exact dataset or table IDs, then exact aliases, then exact names,
+  then broader multi-term matches.
+- common economist phrasing is normalised for ranking, including terms such as "jobless",
+  "mortgage", "rates", and "fx".
 - discontinued RBA tables are excluded from `search_datasets` by default.
 - `list_rba_tables` excludes discontinued tables by default and returns a `discontinued` boolean
   field on every row.
-- `get_economic_series` still only accepts `concept`, `start`, and `end`.
+- empty identifiers and empty search queries are rejected before any network call.
+- `last_n` must be positive when provided.
+- `get_abs_data` validates annual, quarterly, monthly, and half-yearly ABS period strings.
+- `get_rba_table` validates ISO date bounds.
+- `get_economic_series` validates `start` and `end` after resolving the target source.
+- transient ABS and RBA upstream failures are retried automatically.
+- malformed upstream payloads are surfaced as source-aware parse failures.
+- `search_datasets` scores should be treated as ranking metadata rather than a stable contract.
 
 ## Response Shape
 
@@ -92,17 +99,15 @@ Data retrieval tools return a normalised payload with three top-level sections:
 This design keeps source provenance explicit while making downstream processing simpler in Python,
 R, or other analytical environments.
 
-## Validation And Failure Behaviour
+## Discovery Coverage
 
-- empty identifiers and empty search queries are rejected before any network call
-- `last_n` must be positive when provided
-- `get_abs_data` validates annual, quarterly, monthly, and half-yearly ABS period strings
-- `get_rba_table` validates ISO date bounds
-- `get_economic_series` validates `start` and `end` after resolving the target source
-- transient ABS and RBA upstream failures are retried automatically
-- malformed upstream payloads are surfaced as source-aware parse failures
-- `list_rba_tables(include_discontinued=...)` now changes behaviour as documented
-- `search_datasets` scores should be treated as ranking metadata rather than a stable contract
+The curated catalogue is still intentionally selective, but `v0.5.0` covers the main analyst
+workflows more credibly:
+
+- ABS prices and inflation, labour, national accounts, activity, housing and construction,
+  external sector, and lending indicators
+- RBA monetary policy, payments, money and credit, interest rates and yields, exchange rates,
+  inflation, output and labour, and external sector tables
 
 ## Requirements
 
@@ -132,19 +137,45 @@ as a standalone command-line application.
 
 ## Connecting An MCP Client
 
+This repository currently provides a local stdio MCP server only. Claude API / Anthropic MCP
+connector setups and other remote HTTP-based MCP connectors require a separately hosted HTTP server,
+which is out of scope for this repository today.
+
+Use the same absolute checkout path in every client example below:
+
+```text
+/absolute/path/to/ausecon-mcp-server
+```
+
 ### Claude Desktop
 
 An example Claude Desktop configuration is included at
 [examples/claude_desktop_config.json](examples/claude_desktop_config.json).
 
 That file is the source of truth. The only value you need to customise is the absolute checkout
-path passed to `uv --directory`:
+path passed to `uv --directory`.
 
 ```json
 "/absolute/path/to/ausecon-mcp-server"
 ```
 
 Replace `/absolute/path/to/ausecon-mcp-server` with the absolute path to your local checkout.
+
+### Claude Code
+
+Add the server with the Claude Code CLI:
+
+```bash
+claude mcp add --transport stdio ausecon -- uv --directory /absolute/path/to/ausecon-mcp-server run ausecon-mcp-server
+```
+
+### Codex
+
+Add the server with the Codex CLI:
+
+```bash
+codex mcp add ausecon -- uv --directory /absolute/path/to/ausecon-mcp-server run ausecon-mcp-server
+```
 
 ## How To Use The Server
 
@@ -160,10 +191,11 @@ The most reliable workflow is:
 
 In an MCP-enabled client, the user can ask for things such as:
 
-- “Search for datasets related to trimmed mean inflation.”
-- “Show me the ABS structure for CPI.”
-- “Fetch the last 12 observations from RBA table g1.”
-- “Get headline CPI from 2023 onwards.”
+- "Search for datasets related to trimmed mean inflation."
+- "Show me the ABS structure for CPI."
+- "Fetch the last 12 observations from RBA table g1."
+- "Get headline CPI from 2023 onwards."
+- "Get quarterly real GDP growth from 2020."
 
 ### Example retrieval patterns
 
@@ -191,9 +223,9 @@ Fetch a filtered ABS dataset:
 get_abs_data(
   dataflow_id="CPI",
   key="all",
-  start_period="2024-01",
-  end_period="2024-12",
-  last_n=12
+  start_period="2024-Q1",
+  end_period="2024-Q4",
+  last_n=4
 )
 ```
 
@@ -224,6 +256,24 @@ get_economic_series(
 )
 ```
 
+Resolve trimmed mean inflation using the default narrowed series:
+
+```text
+get_economic_series(
+  concept="trimmed_mean_inflation",
+  start="2020-01-01"
+)
+```
+
+Resolve quarterly real GDP growth:
+
+```text
+get_economic_series(
+  concept="gdp_growth",
+  start="2020-Q1"
+)
+```
+
 ## Development
 
 Install the development environment:
@@ -241,7 +291,7 @@ uv run pytest
 Run linting:
 
 ```bash
-uv run ruff check .
+uv run ruff check src tests
 ```
 
 ## Repository Structure
@@ -257,3 +307,24 @@ src/ausecon_mcp/
 tests/
 examples/
 ```
+
+## Releasing
+
+If you want to publish a release from this repository:
+
+1. ensure `pyproject.toml` contains the intended version
+2. commit the release-ready state
+3. create an annotated git tag such as `vX.Y.Z`
+4. push the branch and the tag to GitHub
+5. create a GitHub Release from that tag with release notes
+
+An example tag command is:
+
+```bash
+git tag -a vX.Y.Z -m "vX.Y.Z"
+git push origin main
+git push origin vX.Y.Z
+```
+
+Once the tag is on GitHub, you can create the release in the GitHub interface under
+"Releases" -> "Draft a new release".

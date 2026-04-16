@@ -17,7 +17,14 @@ def parse_abs_structure(xml_text: str) -> dict:
 
     codelists = _build_codelist_index(root)
     dimensions = []
-    for dimension in data_structure.findall(".//structure:Dimension", _NS):
+    dimension_list = data_structure.find(
+        "./structure:DataStructureComponents/structure:DimensionList",
+        _NS,
+    )
+    if dimension_list is None:
+        raise ValueError("ABS structure payload did not contain a DimensionList")
+
+    for dimension in dimension_list.findall("./structure:Dimension", _NS):
         codelist_id = _extract_codelist_id(dimension)
         dimensions.append(
             {
@@ -52,9 +59,10 @@ def _build_codelist_index(root: ET.Element) -> dict[str, list[dict[str, str]]]:
 
 
 def _extract_codelist_id(dimension: ET.Element) -> str | None:
-    for child in dimension.findall(".//*[@id]"):
-        if child.attrib.get("id", "").startswith("CL_"):
-            return child.attrib["id"]
+    for child in dimension.iter():
+        identifier = child.attrib.get("id")
+        if identifier and identifier.startswith("CL_"):
+            return identifier
     return None
 
 

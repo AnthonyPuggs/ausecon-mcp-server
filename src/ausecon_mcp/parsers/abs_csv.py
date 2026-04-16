@@ -7,12 +7,20 @@ from ausecon_mcp.models import Observation, SeriesDescriptor, parse_float, split
 
 _RESERVED_COLUMNS = {
     "DATAFLOW",
+    "TIME_PERIOD",
     "TIME_PERIOD: Time Period",
     "OBS_VALUE",
+    "UNIT_MEASURE",
     "UNIT_MEASURE: Unit of Measure",
+    "UNIT_MULT",
+    "UNIT_MULT: Unit Multiplier",
+    "OBS_STATUS",
     "OBS_STATUS: Observation Status",
+    "DECIMALS",
     "DECIMALS: Decimals",
+    "OBS_COMMENT",
     "OBS_COMMENT: Observation Comment",
+    "BASE_PERIOD",
     "BASE_PERIOD: Reference Base Period",
 }
 
@@ -32,10 +40,13 @@ def parse_abs_csv(csv_text: str) -> dict:
         series_id = "|".join(f"{key}={value['code']}" for key, value in dimension_values.items())
         if series_id not in series_index:
             frequency = frequency or dimension_values.get("FREQ", {}).get("label")
+            unit = split_code_and_label(
+                _row_value(row, "UNIT_MEASURE", "UNIT_MEASURE: Unit of Measure")
+            )[1]
             series_index[series_id] = SeriesDescriptor(
                 series_id=series_id,
                 label=" / ".join(value["label"] for value in dimension_values.values()),
-                unit=split_code_and_label(row["UNIT_MEASURE: Unit of Measure"])[1],
+                unit=unit,
                 frequency=dimension_values.get("FREQ", {}).get("label"),
                 dimensions=dimension_values,
                 source_key=row["DATAFLOW"],
@@ -43,11 +54,14 @@ def parse_abs_csv(csv_text: str) -> dict:
 
         observations.append(
             Observation(
-                date=row["TIME_PERIOD: Time Period"],
+                date=_row_value(row, "TIME_PERIOD", "TIME_PERIOD: Time Period"),
                 series_id=series_id,
                 value=parse_float(row["OBS_VALUE"]),
                 dimensions=dimension_values,
-                status=split_code_and_label(row["OBS_STATUS: Observation Status"])[0] or None,
+                status=split_code_and_label(
+                    _row_value(row, "OBS_STATUS", "OBS_STATUS: Observation Status")
+                )[0]
+                or None,
             ).to_dict()
         )
 
@@ -70,9 +84,17 @@ def _parse_dataset_id(dataflow: str) -> str:
 def _extract_dimensions(row: dict[str, str]) -> dict[str, dict[str, str]]:
     dimensions: dict[str, dict[str, str]] = {}
     for column, value in row.items():
-        if column in _RESERVED_COLUMNS or value is None:
+        if column is None or column in _RESERVED_COLUMNS or value is None:
             continue
         dimension_id = column.split(":", 1)[0]
         code, label = split_code_and_label(value)
         dimensions[dimension_id] = {"code": code, "label": label}
     return dimensions
+
+
+def _row_value(row: dict[str, str], *candidates: str) -> str:
+    for key in candidates:
+        value = row.get(key)
+        if value is not None:
+            return value
+    return ""

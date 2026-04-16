@@ -71,5 +71,14 @@ def test_readme_tracks_current_release_state() -> None:
     pyproject = tomllib.loads(PYPROJECT.read_text(encoding="utf-8"))
     version = pyproject["project"]["version"]
     readme_text = README.read_text(encoding="utf-8")
+    tool_row = (
+        "`get_economic_series` | Resolve a small set of high-value economic concepts to ABS or "
+        "RBA retrievals | `concept`, `variant`, `geography`, `frequency`, `start`, `end` |"
+    )
 
     assert f"This repository is currently at `v{version}`." in readme_text
+    assert tool_row in readme_text
+    assert "claude mcp add --transport stdio ausecon" in readme_text
+    assert "codex mcp add ausecon" in readme_text
+    assert "This repository currently provides a local stdio MCP server only." in readme_text
+    assert "`v0.3.0` is a discovery release" not in readme_text

@@ -36,13 +36,24 @@ async def test_resolve_rejects_ambiguous_alias() -> None:
 
 
 @pytest.mark.asyncio
-async def test_resolve_curated_shortcut_without_variant_returns_bare_dataset() -> None:
+async def test_resolve_cash_rate_target_defaults_to_target_series() -> None:
     result = await resolve("cash_rate_target")
 
     assert result.source == "rba"
     assert result.dataset_id == "a2"
-    assert result.rba_series_ids is None
+    assert result.rba_series_ids == ["ARBAMPCNCRT"]
     assert result.abs_key is None
+    assert result.variant == "target"
+
+
+@pytest.mark.asyncio
+async def test_resolve_trimmed_mean_inflation_defaults_to_year_ended_series() -> None:
+    result = await resolve("trimmed_mean_inflation")
+
+    assert result.source == "rba"
+    assert result.dataset_id == "g1"
+    assert result.rba_series_ids == ["GCPIOCPMTMYP"]
+    assert result.variant == "trimmed_mean"
 
 
 @pytest.mark.asyncio
@@ -58,7 +69,7 @@ async def test_resolve_rba_variant_returns_populated_series_ids() -> None:
 @pytest.mark.asyncio
 async def test_resolve_rba_unpopulated_variant_raises() -> None:
     with pytest.raises(ValueError, match="rba_series_ids populated"):
-        await resolve("trimmed_mean_inflation", variant="trimmed_mean")
+        await resolve("trimmed_mean_inflation", variant="weighted_median")
 
 
 @pytest.mark.asyncio
@@ -89,11 +100,22 @@ async def test_resolve_direct_dataset_id_matches_abs_entry() -> None:
 
 @pytest.mark.asyncio
 async def test_resolve_abs_without_key_inputs_returns_none_key() -> None:
-    result = await resolve("headline_cpi", abs_structure_fetcher=_cpi_fetcher)
+    result = await resolve("headline_cpi")
 
     assert result.source == "abs"
     assert result.dataset_id == "CPI"
-    assert result.abs_key is None
+    assert result.abs_key == "1.10001.10.50.Q"
+    assert result.variant == "headline"
+
+
+@pytest.mark.asyncio
+async def test_resolve_gdp_growth_defaults_to_real_gdp_qoq_key() -> None:
+    result = await resolve("gdp_growth")
+
+    assert result.source == "abs"
+    assert result.dataset_id == "ANA_AGG"
+    assert result.abs_key == "M2.GPM.20.AUS.Q"
+    assert result.variant == "gdp_growth"
 
 
 @pytest.mark.asyncio
@@ -104,9 +126,9 @@ async def test_resolve_abs_frequency_only_composes_against_structure() -> None:
         abs_structure_fetcher=_cpi_fetcher,
     )
 
-    # CPI fixture order: MEASURE(1), REGION(2), FREQ(3).
-    # Only FREQ pinned → ..Q with trailing slot retained because it's the last slot.
-    assert result.abs_key == "..Q"
+    # Live CPI fixture order: MEASURE(1), INDEX(2), TSEST(3), REGION(4), FREQ(5).
+    # The default headline variant already pins the intended semantic series.
+    assert result.abs_key == "1.10001.10.50.Q"
 
 
 @pytest.mark.asyncio
@@ -120,14 +142,13 @@ def test_build_abs_key_orders_parts_by_dimension_position() -> None:
 
     key = build_abs_key(
         structure,
-        variant_fragment={"MEASURE": "3"},
+        variant_fragment={"MEASURE": "1", "INDEX": "10001", "TSEST": "10"},
         frequency="Q",
-        geography=None,
-        geography_codes={},
+        geography="national",
+        geography_codes={"national": "50"},
     )
 
-    # MEASURE=3, REGION empty, FREQ=Q → "3..Q"
-    assert key == "3..Q"
+    assert key == "1.10001.10.50.Q"
 
 
 def test_build_abs_key_strips_trailing_empty_slots() -> None:
@@ -162,14 +183,13 @@ def test_build_abs_key_maps_geography_through_entry_codes() -> None:
 
     key = build_abs_key(
         structure,
-        variant_fragment={"MEASURE": "1"},
+        variant_fragment={"MEASURE": "1", "INDEX": "10001", "TSEST": "10"},
         frequency="Q",
-        geography="sydney",
-        geography_codes={"sydney": "1"},
+        geography="national",
+        geography_codes={"national": "50"},
     )
 
-    # MEASURE=1, REGION=1 (sydney), FREQ=Q
-    assert key == "1.1.Q"
+    assert key == "1.10001.10.50.Q"
 
 
 def test_build_abs_key_rejects_unmapped_geography() -> None:
@@ -178,10 +198,10 @@ def test_build_abs_key_rejects_unmapped_geography() -> None:
     with pytest.raises(ValueError, match="No geography code"):
         build_abs_key(
             structure,
-            variant_fragment={"MEASURE": "1"},
+            variant_fragment={"MEASURE": "1", "INDEX": "10001", "TSEST": "10"},
             frequency=None,
             geography="darwin",
-            geography_codes={"sydney": "1"},
+            geography_codes={"national": "50"},
         )
 
 
