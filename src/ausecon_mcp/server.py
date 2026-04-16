@@ -239,6 +239,7 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
 
     return mcp
 
+mcp = build_server()
 
 def main() -> None:
-    build_server().run()
+    mcp.run()
