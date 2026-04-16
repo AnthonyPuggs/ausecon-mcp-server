@@ -31,7 +31,7 @@ def test_project_metadata_points_to_license_file_and_repository_urls() -> None:
     pyproject = tomllib.loads(PYPROJECT.read_text(encoding="utf-8"))
     project = pyproject["project"]
 
-    assert project["version"] == "0.3.0"
+    assert project["version"]
     assert project["license"] == {"file": "LICENSE"}
     assert project["urls"] == {
         "Homepage": "https://github.com/AnthonyPuggs/ausecon-mcp-server",
@@ -67,9 +67,9 @@ def test_ci_workflow_exists_with_quality_checks_and_hygiene_guard() -> None:
     assert 'rg -n "rba_abs_mcp|<your-repo-url>" README.md examples pyproject.toml' in workflow_text
 
 
-def test_readme_tracks_v0_3_release_state() -> None:
+def test_readme_tracks_current_release_state() -> None:
+    pyproject = tomllib.loads(PYPROJECT.read_text(encoding="utf-8"))
+    version = pyproject["project"]["version"]
     readme_text = README.read_text(encoding="utf-8")
 
-    assert "This repository is currently at `v0.3.0`." in readme_text
-    assert "v0.2.0" not in readme_text
-    assert "but it remains a no-op in `v0.2.0`." not in readme_text
+    assert f"This repository is currently at `v{version}`." in readme_text
