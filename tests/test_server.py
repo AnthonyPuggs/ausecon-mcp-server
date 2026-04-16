@@ -4,8 +4,18 @@ from ausecon_mcp.server import AuseconService
 
 
 class StubABSProvider:
+    def __init__(self) -> None:
+        self.last_get_data_kwargs: dict | None = None
+
     async def get_dataset_structure(self, dataflow_id: str) -> dict:
-        return {"id": dataflow_id, "dimensions": [{"id": "MEASURE"}]}
+        return {
+            "id": dataflow_id,
+            "dimensions": [
+                {"id": "MEASURE", "position": 1, "values": [{"code": "1"}, {"code": "3"}]},
+                {"id": "REGION", "position": 2, "values": [{"code": "50"}]},
+                {"id": "FREQ", "position": 3, "values": [{"code": "Q"}, {"code": "M"}]},
+            ],
+        }
 
     async def get_data(
         self,
@@ -16,6 +26,14 @@ class StubABSProvider:
         last_n: int | None = None,
         updated_after: str | None = None,
     ) -> dict:
+        self.last_get_data_kwargs = {
+            "dataflow_id": dataflow_id,
+            "key": key,
+            "start_period": start_period,
+            "end_period": end_period,
+            "last_n": last_n,
+            "updated_after": updated_after,
+        }
         return {
             "metadata": {"source": "abs", "dataset_id": dataflow_id},
             "series": [{"series_id": "abs-series"}],
@@ -24,6 +42,9 @@ class StubABSProvider:
 
 
 class StubRBAProvider:
+    def __init__(self) -> None:
+        self.last_get_table_kwargs: dict | None = None
+
     def list_tables(
         self,
         category: str | None = None,
@@ -66,6 +87,13 @@ class StubRBAProvider:
         end_date: str | None = None,
         last_n: int | None = None,
     ) -> dict:
+        self.last_get_table_kwargs = {
+            "table_id": table_id,
+            "series_ids": series_ids,
+            "start_date": start_date,
+            "end_date": end_date,
+            "last_n": last_n,
+        }
         return {
             "metadata": {"source": "rba", "dataset_id": table_id},
             "series": [{"series_id": "rba-series"}],
@@ -131,16 +159,49 @@ async def test_service_fetches_abs_data() -> None:
 async def test_service_rejects_unknown_economic_series_concept() -> None:
     service = AuseconService(abs_provider=StubABSProvider(), rba_provider=StubRBAProvider())
 
-    with pytest.raises(ValueError, match="Unsupported concept"):
+    with pytest.raises(ValueError, match="Unknown concept"):
         await service.get_economic_series("unknown_series")
 
 
 @pytest.mark.asyncio
-async def test_service_rejects_unsupported_economic_series_options() -> None:
+async def test_service_rejects_unknown_variant_for_concept() -> None:
     service = AuseconService(abs_provider=StubABSProvider(), rba_provider=StubRBAProvider())
 
-    with pytest.raises(ValueError, match="Unsupported semantic options"):
-        await service.get_economic_series("cash_rate_target", variant="monthly")
+    with pytest.raises(ValueError, match="Unknown variant"):
+        await service.get_economic_series("trimmed_mean_inflation", variant="monthly")
+
+
+@pytest.mark.asyncio
+async def test_service_forwards_rba_series_ids_for_resolved_variant() -> None:
+    rba = StubRBAProvider()
+    service = AuseconService(abs_provider=StubABSProvider(), rba_provider=rba)
+
+    await service.get_economic_series("trimmed_mean_inflation", variant="headline")
+
+    assert rba.last_get_table_kwargs is not None
+    assert rba.last_get_table_kwargs["table_id"] == "g1"
+    assert rba.last_get_table_kwargs["series_ids"] == ["GCPIAG"]
+
+
+@pytest.mark.asyncio
+async def test_service_forwards_abs_key_composed_from_frequency() -> None:
+    abs_provider = StubABSProvider()
+    service = AuseconService(abs_provider=abs_provider, rba_provider=StubRBAProvider())
+
+    await service.get_economic_series("headline_cpi", frequency="Q")
+
+    assert abs_provider.last_get_data_kwargs is not None
+    assert abs_provider.last_get_data_kwargs["dataflow_id"] == "CPI"
+    # StubABSProvider dimensions: MEASURE(1), REGION(2), FREQ(3) — only FREQ pinned.
+    assert abs_provider.last_get_data_kwargs["key"] == "..Q"
+
+
+@pytest.mark.asyncio
+async def test_service_rejects_unpopulated_rba_variant() -> None:
+    service = AuseconService(abs_provider=StubABSProvider(), rba_provider=StubRBAProvider())
+
+    with pytest.raises(ValueError, match="rba_series_ids populated"):
+        await service.get_economic_series("trimmed_mean_inflation", variant="trimmed_mean")
 
 
 @pytest.mark.asyncio

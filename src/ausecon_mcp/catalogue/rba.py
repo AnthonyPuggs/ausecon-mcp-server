@@ -637,7 +637,11 @@ RBA_CATALOGUE = {
         "frequencies": ["Q"],
         "geographies": ["national"],
         "variants": [
-            {"name": "headline", "aliases": ["headline cpi", "cpi"], "rba_series_ids": None},
+            {
+                "name": "headline",
+                "aliases": ["headline cpi", "cpi"],
+                "rba_series_ids": ["GCPIAG"],
+            },
             {
                 "name": "trimmed_mean",
                 "aliases": ["core", "trimmed mean inflation"],

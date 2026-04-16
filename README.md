@@ -14,7 +14,7 @@ research, policy, and analytical workflows.
 
 ## Status
 
-This repository is currently at `v0.3.2`. See [`CHANGELOG.md`](CHANGELOG.md) for release history.
+This repository is currently at `v0.4.0`. See [`CHANGELOG.md`](CHANGELOG.md) for release history.
 
 The current release includes:
 
@@ -56,8 +56,11 @@ The MCP server currently exposes the following tools:
 - `trimmed_mean_inflation`
 - `gdp_growth`
 
-`variant`, `geography`, and `frequency` are not yet supported; they land with the v0.4.0 semantic
-resolver.
+`get_economic_series` now accepts optional `variant`, `geography`, and `frequency` arguments.
+The resolver validates these against the catalogue entry, composes an ABS SDMX key from the
+dataset's live dimensions, or narrows an RBA response to the variant's declared series IDs.
+Variants whose keys are not yet populated raise a clear "not yet wired" error; variant
+population is progressive across point releases.
 
 ## Discovery Behaviour
 

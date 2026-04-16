@@ -5,7 +5,13 @@ from ausecon_mcp.catalogue.rba import RBA_CATALOGUE
 from ausecon_mcp.catalogue.search import search_catalogue
 
 VALID_FREQUENCY_CODES = {"D", "M", "Q", "A", "E"}
-SDMX_KEY_PATTERN = re.compile(r"^[0-9A-Z_+]+(\.[0-9A-Z_+]+)*$")
+SDMX_LITERAL_KEY_PATTERN = re.compile(r"^[0-9A-Z_+]+(\.[0-9A-Z_+]+)*$")
+SDMX_FRAGMENT_PATTERN = re.compile(
+    r"^[A-Z_][A-Z0-9_]*=[0-9A-Z_+]+(;[A-Z_][A-Z0-9_]*=[0-9A-Z_+]+)*$"
+)
+SDMX_KEY_PATTERN = re.compile(
+    f"(?:{SDMX_LITERAL_KEY_PATTERN.pattern})|(?:{SDMX_FRAGMENT_PATTERN.pattern})"
+)
 
 
 def test_abs_catalogue_covers_core_discovery_domains() -> None:

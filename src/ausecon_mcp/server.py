@@ -4,8 +4,8 @@ from typing import Any
 
 from fastmcp import FastMCP
 
+from ausecon_mcp.catalogue.resolver import resolve
 from ausecon_mcp.catalogue.search import search_catalogue
-from ausecon_mcp.errors import AuseconValidationError
 from ausecon_mcp.providers.abs import ABSProvider
 from ausecon_mcp.providers.rba import RBAProvider
 from ausecon_mcp.validation import (
@@ -19,29 +19,6 @@ from ausecon_mcp.validation import (
     validate_series_ids,
     validate_source,
 )
-
-CURATED_SERIES = {
-    "cash_rate_target": {"source": "rba", "dataset_id": "a2"},
-    "headline_cpi": {"source": "abs", "dataset_id": "CPI"},
-    "trimmed_mean_inflation": {"source": "rba", "dataset_id": "g1"},
-    "gdp_growth": {"source": "abs", "dataset_id": "ANA_AGG"},
-}
-
-
-def _unsupported_semantic_options(
-    *,
-    variant: str | None,
-    geography: str | None,
-    frequency: str | None,
-) -> dict[str, str]:
-    unsupported = {}
-    if variant is not None:
-        unsupported["variant"] = variant
-    if geography is not None:
-        unsupported["geography"] = geography
-    if frequency is not None:
-        unsupported["frequency"] = frequency
-    return unsupported
 
 
 class AuseconService:
@@ -136,26 +113,15 @@ class AuseconService:
         end: str | None = None,
     ) -> dict:
         validated_concept = require_non_empty("concept", concept)
-        mapping = CURATED_SERIES.get(validated_concept)
-        if mapping is None:
-            supported = ", ".join(sorted(CURATED_SERIES))
-            raise AuseconValidationError(
-                f"Unsupported concept {validated_concept!r}. Supported concepts: {supported}."
-            )
-
-        unsupported = _unsupported_semantic_options(
+        resolved = await resolve(
+            validated_concept,
             variant=variant,
             geography=geography,
             frequency=frequency,
+            abs_structure_fetcher=self.abs_provider.get_dataset_structure,
         )
-        if unsupported:
-            provided = ", ".join(f"{key}={value!r}" for key, value in unsupported.items())
-            raise ValueError(
-                "Unsupported semantic options: "
-                f"{provided}. Only concept, start, and end are currently supported; "
-                "variant, geography, and frequency land with the v0.4.0 semantic resolver."
-            )
-        if mapping["source"] == "rba":
+
+        if resolved.source == "rba":
             validated_start, validated_end = validate_iso_date_range(
                 start,
                 end,
@@ -163,11 +129,13 @@ class AuseconService:
                 end_name="end",
             )
             return await self.get_rba_table(
-                mapping["dataset_id"],
+                resolved.dataset_id,
+                series_ids=resolved.rba_series_ids,
                 start_date=validated_start,
                 end_date=validated_end,
                 last_n=None,
             )
+
         validated_start, validated_end = validate_abs_period_range(
             start,
             end,
@@ -175,7 +143,8 @@ class AuseconService:
             end_name="end",
         )
         return await self.get_abs_data(
-            mapping["dataset_id"],
+            resolved.dataset_id,
+            key=resolved.abs_key or "all",
             start_period=validated_start,
             end_period=validated_end,
         )
@@ -257,7 +226,8 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
         start: str | None = None,
         end: str | None = None,
     ) -> dict:
-        """Resolve a small curated set of high-value economic concepts to ABS or RBA retrievals."""
+        """Resolve an economic concept to an ABS or RBA retrieval, optionally narrowing by
+        variant, geography, and frequency."""
         return await app_service.get_economic_series(
             concept=concept,
             variant=variant,

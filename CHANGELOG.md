@@ -4,6 +4,38 @@ All notable changes to `ausecon-mcp-server` are recorded here. The format follow
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres
 to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2026-04-17
+
+Semantic resolver release. `get_economic_series` accepts variant / geography /
+frequency and dispatches to narrowed ABS or RBA retrievals.
+
+### Added
+- `ausecon_mcp.catalogue.resolver` module exposing `resolve()`, `build_abs_key()`,
+  `ResolvedQuery`, and the `CURATED_SHORTCUTS` map (replaces the removed
+  `CURATED_SERIES` dict on `server`).
+- ABS SDMX key construction that orders dimensions by `position`, composes from
+  literal dot-keys or `DIM=code;DIM=code` variant fragments, and validates each
+  emitted code against the live codelist.
+- RBA variant resolution returns the variant's `rba_series_ids` as the
+  `get_rba_table` filter.
+- `tests/test_resolver.py` — 19 unit tests covering unknown/ambiguous concepts,
+  unknown/unpopulated variants, frequency/geography validation, key composition,
+  and codelist mismatches.
+- First populated variant: `g1.headline` → `["GCPIAG"]`. Additional variants are
+  populated progressively as `scripts/dump_variant_candidates.py` output is
+  reviewed.
+
+### Changed
+- `get_economic_series` no longer rejects `variant` / `geography` / `frequency`;
+  it routes through the new resolver. Unknown values raise actionable errors
+  listing what is available.
+- When a curated shortcut has no variant supplied and no explicit variant is
+  declared, the response is identical to v0.3.2 (whole dataset or whole table).
+
+### Removed
+- `CURATED_SERIES` dict and `_unsupported_semantic_options` helper from
+  `server.py`.
+
 ## [0.3.2] - 2026-04-17
 
 Bridge release between the v0.3.x discovery work and the upcoming v0.4.0 semantic
@@ -78,6 +110,7 @@ Initial public release.
 - Initial curated catalogues for ABS and RBA, plus a four-concept
   `CURATED_SERIES` semantic shortcut map.
 
+[0.4.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v0.3.2...v0.4.0
 [0.3.2]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v0.2.0...v0.3.0
