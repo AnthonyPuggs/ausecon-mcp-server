@@ -24,7 +24,7 @@ CURATED_SERIES = {
     "cash_rate_target": {"source": "rba", "dataset_id": "a2"},
     "headline_cpi": {"source": "abs", "dataset_id": "CPI"},
     "trimmed_mean_inflation": {"source": "rba", "dataset_id": "g1"},
-    "gdp_growth": {"source": "abs", "dataset_id": "NAQ"},
+    "gdp_growth": {"source": "abs", "dataset_id": "ANA_AGG"},
 }
 
 

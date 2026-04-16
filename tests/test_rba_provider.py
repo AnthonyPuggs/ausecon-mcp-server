@@ -12,25 +12,25 @@ FIXTURES = Path(__file__).parent / "fixtures"
 def test_rba_provider_lists_tables_by_category() -> None:
     provider = RBAProvider()
 
-    results = provider.list_tables(category="inflation")
+    results = provider.list_tables(category="exchange_rates")
 
     ids = [item["id"] for item in results]
 
-    assert "g1" in ids
-    assert "g3" not in ids
+    assert "f11" in ids
+    assert "a5" not in ids
     assert all(item["discontinued"] is False for item in results)
 
 
 def test_rba_provider_can_include_discontinued_tables() -> None:
     provider = RBAProvider()
 
-    results = provider.list_tables(category="inflation", include_discontinued=True)
+    results = provider.list_tables(category="exchange_rates", include_discontinued=True)
 
     ids = [item["id"] for item in results]
 
-    assert "g1" in ids
-    assert "g3" in ids
-    assert any(item["id"] == "g3" and item["discontinued"] is True for item in results)
+    assert "f11" in ids
+    assert "a5" in ids
+    assert any(item["id"] == "a5" and item["discontinued"] is True for item in results)
 
 
 @pytest.mark.asyncio

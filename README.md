@@ -14,7 +14,7 @@ research, policy, and analytical workflows.
 
 ## Status
 
-This repository is currently at `v0.3.0`.
+This repository is currently at `v0.3.1`.
 
 The current release includes:
 
