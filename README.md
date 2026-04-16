@@ -62,9 +62,14 @@ dataset's live dimensions, or narrows an RBA response to the variant's declared 
 Variants whose keys are not yet populated raise a clear "not yet wired" error; variant
 population is progressive across point releases.
 
-## Discovery Behaviour
+## Discovery Coverage
 
-`v0.3.0` is a discovery release rather than a semantic-expansion release.
+- ABS prices and inflation, labour, national accounts, activity, housing and construction,
+  external sector, and lending indicators
+- RBA monetary policy, payments, money and credit, interest rates and yields, exchange rates,
+  inflation, output and labour, and external sector tables
+
+## Discovery Behaviour
 
 - `search_datasets` now prioritises exact dataset or table IDs, then exact aliases, then exact
   names, then broader multi-term matches.
@@ -89,9 +94,6 @@ R, or other analytical environments.
 
 ## Validation And Failure Behaviour
 
-`v0.3.0` retains the hardened validation and failure behaviour introduced earlier and adds clearer
-discovery semantics across the existing tool surface.
-
 - empty identifiers and empty search queries are rejected before any network call
 - `last_n` must be positive when provided
 - `get_abs_data` validates annual, quarterly, monthly, and half-yearly ABS period strings
@@ -101,16 +103,6 @@ discovery semantics across the existing tool surface.
 - malformed upstream payloads are surfaced as source-aware parse failures
 - `list_rba_tables(include_discontinued=...)` now changes behaviour as documented
 - `search_datasets` scores should be treated as ranking metadata rather than a stable contract
-
-## Discovery Coverage
-
-The curated catalogue is still intentionally selective, but `v0.3.0` now covers the main analyst
-workflows more credibly:
-
-- ABS prices and inflation, labour, national accounts, activity, housing and construction,
-  external sector, and lending indicators
-- RBA monetary policy, payments, money and credit, interest rates and yields, exchange rates,
-  inflation, output and labour, and external sector tables
 
 ## Requirements
 
@@ -265,30 +257,3 @@ src/ausecon_mcp/
 tests/
 examples/
 ```
-
-## Release Notes For `v0.3`
-
-`v0.3.0` is a discovery release. It keeps the same six-tool surface while materially expanding the
-curated ABS and RBA catalogues, improving search ranking, and making discontinued-table handling
-real for RBA discovery.
-
-## Releasing
-
-If you want to publish a release from this repository:
-
-1. ensure `pyproject.toml` contains the intended version
-2. commit the release-ready state
-3. create an annotated git tag such as `v0.3.0`
-4. push the branch and the tag to GitHub
-5. create a GitHub Release from that tag with release notes
-
-An example tag command is:
-
-```bash
-git tag -a v0.3.0 -m "v0.3.0"
-git push origin main
-git push origin v0.3.0
-```
-
-Once the tag is on GitHub, you can create the release in the GitHub interface under
-“Releases” -> “Draft a new release”.
