@@ -14,7 +14,7 @@ research, policy, and analytical workflows.
 
 ## Status
 
-This repository is currently at `v0.3.1`.
+This repository is currently at `v0.3.2`. See [`CHANGELOG.md`](CHANGELOG.md) for release history.
 
 The current release includes:
 
@@ -56,7 +56,8 @@ The MCP server currently exposes the following tools:
 - `trimmed_mean_inflation`
 - `gdp_growth`
 
-`variant`, `geography`, and `frequency` remain intentionally unsupported in `v0.3.0`.
+`variant`, `geography`, and `frequency` are not yet supported; they land with the v0.4.0 semantic
+resolver.
 
 ## Discovery Behaviour
 
@@ -66,7 +67,7 @@ The MCP server currently exposes the following tools:
   names, then broader multi-term matches.
 - common economist phrasing is normalised for ranking, including terms such as “jobless”,
   “mortgage”, “rates”, and “fx”.
-- discontinued RBA tables are excluded from `search_datasets` in `v0.3.0`.
+- discontinued RBA tables are excluded from `search_datasets` by default.
 - `list_rba_tables` excludes discontinued tables by default and returns a `discontinued` boolean
   field on every row.
 - `get_economic_series` still only accepts `concept`, `start`, and `end`.

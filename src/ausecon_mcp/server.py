@@ -151,8 +151,9 @@ class AuseconService:
         if unsupported:
             provided = ", ".join(f"{key}={value!r}" for key, value in unsupported.items())
             raise ValueError(
-                "Unsupported semantic options for v0.3.0: "
-                f"{provided}. Only concept, start, and end are currently supported."
+                "Unsupported semantic options: "
+                f"{provided}. Only concept, start, and end are currently supported; "
+                "variant, geography, and frequency land with the v0.4.0 semantic resolver."
             )
         if mapping["source"] == "rba":
             validated_start, validated_end = validate_iso_date_range(
