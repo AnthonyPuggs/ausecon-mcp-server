@@ -4,6 +4,22 @@ All notable changes to `ausecon-mcp-server` are recorded here. The format follow
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres
 to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+- README and example client configs now install the server via
+  `uvx ausecon-mcp-server` from PyPI instead of guiding a local clone
+  plus `uv --directory ...` invocation.
+- `fastmcp.json` now declares `name`, `description`, `tags`, and
+  `homepage` metadata for registry discovery.
+- The `Release` workflow now also builds and publishes a container
+  image to `ghcr.io/AnthonyPuggs/ausecon-mcp-server` after each PyPI
+  release, tagged with the semver and `latest`.
+
+### Added
+- `Dockerfile` installing the published PyPI package into an isolated
+  `uv tool` environment and running it as a non-root user.
+
 ## [0.5.2] - 2026-04-17
 
 ### Changed

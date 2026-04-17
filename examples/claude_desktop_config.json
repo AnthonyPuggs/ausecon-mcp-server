@@ -1,13 +1,8 @@
 {
   "mcpServers": {
     "ausecon": {
-      "command": "uv",
-      "args": [
-        "--directory",
-        "/absolute/path/to/ausecon-mcp-server",
-        "run",
-        "ausecon-mcp-server"
-      ]
+      "command": "uvx",
+      "args": ["ausecon-mcp-server"]
     }
   }
 }

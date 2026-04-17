@@ -14,17 +14,18 @@ LICENSE = ROOT / "LICENSE"
 CI_WORKFLOW = ROOT / ".github" / "workflows" / "ci.yml"
 
 
-def test_readme_and_example_use_canonical_repository_paths() -> None:
+def test_readme_and_example_advertise_pypi_uvx_install() -> None:
     readme_text = README.read_text(encoding="utf-8")
     example_text = CLAUDE_EXAMPLE.read_text(encoding="utf-8")
 
-    assert "git clone https://github.com/AnthonyPuggs/ausecon-mcp-server.git" in readme_text
-    assert "cd ausecon-mcp-server" in readme_text
-    assert "/absolute/path/to/ausecon-mcp-server" in readme_text
-    assert "/absolute/path/to/ausecon-mcp-server" in example_text
+    assert "uvx ausecon-mcp-server" in readme_text
+    assert "https://pypi.org/project/ausecon-mcp-server/" in readme_text
+    assert '"uvx"' in example_text
+    assert '"ausecon-mcp-server"' in example_text
     assert "<your-repo-url>" not in readme_text
     assert "rba_abs_mcp" not in readme_text
     assert "rba_abs_mcp" not in example_text
+    assert "/absolute/path/to/ausecon-mcp-server" not in example_text
 
 
 def test_project_metadata_points_to_license_file_and_repository_urls() -> None:
@@ -76,7 +77,7 @@ def test_readme_tracks_current_release_state() -> None:
 
     assert "https://pypi.org/project/ausecon-mcp-server/" in readme_text
     assert tool_row in readme_text
-    assert "claude mcp add --transport stdio ausecon" in readme_text
-    assert "codex mcp add ausecon" in readme_text
+    assert "claude mcp add --transport stdio ausecon -- uvx ausecon-mcp-server" in readme_text
+    assert "codex mcp add ausecon -- uvx ausecon-mcp-server" in readme_text
     assert "This repository currently provides a local stdio MCP server only." in readme_text
     assert "`v0.3.0` is a discovery release" not in readme_text

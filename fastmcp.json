@@ -1,5 +1,18 @@
 {
   "$schema": "https://gofastmcp.com/public/schemas/fastmcp.json/v1.json",
+  "name": "ausecon",
+  "description": "MCP server exposing Australian economic data from the ABS (Australian Bureau of Statistics) and RBA (Reserve Bank of Australia).",
+  "tags": [
+    "australia",
+    "economics",
+    "finance",
+    "statistics",
+    "abs",
+    "rba",
+    "macro",
+    "public-data"
+  ],
+  "homepage": "https://github.com/AnthonyPuggs/ausecon-mcp-server",
   "source": {
     "path": "src/ausecon_mcp/server.py",
     "entrypoint": "build_server"

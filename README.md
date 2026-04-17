@@ -112,28 +112,23 @@ workflows more credibly:
 ## Requirements
 
 - Python `3.10+`
-- [`uv`](https://docs.astral.sh/uv/) for environment management and local execution
+- [`uv`](https://docs.astral.sh/uv/) (for the `uvx` launcher used by every client below)
 
 ## Installation
 
-Clone the repository and install the project environment:
+The server is published to [PyPI](https://pypi.org/project/ausecon-mcp-server/) and is intended to
+be launched by an MCP client on demand via [`uvx`](https://docs.astral.sh/uv/). No manual clone or
+install is required — the client configurations below handle everything.
+
+To confirm the server is reachable on your machine, you can run it once by hand:
 
 ```bash
-git clone https://github.com/AnthonyPuggs/ausecon-mcp-server.git
-cd ausecon-mcp-server
-uv sync --python 3.12
+uvx ausecon-mcp-server
 ```
 
-## Running The Server
-
-From the repository root:
-
-```bash
-uv run ausecon-mcp-server
-```
-
-The server is designed to be launched by an MCP client over standard input/output rather than used
-as a standalone command-line application.
+`uvx` will download the package into an isolated, cached environment the first time. The server
+speaks MCP over standard input/output and waits for a client to connect, so expect it to sit idle
+until an MCP client attaches.
 
 ## Connecting An MCP Client
 
@@ -141,32 +136,28 @@ This repository currently provides a local stdio MCP server only. Claude API / A
 connector setups and other remote HTTP-based MCP connectors require a separately hosted HTTP server,
 which is out of scope for this repository today.
 
-Use the same absolute checkout path in every client example below:
-
-```text
-/absolute/path/to/ausecon-mcp-server
-```
-
 ### Claude Desktop
 
 An example Claude Desktop configuration is included at
-[examples/claude_desktop_config.json](examples/claude_desktop_config.json).
-
-That file is the source of truth. The only value you need to customise is the absolute checkout
-path passed to `uv --directory`.
+[examples/claude_desktop_config.json](examples/claude_desktop_config.json):
 
 ```json
-"/absolute/path/to/ausecon-mcp-server"
+{
+  "mcpServers": {
+    "ausecon": {
+      "command": "uvx",
+      "args": ["ausecon-mcp-server"]
+    }
+  }
+}
 ```
-
-Replace `/absolute/path/to/ausecon-mcp-server` with the absolute path to your local checkout.
 
 ### Claude Code
 
 Add the server with the Claude Code CLI:
 
 ```bash
-claude mcp add --transport stdio ausecon -- uv --directory /absolute/path/to/ausecon-mcp-server run ausecon-mcp-server
+claude mcp add --transport stdio ausecon -- uvx ausecon-mcp-server
 ```
 
 ### Codex
@@ -174,7 +165,7 @@ claude mcp add --transport stdio ausecon -- uv --directory /absolute/path/to/aus
 Add the server with the Codex CLI:
 
 ```bash
-codex mcp add ausecon -- uv --directory /absolute/path/to/ausecon-mcp-server run ausecon-mcp-server
+codex mcp add ausecon -- uvx ausecon-mcp-server
 ```
 
 ### Cursor
@@ -185,13 +176,8 @@ Add an entry to `~/.cursor/mcp.json` (or the project-level `.cursor/mcp.json`):
 {
   "mcpServers": {
     "ausecon": {
-      "command": "uv",
-      "args": [
-        "--directory",
-        "/absolute/path/to/ausecon-mcp-server",
-        "run",
-        "ausecon-mcp-server"
-      ]
+      "command": "uvx",
+      "args": ["ausecon-mcp-server"]
     }
   }
 }
@@ -206,13 +192,8 @@ Add an entry to `.vscode/mcp.json` in your workspace (or the user-level equivale
   "servers": {
     "ausecon": {
       "type": "stdio",
-      "command": "uv",
-      "args": [
-        "--directory",
-        "/absolute/path/to/ausecon-mcp-server",
-        "run",
-        "ausecon-mcp-server"
-      ]
+      "command": "uvx",
+      "args": ["ausecon-mcp-server"]
     }
   }
 }
