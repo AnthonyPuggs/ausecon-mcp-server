@@ -13,9 +13,9 @@ WORKDIR /home/ausecon
 
 ARG AUSECON_VERSION=
 RUN if [ -n "$AUSECON_VERSION" ]; then \
-      uv tool install --python 3.12 "ausecon-mcp-server==${AUSECON_VERSION}"; \
+      uv tool install "ausecon-mcp-server==${AUSECON_VERSION}"; \
     else \
-      uv tool install --python 3.12 ausecon-mcp-server; \
+      uv tool install ausecon-mcp-server; \
     fi
 
 ENV PATH="/home/ausecon/.local/bin:${PATH}"
