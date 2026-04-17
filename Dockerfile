@@ -11,8 +11,12 @@ RUN useradd --create-home --shell /usr/sbin/nologin ausecon
 USER ausecon
 WORKDIR /home/ausecon
 
-ARG AUSECON_VERSION
-RUN uv tool install --python 3.12 ${AUSECON_VERSION:+ausecon-mcp-server==${AUSECON_VERSION}} ${AUSECON_VERSION:-ausecon-mcp-server}
+ARG AUSECON_VERSION=
+RUN if [ -n "$AUSECON_VERSION" ]; then \
+      uv tool install --python 3.12 "ausecon-mcp-server==${AUSECON_VERSION}"; \
+    else \
+      uv tool install --python 3.12 ausecon-mcp-server; \
+    fi
 
 ENV PATH="/home/ausecon/.local/bin:${PATH}"
 
