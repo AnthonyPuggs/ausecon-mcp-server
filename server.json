@@ -3,7 +3,7 @@
   "name": "io.github.anthonypuggs/ausecon-mcp-server",
   "title": "Ausecon",
   "description": "MCP server for Australian economic data from the ABS and RBA — search, structure introspection, and retrieval for curated datasets and RBA tables, plus semantic shortcuts for cash rate, CPI, trimmed-mean inflation, and GDP growth.",
-  "version": "0.5.3",
+  "version": "0.5.4",
   "repository": {
     "url": "https://github.com/AnthonyPuggs/ausecon-mcp-server",
     "source": "github"
@@ -12,7 +12,7 @@
     {
       "registryType": "pypi",
       "identifier": "ausecon-mcp-server",
-      "version": "0.5.3",
+      "version": "0.5.4",
       "transport": {
         "type": "stdio"
       },
