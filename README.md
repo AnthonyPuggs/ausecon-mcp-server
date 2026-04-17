@@ -177,6 +177,47 @@ Add the server with the Codex CLI:
 codex mcp add ausecon -- uv --directory /absolute/path/to/ausecon-mcp-server run ausecon-mcp-server
 ```
 
+### Cursor
+
+Add an entry to `~/.cursor/mcp.json` (or the project-level `.cursor/mcp.json`):
+
+```json
+{
+  "mcpServers": {
+    "ausecon": {
+      "command": "uv",
+      "args": [
+        "--directory",
+        "/absolute/path/to/ausecon-mcp-server",
+        "run",
+        "ausecon-mcp-server"
+      ]
+    }
+  }
+}
+```
+
+### VS Code
+
+Add an entry to `.vscode/mcp.json` in your workspace (or the user-level equivalent):
+
+```json
+{
+  "servers": {
+    "ausecon": {
+      "type": "stdio",
+      "command": "uv",
+      "args": [
+        "--directory",
+        "/absolute/path/to/ausecon-mcp-server",
+        "run",
+        "ausecon-mcp-server"
+      ]
+    }
+  }
+}
+```
+
 ## How To Use The Server
 
 The most reliable workflow is:
