@@ -1,0 +1,5 @@
+startCommand:
+  type: stdio
+  configSchema: {}
+  commandFunction: |-
+    () => ({ command: "uvx", args: ["ausecon-mcp-server"] })
