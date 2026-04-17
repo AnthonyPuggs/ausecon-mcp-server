@@ -1,5 +1,7 @@
 # ausecon-mcp-server
 
+<!-- mcp-name: io.github.anthonypuggs/ausecon-mcp-server -->
+
 [![CI](https://github.com/AnthonyPuggs/ausecon-mcp-server/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/AnthonyPuggs/ausecon-mcp-server/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/tag/AnthonyPuggs/ausecon-mcp-server?sort=semver&label=release)](https://github.com/AnthonyPuggs/ausecon-mcp-server/tags)
 

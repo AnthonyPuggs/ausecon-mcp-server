@@ -6,6 +6,12 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- Added a hidden `mcp-name` marker to the README and a `server.json`
+  manifest at the repo root, in preparation for listing in the official
+  MCP Registry (`registry.modelcontextprotocol.io`). The marker is how
+  the registry verifies ownership of the PyPI package.
+
 ### Changed
 - README and example client configs now install the server via
   `uvx ausecon-mcp-server` from PyPI instead of guiding a local clone
