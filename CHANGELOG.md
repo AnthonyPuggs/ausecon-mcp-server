@@ -4,6 +4,14 @@ All notable changes to `ausecon-mcp-server` are recorded here. The format follow
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres
 to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.5] - 2026-04-18
+
+### Fixed
+- The `mcp-name` marker in the README and the `server.json` name now
+  use the GitHub username casing `AnthonyPuggs` instead of lowercase.
+  The MCP Registry's namespace check is case-sensitive and was
+  rejecting the publish with a 403.
+
 ## [0.5.4] - 2026-04-18
 
 ### Added

@@ -1,9 +1,9 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-  "name": "io.github.anthonypuggs/ausecon-mcp-server",
+  "name": "io.github.AnthonyPuggs/ausecon-mcp-server",
   "title": "Ausecon",
-  "description": "MCP server for Australian economic data from the ABS and RBA — search, structure introspection, and retrieval for curated datasets and RBA tables, plus semantic shortcuts for cash rate, CPI, trimmed-mean inflation, and GDP growth.",
-  "version": "0.5.4",
+  "description": "Australian economic data (ABS + RBA): CPI, GDP, cash rate, labour, external sector.",
+  "version": "0.5.5",
   "repository": {
     "url": "https://github.com/AnthonyPuggs/ausecon-mcp-server",
     "source": "github"
@@ -12,7 +12,7 @@
     {
       "registryType": "pypi",
       "identifier": "ausecon-mcp-server",
-      "version": "0.5.4",
+      "version": "0.5.5",
       "transport": {
         "type": "stdio"
       },
