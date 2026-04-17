@@ -8,5 +8,7 @@ build/
 coverage.xml
 .coverage
 ausecon-mcp-server-future-releases.png
+ausecon-mcp-roadmap.md
 .DS_Store
 src/ausecon_mcp/_version.py
+
