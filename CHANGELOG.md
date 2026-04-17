@@ -4,6 +4,17 @@ All notable changes to `ausecon-mcp-server` are recorded here. The format follow
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres
 to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.2] - 2026-04-17
+
+### Changed
+- Package version is now derived from git tags via `hatch-vcs` instead of
+  being hardcoded in `pyproject.toml`, keeping the tag and the published
+  PyPI artifact in sync automatically.
+- Added Cursor and VS Code configuration snippets to the README alongside
+  the existing Claude Desktop, Claude Code, and Codex entries.
+- Added a tag-triggered `Release` workflow that builds and publishes to
+  PyPI via Trusted Publishing (OIDC).
+
 ## [0.5.0] - 2026-04-17
 
 Semantic-defaults and release-readiness release. Curated

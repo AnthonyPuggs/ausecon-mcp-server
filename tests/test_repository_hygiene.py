@@ -31,7 +31,7 @@ def test_project_metadata_points_to_license_file_and_repository_urls() -> None:
     pyproject = tomllib.loads(PYPROJECT.read_text(encoding="utf-8"))
     project = pyproject["project"]
 
-    assert project["version"]
+    assert "version" in project.get("dynamic", [])
     assert project["license"] == {"file": "LICENSE"}
     assert project["urls"] == {
         "Homepage": "https://github.com/AnthonyPuggs/ausecon-mcp-server",
@@ -68,15 +68,13 @@ def test_ci_workflow_exists_with_quality_checks_and_hygiene_guard() -> None:
 
 
 def test_readme_tracks_current_release_state() -> None:
-    pyproject = tomllib.loads(PYPROJECT.read_text(encoding="utf-8"))
-    version = pyproject["project"]["version"]
     readme_text = README.read_text(encoding="utf-8")
     tool_row = (
         "`get_economic_series` | Resolve a small set of high-value economic concepts to ABS or "
         "RBA retrievals | `concept`, `variant`, `geography`, `frequency`, `start`, `end` |"
     )
 
-    assert f"This repository is currently at `v{version}`." in readme_text
+    assert "https://pypi.org/project/ausecon-mcp-server/" in readme_text
     assert tool_row in readme_text
     assert "claude mcp add --transport stdio ausecon" in readme_text
     assert "codex mcp add ausecon" in readme_text

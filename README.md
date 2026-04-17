@@ -14,7 +14,7 @@ research, policy, and analytical workflows.
 
 ## Status
 
-This repository is currently at `v0.5.0`. See [`CHANGELOG.md`](CHANGELOG.md) for release history.
+Releases are published to [PyPI](https://pypi.org/project/ausecon-mcp-server/) and versioned via git tags. See [`CHANGELOG.md`](CHANGELOG.md) for release history.
 
 The current release includes:
 

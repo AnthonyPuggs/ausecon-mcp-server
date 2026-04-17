@@ -9,3 +9,4 @@ coverage.xml
 .coverage
 ausecon-mcp-server-future-releases.png
 .DS_Store
+src/ausecon_mcp/_version.py
