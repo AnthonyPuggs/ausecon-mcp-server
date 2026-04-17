@@ -6,8 +6,10 @@ from fastmcp import FastMCP
 
 from ausecon_mcp.catalogue.resolver import resolve
 from ausecon_mcp.catalogue.search import search_catalogue
+from ausecon_mcp.prompts import register_prompts
 from ausecon_mcp.providers.abs import ABSProvider
 from ausecon_mcp.providers.rba import RBAProvider
+from ausecon_mcp.resources import register_resources
 from ausecon_mcp.validation import (
     require_non_empty,
     validate_abs_period_range,
@@ -160,17 +162,17 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
         ),
     )
 
-    @mcp.tool
+    @mcp.tool(annotations={"readOnlyHint": True, "openWorldHint": True})
     async def search_datasets(query: str, source: str | None = None) -> list[dict]:
         """Search curated ABS and RBA economic datasets."""
         return await app_service.search_datasets(query=query, source=source)
 
-    @mcp.tool
+    @mcp.tool(annotations={"readOnlyHint": True, "openWorldHint": True})
     async def get_abs_dataset_structure(dataflow_id: str) -> dict:
         """Get ABS SDMX dataset dimensions and codelists."""
         return await app_service.get_abs_dataset_structure(dataflow_id=dataflow_id)
 
-    @mcp.tool
+    @mcp.tool(annotations={"readOnlyHint": True, "openWorldHint": True})
     async def get_abs_data(
         dataflow_id: str,
         key: str = "all",
@@ -189,7 +191,7 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
             updated_after=updated_after,
         )
 
-    @mcp.tool
+    @mcp.tool(annotations={"readOnlyHint": True, "openWorldHint": True})
     async def list_rba_tables(
         category: str | None = None,
         include_discontinued: bool = False,
@@ -200,7 +202,7 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
             include_discontinued=include_discontinued,
         )
 
-    @mcp.tool
+    @mcp.tool(annotations={"readOnlyHint": True, "openWorldHint": True})
     async def get_rba_table(
         table_id: str,
         series_ids: list[str] | None = None,
@@ -217,7 +219,7 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
             last_n=last_n,
         )
 
-    @mcp.tool
+    @mcp.tool(annotations={"readOnlyHint": True, "openWorldHint": True})
     async def get_economic_series(
         concept: str,
         variant: str | None = None,
@@ -237,9 +239,14 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
             end=end,
         )
 
+    register_resources(mcp)
+    register_prompts(mcp)
+
     return mcp
 
+
 mcp = build_server()
+
 
 def main() -> None:
     mcp.run()

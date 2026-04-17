@@ -4,6 +4,20 @@ All notable changes to `ausecon-mcp-server` are recorded here. The format follow
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres
 to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- MCP `resources` surface: `ausecon://catalogue` (flat index of every
+  curated ABS and RBA entry), `ausecon://abs/{dataflow_id}`, and
+  `ausecon://rba/{table_id}`. Lets clients browse the catalogue in a
+  resource picker without calling `search_datasets` blind.
+- MCP `prompts` surface: four slash-command templates —
+  `summarise_latest_inflation`, `compare_cash_rate_to_cpi`,
+  `macro_snapshot`, and `discover_dataset` — that chain existing tools
+  into common economist workflows.
+- `readOnlyHint` and `openWorldHint` annotations on every tool so
+  compliant clients can render them appropriately.
+
 ## [0.5.5] - 2026-04-18
 
 ### Fixed

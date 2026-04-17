@@ -1,6 +1,7 @@
 import pytest
+from fastmcp import Client
 
-from ausecon_mcp.server import AuseconService
+from ausecon_mcp.server import AuseconService, build_server
 
 
 class StubABSProvider:
@@ -346,3 +347,17 @@ async def test_service_rejects_unknown_rba_category() -> None:
 
     with pytest.raises(ValueError, match="category"):
         await service.list_rba_tables(category="housing")
+
+
+async def test_registered_tools_carry_readonly_and_openworld_annotations() -> None:
+    mcp = build_server()
+
+    async with Client(mcp) as client:
+        tools = await client.list_tools()
+
+    assert tools, "expected at least one tool registered"
+    for tool in tools:
+        annotations = tool.annotations
+        assert annotations is not None, f"{tool.name} has no annotations"
+        assert annotations.readOnlyHint is True, f"{tool.name} missing readOnlyHint"
+        assert annotations.openWorldHint is True, f"{tool.name} missing openWorldHint"

@@ -201,6 +201,39 @@ Add an entry to `.vscode/mcp.json` in your workspace (or the user-level equivale
 }
 ```
 
+## Resources
+
+In addition to tools, the server exposes the curated catalogue as MCP
+resources. Clients can render these in a resource picker without
+calling `search_datasets` first.
+
+| URI | Returns |
+| --- | --- |
+| `ausecon://catalogue` | Flat index of every curated ABS and RBA entry (id, source, name, description, category, frequency, tags). |
+| `ausecon://abs/{dataflow_id}` | Full curated catalogue entry for a single ABS dataflow (e.g. `ausecon://abs/CPI`). |
+| `ausecon://rba/{table_id}` | Full curated catalogue entry for a single RBA statistical table (e.g. `ausecon://rba/g1`). |
+
+All resources are read-only, served as `application/json`, and sourced
+from the static curated catalogue — no network calls are made to
+render them.
+
+## Prompts
+
+The server registers four prompt templates that chain the existing
+tools into common economist workflows. Clients such as Claude Desktop
+surface these as slash-commands.
+
+| Prompt | Arguments | What it does |
+| --- | --- | --- |
+| `summarise_latest_inflation` | `months: int = 12` | Pulls headline and trimmed-mean CPI via `get_economic_series` and summarises them against the RBA 2–3% target band. |
+| `compare_cash_rate_to_cpi` | `start: str`, `end: str \| None` | Narrates the path of the cash rate target against headline CPI over the window. |
+| `macro_snapshot` | `as_of: str \| None` | Assembles a compact snapshot table of cash rate, headline CPI, trimmed-mean CPI, and real GDP growth. |
+| `discover_dataset` | `topic: str` | Runs `search_datasets` and `list_rba_tables` for the topic, then recommends the top two candidates. |
+
+Each tool is also annotated with `readOnlyHint` and `openWorldHint` so
+compliant clients can indicate that the server only reads from
+external, evolving sources.
+
 ## How To Use The Server
 
 The most reliable workflow is:
