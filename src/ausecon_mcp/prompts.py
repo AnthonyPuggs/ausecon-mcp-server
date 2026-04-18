@@ -86,6 +86,69 @@ def register_prompts(mcp: FastMCP) -> None:
         )
 
     @mcp.prompt(
+        name="living_costs_vs_cpi",
+        description=(
+            "Compare Selected Living Cost Indexes (LCI) across household types "
+            "against headline CPI to show cost-of-living divergence."
+        ),
+    )
+    def living_costs_vs_cpi(start: str | None = None) -> str:
+        start_clause = f'start="{start}"' if start else "the default window"
+        return (
+            "The user wants to see how cost-of-living pressures differ across "
+            "Australian household types compared with the headline CPI. "
+            "LCI weights reflect actual spending patterns for each household "
+            "type, so the series can diverge materially from CPI.\n"
+            "\n"
+            "Do the following using tools from this MCP server:\n"
+            f"1. Call `get_abs_data` with dataflow_id=\"LCI\" and {start_clause} "
+            "to retrieve Selected Living Cost Indexes across household types.\n"
+            f'2. Call `get_economic_series` with concept="headline_cpi" '
+            f"using {start_clause} for the CPI benchmark.\n"
+            "\n"
+            "Then write 4-6 sentences covering:\n"
+            "- the LCI household type with the highest annual change and its value,\n"
+            "- the household type with the lowest, and the gap between them,\n"
+            "- how both compare to headline CPI over the same window,\n"
+            "- a plain-language interpretation (which households are feeling "
+            "the most cost-of-living pressure and why).\n"
+            "\n"
+            "Do not fabricate numbers. Use the exact values the tools return."
+        )
+
+    @mcp.prompt(
+        name="construction_pipeline",
+        description=(
+            "Summarise the Australian construction pipeline across engineering, "
+            "residential, and non-residential activity."
+        ),
+    )
+    def construction_pipeline(last_n: int = 8) -> str:
+        return (
+            f"Build a snapshot of the Australian construction pipeline using "
+            f"the last {last_n} quarters of activity data.\n"
+            "\n"
+            "Do the following using tools from this MCP server:\n"
+            f'1. Call `get_abs_data` with dataflow_id="CWD", last_n={last_n} '
+            "for total construction work done.\n"
+            f'2. Call `get_abs_data` with dataflow_id="EWD", last_n={last_n} '
+            "for engineering construction work done (infrastructure and "
+            "resources investment).\n"
+            f'3. Call `get_abs_data` with dataflow_id="BUILDING_ACTIVITY", '
+            f"last_n={last_n} for residential and non-residential building.\n"
+            "\n"
+            "Then write a tight summary covering:\n"
+            "- the latest quarterly value for each series and the "
+            "year-ended change,\n"
+            "- which pipeline component is strongest and which is weakest,\n"
+            "- one sentence on what this mix implies for near-term "
+            "construction employment and materials demand.\n"
+            "\n"
+            "Report real values only. If a series is sparse or missing, "
+            "say so plainly."
+        )
+
+    @mcp.prompt(
         name="discover_dataset",
         description=(
             "Find and recommend the best ABS datasets or RBA tables for a given economic topic."

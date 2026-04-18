@@ -22,7 +22,7 @@ Current capabilities:
 
 - six read-only MCP tools covering dataset discovery, ABS structure inspection, ABS and RBA data retrieval, and a small semantic shortcut layer for common macroeconomic concepts
 - three read-only MCP resources exposing the curated catalogue and per-entry metadata without making live upstream calls
-- four MCP prompt templates for common economist workflows such as inflation summaries, macro snapshots, and dataset discovery
+- six MCP prompt templates for common economist workflows such as inflation summaries, macro snapshots, living-cost comparisons, construction pipeline reviews, and dataset discovery
 - provenance-rich JSON responses, structured JSON logging to stderr, and dual-layer caching that survives client restarts
 
 At this stage, the server should still be treated as an opinionated early release rather than a
@@ -209,7 +209,7 @@ render them.
 
 ## Prompts
 
-The server registers four prompt templates that chain the existing
+The server registers six prompt templates that chain the existing
 tools into common economist workflows. Clients such as Claude Desktop
 surface these as slash-commands.
 
@@ -218,6 +218,8 @@ surface these as slash-commands.
 | `summarise_latest_inflation` | `months: int = 12` | Pulls headline and trimmed-mean CPI via `get_economic_series` and summarises them against the RBA 2–3% target band. |
 | `compare_cash_rate_to_cpi` | `start: str`, `end: str \| None` | Narrates the path of the cash rate target against headline CPI over the window. |
 | `macro_snapshot` | `as_of: str \| None` | Assembles a compact snapshot table of cash rate, headline CPI, trimmed-mean CPI, and real GDP growth. |
+| `living_costs_vs_cpi` | `start: str \| None` | Compares Selected Living Cost Indexes across household types against headline CPI to highlight cost-of-living divergence. |
+| `construction_pipeline` | `last_n: int = 8` | Summarises construction pipeline strength across total, engineering, and residential/non-residential building activity. |
 | `discover_dataset` | `topic: str` | Runs `search_datasets` and `list_rba_tables` for the topic, then recommends the top two candidates. |
 
 Each tool is also annotated with `readOnlyHint` and `openWorldHint` so
@@ -243,6 +245,9 @@ In an MCP-enabled client, the user can ask for things such as:
 - "Fetch the last 12 observations from RBA table g1."
 - "Get headline CPI from 2023 onwards."
 - "Get quarterly real GDP growth from 2020."
+- "Compare Selected Living Cost Indexes across household types against CPI."
+- "Pull the last 8 quarters of engineering construction work done."
+- "Get the RBA zero-coupon yield curve for this year."
 
 ### Example retrieval patterns
 
