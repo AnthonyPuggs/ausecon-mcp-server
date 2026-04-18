@@ -366,6 +366,7 @@ ABS_CATALOGUE = {
     },
     "LF_UNDER": {
         "id": "LF_UNDER",
+        "structure_id": "DS_LF_UNDER",
         "source": "abs",
         "name": "Labour Force - Underutilisation",
         "description": "Underemployment, underutilisation, and slack labour market indicators.",

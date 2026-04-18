@@ -9,6 +9,7 @@ from ausecon_mcp.catalogue.resolver import (
     build_abs_key,
     resolve,
     resolve_abs_dataflow_id,
+    resolve_abs_structure_id,
     resolve_rba_csv_path,
 )
 from ausecon_mcp.parsers.abs_structure import parse_abs_structure
@@ -229,6 +230,41 @@ def test_resolve_abs_dataflow_id_returns_upstream_id_when_declared() -> None:
         assert resolve_abs_dataflow_id("__TEST__") == "REAL_ID"
     finally:
         del ABS_CATALOGUE["__TEST__"]
+
+
+def test_resolve_abs_structure_id_passes_through_unknown_keys() -> None:
+    assert resolve_abs_structure_id("NOT_IN_CATALOGUE") == "NOT_IN_CATALOGUE"
+
+
+def test_resolve_abs_structure_id_falls_back_to_dataflow_id_when_not_declared() -> None:
+    assert resolve_abs_structure_id("CPI") == "CPI"
+
+
+def test_resolve_abs_structure_id_returns_structure_id_for_lf_under() -> None:
+    assert resolve_abs_structure_id("LF_UNDER") == "DS_LF_UNDER"
+
+
+@pytest.mark.asyncio
+async def test_resolve_lf_under_uses_mapped_structure_id_for_fetch() -> None:
+    captured: list[str] = []
+
+    async def fetcher(dataflow_id: str) -> dict:
+        captured.append(dataflow_id)
+        return {
+            "id": dataflow_id,
+            "dimensions": [
+                {
+                    "id": "MEASURE",
+                    "position": 1,
+                    "values": [{"code": "M23"}],
+                },
+                {"id": "FREQ", "position": 2, "values": [{"code": "M"}]},
+            ],
+        }
+
+    await resolve("LF_UNDER", frequency="M", abs_structure_fetcher=fetcher)
+
+    assert captured == ["DS_LF_UNDER"]
 
 
 def test_resolve_rba_csv_path_defaults_to_id_pattern() -> None:
