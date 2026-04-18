@@ -15,7 +15,7 @@ async def test_abs_cpi_structure_has_expected_shape() -> None:
     assert structure["id"] == "CPI"
     assert len(structure["dimensions"]) >= 5
     dim_ids = {dim["id"] for dim in structure["dimensions"]}
-    assert "TIME_PERIOD" in dim_ids
+    assert {"MEASURE", "REGION"} <= dim_ids
 
 
 async def test_abs_cpi_data_returns_observations() -> None:
