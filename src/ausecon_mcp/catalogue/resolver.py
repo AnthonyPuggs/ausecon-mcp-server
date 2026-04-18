@@ -99,6 +99,35 @@ CURATED_SHORTCUTS: dict[str, dict[str, Any]] = {
     "government_bond_yield_3y": {"source": "rba", "dataset_id": "f17", "variant": "ags_3y"},
     "government_bond_yield_10y": {"source": "rba", "dataset_id": "f17", "variant": "ags_10y"},
     "housing_credit": {"source": "rba", "dataset_id": "d2", "variant": "housing"},
+    # Tranche B
+    "business_credit": {"source": "rba", "dataset_id": "d2", "variant": "business"},
+    "current_account_balance": {
+        "source": "abs",
+        "dataset_id": "BOP",
+        "variant": "current_account",
+    },
+    "underemployment_rate": {
+        "source": "abs",
+        "dataset_id": "LF_UNDER",
+        "variant": "headline_underemployment",
+    },
+    "hours_worked": {"source": "abs", "dataset_id": "LF_HOURS", "variant": "headline_hours"},
+    "job_vacancies": {"source": "abs", "dataset_id": "JV", "variant": "headline_vacancies"},
+    "mortgage_rate": {"source": "rba", "dataset_id": "f6", "variant": "owner_occupier_variable"},
+    "business_lending_rate": {
+        "source": "rba",
+        "dataset_id": "f7",
+        "variant": "small_business_indicator",
+    },
+    "population": {"source": "abs", "dataset_id": "ERP_Q", "variant": "headline_population"},
+    "inflation_expectations": {"source": "rba", "dataset_id": "g3", "variant": "consumer"},
+    "producer_price_inflation": {"source": "abs", "dataset_id": "PPI_FD", "variant": "producer"},
+    "household_spending": {
+        "source": "abs",
+        "dataset_id": "HSI_M",
+        "variant": "headline_spending",
+    },
+    "commodity_prices": {"source": "rba", "dataset_id": "i2", "variant": "rba_commodity_index"},
 }
 
 

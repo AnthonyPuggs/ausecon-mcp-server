@@ -565,7 +565,11 @@ RBA_CATALOGUE = {
                 "aliases": ["housing credit"],
                 "rba_series_ids": ["DLCACOHS", "DLCACIHS"],
             },
-            {"name": "business", "aliases": ["business credit"], "rba_series_ids": None},
+            {
+                "name": "business",
+                "aliases": ["business credit"],
+                "rba_series_ids": ["DLCACBS"],
+            },
             {"name": "household", "aliases": ["household credit"], "rba_series_ids": None},
         ],
         "audit": {
@@ -1047,6 +1051,11 @@ RBA_CATALOGUE = {
         "geographies": ["national"],
         "variants": [
             {"name": "owner_occupier", "aliases": ["owner-occupier"], "rba_series_ids": None},
+            {
+                "name": "owner_occupier_variable",
+                "aliases": ["owner-occupier variable rate", "variable mortgage rate"],
+                "rba_series_ids": ["FLRHOOVA"],
+            },
             {"name": "investor", "aliases": ["investment"], "rba_series_ids": None},
         ],
         "audit": {
@@ -1076,6 +1085,11 @@ RBA_CATALOGUE = {
         "geographies": ["national"],
         "variants": [
             {"name": "small_business", "aliases": ["sme rates"], "rba_series_ids": None},
+            {
+                "name": "small_business_indicator",
+                "aliases": ["small business indicator rate"],
+                "rba_series_ids": ["FLRBFOSBT"],
+            },
             {"name": "large_business", "aliases": [], "rba_series_ids": None},
         ],
         "audit": {
@@ -1408,7 +1422,11 @@ RBA_CATALOGUE = {
         "frequencies": ["M", "Q"],
         "geographies": ["national"],
         "variants": [
-            {"name": "consumer", "aliases": ["consumer expectations"], "rba_series_ids": None},
+            {
+                "name": "consumer",
+                "aliases": ["consumer expectations"],
+                "rba_series_ids": ["GCONEXP"],
+            },
             {"name": "market", "aliases": ["market expectations"], "rba_series_ids": None},
             {"name": "union", "aliases": [], "rba_series_ids": None},
         ],
@@ -1669,7 +1687,13 @@ RBA_CATALOGUE = {
         ],
         "frequencies": ["M"],
         "geographies": ["national"],
-        "variants": [],
+        "variants": [
+            {
+                "name": "rba_commodity_index",
+                "aliases": ["rba commodity price index", "all items sdr"],
+                "rba_series_ids": ["GRCPAISDR"],
+            },
+        ],
         "audit": {
             "last_audited": "2026-04-18",
             "upstream_url": "https://www.rba.gov.au/statistics/tables/csv/i2-data.csv",

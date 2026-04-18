@@ -420,6 +420,55 @@ async def test_service_forwards_tranche_a_rba_concepts(
     assert rba.last_get_table_kwargs["series_ids"] == series_ids
 
 
+TRANCHE_B_ABS_SERVICE = [
+    ("current_account_balance", "BOP", "1.100.20.Q"),
+    ("underemployment_rate", "LF_UNDER", "M23.3.1599.20.AUS.M"),
+    ("hours_worked", "LF_HOURS", "M18.3.1599.TOT.20.AUS.M"),
+    ("job_vacancies", "JV", "M1.7.TOT.20.AUS.Q"),
+    ("population", "ERP_Q", "1.3.TOT.AUS.Q"),
+    ("producer_price_inflation", "PPI_FD", "3.TOT.TOT.TOTXE.Q"),
+    ("household_spending", "HSI_M", "7.TOT.CUR.20.AUS.M"),
+]
+
+TRANCHE_B_RBA_SERVICE = [
+    ("business_credit", "d2", ["DLCACBS"]),
+    ("mortgage_rate", "f6", ["FLRHOOVA"]),
+    ("business_lending_rate", "f7", ["FLRBFOSBT"]),
+    ("inflation_expectations", "g3", ["GCONEXP"]),
+    ("commodity_prices", "i2", ["GRCPAISDR"]),
+]
+
+
+@pytest.mark.parametrize(("concept", "dataflow_id", "abs_key"), TRANCHE_B_ABS_SERVICE)
+@pytest.mark.asyncio
+async def test_service_forwards_tranche_b_abs_concepts(
+    concept: str, dataflow_id: str, abs_key: str
+) -> None:
+    abs_provider = StubABSProvider()
+    service = AuseconService(abs_provider=abs_provider, rba_provider=StubRBAProvider())
+
+    await service.get_economic_series(concept)
+
+    assert abs_provider.last_get_data_kwargs is not None
+    assert abs_provider.last_get_data_kwargs["dataflow_id"] == dataflow_id
+    assert abs_provider.last_get_data_kwargs["key"] == abs_key
+
+
+@pytest.mark.parametrize(("concept", "table_id", "series_ids"), TRANCHE_B_RBA_SERVICE)
+@pytest.mark.asyncio
+async def test_service_forwards_tranche_b_rba_concepts(
+    concept: str, table_id: str, series_ids: list[str]
+) -> None:
+    rba = StubRBAProvider()
+    service = AuseconService(abs_provider=StubABSProvider(), rba_provider=rba)
+
+    await service.get_economic_series(concept)
+
+    assert rba.last_get_table_kwargs is not None
+    assert rba.last_get_table_kwargs["table_id"] == table_id
+    assert rba.last_get_table_kwargs["series_ids"] == series_ids
+
+
 async def test_service_resolves_abs_upstream_id_before_calling_provider() -> None:
     abs_provider = StubABSProvider()
     service = AuseconService(abs_provider=abs_provider, rba_provider=StubRBAProvider())

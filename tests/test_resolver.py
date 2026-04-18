@@ -279,7 +279,7 @@ def test_resolve_rba_csv_path_uses_explicit_csv_path_when_declared() -> None:
         del RBA_CATALOGUE["__test__"]
 
 
-def test_curated_shortcuts_cover_v0110_tranche_a_concepts() -> None:
+def test_curated_shortcuts_cover_v0110_tranches_ab_concepts() -> None:
     assert set(CURATED_SHORTCUTS) == {
         "cash_rate_target",
         "headline_cpi",
@@ -298,7 +298,63 @@ def test_curated_shortcuts_cover_v0110_tranche_a_concepts() -> None:
         "government_bond_yield_3y",
         "government_bond_yield_10y",
         "housing_credit",
+        # Tranche B
+        "business_credit",
+        "current_account_balance",
+        "underemployment_rate",
+        "hours_worked",
+        "job_vacancies",
+        "mortgage_rate",
+        "business_lending_rate",
+        "population",
+        "inflation_expectations",
+        "producer_price_inflation",
+        "household_spending",
+        "commodity_prices",
     }
+
+
+TRANCHE_B_ABS = [
+    ("current_account_balance", "BOP", "current_account", "1.100.20.Q"),
+    ("underemployment_rate", "LF_UNDER", "headline_underemployment", "M23.3.1599.20.AUS.M"),
+    ("hours_worked", "LF_HOURS", "headline_hours", "M18.3.1599.TOT.20.AUS.M"),
+    ("job_vacancies", "JV", "headline_vacancies", "M1.7.TOT.20.AUS.Q"),
+    ("population", "ERP_Q", "headline_population", "1.3.TOT.AUS.Q"),
+    ("producer_price_inflation", "PPI_FD", "producer", "3.TOT.TOT.TOTXE.Q"),
+    ("household_spending", "HSI_M", "headline_spending", "7.TOT.CUR.20.AUS.M"),
+]
+
+TRANCHE_B_RBA = [
+    ("business_credit", "d2", "business", ["DLCACBS"]),
+    ("mortgage_rate", "f6", "owner_occupier_variable", ["FLRHOOVA"]),
+    ("business_lending_rate", "f7", "small_business_indicator", ["FLRBFOSBT"]),
+    ("inflation_expectations", "g3", "consumer", ["GCONEXP"]),
+    ("commodity_prices", "i2", "rba_commodity_index", ["GRCPAISDR"]),
+]
+
+
+@pytest.mark.parametrize(("concept", "dataset_id", "variant", "abs_key"), TRANCHE_B_ABS)
+@pytest.mark.asyncio
+async def test_resolve_tranche_b_abs_concepts(
+    concept: str, dataset_id: str, variant: str, abs_key: str
+) -> None:
+    result = await resolve(concept)
+    assert result.source == "abs"
+    assert result.dataset_id == dataset_id
+    assert result.variant == variant
+    assert result.abs_key == abs_key
+
+
+@pytest.mark.parametrize(("concept", "dataset_id", "variant", "series_ids"), TRANCHE_B_RBA)
+@pytest.mark.asyncio
+async def test_resolve_tranche_b_rba_concepts(
+    concept: str, dataset_id: str, variant: str, series_ids: list[str]
+) -> None:
+    result = await resolve(concept)
+    assert result.source == "rba"
+    assert result.dataset_id == dataset_id
+    assert result.variant == variant
+    assert result.rba_series_ids == series_ids
 
 
 TRANCHE_A_ABS = [

@@ -117,7 +117,13 @@ ABS_CATALOGUE = {
         ],
         "frequencies": ["Q"],
         "geographies": ["national"],
-        "variants": [],
+        "variants": [
+            {
+                "name": "producer",
+                "aliases": ["producer prices", "ppi final demand total"],
+                "abs_key": "3.TOT.TOT.TOTXE.Q",
+            },
+        ],
         "audit": {
             "last_audited": "2026-04-18",
             "upstream_url": "https://data.api.abs.gov.au/rest/dataflow/ABS/PPI_FD/latest",
@@ -357,7 +363,13 @@ ABS_CATALOGUE = {
         ],
         "frequencies": ["M"],
         "geographies": ["national"],
-        "variants": [],
+        "variants": [
+            {
+                "name": "headline_hours",
+                "aliases": ["aggregate hours", "hours worked"],
+                "abs_key": "M18.3.1599.TOT.20.AUS.M",
+            },
+        ],
         "audit": {
             "last_audited": "2026-04-18",
             "upstream_url": "https://data.api.abs.gov.au/rest/dataflow/ABS/LF_HOURS/latest",
@@ -384,7 +396,13 @@ ABS_CATALOGUE = {
         ],
         "frequencies": ["M"],
         "geographies": ["national"],
-        "variants": [],
+        "variants": [
+            {
+                "name": "headline_underemployment",
+                "aliases": ["underemployment rate", "underemployment"],
+                "abs_key": "M23.3.1599.20.AUS.M",
+            },
+        ],
         "audit": {
             "last_audited": "2026-04-18",
             "upstream_url": "https://data.api.abs.gov.au/rest/dataflow/ABS/LF_UNDER/latest",
@@ -477,7 +495,13 @@ ABS_CATALOGUE = {
         ],
         "frequencies": ["Q"],
         "geographies": ["national"],
-        "variants": [],
+        "variants": [
+            {
+                "name": "headline_vacancies",
+                "aliases": ["total vacancies", "job vacancies"],
+                "abs_key": "M1.7.TOT.20.AUS.Q",
+            },
+        ],
         "audit": {
             "last_audited": "2026-04-18",
             "upstream_url": "https://data.api.abs.gov.au/rest/dataflow/ABS/JV/latest",
@@ -775,7 +799,13 @@ ABS_CATALOGUE = {
         ],
         "frequencies": ["M"],
         "geographies": ["national"],
-        "variants": [],
+        "variants": [
+            {
+                "name": "headline_spending",
+                "aliases": ["total spending", "household spending headline"],
+                "abs_key": "7.TOT.CUR.20.AUS.M",
+            },
+        ],
         "audit": {
             "last_audited": "2026-04-18",
             "upstream_url": "https://data.api.abs.gov.au/rest/dataflow/ABS/HSI_M/latest",
@@ -1069,7 +1099,7 @@ ABS_CATALOGUE = {
         "frequencies": ["Q"],
         "geographies": ["national"],
         "variants": [
-            {"name": "current_account", "aliases": [], "abs_key": None},
+            {"name": "current_account", "aliases": [], "abs_key": "1.100.20.Q"},
             {"name": "capital_account", "aliases": [], "abs_key": None},
             {"name": "financial_account", "aliases": [], "abs_key": None},
         ],
@@ -1271,7 +1301,13 @@ ABS_CATALOGUE = {
         ],
         "frequencies": ["Q"],
         "geographies": ["national"],
-        "variants": [],
+        "variants": [
+            {
+                "name": "headline_population",
+                "aliases": ["resident population", "erp headline"],
+                "abs_key": "1.3.TOT.AUS.Q",
+            },
+        ],
         "audit": {
             "last_audited": "2026-04-18",
             "upstream_url": "https://data.api.abs.gov.au/rest/dataflow/ABS/ERP_Q/latest",
