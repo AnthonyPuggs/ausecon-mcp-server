@@ -19,6 +19,11 @@ RBA_CATALOGUE = {
         "frequencies": ["M"],
         "geographies": ["national"],
         "variants": [],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://www.rba.gov.au/statistics/tables/csv/a1-data.csv",
+            "upstream_title": "RBA Balance Sheet",
+        },
     },
     "a2": {
         "id": "a2",
@@ -47,6 +52,11 @@ RBA_CATALOGUE = {
                 "rba_series_ids": ["ARBAMPCNCRT"],
             }
         ],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://www.rba.gov.au/statistics/tables/csv/a2-data.csv",
+            "upstream_title": "Changes in Monetary Policy and Administered Rates",
+        },
     },
     "a3": {
         "id": "a3",
@@ -73,14 +83,20 @@ RBA_CATALOGUE = {
         "frequencies": ["D"],
         "geographies": ["national"],
         "variants": [],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://www.rba.gov.au/statistics/tables/csv/a3-data.csv",
+            "upstream_title": "Monetary Policy Operations – Current",
+        },
     },
     "a5": {
         "id": "a5",
         "source": "rba",
         "name": "Daily Foreign Exchange Market Intervention Transactions",
         "description": (
-            "Discontinued daily record of Reserve Bank foreign exchange market "
-            "intervention transactions."
+            "Daily record of Reserve Bank foreign exchange market intervention "
+            "transactions (A$m). Updates are event-driven and infrequent — "
+            "most observations are zero."
         ),
         "frequency": "Daily",
         "category": "exchange_rates",
@@ -90,14 +106,17 @@ RBA_CATALOGUE = {
             "rba fx intervention",
         ],
         "tags": [
-            "discontinued",
             "fx intervention",
             "rba operations",
         ],
         "frequencies": ["D"],
         "geographies": ["national"],
         "variants": [],
-        "discontinued": True,
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://www.rba.gov.au/statistics/tables/csv/a5-data.csv",
+            "upstream_title": "Daily Foreign Exchange Market Intervention Transactions",
+        },
     },
     "b1": {
         "id": "b1",
@@ -124,6 +143,11 @@ RBA_CATALOGUE = {
         "frequencies": ["M"],
         "geographies": ["national"],
         "variants": [],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://www.rba.gov.au/statistics/tables/csv/b1-data.csv",
+            "upstream_title": "Assets of Financial Institutions",
+        },
     },
     "b2": {
         "id": "b2",
@@ -149,6 +173,11 @@ RBA_CATALOGUE = {
         "frequencies": ["Q"],
         "geographies": ["national"],
         "variants": [],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://www.rba.gov.au/statistics/tables/csv/b2-data.csv",
+            "upstream_title": "Banks – Off-balance Sheet Business",
+        },
     },
     "b3": {
         "id": "b3",
@@ -175,6 +204,11 @@ RBA_CATALOGUE = {
         "frequencies": ["M"],
         "geographies": ["national"],
         "variants": [],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://www.rba.gov.au/statistics/tables/csv/b3-data.csv",
+            "upstream_title": "Repurchase Agreements and Stock Lending by Banks and RFCs",
+        },
     },
     "c1": {
         "id": "c1",
@@ -196,6 +230,11 @@ RBA_CATALOGUE = {
         "frequencies": ["M"],
         "geographies": ["national"],
         "variants": [],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://www.rba.gov.au/statistics/tables/csv/c1-data.csv",
+            "upstream_title": "Credit and Charge Cards – Seasonally Adjusted Series",
+        },
     },
     "c1.2": {
         "id": "c1.2",
@@ -222,6 +261,13 @@ RBA_CATALOGUE = {
         "frequencies": ["M"],
         "geographies": ["national"],
         "variants": [],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://www.rba.gov.au/statistics/tables/csv/c1.2-data.csv",
+            "upstream_title": (
+                "Credit and Charge Cards – Original Series – Personal and Commercial Cards"
+            ),
+        },
     },
     "c2": {
         "id": "c2",
@@ -246,6 +292,11 @@ RBA_CATALOGUE = {
         "frequencies": ["M"],
         "geographies": ["national"],
         "variants": [],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://www.rba.gov.au/statistics/tables/csv/c2-data.csv",
+            "upstream_title": "Debit Cards – Seasonally Adjusted Series",
+        },
     },
     "c3": {
         "id": "c3",
@@ -270,6 +321,11 @@ RBA_CATALOGUE = {
         "frequencies": ["Q"],
         "geographies": ["national"],
         "variants": [],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://www.rba.gov.au/statistics/tables/csv/c3-data.csv",
+            "upstream_title": "Average Merchant Fees for Debit, Credit and Charge Cards",
+        },
     },
     "c4": {
         "id": "c4",
@@ -294,6 +350,11 @@ RBA_CATALOGUE = {
         "frequencies": ["M"],
         "geographies": ["national"],
         "variants": [],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://www.rba.gov.au/statistics/tables/csv/c4-data.csv",
+            "upstream_title": "ATMs – Seasonally Adjusted Series",
+        },
     },
     "c5": {
         "id": "c5",
@@ -318,6 +379,11 @@ RBA_CATALOGUE = {
         "frequencies": ["M"],
         "geographies": ["national"],
         "variants": [],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://www.rba.gov.au/statistics/tables/csv/c5-data.csv",
+            "upstream_title": "Cheques – Seasonally Adjusted Series",
+        },
     },
     "c6": {
         "id": "c6",
@@ -346,6 +412,11 @@ RBA_CATALOGUE = {
         "frequencies": ["M"],
         "geographies": ["national"],
         "variants": [],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://www.rba.gov.au/statistics/tables/csv/c6-data.csv",
+            "upstream_title": "Direct Entry and NPP – Seasonally Adjusted Series",
+        },
     },
     "c7": {
         "id": "c7",
@@ -372,6 +443,11 @@ RBA_CATALOGUE = {
         "frequencies": ["M"],
         "geographies": ["national"],
         "variants": [],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://www.rba.gov.au/statistics/tables/csv/c7-data.csv",
+            "upstream_title": "Real-time Gross Settlement Statistics",
+        },
     },
     "c8": {
         "id": "c8",
@@ -398,6 +474,11 @@ RBA_CATALOGUE = {
         "frequencies": ["A"],
         "geographies": ["national"],
         "variants": [],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://www.rba.gov.au/statistics/tables/csv/c8-data.csv",
+            "upstream_title": "Points of Access to the Australian Payments System",
+        },
     },
     "c9": {
         "id": "c9",
@@ -424,6 +505,11 @@ RBA_CATALOGUE = {
         "frequencies": ["A"],
         "geographies": ["national"],
         "variants": [],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://www.rba.gov.au/statistics/tables/csv/c9-data.csv",
+            "upstream_title": "Domestic Banking Fees Charged",
+        },
     },
     "d1": {
         "id": "d1",
@@ -448,6 +534,11 @@ RBA_CATALOGUE = {
             {"name": "credit", "aliases": ["credit growth"], "rba_series_ids": None},
             {"name": "money", "aliases": ["money growth", "broad money"], "rba_series_ids": None},
         ],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://www.rba.gov.au/statistics/tables/csv/d1-data.csv",
+            "upstream_title": "Growth in Selected Financial Aggregates",
+        },
     },
     "d2": {
         "id": "d2",
@@ -473,6 +564,11 @@ RBA_CATALOGUE = {
             {"name": "business", "aliases": ["business credit"], "rba_series_ids": None},
             {"name": "household", "aliases": ["household credit"], "rba_series_ids": None},
         ],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://www.rba.gov.au/statistics/tables/csv/d2-data.csv",
+            "upstream_title": "Lending and Credit Aggregates",
+        },
     },
     "d3": {
         "id": "d3",
@@ -498,6 +594,11 @@ RBA_CATALOGUE = {
             {"name": "deposits", "aliases": [], "rba_series_ids": None},
             {"name": "broad_money", "aliases": ["m3"], "rba_series_ids": None},
         ],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://www.rba.gov.au/statistics/tables/csv/d3-data.csv",
+            "upstream_title": "Monetary Aggregates",
+        },
     },
     "d4": {
         "id": "d4",
@@ -524,6 +625,11 @@ RBA_CATALOGUE = {
         "frequencies": ["Q"],
         "geographies": ["national"],
         "variants": [],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://www.rba.gov.au/statistics/tables/csv/d4-data.csv",
+            "upstream_title": "Debt Securities Outstanding",
+        },
     },
     "d5": {
         "id": "d5",
@@ -548,6 +654,11 @@ RBA_CATALOGUE = {
             {"name": "business", "aliases": ["business lending"], "rba_series_ids": None},
             {"name": "household", "aliases": ["household lending"], "rba_series_ids": None},
         ],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://www.rba.gov.au/statistics/tables/csv/d5-data.csv",
+            "upstream_title": "Bank Lending Classified by Sector",
+        },
     },
     "d9": {
         "id": "d9",
@@ -573,6 +684,11 @@ RBA_CATALOGUE = {
         "frequencies": ["Q"],
         "geographies": ["national"],
         "variants": [],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://www.rba.gov.au/statistics/tables/csv/d9-data.csv",
+            "upstream_title": "Rural Debt by Lender",
+        },
     },
     "d10": {
         "id": "d10",
@@ -597,6 +713,11 @@ RBA_CATALOGUE = {
         "frequencies": ["Q"],
         "geographies": ["national"],
         "variants": [],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://www.rba.gov.au/statistics/tables/csv/d10-data.csv",
+            "upstream_title": "Margin Lending",
+        },
     },
     "d14": {
         "id": "d14",
@@ -627,6 +748,14 @@ RBA_CATALOGUE = {
             {"name": "medium_business", "aliases": [], "rba_series_ids": None},
             {"name": "large_business", "aliases": [], "rba_series_ids": None},
         ],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://www.rba.gov.au/statistics/tables/csv/d14-data.csv",
+            "upstream_title": (
+                "Lending to Business – Business Finance Outstanding "
+                "by Business Size and Interest Rate Type"
+            ),
+        },
     },
     "e1": {
         "id": "e1",
@@ -651,6 +780,11 @@ RBA_CATALOGUE = {
             {"name": "household", "aliases": ["household debt"], "rba_series_ids": None},
             {"name": "business", "aliases": [], "rba_series_ids": None},
         ],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://www.rba.gov.au/statistics/tables/csv/e1-data.csv",
+            "upstream_title": "Household and Business Balance Sheets",
+        },
     },
     "e2": {
         "id": "e2",
@@ -674,6 +808,11 @@ RBA_CATALOGUE = {
         "frequencies": ["Q"],
         "geographies": ["national"],
         "variants": [],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://www.rba.gov.au/statistics/tables/csv/e2-data.csv",
+            "upstream_title": "Household Finances – Selected Ratios",
+        },
     },
     "e13": {
         "id": "e13",
@@ -700,6 +839,11 @@ RBA_CATALOGUE = {
         "frequencies": ["M"],
         "geographies": ["national"],
         "variants": [],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://www.rba.gov.au/statistics/tables/csv/e13-data.csv",
+            "upstream_title": "Housing Loan Payments",
+        },
     },
     "f1": {
         "id": "f1",
@@ -728,6 +872,11 @@ RBA_CATALOGUE = {
                 "rba_series_ids": None,
             },
         ],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://www.rba.gov.au/statistics/tables/csv/f1-data.csv",
+            "upstream_title": "Interest Rates and Yields – Money Market – Daily",
+        },
     },
     "f2": {
         "id": "f2",
@@ -749,6 +898,11 @@ RBA_CATALOGUE = {
         "frequencies": ["D"],
         "geographies": ["national"],
         "variants": [],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://www.rba.gov.au/statistics/tables/csv/f2-data.csv",
+            "upstream_title": "Capital Market Yields – Government Bonds – Daily",
+        },
     },
     "f3": {
         "id": "f3",
@@ -771,6 +925,11 @@ RBA_CATALOGUE = {
         "frequencies": ["D"],
         "geographies": ["national"],
         "variants": [],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://www.rba.gov.au/statistics/tables/csv/f3-data.csv",
+            "upstream_title": "Aggregate Measures of Australian Corporate Bond Yields",
+        },
     },
     "f4": {
         "id": "f4",
@@ -797,6 +956,11 @@ RBA_CATALOGUE = {
         "frequencies": ["M"],
         "geographies": ["national"],
         "variants": [],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://www.rba.gov.au/statistics/tables/csv/f4-data.csv",
+            "upstream_title": "Advertised Deposit Rates",
+        },
     },
     "f4.1": {
         "id": "f4.1",
@@ -822,6 +986,11 @@ RBA_CATALOGUE = {
         "frequencies": ["M"],
         "geographies": ["national"],
         "variants": [],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://www.rba.gov.au/statistics/tables/csv/f4.1-data.csv",
+            "upstream_title": "Paid Deposit Rates",
+        },
     },
     "f5": {
         "id": "f5",
@@ -847,6 +1016,11 @@ RBA_CATALOGUE = {
             {"name": "housing", "aliases": ["housing loan rates"], "rba_series_ids": None},
             {"name": "personal", "aliases": ["personal loan rates"], "rba_series_ids": None},
         ],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://www.rba.gov.au/statistics/tables/csv/f5-data.csv",
+            "upstream_title": "Indicator Lending Rates",
+        },
     },
     "f6": {
         "id": "f6",
@@ -871,6 +1045,11 @@ RBA_CATALOGUE = {
             {"name": "owner_occupier", "aliases": ["owner-occupier"], "rba_series_ids": None},
             {"name": "investor", "aliases": ["investment"], "rba_series_ids": None},
         ],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://www.rba.gov.au/statistics/tables/csv/f6-data.csv",
+            "upstream_title": "Housing Lending Rates",
+        },
     },
     "f7": {
         "id": "f7",
@@ -895,6 +1074,11 @@ RBA_CATALOGUE = {
             {"name": "small_business", "aliases": ["sme rates"], "rba_series_ids": None},
             {"name": "large_business", "aliases": [], "rba_series_ids": None},
         ],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://www.rba.gov.au/statistics/tables/csv/f7-data.csv",
+            "upstream_title": "Business Lending Rates",
+        },
     },
     "f8": {
         "id": "f8",
@@ -921,6 +1105,11 @@ RBA_CATALOGUE = {
         "frequencies": ["M"],
         "geographies": ["national"],
         "variants": [],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://www.rba.gov.au/statistics/tables/csv/f8-data.csv",
+            "upstream_title": "Personal Lending Rates",
+        },
     },
     "f11": {
         "id": "f11",
@@ -945,6 +1134,11 @@ RBA_CATALOGUE = {
         "frequencies": ["D"],
         "geographies": ["national"],
         "variants": [],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://www.rba.gov.au/statistics/tables/csv/f11-data.csv",
+            "upstream_title": "Exchange Rates - Historical - Daily and Monthly",
+        },
     },
     "f11.1": {
         "id": "f11.1",
@@ -971,6 +1165,11 @@ RBA_CATALOGUE = {
         "frequencies": ["D"],
         "geographies": ["national"],
         "variants": [],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://www.rba.gov.au/statistics/tables/csv/f11.1-data.csv",
+            "upstream_title": "Exchange Rates - Daily - 2023 to Current",
+        },
     },
     "f12": {
         "id": "f12",
@@ -994,6 +1193,11 @@ RBA_CATALOGUE = {
         "frequencies": ["D"],
         "geographies": ["national"],
         "variants": [],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://www.rba.gov.au/statistics/tables/csv/f12-data.csv",
+            "upstream_title": "US Dollar Exchange Rates",
+        },
     },
     "f15": {
         "id": "f15",
@@ -1015,6 +1219,11 @@ RBA_CATALOGUE = {
         "frequencies": ["M"],
         "geographies": ["national"],
         "variants": [],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://www.rba.gov.au/statistics/tables/csv/f15-data.csv",
+            "upstream_title": "Real Exchange Rate Measures",
+        },
     },
     "f16": {
         "id": "f16",
@@ -1043,6 +1252,11 @@ RBA_CATALOGUE = {
         "frequencies": ["D"],
         "geographies": ["national"],
         "variants": [],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://www.rba.gov.au/statistics/tables/csv/f16-data.csv",
+            "upstream_title": "Indicative Mid Rates of Selected Australian Government Securities",
+        },
     },
     "f17": {
         "id": "f17",
@@ -1072,6 +1286,11 @@ RBA_CATALOGUE = {
         "frequencies": ["D"],
         "geographies": ["national"],
         "variants": [],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://www.rba.gov.au/statistics/tables/csv/f17-yields.csv",
+            "upstream_title": "Zero-coupon Interest Rates – Analytical Series – 2017 to Current",
+        },
     },
     "g1": {
         "id": "g1",
@@ -1111,6 +1330,11 @@ RBA_CATALOGUE = {
                 "rba_series_ids": None,
             },
         ],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://www.rba.gov.au/statistics/tables/csv/g1-data.csv",
+            "upstream_title": "Consumer Price Inflation",
+        },
     },
     "g2": {
         "id": "g2",
@@ -1132,6 +1356,11 @@ RBA_CATALOGUE = {
         "frequencies": ["Q"],
         "geographies": ["national"],
         "variants": [],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://www.rba.gov.au/statistics/tables/csv/g2-data.csv",
+            "upstream_title": "Consumer Price Inflation – Expenditure Groups",
+        },
     },
     "g3": {
         "id": "g3",
@@ -1157,6 +1386,11 @@ RBA_CATALOGUE = {
             {"name": "market", "aliases": ["market expectations"], "rba_series_ids": None},
             {"name": "union", "aliases": [], "rba_series_ids": None},
         ],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://www.rba.gov.au/statistics/tables/csv/g3-data.csv",
+            "upstream_title": "Inflation Expectations",
+        },
     },
     "g4": {
         "id": "g4",
@@ -1183,6 +1417,11 @@ RBA_CATALOGUE = {
         "frequencies": ["M"],
         "geographies": ["national"],
         "variants": [],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://www.rba.gov.au/statistics/tables/csv/g4-data.csv",
+            "upstream_title": "Consumer Price Inflation – Monthly Collection",
+        },
     },
     "h1": {
         "id": "h1",
@@ -1208,6 +1447,11 @@ RBA_CATALOGUE = {
             {"name": "gdp", "aliases": ["output", "economic growth"], "rba_series_ids": None},
             {"name": "income", "aliases": [], "rba_series_ids": None},
         ],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://www.rba.gov.au/statistics/tables/csv/h1-data.csv",
+            "upstream_title": "Gross Domestic Product and Income",
+        },
     },
     "h2": {
         "id": "h2",
@@ -1235,6 +1479,11 @@ RBA_CATALOGUE = {
         "frequencies": ["Q"],
         "geographies": ["national"],
         "variants": [],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://www.rba.gov.au/statistics/tables/csv/h2-data.csv",
+            "upstream_title": "Demand and Income",
+        },
     },
     "h3": {
         "id": "h3",
@@ -1256,6 +1505,11 @@ RBA_CATALOGUE = {
         "frequencies": ["M"],
         "geographies": ["national"],
         "variants": [],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://www.rba.gov.au/statistics/tables/csv/h3-data.csv",
+            "upstream_title": "Monthly Activity Indicators",
+        },
     },
     "h4": {
         "id": "h4",
@@ -1282,6 +1536,11 @@ RBA_CATALOGUE = {
         "frequencies": ["Q"],
         "geographies": ["national"],
         "variants": [],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://www.rba.gov.au/statistics/tables/csv/h4-data.csv",
+            "upstream_title": "Labour Costs and Productivity",
+        },
     },
     "h5": {
         "id": "h5",
@@ -1318,6 +1577,11 @@ RBA_CATALOGUE = {
                 "rba_series_ids": None,
             },
         ],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://www.rba.gov.au/statistics/tables/csv/h5-data.csv",
+            "upstream_title": "Labour Force",
+        },
     },
     "i1": {
         "id": "i1",
@@ -1342,6 +1606,11 @@ RBA_CATALOGUE = {
             {"name": "trade", "aliases": ["international trade"], "rba_series_ids": None},
             {"name": "current_account", "aliases": [], "rba_series_ids": None},
         ],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://www.rba.gov.au/statistics/tables/csv/i1-data.csv",
+            "upstream_title": "International Trade and Balance of Payments",
+        },
     },
     "i2": {
         "id": "i2",
@@ -1369,6 +1638,11 @@ RBA_CATALOGUE = {
         "frequencies": ["M"],
         "geographies": ["national"],
         "variants": [],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://www.rba.gov.au/statistics/tables/csv/i2-data.csv",
+            "upstream_title": "Commodity Prices",
+        },
     },
     "i3": {
         "id": "i3",
@@ -1395,6 +1669,11 @@ RBA_CATALOGUE = {
         "frequencies": ["Q"],
         "geographies": ["national"],
         "variants": [],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://www.rba.gov.au/statistics/tables/csv/i3-data.csv",
+            "upstream_title": "Balance of Payments – Financial Account",
+        },
     },
     "i4": {
         "id": "i4",
@@ -1422,5 +1701,10 @@ RBA_CATALOGUE = {
         "frequencies": ["Q"],
         "geographies": ["national"],
         "variants": [],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://www.rba.gov.au/statistics/tables/csv/i4-data.csv",
+            "upstream_title": "Australia's Gross Foreign Assets and Liabilities",
+        },
     },
 }
