@@ -86,6 +86,22 @@ def test_search_catalogue_excludes_discontinued_rba_tables() -> None:
     assert results == []
 
 
+def test_search_catalogue_excludes_discontinued_abs_dataflows() -> None:
+    for ceased_id in ("BUSINESS_TURNOVER", "CPI_M", "RT", "RPPI"):
+        results = search_catalogue(ceased_id, source="abs")
+        assert all(item["id"] != ceased_id for item in results), (
+            f"{ceased_id} is marked discontinued but still appeared in search results"
+        )
+
+
+def test_lci_resolves_to_selected_living_cost_indexes() -> None:
+    entry = ABS_CATALOGUE["LCI"]
+
+    assert entry["name"] == "Selected Living Cost Indexes"
+    assert "selected living cost indexes" in entry["aliases"]
+    assert entry["category"] == "prices_inflation"
+
+
 def test_every_catalogue_entry_declares_resolver_schema_fields() -> None:
     for entry in (*ABS_CATALOGUE.values(), *RBA_CATALOGUE.values()):
         assert isinstance(entry.get("frequencies"), list), entry["id"]

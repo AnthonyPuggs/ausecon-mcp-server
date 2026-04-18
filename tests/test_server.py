@@ -89,6 +89,7 @@ class StubRBAProvider:
         start_date: str | None = None,
         end_date: str | None = None,
         last_n: int | None = None,
+        csv_path: str | None = None,
     ) -> dict:
         self.last_get_table_kwargs = {
             "table_id": table_id,
@@ -96,6 +97,7 @@ class StubRBAProvider:
             "start_date": start_date,
             "end_date": end_date,
             "last_n": last_n,
+            "csv_path": csv_path,
         }
         return {
             "metadata": {"source": "rba", "dataset_id": table_id},

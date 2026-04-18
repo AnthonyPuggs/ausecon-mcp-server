@@ -4,7 +4,11 @@ from typing import Any
 
 from fastmcp import FastMCP
 
-from ausecon_mcp.catalogue.resolver import resolve
+from ausecon_mcp.catalogue.resolver import (
+    resolve,
+    resolve_abs_dataflow_id,
+    resolve_rba_csv_path,
+)
 from ausecon_mcp.catalogue.search import search_catalogue
 from ausecon_mcp.logging import configure_logging, get_logger
 from ausecon_mcp.prompts import register_prompts
@@ -40,7 +44,8 @@ class AuseconService:
 
     async def get_abs_dataset_structure(self, dataflow_id: str) -> dict:
         validated_dataflow_id = require_non_empty("dataflow_id", dataflow_id)
-        return await self.abs_provider.get_dataset_structure(validated_dataflow_id)
+        upstream_id = resolve_abs_dataflow_id(validated_dataflow_id)
+        return await self.abs_provider.get_dataset_structure(upstream_id)
 
     async def get_abs_data(
         self,
@@ -61,8 +66,9 @@ class AuseconService:
         )
         validated_last_n = validate_positive_int("last_n", last_n)
         validated_updated_after = validate_iso_datetime("updated_after", updated_after)
+        upstream_id = resolve_abs_dataflow_id(validated_dataflow_id)
         return await self.abs_provider.get_data(
-            dataflow_id=validated_dataflow_id,
+            dataflow_id=upstream_id,
             key=validated_key,
             start_period=validated_start_period,
             end_period=validated_end_period,
@@ -98,12 +104,14 @@ class AuseconService:
             end_name="end_date",
         )
         validated_last_n = validate_positive_int("last_n", last_n)
+        csv_path = resolve_rba_csv_path(validated_table_id)
         return await self.rba_provider.get_table(
             table_id=validated_table_id,
             series_ids=validated_series_ids,
             start_date=validated_start_date,
             end_date=validated_end_date,
             last_n=validated_last_n,
+            csv_path=csv_path,
         )
 
     async def get_economic_series(

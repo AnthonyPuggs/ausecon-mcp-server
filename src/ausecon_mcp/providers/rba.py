@@ -59,13 +59,15 @@ class RBAProvider:
         start_date: str | None = None,
         end_date: str | None = None,
         last_n: int | None = None,
+        csv_path: str | None = None,
     ) -> dict[str, Any]:
         cache_key = f"rba-table:{table_id}"
         raw_payload = self._cache.get(cache_key)
         stale_meta: dict[str, Any] | None = None
 
         if raw_payload is None:
-            url = f"{self.BASE_URL}/{table_id}-data.csv"
+            filename = csv_path or f"{table_id}-data.csv"
+            url = f"{self.BASE_URL}/{filename}"
             _logger.info(
                 "request.start",
                 extra={"source": "rba", "identifier": table_id, "url": url},

@@ -35,9 +35,10 @@ ABS_CATALOGUE = {
     "CPI_M": {
         "id": "CPI_M",
         "source": "abs",
-        "name": "Monthly Consumer Price Index Indicator",
+        "name": "Monthly Consumer Price Index Indicator (Ceased)",
         "description": (
-            "Monthly CPI indicator with selected expenditure classes and annual inflation."
+            "Ceased monthly CPI indicator dataflow. Superseded by the ABS monthly CPI "
+            "collection under a new dataflow; retained here for historical reference."
         ),
         "frequency": "Monthly",
         "category": "prices_inflation",
@@ -55,6 +56,7 @@ ABS_CATALOGUE = {
         "frequencies": ["M"],
         "geographies": ["national"],
         "variants": [],
+        "discontinued": True,
     },
     "PPI": {
         "id": "PPI",
@@ -189,23 +191,55 @@ ABS_CATALOGUE = {
     "LCI": {
         "id": "LCI",
         "source": "abs",
-        "name": "Labour Cost Index",
-        "description": "Experimental labour cost index capturing employer labour costs.",
+        "name": "Selected Living Cost Indexes",
+        "description": (
+            "Quarterly price indexes tracking changes in living costs for selected "
+            "Australian household types (employee, age pensioner, self-funded retiree, "
+            "other government transfer recipient, and pensioner & beneficiary)."
+        ),
         "frequency": "Quarterly",
-        "category": "labour",
+        "category": "prices_inflation",
         "aliases": [
-            "labour cost index",
-            "labor cost index",
-            "lci",
+            "selected living cost indexes",
+            "living cost indexes",
+            "living cost index",
+            "slci",
+            "cost of living",
+            "household living costs",
+            "pensioner living costs",
+            "employee living costs",
         ],
         "tags": [
-            "labour costs",
-            "wage costs",
-            "productivity inputs",
+            "cost of living",
+            "household prices",
+            "pensioner inflation",
+            "employee inflation",
         ],
         "frequencies": ["Q"],
         "geographies": ["national"],
-        "variants": [],
+        "variants": [
+            {"name": "employee", "aliases": ["employee households"], "abs_key": None},
+            {
+                "name": "age_pensioner",
+                "aliases": ["age pensioner households"],
+                "abs_key": None,
+            },
+            {
+                "name": "self_funded_retiree",
+                "aliases": ["self-funded retiree households"],
+                "abs_key": None,
+            },
+            {
+                "name": "other_transfer",
+                "aliases": ["other government transfer recipient households"],
+                "abs_key": None,
+            },
+            {
+                "name": "pensioner_beneficiary",
+                "aliases": ["pensioner and beneficiary households"],
+                "abs_key": None,
+            },
+        ],
     },
     "LF": {
         "id": "LF",
@@ -413,8 +447,11 @@ ABS_CATALOGUE = {
     "RT": {
         "id": "RT",
         "source": "abs",
-        "name": "Retail Trade",
-        "description": "Monthly turnover across Australian retail industries and states.",
+        "name": "Retail Trade (Ceased)",
+        "description": (
+            "Ceased monthly retail trade dataflow. Superseded by a new ABS monthly "
+            "retail indicator; retained here for historical reference."
+        ),
         "frequency": "Monthly",
         "category": "activity",
         "aliases": [
@@ -430,12 +467,16 @@ ABS_CATALOGUE = {
         "frequencies": ["M"],
         "geographies": ["national"],
         "variants": [],
+        "discontinued": True,
     },
     "BUSINESS_TURNOVER": {
         "id": "BUSINESS_TURNOVER",
         "source": "abs",
-        "name": "Monthly Business Turnover Indicator",
-        "description": "Monthly business turnover growth across industry divisions.",
+        "name": "Monthly Business Turnover Indicator (Ceased)",
+        "description": (
+            "Ceased 2025-11-10. Previously tracked monthly business turnover growth "
+            "across industry divisions; retained here for historical reference."
+        ),
         "frequency": "Monthly",
         "category": "activity",
         "aliases": [
@@ -451,6 +492,7 @@ ABS_CATALOGUE = {
         "frequencies": ["M"],
         "geographies": ["national"],
         "variants": [],
+        "discontinued": True,
     },
     "QBIS": {
         "id": "QBIS",
@@ -603,8 +645,11 @@ ABS_CATALOGUE = {
     "RPPI": {
         "id": "RPPI",
         "source": "abs",
-        "name": "Residential Property Price Indexes",
-        "description": "Residential dwelling price indexes across capital cities.",
+        "name": "Residential Property Price Index (Ceased)",
+        "description": (
+            "Ceased residential property price index dataflow. Superseded by a new "
+            "ABS property prices dataflow; retained here for historical reference."
+        ),
         "frequency": "Quarterly",
         "category": "housing_construction",
         "aliases": [
@@ -620,6 +665,7 @@ ABS_CATALOGUE = {
         "frequencies": ["Q"],
         "geographies": ["national"],
         "variants": [],
+        "discontinued": True,
     },
     "ITGS": {
         "id": "ITGS",

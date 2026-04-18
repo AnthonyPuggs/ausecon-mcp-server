@@ -2,7 +2,15 @@ from pathlib import Path
 
 import pytest
 
-from ausecon_mcp.catalogue.resolver import CURATED_SHORTCUTS, build_abs_key, resolve
+from ausecon_mcp.catalogue.abs import ABS_CATALOGUE
+from ausecon_mcp.catalogue.rba import RBA_CATALOGUE
+from ausecon_mcp.catalogue.resolver import (
+    CURATED_SHORTCUTS,
+    build_abs_key,
+    resolve,
+    resolve_abs_dataflow_id,
+    resolve_rba_csv_path,
+)
 from ausecon_mcp.parsers.abs_structure import parse_abs_structure
 
 FIXTURES = Path(__file__).parent / "fixtures"
@@ -203,6 +211,36 @@ def test_build_abs_key_rejects_unmapped_geography() -> None:
             geography="darwin",
             geography_codes={"national": "50"},
         )
+
+
+def test_resolve_abs_dataflow_id_passes_through_unknown_keys() -> None:
+    assert resolve_abs_dataflow_id("NOT_IN_CATALOGUE") == "NOT_IN_CATALOGUE"
+
+
+def test_resolve_abs_dataflow_id_returns_catalogue_key_when_no_upstream_id() -> None:
+    key = next(iter(ABS_CATALOGUE))
+    assert "upstream_id" not in ABS_CATALOGUE[key] or ABS_CATALOGUE[key].get("upstream_id") == key
+    assert resolve_abs_dataflow_id(key) == ABS_CATALOGUE[key].get("upstream_id", key)
+
+
+def test_resolve_abs_dataflow_id_returns_upstream_id_when_declared() -> None:
+    ABS_CATALOGUE["__TEST__"] = {"upstream_id": "REAL_ID"}
+    try:
+        assert resolve_abs_dataflow_id("__TEST__") == "REAL_ID"
+    finally:
+        del ABS_CATALOGUE["__TEST__"]
+
+
+def test_resolve_rba_csv_path_defaults_to_id_pattern() -> None:
+    assert resolve_rba_csv_path("unknown_id") == "unknown_id-data.csv"
+
+
+def test_resolve_rba_csv_path_uses_explicit_csv_path_when_declared() -> None:
+    RBA_CATALOGUE["__test__"] = {"csv_path": "custom-file.csv"}
+    try:
+        assert resolve_rba_csv_path("__test__") == "custom-file.csv"
+    finally:
+        del RBA_CATALOGUE["__test__"]
 
 
 def test_curated_shortcuts_cover_v030_concepts() -> None:

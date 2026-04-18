@@ -2,8 +2,8 @@ RBA_CATALOGUE = {
     "a1": {
         "id": "a1",
         "source": "rba",
-        "name": "Reserve Bank of Australia Liabilities and Assets - Summary",
-        "description": "Summary balance sheet of the Reserve Bank of Australia.",
+        "name": "RBA Balance Sheet",
+        "description": "Reserve Bank of Australia balance sheet — assets and liabilities.",
         "frequency": "Weekly",
         "category": "monetary_policy",
         "aliases": [
@@ -51,11 +51,15 @@ RBA_CATALOGUE = {
     "a3": {
         "id": "a3",
         "source": "rba",
-        "name": "Open Market Operations - Current",
-        "description": "Current domestic market operations and open market liquidity settings.",
+        "name": "Monetary Policy Operations - Current",
+        "description": (
+            "Current domestic monetary policy operations including open market operations "
+            "and liquidity settings."
+        ),
         "frequency": "Daily",
         "category": "monetary_policy",
         "aliases": [
+            "monetary policy operations",
             "open market operations",
             "liquidity operations",
             "domestic market operations",
@@ -64,6 +68,7 @@ RBA_CATALOGUE = {
             "omo",
             "liquidity",
             "market operations",
+            "monetary policy",
         ],
         "frequencies": ["D"],
         "geographies": ["national"],
@@ -118,19 +123,24 @@ RBA_CATALOGUE = {
     "c7": {
         "id": "c7",
         "source": "rba",
-        "name": "Payments System - Retail Payments",
-        "description": "Retail payment system transaction volumes and values across instruments.",
+        "name": "Real-time Gross Settlement Statistics",
+        "description": (
+            "Volumes and values of high-value payments settled through the Reserve Bank's "
+            "real-time gross settlement (RTGS) system."
+        ),
         "frequency": "Monthly",
         "category": "payments",
         "aliases": [
-            "retail payments",
-            "payments system",
-            "payment instruments",
+            "rtgs",
+            "real-time gross settlement",
+            "high value payments",
+            "wholesale payments",
         ],
         "tags": [
             "payments",
-            "retail transactions",
-            "direct entry",
+            "rtgs",
+            "high-value settlements",
+            "wholesale",
         ],
         "frequencies": ["M"],
         "geographies": ["national"],
@@ -139,21 +149,26 @@ RBA_CATALOGUE = {
     "c9": {
         "id": "c9",
         "source": "rba",
-        "name": "ATM Cash Withdrawals",
-        "description": "Automated teller machine cash withdrawal volumes and values.",
-        "frequency": "Monthly",
+        "name": "Domestic Banking Fees Charged",
+        "description": (
+            "Annual aggregate fees charged by Australian banks to households and "
+            "businesses across deposit, loan, and merchant fee categories."
+        ),
+        "frequency": "Annual",
         "category": "payments",
         "aliases": [
-            "atm withdrawals",
-            "cash withdrawals",
-            "atm transactions",
+            "bank fees",
+            "domestic banking fees",
+            "banking fees charged",
+            "merchant fees",
         ],
         "tags": [
-            "payments",
-            "cash usage",
-            "atm",
+            "bank fees",
+            "household fees",
+            "business fees",
+            "merchant fees",
         ],
-        "frequencies": ["M"],
+        "frequencies": ["A"],
         "geographies": ["national"],
         "variants": [],
     },
@@ -234,26 +249,28 @@ RBA_CATALOGUE = {
     "d4": {
         "id": "d4",
         "source": "rba",
-        "name": "Bank Lending to Business - Total Credit Outstanding by Size and Sector",
-        "description": "Bank business lending broken down by borrower size and industry.",
-        "frequency": "Monthly",
+        "name": "Debt Securities Outstanding",
+        "description": (
+            "Outstanding debt securities issued by Australian residents by issuer "
+            "sector, instrument, and currency."
+        ),
+        "frequency": "Quarterly",
         "category": "money_credit",
         "aliases": [
-            "business lending by size",
-            "business credit by sector",
-            "business lending industry",
+            "debt securities outstanding",
+            "debt securities",
+            "bonds outstanding",
+            "fixed income outstanding",
         ],
         "tags": [
-            "business credit",
-            "sme lending",
-            "industry lending",
+            "debt securities",
+            "bond issuance",
+            "fixed income",
+            "capital markets",
         ],
-        "frequencies": ["M"],
+        "frequencies": ["Q"],
         "geographies": ["national"],
-        "variants": [
-            {"name": "small_business", "aliases": ["sme"], "rba_series_ids": None},
-            {"name": "large_business", "aliases": [], "rba_series_ids": None},
-        ],
+        "variants": [],
     },
     "d5": {
         "id": "d5",
@@ -282,23 +299,32 @@ RBA_CATALOGUE = {
     "d14": {
         "id": "d14",
         "source": "rba",
-        "name": "Growth in Selected Financial Aggregates - Consolidated",
-        "description": "Long-run consolidated growth rates for credit and financial aggregates.",
+        "name": "Lending to Business - Outstanding by Business Size and Interest Rate Type",
+        "description": (
+            "Outstanding business lending broken down by borrower size (small, medium, "
+            "large) and interest rate type (fixed, variable)."
+        ),
         "frequency": "Monthly",
         "category": "money_credit",
         "aliases": [
-            "consolidated financial aggregates",
-            "long run credit growth",
-            "financial aggregates historical",
+            "business finance outstanding",
+            "business lending by size",
+            "business credit by size",
+            "fixed vs variable business lending",
         ],
         "tags": [
-            "credit history",
-            "broad money history",
-            "long run series",
+            "business credit",
+            "sme lending",
+            "fixed rate lending",
+            "variable rate lending",
         ],
         "frequencies": ["M"],
         "geographies": ["national"],
-        "variants": [],
+        "variants": [
+            {"name": "small_business", "aliases": ["sme"], "rba_series_ids": None},
+            {"name": "medium_business", "aliases": [], "rba_series_ids": None},
+            {"name": "large_business", "aliases": [], "rba_series_ids": None},
+        ],
     },
     "e1": {
         "id": "e1",
@@ -350,21 +376,26 @@ RBA_CATALOGUE = {
     "e13": {
         "id": "e13",
         "source": "rba",
-        "name": "Household Non-Financial Assets",
-        "description": "Household holdings of non-financial assets, primarily housing.",
-        "frequency": "Quarterly",
+        "name": "Housing Loan Payments",
+        "description": (
+            "Aggregate scheduled and excess principal-and-interest payments on "
+            "outstanding housing loans."
+        ),
+        "frequency": "Monthly",
         "category": "household_finance",
         "aliases": [
-            "household non-financial assets",
-            "housing assets",
-            "household dwelling wealth",
+            "housing loan payments",
+            "mortgage payments",
+            "scheduled mortgage repayments",
+            "excess mortgage repayments",
         ],
         "tags": [
-            "housing wealth",
-            "dwelling stock",
-            "household assets",
+            "mortgage payments",
+            "housing loans",
+            "household debt servicing",
+            "offset accounts",
         ],
-        "frequencies": ["Q"],
+        "frequencies": ["M"],
         "geographies": ["national"],
         "variants": [],
     },
@@ -420,19 +451,20 @@ RBA_CATALOGUE = {
     "f3": {
         "id": "f3",
         "source": "rba",
-        "name": "Capital Market Yields and Spreads - Non-Government Instruments",
-        "description": "Non-government capital market yields and spreads over Australian bonds.",
+        "name": "Aggregate Measures of Australian Corporate Bond Yields",
+        "description": ("Aggregate measures of yields and spreads on Australian corporate bonds."),
         "frequency": "Daily",
         "category": "interest_rates",
         "aliases": [
+            "corporate bond yields",
+            "corporate bond spreads",
             "non-government yields",
             "credit spreads",
-            "corporate bond spreads",
         ],
         "tags": [
             "credit spreads",
             "corporate yields",
-            "swap spreads",
+            "non-government bonds",
         ],
         "frequencies": ["D"],
         "geographies": ["national"],
@@ -441,21 +473,26 @@ RBA_CATALOGUE = {
     "f4": {
         "id": "f4",
         "source": "rba",
-        "name": "Australian Share Market",
-        "description": "Equity index levels, price-earnings ratios, and dividend yields.",
-        "frequency": "Daily",
+        "name": "Advertised Deposit Rates",
+        "description": (
+            "Advertised retail deposit rates for at-call and term deposit products "
+            "across major Australian deposit-taking institutions."
+        ),
+        "frequency": "Monthly",
         "category": "interest_rates",
         "aliases": [
-            "share market",
-            "equity market",
-            "asx",
+            "advertised deposit rates",
+            "retail deposit rates",
+            "advertised savings rates",
+            "term deposit advertised rates",
         ],
         "tags": [
-            "equities",
-            "share prices",
-            "dividend yield",
+            "retail deposits",
+            "advertised rates",
+            "term deposits",
+            "savings accounts",
         ],
-        "frequencies": ["D"],
+        "frequencies": ["M"],
         "geographies": ["national"],
         "variants": [],
     },
@@ -511,7 +548,7 @@ RBA_CATALOGUE = {
     "f7": {
         "id": "f7",
         "source": "rba",
-        "name": "Business Finance Lending Rates",
+        "name": "Business Lending Rates",
         "description": "Average interest rates on new and outstanding business loans.",
         "frequency": "Monthly",
         "category": "interest_rates",
@@ -535,32 +572,37 @@ RBA_CATALOGUE = {
     "f8": {
         "id": "f8",
         "source": "rba",
-        "name": "Retail Deposit and Investment Rates",
-        "description": "Retail deposit, term deposit, and cash management rates.",
+        "name": "Personal Lending Rates",
+        "description": (
+            "Interest rates on personal loans including credit cards, fixed-term "
+            "personal loans, and revolving credit facilities."
+        ),
         "frequency": "Monthly",
         "category": "interest_rates",
         "aliases": [
-            "deposit rates",
-            "term deposit rates",
-            "savings rates",
+            "personal lending rates",
+            "personal loan rates",
+            "credit card interest rates",
+            "consumer loan rates",
         ],
         "tags": [
-            "retail deposits",
-            "term deposits",
-            "savings accounts",
+            "personal loans",
+            "credit cards",
+            "consumer credit",
+            "revolving credit",
         ],
         "frequencies": ["M"],
         "geographies": ["national"],
-        "variants": [
-            {"name": "term_deposit", "aliases": ["term deposit rates"], "rba_series_ids": None},
-            {"name": "at_call", "aliases": ["savings"], "rba_series_ids": None},
-        ],
+        "variants": [],
     },
     "f11": {
         "id": "f11",
         "source": "rba",
-        "name": "Exchange Rates",
-        "description": "Australian dollar exchange rates against major trading partner currencies.",
+        "name": "Exchange Rates - Historical - Daily and Monthly",
+        "description": (
+            "Long historical run of Australian dollar exchange rates against major "
+            "trading partner currencies, daily and monthly observations."
+        ),
         "frequency": "Daily",
         "category": "exchange_rates",
         "aliases": [
@@ -580,23 +622,23 @@ RBA_CATALOGUE = {
     "f12": {
         "id": "f12",
         "source": "rba",
-        "name": "Exchange Rates - Monthly Average",
+        "name": "US Dollar Exchange Rates",
         "description": (
-            "Monthly average exchange rates against major currencies and trade-weighted index."
+            "Cross exchange rates of major currencies expressed against the US dollar."
         ),
-        "frequency": "Monthly",
+        "frequency": "Daily",
         "category": "exchange_rates",
         "aliases": [
-            "monthly exchange rates",
-            "monthly fx",
-            "average exchange rate",
+            "us dollar exchange rates",
+            "usd cross rates",
+            "major currency cross rates",
         ],
         "tags": [
-            "aud average",
-            "trade weighted index",
-            "monthly fx",
+            "usd",
+            "cross rates",
+            "major currencies",
         ],
-        "frequencies": ["M"],
+        "frequencies": ["D"],
         "geographies": ["national"],
         "variants": [],
     },
@@ -709,21 +751,26 @@ RBA_CATALOGUE = {
     "g4": {
         "id": "g4",
         "source": "rba",
-        "name": "Measures of Consumer Price Inflation",
-        "description": "Alternative and supplementary measures of consumer price inflation.",
-        "frequency": "Quarterly",
+        "name": "Consumer Price Inflation - Monthly Collection",
+        "description": (
+            "Monthly consumer price inflation measures from the ABS Monthly CPI "
+            "collection (added January 2026)."
+        ),
+        "frequency": "Monthly",
         "category": "inflation",
         "aliases": [
-            "alternative inflation measures",
-            "underlying inflation measures",
-            "supplementary inflation",
+            "monthly cpi",
+            "monthly inflation",
+            "monthly consumer price inflation",
+            "monthly cpi collection",
         ],
         "tags": [
-            "underlying inflation",
-            "inflation measures",
-            "supplementary cpi",
+            "monthly inflation",
+            "monthly cpi",
+            "consumer prices",
+            "inflation nowcast",
         ],
-        "frequencies": ["Q"],
+        "frequencies": ["M"],
         "geographies": ["national"],
         "variants": [],
     },
@@ -755,21 +802,25 @@ RBA_CATALOGUE = {
     "h2": {
         "id": "h2",
         "source": "rba",
-        "name": "Household Finances - Selected Ratios",
+        "name": "Demand and Income",
         "description": (
-            "Household income, saving, and consumption ratios from the national accounts."
+            "Components of aggregate demand and income from the national accounts: "
+            "consumption, investment, government, and net exports contributions."
         ),
         "frequency": "Quarterly",
         "category": "output_labour",
         "aliases": [
-            "household saving ratio",
-            "household consumption",
-            "household finances",
+            "demand and income",
+            "aggregate demand",
+            "expenditure components",
+            "national accounts demand",
         ],
         "tags": [
-            "saving ratio",
-            "household consumption",
-            "disposable income",
+            "consumption",
+            "investment",
+            "government spending",
+            "net exports",
+            "aggregate demand",
         ],
         "frequencies": ["Q"],
         "geographies": ["national"],
@@ -799,19 +850,24 @@ RBA_CATALOGUE = {
     "h4": {
         "id": "h4",
         "source": "rba",
-        "name": "Business Sector Finances",
-        "description": "Business sector profits, investment, and finance indicators.",
+        "name": "Labour Costs and Productivity",
+        "description": (
+            "Labour cost and productivity indicators including unit labour costs, "
+            "real unit labour costs, and labour productivity."
+        ),
         "frequency": "Quarterly",
         "category": "output_labour",
         "aliases": [
-            "business profits",
-            "business investment",
-            "business sector finances",
+            "labour costs and productivity",
+            "unit labour costs",
+            "labour productivity",
+            "real unit labour costs",
         ],
         "tags": [
-            "company profits",
-            "business investment",
-            "business finance",
+            "labour costs",
+            "productivity",
+            "unit labour costs",
+            "wages",
         ],
         "frequencies": ["Q"],
         "geographies": ["national"],
@@ -880,65 +936,80 @@ RBA_CATALOGUE = {
     "i2": {
         "id": "i2",
         "source": "rba",
-        "name": "Australia's Foreign Assets and Liabilities",
+        "name": "Commodity Prices",
         "description": (
-            "International investment position and stocks of foreign assets and liabilities."
+            "RBA Index of Commodity Prices and component series for major Australian "
+            "export commodities."
         ),
-        "frequency": "Quarterly",
+        "frequency": "Monthly",
         "category": "external_sector",
         "aliases": [
-            "international investment position",
-            "foreign assets and liabilities",
-            "iip",
+            "commodity prices",
+            "rba commodity index",
+            "commodity price index",
+            "iron ore prices",
+            "coal prices",
         ],
         "tags": [
-            "foreign assets",
-            "foreign liabilities",
-            "net international investment",
+            "commodity prices",
+            "terms of trade",
+            "commodity index",
+            "export commodities",
         ],
-        "frequencies": ["Q"],
+        "frequencies": ["M"],
         "geographies": ["national"],
         "variants": [],
     },
     "i3": {
         "id": "i3",
         "source": "rba",
-        "name": "Australian Exports - Values",
-        "description": "Value of Australian exports by category.",
-        "frequency": "Monthly",
+        "name": "Balance of Payments - Financial Account",
+        "description": (
+            "Quarterly financial account components of Australia's balance of payments: "
+            "direct investment, portfolio investment, and other investment flows."
+        ),
+        "frequency": "Quarterly",
         "category": "external_sector",
         "aliases": [
-            "australian exports",
-            "export values",
-            "exports by category",
+            "financial account",
+            "balance of payments financial account",
+            "capital flows",
+            "portfolio investment flows",
         ],
         "tags": [
-            "exports",
-            "commodity exports",
-            "trade",
+            "financial account",
+            "capital flows",
+            "direct investment",
+            "portfolio investment",
         ],
-        "frequencies": ["M"],
+        "frequencies": ["Q"],
         "geographies": ["national"],
         "variants": [],
     },
     "i4": {
         "id": "i4",
         "source": "rba",
-        "name": "Australian Imports - Values",
-        "description": "Value of Australian imports by category.",
-        "frequency": "Monthly",
+        "name": "Australia's Gross Foreign Assets and Liabilities",
+        "description": (
+            "Quarterly stocks of Australia's gross foreign assets and liabilities by "
+            "instrument and sector."
+        ),
+        "frequency": "Quarterly",
         "category": "external_sector",
         "aliases": [
-            "australian imports",
-            "import values",
-            "imports by category",
+            "gross foreign assets",
+            "gross foreign liabilities",
+            "foreign assets and liabilities",
+            "international investment position",
+            "iip",
         ],
         "tags": [
-            "imports",
-            "trade",
-            "import values",
+            "foreign assets",
+            "foreign liabilities",
+            "international investment position",
+            "external balance sheet",
         ],
-        "frequencies": ["M"],
+        "frequencies": ["Q"],
         "geographies": ["national"],
         "variants": [],
     },

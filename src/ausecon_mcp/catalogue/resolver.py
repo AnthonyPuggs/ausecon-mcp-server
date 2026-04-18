@@ -33,6 +33,35 @@ from ausecon_mcp.errors import AuseconValidationError
 _FRAGMENT_PIECE_RE = re.compile(r"^([A-Z_][A-Z0-9_]*)=([0-9A-Z_+]+)$")
 _LITERAL_KEY_RE = re.compile(r"^[0-9A-Z_+]+(\.[0-9A-Z_+]+)*$")
 
+
+def resolve_abs_dataflow_id(dataflow_id: str) -> str:
+    """Map a catalogue key to its upstream ABS SDMX dataflow ID.
+
+    Catalogue entries may declare an ``upstream_id`` when the ergonomic catalogue
+    key differs from the real ABS dataflow identifier. Falls back to the input ID
+    so unknown keys (and entries without ``upstream_id``) pass through unchanged.
+    """
+    entry = ABS_CATALOGUE.get(dataflow_id)
+    if entry is None:
+        return dataflow_id
+    return entry.get("upstream_id", dataflow_id)
+
+
+def resolve_rba_csv_path(table_id: str) -> str:
+    """Map a catalogue key to its upstream RBA CSV filename.
+
+    Most RBA tables follow ``{table_id}-data.csv``; catalogue entries may declare
+    an explicit ``csv_path`` for the exceptions (e.g. ``f17``). Falls back to the
+    default pattern for unknown keys and entries without ``csv_path``.
+    """
+    entry = RBA_CATALOGUE.get(table_id)
+    if entry is not None:
+        explicit = entry.get("csv_path")
+        if explicit:
+            return explicit
+    return f"{table_id}-data.csv"
+
+
 CURATED_SHORTCUTS: dict[str, dict[str, Any]] = {
     "cash_rate_target": {"source": "rba", "dataset_id": "a2", "variant": "target"},
     "headline_cpi": {"source": "abs", "dataset_id": "CPI", "variant": "headline"},
