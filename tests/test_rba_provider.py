@@ -172,14 +172,14 @@ async def test_rba_provider_stamps_server_version_in_metadata() -> None:
 
 
 @pytest.mark.asyncio
-async def test_rba_provider_returns_stale_on_upstream_failure(tmp_path) -> None:
+async def test_rba_provider_returns_stale_on_upstream_failure(_isolated_cache_dir) -> None:
     import json as _json
 
     from httpx import ConnectTimeout
 
     from ausecon_mcp.cache import TTLCache
 
-    cache = TTLCache(disk_dir=tmp_path / "cache", ttl_seconds=60)
+    cache = TTLCache(ttl_seconds=60)
     provider = RBAProvider(cache=cache)
     csv_payload = (FIXTURES / "rba_g1_sample.csv").read_text()
 
@@ -189,12 +189,12 @@ async def test_rba_provider_returns_stale_on_upstream_failure(tmp_path) -> None:
         )
         await provider.get_table("g1")
 
-    (file,) = (tmp_path / "cache").glob("*.json")
+    (file,) = _isolated_cache_dir.glob("*.json")
     data = _json.loads(file.read_text())
     data["expires_at"] = 0.0
     file.write_text(_json.dumps(data))
 
-    fresh_cache = TTLCache(disk_dir=tmp_path / "cache", ttl_seconds=60)
+    fresh_cache = TTLCache(ttl_seconds=60)
     fresh_provider = RBAProvider(cache=fresh_cache)
 
     with respx.mock(assert_all_called=True) as router:
@@ -211,12 +211,12 @@ async def test_rba_provider_returns_stale_on_upstream_failure(tmp_path) -> None:
 
 
 @pytest.mark.asyncio
-async def test_rba_provider_parse_failure_is_not_masked_by_stale(tmp_path) -> None:
+async def test_rba_provider_parse_failure_is_not_masked_by_stale(_isolated_cache_dir) -> None:
     import json as _json
 
     from ausecon_mcp.cache import TTLCache
 
-    cache = TTLCache(disk_dir=tmp_path / "cache", ttl_seconds=60)
+    cache = TTLCache(ttl_seconds=60)
     provider = RBAProvider(cache=cache)
     csv_payload = (FIXTURES / "rba_g1_sample.csv").read_text()
 
@@ -226,12 +226,12 @@ async def test_rba_provider_parse_failure_is_not_masked_by_stale(tmp_path) -> No
         )
         await provider.get_table("g1")
 
-    (file,) = (tmp_path / "cache").glob("*.json")
+    (file,) = _isolated_cache_dir.glob("*.json")
     data = _json.loads(file.read_text())
     data["expires_at"] = 0.0
     file.write_text(_json.dumps(data))
 
-    fresh_cache = TTLCache(disk_dir=tmp_path / "cache", ttl_seconds=60)
+    fresh_cache = TTLCache(ttl_seconds=60)
     fresh_provider = RBAProvider(cache=fresh_cache)
 
     with respx.mock(assert_all_called=True) as router:

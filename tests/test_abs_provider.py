@@ -149,10 +149,10 @@ async def test_abs_provider_stamps_server_version_in_metadata() -> None:
 
 
 @pytest.mark.asyncio
-async def test_abs_provider_returns_stale_on_upstream_failure(tmp_path) -> None:
+async def test_abs_provider_returns_stale_on_upstream_failure(_isolated_cache_dir) -> None:
     from ausecon_mcp.cache import TTLCache
 
-    cache = TTLCache(disk_dir=tmp_path / "cache", ttl_seconds=60)
+    cache = TTLCache(ttl_seconds=60)
     provider = ABSProvider(cache=cache)
     csv_payload = (FIXTURES / "abs_cpi_sample.csv").read_text()
 
@@ -164,12 +164,12 @@ async def test_abs_provider_returns_stale_on_upstream_failure(tmp_path) -> None:
 
     import json as _json
 
-    (file,) = (tmp_path / "cache").glob("*.json")
+    (file,) = _isolated_cache_dir.glob("*.json")
     data = _json.loads(file.read_text())
     data["expires_at"] = 0.0
     file.write_text(_json.dumps(data))
 
-    fresh_cache = TTLCache(disk_dir=tmp_path / "cache", ttl_seconds=60)
+    fresh_cache = TTLCache(ttl_seconds=60)
     fresh_provider = ABSProvider(cache=fresh_cache)
 
     with respx.mock(assert_all_called=True) as router:
@@ -186,10 +186,10 @@ async def test_abs_provider_returns_stale_on_upstream_failure(tmp_path) -> None:
 
 
 @pytest.mark.asyncio
-async def test_abs_provider_parse_failure_is_not_masked_by_stale(tmp_path) -> None:
+async def test_abs_provider_parse_failure_is_not_masked_by_stale(_isolated_cache_dir) -> None:
     from ausecon_mcp.cache import TTLCache
 
-    cache = TTLCache(disk_dir=tmp_path / "cache", ttl_seconds=60)
+    cache = TTLCache(ttl_seconds=60)
     provider = ABSProvider(cache=cache)
     csv_payload = (FIXTURES / "abs_cpi_sample.csv").read_text()
 
@@ -201,12 +201,12 @@ async def test_abs_provider_parse_failure_is_not_masked_by_stale(tmp_path) -> No
 
     import json as _json
 
-    (file,) = (tmp_path / "cache").glob("*.json")
+    (file,) = _isolated_cache_dir.glob("*.json")
     data = _json.loads(file.read_text())
     data["expires_at"] = 0.0
     file.write_text(_json.dumps(data))
 
-    fresh_cache = TTLCache(disk_dir=tmp_path / "cache", ttl_seconds=60)
+    fresh_cache = TTLCache(ttl_seconds=60)
     fresh_provider = ABSProvider(cache=fresh_cache)
 
     with respx.mock(assert_all_called=True) as router:

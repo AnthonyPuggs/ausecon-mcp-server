@@ -1,10 +1,13 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import time
+from pathlib import Path
 
 import pytest
 
+import ausecon_mcp.cache as cache_module
 from ausecon_mcp.cache import TTLCache
 
 
@@ -27,42 +30,39 @@ def test_cache_returns_deep_copies() -> None:
     assert cache.get("k") == {"series": [{"id": "a"}]}
 
 
-def test_cache_persists_to_disk_across_instances(tmp_path) -> None:
-    disk = tmp_path / "cache"
-    first = TTLCache(disk_dir=disk, ttl_seconds=60)
+def test_cache_persists_to_disk_across_instances(_isolated_cache_dir: Path) -> None:
+    first = TTLCache(ttl_seconds=60)
     first.set("k", {"v": 1})
 
-    second = TTLCache(disk_dir=disk, ttl_seconds=60)
+    second = TTLCache(ttl_seconds=60)
 
     assert second.get("k") == {"v": 1}
 
 
-def test_cache_expired_disk_entry_is_a_miss(tmp_path) -> None:
-    disk = tmp_path / "cache"
-    cache = TTLCache(disk_dir=disk, ttl_seconds=1)
+def test_cache_expired_disk_entry_is_a_miss(_isolated_cache_dir: Path) -> None:
+    cache = TTLCache(ttl_seconds=1)
     cache.set("k", {"v": 1})
 
     # Force expiry by rewriting the stored expires_at to the past.
-    (file,) = disk.glob("*.json")
+    (file,) = _isolated_cache_dir.glob("*.json")
     data = json.loads(file.read_text())
     data["expires_at"] = time.time() - 10
     file.write_text(json.dumps(data))
 
-    fresh = TTLCache(disk_dir=disk, ttl_seconds=1)
+    fresh = TTLCache(ttl_seconds=1)
     assert fresh.get("k") is None
 
 
-def test_get_stale_returns_expired_value_with_timestamps(tmp_path) -> None:
-    disk = tmp_path / "cache"
-    cache = TTLCache(disk_dir=disk, ttl_seconds=1)
+def test_get_stale_returns_expired_value_with_timestamps(_isolated_cache_dir: Path) -> None:
+    cache = TTLCache(ttl_seconds=1)
     cache.set("k", {"v": 1})
 
-    (file,) = disk.glob("*.json")
+    (file,) = _isolated_cache_dir.glob("*.json")
     data = json.loads(file.read_text())
     data["expires_at"] = time.time() - 10
     file.write_text(json.dumps(data))
 
-    fresh = TTLCache(disk_dir=disk, ttl_seconds=1)
+    fresh = TTLCache(ttl_seconds=1)
     stale = fresh.get_stale("k")
 
     assert stale is not None
@@ -71,9 +71,8 @@ def test_get_stale_returns_expired_value_with_timestamps(tmp_path) -> None:
     assert stale["expires_at"] == data["expires_at"]
 
 
-def test_get_stale_is_deep_copy(tmp_path) -> None:
-    disk = tmp_path / "cache"
-    cache = TTLCache(disk_dir=disk, ttl_seconds=60)
+def test_get_stale_is_deep_copy() -> None:
+    cache = TTLCache(ttl_seconds=60)
     cache.set("k", {"nested": [1, 2]})
 
     stale = cache.get_stale("k")
@@ -82,41 +81,39 @@ def test_get_stale_is_deep_copy(tmp_path) -> None:
     assert cache.get("k") == {"nested": [1, 2]}
 
 
-def test_get_stale_returns_none_when_missing(tmp_path) -> None:
-    cache = TTLCache(disk_dir=tmp_path / "cache", ttl_seconds=60)
+def test_get_stale_returns_none_when_missing() -> None:
+    cache = TTLCache(ttl_seconds=60)
     assert cache.get_stale("nope") is None
 
 
-def test_corrupt_json_self_heals(tmp_path) -> None:
-    disk = tmp_path / "cache"
-    cache = TTLCache(disk_dir=disk, ttl_seconds=60)
+def test_corrupt_json_self_heals(_isolated_cache_dir: Path) -> None:
+    cache = TTLCache(ttl_seconds=60)
     cache.set("k", {"v": 1})
 
-    (file,) = disk.glob("*.json")
+    (file,) = _isolated_cache_dir.glob("*.json")
     file.write_text("{ not json")
 
-    fresh = TTLCache(disk_dir=disk, ttl_seconds=60)
+    fresh = TTLCache(ttl_seconds=60)
     assert fresh.get("k") is None
     assert not file.exists()
 
 
-def test_schema_mismatch_self_heals(tmp_path) -> None:
-    disk = tmp_path / "cache"
-    cache = TTLCache(disk_dir=disk, ttl_seconds=60)
+def test_schema_mismatch_self_heals(_isolated_cache_dir: Path) -> None:
+    cache = TTLCache(ttl_seconds=60)
     cache.set("k", {"v": 1})
 
-    (file,) = disk.glob("*.json")
+    (file,) = _isolated_cache_dir.glob("*.json")
     data = json.loads(file.read_text())
     data["schema"] = 999
     file.write_text(json.dumps(data))
 
-    fresh = TTLCache(disk_dir=disk, ttl_seconds=60)
+    fresh = TTLCache(ttl_seconds=60)
     assert fresh.get("k") is None
     assert not file.exists()
 
 
-def test_disabled_cache_never_hits(tmp_path) -> None:
-    cache = TTLCache(disk_dir=tmp_path / "cache", disabled=True, ttl_seconds=60)
+def test_disabled_cache_never_hits() -> None:
+    cache = TTLCache(disabled=True, ttl_seconds=60)
 
     cache.set("k", {"v": 1})
 
@@ -124,30 +121,34 @@ def test_disabled_cache_never_hits(tmp_path) -> None:
     assert cache.get_stale("k") is None
 
 
-def test_disabled_env_var_also_disables(monkeypatch, tmp_path) -> None:
+def test_disabled_env_var_also_disables(monkeypatch) -> None:
     monkeypatch.setenv("AUSECON_CACHE_DISABLED", "1")
-    cache = TTLCache(disk_dir=tmp_path / "cache", ttl_seconds=60)
+    cache = TTLCache(ttl_seconds=60)
 
     cache.set("k", {"v": 1})
     assert cache.get("k") is None
 
 
-def test_cache_dir_env_override(monkeypatch, tmp_path) -> None:
+def test_cache_dir_env_override_is_ignored(
+    monkeypatch, tmp_path, _isolated_cache_dir: Path
+) -> None:
     override = tmp_path / "custom-cache"
     monkeypatch.setenv("AUSECON_CACHE_DIR", str(override))
     cache = TTLCache(ttl_seconds=60)
 
     cache.set("k", {"v": 1})
 
-    assert any(override.glob("*.json"))
+    assert any(_isolated_cache_dir.glob("*.json"))
+    assert not override.exists()
 
 
-def test_disk_write_failure_is_fail_soft(tmp_path) -> None:
+def test_disk_write_failure_is_fail_soft(tmp_path, monkeypatch) -> None:
     bad_dir = tmp_path / "readonly" / "cache"
     bad_dir.parent.mkdir()
     bad_dir.parent.chmod(0o500)
     try:
-        cache = TTLCache(disk_dir=bad_dir, ttl_seconds=60)
+        monkeypatch.setattr(cache_module, "_default_disk_dir", lambda: bad_dir)
+        cache = TTLCache(ttl_seconds=60)
         cache.set("k", {"v": 1})
         assert cache.get("k") == {"v": 1}
     finally:
@@ -160,9 +161,81 @@ def test_set_returns_stored_value() -> None:
     assert cache.set("k", {"v": 1}) == {"v": 1}
 
 
+def test_cache_uses_digest_based_file_names(_isolated_cache_dir: Path) -> None:
+    key = "abs-data:CPI/all?updated_after=2024-01-01"
+    cache = TTLCache(ttl_seconds=60)
+
+    cache.set(key, {"v": 1})
+
+    expected = f"{hashlib.sha256(key.encode('utf-8')).hexdigest()}.json"
+    files = list(_isolated_cache_dir.glob("*.json"))
+
+    assert [file.name for file in files] == [expected]
+
+
+def test_cache_keeps_instance_root_for_writes_after_helper_changes(tmp_path, monkeypatch) -> None:
+    first_root = tmp_path / "first-cache"
+    second_root = tmp_path / "second-cache"
+    monkeypatch.setattr(cache_module, "_default_disk_dir", lambda: first_root)
+    cache = TTLCache(ttl_seconds=60)
+
+    monkeypatch.setattr(cache_module, "_default_disk_dir", lambda: second_root)
+    cache.set("k", {"v": 1})
+
+    assert any(first_root.glob("*.json"))
+    assert not second_root.exists()
+
+
+def test_cache_keeps_instance_root_for_disk_reads_after_helper_changes(
+    tmp_path, monkeypatch
+) -> None:
+    key = "k"
+    root = tmp_path / "first-cache"
+    monkeypatch.setattr(cache_module, "_default_disk_dir", lambda: root)
+    cache = TTLCache(ttl_seconds=60)
+    root.mkdir(parents=True)
+    cache._path_for(key).write_text(
+        json.dumps(
+            {
+                "schema": 1,
+                "cached_at": time.time(),
+                "expires_at": time.time() + 60,
+                "value": {"v": 1},
+            }
+        )
+    )
+
+    monkeypatch.setattr(cache_module, "_default_disk_dir", lambda: tmp_path / "second-cache")
+    assert cache.get(key) == {"v": 1}
+
+
+def test_disk_write_does_not_escape_trusted_cache_root(
+    tmp_path, monkeypatch, _isolated_cache_dir: Path
+) -> None:
+    outside = tmp_path / "outside.json"
+    cache = TTLCache(ttl_seconds=60)
+    monkeypatch.setattr(cache, "_path_for", lambda _key: outside)
+
+    cache.set("k", {"v": 1})
+
+    assert cache.get("k") == {"v": 1}
+    assert not outside.exists()
+    assert not any(_isolated_cache_dir.glob("*.json"))
+
+
+def test_unlink_ignores_paths_outside_trusted_cache_root(tmp_path) -> None:
+    cache = TTLCache(ttl_seconds=60)
+    outside = tmp_path / "outside.json"
+    outside.write_text("keep me")
+
+    cache._unlink(outside)
+
+    assert outside.exists()
+
+
 @pytest.mark.parametrize("ttl", [0, -1])
-def test_zero_or_negative_ttl_expires_immediately(ttl, tmp_path) -> None:
-    cache = TTLCache(disk_dir=tmp_path / "cache", ttl_seconds=ttl)
+def test_zero_or_negative_ttl_expires_immediately(ttl) -> None:
+    cache = TTLCache(ttl_seconds=ttl)
     cache.set("k", {"v": 1})
 
     assert cache.get("k") is None

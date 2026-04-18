@@ -18,6 +18,10 @@ _SCHEMA_VERSION = 1
 _logger = get_logger("cache")
 
 
+def _default_disk_dir() -> Path:
+    return Path(user_cache_dir("ausecon-mcp")).expanduser().resolve(strict=False)
+
+
 @dataclass
 class _CacheEntry:
     cached_at: float
@@ -29,7 +33,6 @@ class TTLCache:
     def __init__(
         self,
         *,
-        disk_dir: str | os.PathLike[str] | None = None,
         disabled: bool | None = None,
         ttl_seconds: int = 3600,
     ) -> None:
@@ -40,9 +43,8 @@ class TTLCache:
             disabled = os.environ.get("AUSECON_CACHE_DISABLED", "").lower() in {"1", "true", "yes"}
         self._disabled = disabled
 
-        if disk_dir is None:
-            disk_dir = os.environ.get("AUSECON_CACHE_DIR") or user_cache_dir("ausecon-mcp")
-        self._disk_dir = Path(disk_dir)
+        # Keep on-disk cache writes inside the app-owned cache root.
+        self._disk_dir = _default_disk_dir()
 
     def get(self, key: str) -> Any | None:
         if self._disabled:
@@ -94,7 +96,14 @@ class TTLCache:
         return self._disk_dir / f"{digest}.json"
 
     def _read_disk(self, key: str) -> _CacheEntry | None:
-        path = self._path_for(key)
+        try:
+            path = self._checked_path(self._path_for(key))
+        except ValueError as exc:
+            _logger.warning(
+                "cache.disk_error",
+                extra={"op": "read", "error_type": type(exc).__name__},
+            )
+            return None
         if not path.is_file():
             return None
         try:
@@ -122,25 +131,38 @@ class TTLCache:
             "expires_at": entry.expires_at,
             "value": entry.value,
         }
+        tmp_path: Path | None = None
         try:
             self._disk_dir.mkdir(parents=True, exist_ok=True)
-            fd, tmp_name = tempfile.mkstemp(prefix=".cache-", dir=self._disk_dir)
+            checked_path = self._checked_path(path)
+            with tempfile.NamedTemporaryFile(
+                "w",
+                encoding="utf-8",
+                dir=self._disk_dir,
+                prefix=".cache-",
+                delete=False,
+            ) as fh:
+                tmp_path = self._checked_path(Path(fh.name))
+                json.dump(payload, fh)
             try:
-                with os.fdopen(fd, "w") as fh:
-                    json.dump(payload, fh)
-                os.replace(tmp_name, path)
+                os.replace(tmp_path, checked_path)
             except Exception:
-                self._unlink(Path(tmp_name))
+                if tmp_path is not None:
+                    self._unlink(tmp_path)
                 raise
-        except OSError as exc:
+        except (OSError, ValueError) as exc:
             _logger.warning(
                 "cache.disk_error",
                 extra={"op": "write", "error_type": type(exc).__name__},
             )
 
-    @staticmethod
-    def _unlink(path: Path) -> None:
+    def _checked_path(self, path: Path) -> Path:
+        resolved_path = Path(path).expanduser().resolve(strict=False)
+        resolved_path.relative_to(self._disk_dir)
+        return resolved_path
+
+    def _unlink(self, path: Path) -> None:
         try:
-            path.unlink(missing_ok=True)
-        except OSError:
+            self._checked_path(path).unlink(missing_ok=True)
+        except (OSError, ValueError):
             pass

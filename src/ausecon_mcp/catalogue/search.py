@@ -129,6 +129,5 @@ def _tokenise(value: str) -> set[str]:
 
 def _normalise_tokens(value: str) -> list[str]:
     return [
-        _TOKEN_SYNONYMS.get(raw_token, raw_token)
-        for raw_token in _TOKEN_RE.findall(value.lower())
+        _TOKEN_SYNONYMS.get(raw_token, raw_token) for raw_token in _TOKEN_RE.findall(value.lower())
     ]

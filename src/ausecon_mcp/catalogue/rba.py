@@ -685,9 +685,7 @@ RBA_CATALOGUE = {
         "id": "g3",
         "source": "rba",
         "name": "Inflation Expectations",
-        "description": (
-            "Consumer, union, market, and business measures of expected inflation."
-        ),
+        "description": ("Consumer, union, market, and business measures of expected inflation."),
         "frequency": "Monthly",
         "category": "inflation",
         "aliases": [

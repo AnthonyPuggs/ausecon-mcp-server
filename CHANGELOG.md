@@ -4,6 +4,23 @@ All notable changes to `ausecon-mcp-server` are recorded here. The format follow
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres
 to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.0] - 2026-04-18
+
+### Changed
+- Hardened the on-disk cache path handling so all cache file reads,
+  writes, and deletes are validated against the cache instance's
+  trusted app-cache root.
+- Removed support for the `AUSECON_CACHE_DIR` override. Disk cache
+  writes now stay under the platform app-cache directory.
+- Added an `Unreleased`-style follow-up cleanup to keep the branch
+  locally clean under `ruff format --check`, reformatting previously
+  drifting source files without changing runtime behaviour.
+
+### Fixed
+- Addressed the post-`v0.7.0` CodeQL findings by pinning third-party
+  GitHub Actions to immutable commit SHAs and by adding explicit
+  least-privilege top-level workflow permissions where required.
+
 ## [0.7.0] - 2026-04-18
 
 Production hardening release.

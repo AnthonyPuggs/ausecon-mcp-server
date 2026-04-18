@@ -119,8 +119,7 @@ def _match_concept(concept: str) -> tuple[str, str, dict[str, Any]]:
         entry = catalogue.get(dataset_id)
         if entry is None:
             raise AuseconValidationError(
-                f"Curated shortcut {concept!r} points at unknown "
-                f"{source} dataset {dataset_id!r}."
+                f"Curated shortcut {concept!r} points at unknown {source} dataset {dataset_id!r}."
             )
         return source, dataset_id, entry
 
@@ -175,8 +174,7 @@ def _match_variant(entry: dict[str, Any], variant: str | None) -> dict[str, Any]
             return candidate
     known = ", ".join(v["name"] for v in variants) or "(none declared)"
     raise AuseconValidationError(
-        f"Unknown variant {variant!r} for concept {entry['id']!r}. "
-        f"Known variants: {known}."
+        f"Unknown variant {variant!r} for concept {entry['id']!r}. Known variants: {known}."
     )
 
 
@@ -262,9 +260,7 @@ async def _resolve_abs_key(
 
 def _fragment_from_variant_key(variant_key: str, structure: dict[str, Any]) -> dict[str, str]:
     if _LITERAL_KEY_RE.match(variant_key):
-        ordered_dims = sorted(
-            structure.get("dimensions", []), key=lambda dim: dim["position"]
-        )
+        ordered_dims = sorted(structure.get("dimensions", []), key=lambda dim: dim["position"])
         fragment: dict[str, str] = {}
         for dim, part in zip(ordered_dims, variant_key.split("."), strict=False):
             if part:
@@ -316,8 +312,7 @@ def build_abs_key(
         dim = known_dims.get(dim_id)
         if dim is None:
             raise AuseconValidationError(
-                f"Dimension {dim_id!r} is not present in structure for "
-                f"{structure['id']!r}."
+                f"Dimension {dim_id!r} is not present in structure for {structure['id']!r}."
             )
         allowed = {value["code"] for value in dim.get("values", [])}
         if allowed and code not in allowed:

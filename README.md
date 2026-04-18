@@ -353,9 +353,12 @@ can reference the exact release that produced them.
 
 | Variable | Purpose | Default |
 | --- | --- | --- |
-| `AUSECON_CACHE_DIR` | Override the on-disk cache directory. | Platform default (`~/.cache/ausecon-mcp/` on Linux, `~/Library/Caches/ausecon-mcp/` on macOS). |
 | `AUSECON_CACHE_DISABLED` | Set to `1` / `true` / `yes` to turn off **all** caching (memory and disk). Useful for debugging. | unset (caching on). |
 | `AUSECON_LOG_LEVEL` | Logger level for the `ausecon_mcp` namespace (`DEBUG`, `INFO`, `WARNING`, `ERROR`). `DEBUG` enables cache-hit/miss events. | `INFO`. |
+
+The on-disk cache location is fixed to the platform app-cache directory
+(`~/.cache/ausecon-mcp/` on Linux, `~/Library/Caches/ausecon-mcp/` on macOS).
+`AUSECON_CACHE_DIR` is no longer supported.
 
 ## Development
 

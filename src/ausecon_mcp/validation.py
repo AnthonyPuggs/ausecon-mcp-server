@@ -93,9 +93,7 @@ def validate_iso_datetime(field_name: str, value: str | None) -> str | None:
         try:
             date.fromisoformat(normalised)
         except ValueError as exc:
-            raise AuseconValidationError(
-                f"{field_name} must be an ISO date or datetime."
-            ) from exc
+            raise AuseconValidationError(f"{field_name} must be an ISO date or datetime.") from exc
     return normalised
 
 
