@@ -420,6 +420,36 @@ async def test_service_forwards_tranche_a_rba_concepts(
     assert rba.last_get_table_kwargs["series_ids"] == series_ids
 
 
+@pytest.mark.asyncio
+async def test_service_forwards_last_n_to_abs_provider_for_semantic_call() -> None:
+    abs_provider = StubABSProvider()
+    service = AuseconService(abs_provider=abs_provider, rba_provider=StubRBAProvider())
+
+    await service.get_economic_series("headline_cpi", last_n=4)
+
+    assert abs_provider.last_get_data_kwargs is not None
+    assert abs_provider.last_get_data_kwargs["last_n"] == 4
+
+
+@pytest.mark.asyncio
+async def test_service_forwards_last_n_to_rba_provider_for_semantic_call() -> None:
+    rba = StubRBAProvider()
+    service = AuseconService(abs_provider=StubABSProvider(), rba_provider=rba)
+
+    await service.get_economic_series("cash_rate_target", last_n=12)
+
+    assert rba.last_get_table_kwargs is not None
+    assert rba.last_get_table_kwargs["last_n"] == 12
+
+
+@pytest.mark.asyncio
+async def test_service_rejects_non_positive_semantic_last_n() -> None:
+    service = AuseconService(abs_provider=StubABSProvider(), rba_provider=StubRBAProvider())
+
+    with pytest.raises(ValueError, match="last_n"):
+        await service.get_economic_series("cash_rate_target", last_n=0)
+
+
 TRANCHE_B_ABS_SERVICE = [
     ("current_account_balance", "BOP", "1.100.20.Q"),
     ("underemployment_rate", "LF_UNDER", "M23.3.1599.20.AUS.M"),

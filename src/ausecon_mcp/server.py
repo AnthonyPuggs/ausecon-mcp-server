@@ -122,8 +122,10 @@ class AuseconService:
         frequency: str | None = None,
         start: str | None = None,
         end: str | None = None,
+        last_n: int | None = None,
     ) -> dict:
         validated_concept = require_non_empty("concept", concept)
+        validated_last_n = validate_positive_int("last_n", last_n)
         resolved = await resolve(
             validated_concept,
             variant=variant,
@@ -144,7 +146,7 @@ class AuseconService:
                 series_ids=resolved.rba_series_ids,
                 start_date=validated_start,
                 end_date=validated_end,
-                last_n=None,
+                last_n=validated_last_n,
             )
 
         validated_start, validated_end = validate_abs_period_range(
@@ -158,6 +160,7 @@ class AuseconService:
             key=resolved.abs_key or "all",
             start_period=validated_start,
             end_period=validated_end,
+            last_n=validated_last_n,
         )
 
 
@@ -236,9 +239,11 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
         frequency: str | None = None,
         start: str | None = None,
         end: str | None = None,
+        last_n: int | None = None,
     ) -> dict:
         """Resolve an economic concept to an ABS or RBA retrieval, optionally narrowing by
-        variant, geography, and frequency."""
+        variant, geography, and frequency. Use ``last_n`` to cap observations to the most
+        recent N."""
         return await app_service.get_economic_series(
             concept=concept,
             variant=variant,
@@ -246,6 +251,7 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
             frequency=frequency,
             start=start,
             end=end,
+            last_n=last_n,
         )
 
     register_resources(mcp)
