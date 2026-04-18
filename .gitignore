@@ -12,4 +12,5 @@ ausecon-mcp-roadmap.md
 ausecon-mcp-roadmap-2.md
 .DS_Store
 src/ausecon_mcp/_version.py
+releases/
 
