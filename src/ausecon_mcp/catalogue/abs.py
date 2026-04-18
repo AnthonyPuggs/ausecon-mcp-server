@@ -195,7 +195,13 @@ ABS_CATALOGUE = {
         ],
         "frequencies": ["Q"],
         "geographies": ["national"],
-        "variants": [],
+        "variants": [
+            {
+                "name": "headline_wpi",
+                "aliases": ["headline", "total hourly rates"],
+                "abs_key": "3.THRPEB.7.TOT.20.AUS.Q",
+            },
+        ],
         "audit": {
             "last_audited": "2026-04-18",
             "upstream_url": "https://data.api.abs.gov.au/rest/dataflow/ABS/WPI/latest",
@@ -310,16 +316,20 @@ ABS_CATALOGUE = {
         "frequencies": ["M"],
         "geographies": ["national"],
         "variants": [
-            {"name": "employment", "aliases": ["employed persons"], "abs_key": None},
+            {
+                "name": "employment",
+                "aliases": ["employed persons"],
+                "abs_key": "M3.3.1599.20.AUS.M",
+            },
             {
                 "name": "unemployment_rate",
                 "aliases": ["unemployment", "jobless rate"],
-                "abs_key": None,
+                "abs_key": "M13.3.1599.20.AUS.M",
             },
             {
                 "name": "participation_rate",
                 "aliases": ["participation"],
-                "abs_key": None,
+                "abs_key": "M12.3.1599.20.AUS.M",
             },
         ],
         "audit": {
@@ -974,7 +984,11 @@ ABS_CATALOGUE = {
         "variants": [
             {"name": "exports", "aliases": [], "abs_key": None},
             {"name": "imports", "aliases": [], "abs_key": None},
-            {"name": "trade_balance", "aliases": ["net exports"], "abs_key": None},
+            {
+                "name": "trade_balance",
+                "aliases": ["net exports"],
+                "abs_key": "M1.170.20.AUS.M",
+            },
         ],
         "audit": {
             "last_audited": "2026-04-18",

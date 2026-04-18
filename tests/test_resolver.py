@@ -77,7 +77,7 @@ async def test_resolve_rba_variant_returns_populated_series_ids() -> None:
 @pytest.mark.asyncio
 async def test_resolve_rba_unpopulated_variant_raises() -> None:
     with pytest.raises(ValueError, match="rba_series_ids populated"):
-        await resolve("trimmed_mean_inflation", variant="weighted_median")
+        await resolve("g3", variant="market")
 
 
 @pytest.mark.asyncio
@@ -243,10 +243,66 @@ def test_resolve_rba_csv_path_uses_explicit_csv_path_when_declared() -> None:
         del RBA_CATALOGUE["__test__"]
 
 
-def test_curated_shortcuts_cover_v030_concepts() -> None:
+def test_curated_shortcuts_cover_v0110_tranche_a_concepts() -> None:
     assert set(CURATED_SHORTCUTS) == {
         "cash_rate_target",
         "headline_cpi",
         "trimmed_mean_inflation",
         "gdp_growth",
+        # Tranche A
+        "employment",
+        "unemployment_rate",
+        "participation_rate",
+        "wage_growth",
+        "trade_balance",
+        "weighted_median_inflation",
+        "monthly_inflation",
+        "aud_usd",
+        "trade_weighted_index",
+        "government_bond_yield_3y",
+        "government_bond_yield_10y",
+        "housing_credit",
     }
+
+
+TRANCHE_A_ABS = [
+    ("employment", "LF", "employment", "M3.3.1599.20.AUS.M"),
+    ("unemployment_rate", "LF", "unemployment_rate", "M13.3.1599.20.AUS.M"),
+    ("participation_rate", "LF", "participation_rate", "M12.3.1599.20.AUS.M"),
+    ("wage_growth", "WPI", "headline_wpi", "3.THRPEB.7.TOT.20.AUS.Q"),
+    ("trade_balance", "ITGS", "trade_balance", "M1.170.20.AUS.M"),
+]
+
+TRANCHE_A_RBA = [
+    ("weighted_median_inflation", "g1", "weighted_median", ["GCPIOCPMWMYP"]),
+    ("monthly_inflation", "g4", "headline_monthly", ["GCPIAGSAMP"]),
+    ("aud_usd", "f11", "aud_usd", ["FXRUSD"]),
+    ("trade_weighted_index", "f11", "twi", ["FXRTWI"]),
+    ("government_bond_yield_3y", "f17", "ags_3y", ["FZCY300D"]),
+    ("government_bond_yield_10y", "f17", "ags_10y", ["FZCY1000D"]),
+    ("housing_credit", "d2", "housing", ["DLCACOHS", "DLCACIHS"]),
+]
+
+
+@pytest.mark.parametrize(("concept", "dataset_id", "variant", "abs_key"), TRANCHE_A_ABS)
+@pytest.mark.asyncio
+async def test_resolve_tranche_a_abs_concepts(
+    concept: str, dataset_id: str, variant: str, abs_key: str
+) -> None:
+    result = await resolve(concept)
+    assert result.source == "abs"
+    assert result.dataset_id == dataset_id
+    assert result.variant == variant
+    assert result.abs_key == abs_key
+
+
+@pytest.mark.parametrize(("concept", "dataset_id", "variant", "series_ids"), TRANCHE_A_RBA)
+@pytest.mark.asyncio
+async def test_resolve_tranche_a_rba_concepts(
+    concept: str, dataset_id: str, variant: str, series_ids: list[str]
+) -> None:
+    result = await resolve(concept)
+    assert result.source == "rba"
+    assert result.dataset_id == dataset_id
+    assert result.variant == variant
+    assert result.rba_series_ids == series_ids

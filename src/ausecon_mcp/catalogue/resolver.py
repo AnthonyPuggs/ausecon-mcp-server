@@ -67,6 +67,23 @@ CURATED_SHORTCUTS: dict[str, dict[str, Any]] = {
     "headline_cpi": {"source": "abs", "dataset_id": "CPI", "variant": "headline"},
     "trimmed_mean_inflation": {"source": "rba", "dataset_id": "g1", "variant": "trimmed_mean"},
     "gdp_growth": {"source": "abs", "dataset_id": "ANA_AGG", "variant": "gdp_growth"},
+    # Tranche A
+    "employment": {"source": "abs", "dataset_id": "LF", "variant": "employment"},
+    "unemployment_rate": {"source": "abs", "dataset_id": "LF", "variant": "unemployment_rate"},
+    "participation_rate": {"source": "abs", "dataset_id": "LF", "variant": "participation_rate"},
+    "wage_growth": {"source": "abs", "dataset_id": "WPI", "variant": "headline_wpi"},
+    "trade_balance": {"source": "abs", "dataset_id": "ITGS", "variant": "trade_balance"},
+    "weighted_median_inflation": {
+        "source": "rba",
+        "dataset_id": "g1",
+        "variant": "weighted_median",
+    },
+    "monthly_inflation": {"source": "rba", "dataset_id": "g4", "variant": "headline_monthly"},
+    "aud_usd": {"source": "rba", "dataset_id": "f11", "variant": "aud_usd"},
+    "trade_weighted_index": {"source": "rba", "dataset_id": "f11", "variant": "twi"},
+    "government_bond_yield_3y": {"source": "rba", "dataset_id": "f17", "variant": "ags_3y"},
+    "government_bond_yield_10y": {"source": "rba", "dataset_id": "f17", "variant": "ags_10y"},
+    "housing_credit": {"source": "rba", "dataset_id": "d2", "variant": "housing"},
 }
 
 
