@@ -351,6 +351,46 @@ async def test_service_rejects_unknown_rba_category() -> None:
         await service.list_rba_tables(category="housing")
 
 
+async def test_service_resolves_rba_csv_path_before_calling_provider() -> None:
+    rba_provider = StubRBAProvider()
+    service = AuseconService(abs_provider=StubABSProvider(), rba_provider=rba_provider)
+
+    await service.get_rba_table("f17")
+
+    assert rba_provider.last_get_table_kwargs is not None
+    assert rba_provider.last_get_table_kwargs["csv_path"] == "f17-yields.csv"
+
+
+async def test_service_defaults_rba_csv_path_when_not_declared() -> None:
+    rba_provider = StubRBAProvider()
+    service = AuseconService(abs_provider=StubABSProvider(), rba_provider=rba_provider)
+
+    await service.get_rba_table("f16")
+
+    assert rba_provider.last_get_table_kwargs is not None
+    assert rba_provider.last_get_table_kwargs["csv_path"] == "f16-data.csv"
+
+
+async def test_service_resolves_abs_upstream_id_before_calling_provider() -> None:
+    abs_provider = StubABSProvider()
+    service = AuseconService(abs_provider=abs_provider, rba_provider=StubRBAProvider())
+
+    await service.get_abs_data("LABOUR_ACCT_A", start_period="2023")
+
+    assert abs_provider.last_get_data_kwargs is not None
+    assert abs_provider.last_get_data_kwargs["dataflow_id"] == "ABS_LABOUR_ACCT"
+
+
+async def test_service_passes_through_dataflow_id_when_no_upstream_id_declared() -> None:
+    abs_provider = StubABSProvider()
+    service = AuseconService(abs_provider=abs_provider, rba_provider=StubRBAProvider())
+
+    await service.get_abs_data("CPI")
+
+    assert abs_provider.last_get_data_kwargs is not None
+    assert abs_provider.last_get_data_kwargs["dataflow_id"] == "CPI"
+
+
 async def test_registered_tools_carry_readonly_and_openworld_annotations() -> None:
     mcp = build_server()
 

@@ -99,6 +99,83 @@ RBA_CATALOGUE = {
         "variants": [],
         "discontinued": True,
     },
+    "b1": {
+        "id": "b1",
+        "source": "rba",
+        "name": "Assets of Financial Institutions",
+        "description": (
+            "Monthly assets of Australia's financial institutions (banks, building "
+            "societies, credit unions, money market corporations, finance companies, "
+            "life insurers, superannuation, and managed funds). Headline measure of "
+            "the size of the domestic financial sector."
+        ),
+        "frequency": "Monthly",
+        "category": "money_credit",
+        "aliases": [
+            "financial institutions assets",
+            "financial sector assets",
+            "banking sector assets",
+        ],
+        "tags": [
+            "banking",
+            "financial sector",
+            "balance sheet",
+        ],
+        "frequencies": ["M"],
+        "geographies": ["national"],
+        "variants": [],
+    },
+    "b2": {
+        "id": "b2",
+        "source": "rba",
+        "name": "Banks - Off-Balance Sheet Business",
+        "description": (
+            "Quarterly notional principal of banks' off-balance-sheet exposures "
+            "(derivatives, guarantees, commitments). Useful for tracking "
+            "leverage and counterparty exposure trends."
+        ),
+        "frequency": "Quarterly",
+        "category": "money_credit",
+        "aliases": [
+            "off-balance sheet business",
+            "bank derivatives",
+            "notional exposures",
+        ],
+        "tags": [
+            "banking",
+            "derivatives",
+            "off-balance sheet",
+        ],
+        "frequencies": ["Q"],
+        "geographies": ["national"],
+        "variants": [],
+    },
+    "b3": {
+        "id": "b3",
+        "source": "rba",
+        "name": "Repurchase Agreements and Stock Lending by Banks and RFCs",
+        "description": (
+            "Monthly repo and securities lending activity by Australian banks "
+            "and registered financial corporations. Relevant for short-term "
+            "funding and collateral market analysis."
+        ),
+        "frequency": "Monthly",
+        "category": "money_credit",
+        "aliases": [
+            "repo",
+            "repurchase agreements",
+            "securities lending",
+            "stock lending",
+        ],
+        "tags": [
+            "repo",
+            "funding markets",
+            "securities lending",
+        ],
+        "frequencies": ["M"],
+        "geographies": ["national"],
+        "variants": [],
+    },
     "c1": {
         "id": "c1",
         "source": "rba",
@@ -115,6 +192,156 @@ RBA_CATALOGUE = {
             "payments",
             "cards",
             "merchant spending",
+        ],
+        "frequencies": ["M"],
+        "geographies": ["national"],
+        "variants": [],
+    },
+    "c1.2": {
+        "id": "c1.2",
+        "source": "rba",
+        "name": "Credit and Charge Cards - Original Series - Personal and Commercial",
+        "description": (
+            "Monthly credit and charge card usage split by personal vs. commercial "
+            "card type, on an original (not seasonally adjusted) basis. Finer "
+            "detail than C1 for retail payments analysis."
+        ),
+        "frequency": "Monthly",
+        "category": "payments",
+        "aliases": [
+            "credit cards original series",
+            "personal cards",
+            "commercial cards",
+        ],
+        "tags": [
+            "payments",
+            "cards",
+            "personal cards",
+            "commercial cards",
+        ],
+        "frequencies": ["M"],
+        "geographies": ["national"],
+        "variants": [],
+    },
+    "c2": {
+        "id": "c2",
+        "source": "rba",
+        "name": "Debit Cards - Seasonally Adjusted",
+        "description": (
+            "Monthly debit card transaction volumes and values on a seasonally "
+            "adjusted basis. Tracks shift away from cash / cheques."
+        ),
+        "frequency": "Monthly",
+        "category": "payments",
+        "aliases": [
+            "debit cards",
+            "eftpos",
+            "debit card statistics",
+        ],
+        "tags": [
+            "payments",
+            "debit cards",
+            "eftpos",
+        ],
+        "frequencies": ["M"],
+        "geographies": ["national"],
+        "variants": [],
+    },
+    "c3": {
+        "id": "c3",
+        "source": "rba",
+        "name": "Average Merchant Fees for Debit, Credit and Charge Cards",
+        "description": (
+            "Quarterly merchant service fees by card scheme. Used for card-payments "
+            "competition and interchange analysis."
+        ),
+        "frequency": "Quarterly",
+        "category": "payments",
+        "aliases": [
+            "merchant fees",
+            "card fees",
+            "interchange fees",
+        ],
+        "tags": [
+            "payments",
+            "merchant fees",
+            "interchange",
+        ],
+        "frequencies": ["Q"],
+        "geographies": ["national"],
+        "variants": [],
+    },
+    "c4": {
+        "id": "c4",
+        "source": "rba",
+        "name": "ATMs - Seasonally Adjusted",
+        "description": (
+            "Monthly ATM transaction volumes and values, seasonally adjusted. "
+            "Tracks the decline of cash-out usage."
+        ),
+        "frequency": "Monthly",
+        "category": "payments",
+        "aliases": [
+            "atm withdrawals",
+            "atm transactions",
+            "cash withdrawals",
+        ],
+        "tags": [
+            "payments",
+            "atm",
+            "cash",
+        ],
+        "frequencies": ["M"],
+        "geographies": ["national"],
+        "variants": [],
+    },
+    "c5": {
+        "id": "c5",
+        "source": "rba",
+        "name": "Cheques - Seasonally Adjusted",
+        "description": (
+            "Monthly cheque transaction volumes and values, seasonally adjusted. "
+            "Tracks the long-run decline of paper-based payments."
+        ),
+        "frequency": "Monthly",
+        "category": "payments",
+        "aliases": [
+            "cheques",
+            "cheque statistics",
+            "paper payments",
+        ],
+        "tags": [
+            "payments",
+            "cheques",
+            "paper payments",
+        ],
+        "frequencies": ["M"],
+        "geographies": ["national"],
+        "variants": [],
+    },
+    "c6": {
+        "id": "c6",
+        "source": "rba",
+        "name": "Direct Entry and NPP - Seasonally Adjusted",
+        "description": (
+            "Monthly direct entry and New Payments Platform (NPP) transaction "
+            "volumes and values, seasonally adjusted. Tracks real-time account-to-"
+            "account payments adoption."
+        ),
+        "frequency": "Monthly",
+        "category": "payments",
+        "aliases": [
+            "npp",
+            "new payments platform",
+            "direct entry",
+            "osko",
+            "account to account payments",
+        ],
+        "tags": [
+            "payments",
+            "npp",
+            "direct entry",
+            "real-time payments",
         ],
         "frequencies": ["M"],
         "geographies": ["national"],
@@ -143,6 +370,32 @@ RBA_CATALOGUE = {
             "wholesale",
         ],
         "frequencies": ["M"],
+        "geographies": ["national"],
+        "variants": [],
+    },
+    "c8": {
+        "id": "c8",
+        "source": "rba",
+        "name": "Points of Access to the Australian Payments System",
+        "description": (
+            "Annual counts of payments-system access points (bank branches, ATMs, "
+            "EFTPOS terminals) across Australia."
+        ),
+        "frequency": "Annual",
+        "category": "payments",
+        "aliases": [
+            "points of access",
+            "bank branches",
+            "atm count",
+            "eftpos terminals",
+        ],
+        "tags": [
+            "payments",
+            "access points",
+            "branches",
+            "atms",
+        ],
+        "frequencies": ["A"],
         "geographies": ["national"],
         "variants": [],
     },
@@ -295,6 +548,55 @@ RBA_CATALOGUE = {
             {"name": "business", "aliases": ["business lending"], "rba_series_ids": None},
             {"name": "household", "aliases": ["household lending"], "rba_series_ids": None},
         ],
+    },
+    "d9": {
+        "id": "d9",
+        "source": "rba",
+        "name": "Rural Debt by Lender",
+        "description": (
+            "Quarterly outstanding rural debt by lender type (banks vs. pastoral "
+            "finance companies). Niche but the only published breakdown of "
+            "Australian agricultural-sector credit."
+        ),
+        "frequency": "Quarterly",
+        "category": "money_credit",
+        "aliases": [
+            "rural debt",
+            "agricultural credit",
+            "farm debt",
+        ],
+        "tags": [
+            "rural",
+            "agriculture",
+            "credit",
+        ],
+        "frequencies": ["Q"],
+        "geographies": ["national"],
+        "variants": [],
+    },
+    "d10": {
+        "id": "d10",
+        "source": "rba",
+        "name": "Margin Lending",
+        "description": (
+            "Quarterly margin loan balances, client and facility counts, and "
+            "credit limits. Captures household leveraged equity investment."
+        ),
+        "frequency": "Quarterly",
+        "category": "money_credit",
+        "aliases": [
+            "margin loans",
+            "margin lending",
+            "equity-backed lending",
+        ],
+        "tags": [
+            "margin loans",
+            "household leverage",
+            "equity markets",
+        ],
+        "frequencies": ["Q"],
+        "geographies": ["national"],
+        "variants": [],
     },
     "d14": {
         "id": "d14",
@@ -496,6 +798,31 @@ RBA_CATALOGUE = {
         "geographies": ["national"],
         "variants": [],
     },
+    "f4.1": {
+        "id": "f4.1",
+        "source": "rba",
+        "name": "Paid Deposit Rates",
+        "description": (
+            "Monthly average interest rates actually paid on deposits by "
+            "Australian banks, by deposit type. Complements F4 (advertised "
+            "rates) with transaction-weighted measures."
+        ),
+        "frequency": "Monthly",
+        "category": "interest_rates",
+        "aliases": [
+            "paid deposit rates",
+            "actual deposit rates",
+            "average deposit rate",
+        ],
+        "tags": [
+            "deposit rates",
+            "banking",
+            "transaction-weighted",
+        ],
+        "frequencies": ["M"],
+        "geographies": ["national"],
+        "variants": [],
+    },
     "f5": {
         "id": "f5",
         "source": "rba",
@@ -619,6 +946,32 @@ RBA_CATALOGUE = {
         "geographies": ["national"],
         "variants": [],
     },
+    "f11.1": {
+        "id": "f11.1",
+        "source": "rba",
+        "name": "Exchange Rates - Extended Series",
+        "description": (
+            "Daily Australian dollar bilateral exchange rates against additional "
+            "currencies not covered in F11, including cross-rates and emerging-"
+            "market pairs."
+        ),
+        "frequency": "Daily",
+        "category": "exchange_rates",
+        "aliases": [
+            "exchange rates extended",
+            "additional currencies",
+            "emerging market currencies",
+            "cross rates",
+        ],
+        "tags": [
+            "exchange rates",
+            "bilateral",
+            "cross rates",
+        ],
+        "frequencies": ["D"],
+        "geographies": ["national"],
+        "variants": [],
+    },
     "f12": {
         "id": "f12",
         "source": "rba",
@@ -660,6 +1013,63 @@ RBA_CATALOGUE = {
             "twi",
         ],
         "frequencies": ["M"],
+        "geographies": ["national"],
+        "variants": [],
+    },
+    "f16": {
+        "id": "f16",
+        "source": "rba",
+        "name": "Indicative Mid Rates of Selected Australian Government Securities",
+        "description": (
+            "Daily indicative mid yields on Australian Government Securities "
+            "across the curve (2, 3, 5, 10 year and others). Core input for "
+            "fixed-income and monetary-policy analysis."
+        ),
+        "frequency": "Daily",
+        "category": "interest_rates",
+        "aliases": [
+            "ags yields",
+            "government bond yields",
+            "commonwealth government securities",
+            "cgs",
+            "bond curve",
+        ],
+        "tags": [
+            "bond yields",
+            "government bonds",
+            "yield curve",
+            "ags",
+        ],
+        "frequencies": ["D"],
+        "geographies": ["national"],
+        "variants": [],
+    },
+    "f17": {
+        "id": "f17",
+        "source": "rba",
+        "csv_path": "f17-yields.csv",
+        "name": "Zero-Coupon Interest Rates - Analytical Series (Yields)",
+        "description": (
+            "Daily zero-coupon yield curve fitted by the RBA from Australian "
+            "Government Securities, at quarter-year maturities from 0 to 10 "
+            "years. Published as separate yields, discount-factors, and forward-"
+            "rates files; this entry retrieves the yields slice."
+        ),
+        "frequency": "Daily",
+        "category": "interest_rates",
+        "aliases": [
+            "zero coupon yields",
+            "zero-coupon rates",
+            "spot yield curve",
+            "analytical yields",
+        ],
+        "tags": [
+            "yield curve",
+            "zero coupon",
+            "analytical",
+            "term structure",
+        ],
+        "frequencies": ["D"],
         "geographies": ["national"],
         "variants": [],
     },

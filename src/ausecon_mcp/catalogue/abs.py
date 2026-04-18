@@ -342,6 +342,34 @@ ABS_CATALOGUE = {
         "geographies": ["national"],
         "variants": [],
     },
+    "LABOUR_ACCT_A": {
+        "id": "LABOUR_ACCT_A",
+        "upstream_id": "ABS_LABOUR_ACCT",
+        "source": "abs",
+        "name": "Australian Labour Account, Annual Balanced",
+        "description": (
+            "Annual balanced labour account by industry subdivision, division, and "
+            "total all industries. Reconciles employer and household measures of "
+            "employment, hours, jobs, and labour income."
+        ),
+        "frequency": "Annual",
+        "category": "labour",
+        "aliases": [
+            "annual labour account",
+            "labour account annual",
+            "balanced labour account",
+            "labour account by industry",
+        ],
+        "tags": [
+            "industry",
+            "balanced",
+            "annual",
+            "jobs framework",
+        ],
+        "frequencies": ["A"],
+        "geographies": ["national"],
+        "variants": [],
+    },
     "JV": {
         "id": "JV",
         "source": "abs",
@@ -442,6 +470,71 @@ ABS_CATALOGUE = {
         ],
         "frequencies": ["Q"],
         "geographies": ["national"],
+        "variants": [],
+    },
+    "ANA_IND_GVA": {
+        "id": "ANA_IND_GVA",
+        "source": "abs",
+        "name": "National Accounts - Production (GVA by Industry)",
+        "description": (
+            "Quarterly national accounts production-side gross value added by "
+            "industry (ANZSIC division). Complements the expenditure and income "
+            "measures for cross-checking quarterly GDP."
+        ),
+        "frequency": "Quarterly",
+        "category": "national_accounts",
+        "aliases": [
+            "gdp production",
+            "gdpp",
+            "gva by industry",
+            "industry gross value added",
+            "production measure of gdp",
+        ],
+        "tags": [
+            "production",
+            "industry",
+            "gross value added",
+            "anzsic",
+        ],
+        "frequencies": ["Q"],
+        "geographies": ["national"],
+        "variants": [],
+    },
+    "ANA_SFD": {
+        "id": "ANA_SFD",
+        "source": "abs",
+        "name": "State Final Demand",
+        "description": (
+            "Quarterly state final demand (household consumption, private and "
+            "public investment, government consumption) by state and territory. "
+            "Key input for state-level activity analysis."
+        ),
+        "frequency": "Quarterly",
+        "category": "national_accounts",
+        "aliases": [
+            "state final demand",
+            "sfd",
+            "state demand",
+            "state gdp proxy",
+        ],
+        "tags": [
+            "state",
+            "final demand",
+            "consumption",
+            "investment",
+        ],
+        "frequencies": ["Q"],
+        "geographies": [
+            "national",
+            "nsw",
+            "vic",
+            "qld",
+            "sa",
+            "wa",
+            "tas",
+            "nt",
+            "act",
+        ],
         "variants": [],
     },
     "RT": {
@@ -621,6 +714,32 @@ ABS_CATALOGUE = {
             },
         ],
     },
+    "EWD": {
+        "id": "EWD",
+        "source": "abs",
+        "name": "Engineering Construction Work Done",
+        "description": (
+            "Quarterly preliminary engineering construction work done, split by "
+            "sector (private / public) and type of activity. Leading indicator "
+            "for infrastructure and resource-sector investment."
+        ),
+        "frequency": "Quarterly",
+        "category": "housing_construction",
+        "aliases": [
+            "engineering construction",
+            "engineering construction work done",
+            "infrastructure construction",
+        ],
+        "tags": [
+            "engineering construction",
+            "infrastructure",
+            "resources investment",
+            "preliminary",
+        ],
+        "frequencies": ["Q"],
+        "geographies": ["national"],
+        "variants": [],
+    },
     "RES_DWELL": {
         "id": "RES_DWELL",
         "source": "abs",
@@ -780,6 +899,39 @@ ABS_CATALOGUE = {
         "geographies": ["national"],
         "variants": [],
     },
+    "BOP_STATE": {
+        "id": "BOP_STATE",
+        "source": "abs",
+        "name": "Balance of Payments by State",
+        "description": (
+            "Quarterly balance of payments decomposed by state and territory, "
+            "covering goods and services, primary income, and secondary income."
+        ),
+        "frequency": "Quarterly",
+        "category": "external_sector",
+        "aliases": [
+            "balance of payments by state",
+            "state bop",
+            "state exports",
+        ],
+        "tags": [
+            "state",
+            "current account",
+            "goods and services",
+        ],
+        "frequencies": ["Q"],
+        "geographies": [
+            "nsw",
+            "vic",
+            "qld",
+            "sa",
+            "wa",
+            "tas",
+            "nt",
+            "act",
+        ],
+        "variants": [],
+    },
     "IIP": {
         "id": "IIP",
         "source": "abs",
@@ -887,6 +1039,60 @@ ABS_CATALOGUE = {
             "demography",
         ],
         "frequencies": ["Q"],
+        "geographies": ["national"],
+        "variants": [],
+    },
+    "ERP_COMP_Q": {
+        "id": "ERP_COMP_Q",
+        "source": "abs",
+        "name": "Population and Components of Change",
+        "description": (
+            "Quarterly population components: natural increase (births, deaths), "
+            "net overseas migration, and net interstate migration by state and "
+            "territory. Decomposes the headline ERP growth rate."
+        ),
+        "frequency": "Quarterly",
+        "category": "demographics",
+        "aliases": [
+            "population components",
+            "births deaths migration",
+            "natural increase",
+            "net overseas migration",
+            "nom",
+        ],
+        "tags": [
+            "natural increase",
+            "migration",
+            "births",
+            "deaths",
+            "interstate",
+        ],
+        "frequencies": ["Q"],
+        "geographies": ["national"],
+        "variants": [],
+    },
+    "POP_PROJ": {
+        "id": "POP_PROJ",
+        "source": "abs",
+        "name": "Population Projections, Australia, 2022-2071",
+        "description": (
+            "Long-run projections of the Australian resident population by age, "
+            "sex, and state/territory under multiple fertility, mortality, and "
+            "migration scenarios."
+        ),
+        "frequency": "Annual",
+        "category": "demographics",
+        "aliases": [
+            "population projections",
+            "long run population",
+            "future population",
+        ],
+        "tags": [
+            "projections",
+            "long run",
+            "scenarios",
+        ],
+        "frequencies": ["A"],
         "geographies": ["national"],
         "variants": [],
     },
