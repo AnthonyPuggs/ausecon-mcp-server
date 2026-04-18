@@ -32,7 +32,7 @@ def search_catalogue(query: str, source: str | None = None) -> list[dict]:
 
     for collection_source, collection in _iter_collections(source):
         for entry in collection.values():
-            if entry.get("discontinued", False):
+            if entry.get("discontinued", False) or entry.get("ceased", False):
                 continue
 
             score = _score_entry(query_text, query_terms, entry)

@@ -31,6 +31,11 @@ ABS_CATALOGUE = {
             {"name": "trimmed_mean", "aliases": ["core", "trimmed mean"], "abs_key": None},
             {"name": "weighted_median", "aliases": ["weighted median"], "abs_key": None},
         ],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://data.api.abs.gov.au/rest/dataflow/ABS/CPI/latest",
+            "upstream_title": "Consumer Price Index (CPI)",
+        },
     },
     "CPI_M": {
         "id": "CPI_M",
@@ -56,7 +61,12 @@ ABS_CATALOGUE = {
         "frequencies": ["M"],
         "geographies": ["national"],
         "variants": [],
-        "discontinued": True,
+        "ceased": True,
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://data.api.abs.gov.au/rest/dataflow/ABS/CPI_M/latest",
+            "upstream_title": "Monthly Consumer Price Index (CPI) indicator",
+        },
     },
     "PPI": {
         "id": "PPI",
@@ -82,6 +92,11 @@ ABS_CATALOGUE = {
             {"name": "export", "aliases": ["export prices"], "abs_key": None},
             {"name": "import", "aliases": ["import prices"], "abs_key": None},
         ],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://data.api.abs.gov.au/rest/dataflow/ABS/PPI/latest",
+            "upstream_title": "Producer Price Indexes by Industry",
+        },
     },
     "PPI_FD": {
         "id": "PPI_FD",
@@ -103,6 +118,11 @@ ABS_CATALOGUE = {
         "frequencies": ["Q"],
         "geographies": ["national"],
         "variants": [],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://data.api.abs.gov.au/rest/dataflow/ABS/PPI_FD/latest",
+            "upstream_title": "Producer Price Indexes, Final Demand",
+        },
     },
     "ITPI_EXP": {
         "id": "ITPI_EXP",
@@ -124,6 +144,11 @@ ABS_CATALOGUE = {
         "frequencies": ["Q"],
         "geographies": ["national"],
         "variants": [],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://data.api.abs.gov.au/rest/dataflow/ABS/ITPI_EXP/latest",
+            "upstream_title": "Export Price Index",
+        },
     },
     "ITPI_IMP": {
         "id": "ITPI_IMP",
@@ -145,6 +170,11 @@ ABS_CATALOGUE = {
         "frequencies": ["Q"],
         "geographies": ["national"],
         "variants": [],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://data.api.abs.gov.au/rest/dataflow/ABS/ITPI_IMP/latest",
+            "upstream_title": "Import Price Index",
+        },
     },
     "WPI": {
         "id": "WPI",
@@ -166,6 +196,11 @@ ABS_CATALOGUE = {
         "frequencies": ["Q"],
         "geographies": ["national"],
         "variants": [],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://data.api.abs.gov.au/rest/dataflow/ABS/WPI/latest",
+            "upstream_title": "Wage Price Index",
+        },
     },
     "AWE": {
         "id": "AWE",
@@ -187,9 +222,15 @@ ABS_CATALOGUE = {
         "frequencies": ["A"],
         "geographies": ["national"],
         "variants": [],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://data.api.abs.gov.au/rest/dataflow/ABS/AWE/latest",
+            "upstream_title": "Average Weekly Earnings",
+        },
     },
-    "LCI": {
-        "id": "LCI",
+    "SLCI": {
+        "id": "SLCI",
+        "upstream_id": "LCI",
         "source": "abs",
         "name": "Selected Living Cost Indexes",
         "description": (
@@ -240,6 +281,11 @@ ABS_CATALOGUE = {
                 "abs_key": None,
             },
         ],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://data.api.abs.gov.au/rest/dataflow/ABS/LCI/latest",
+            "upstream_title": "Selected Living Cost Indexes",
+        },
     },
     "LF": {
         "id": "LF",
@@ -276,6 +322,11 @@ ABS_CATALOGUE = {
                 "abs_key": None,
             },
         ],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://data.api.abs.gov.au/rest/dataflow/ABS/LF/latest",
+            "upstream_title": "Labour Force",
+        },
     },
     "LF_HOURS": {
         "id": "LF_HOURS",
@@ -297,6 +348,11 @@ ABS_CATALOGUE = {
         "frequencies": ["M"],
         "geographies": ["national"],
         "variants": [],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://data.api.abs.gov.au/rest/dataflow/ABS/LF_HOURS/latest",
+            "upstream_title": "Labour Force: Hours worked by sector",
+        },
     },
     "LF_UNDER": {
         "id": "LF_UNDER",
@@ -318,6 +374,11 @@ ABS_CATALOGUE = {
         "frequencies": ["M"],
         "geographies": ["national"],
         "variants": [],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://data.api.abs.gov.au/rest/dataflow/ABS/LF_UNDER/latest",
+            "upstream_title": "Labour force - underemployment and underutilisation",
+        },
     },
     "LABOUR_ACCT_Q": {
         "id": "LABOUR_ACCT_Q",
@@ -341,6 +402,14 @@ ABS_CATALOGUE = {
         "frequencies": ["Q"],
         "geographies": ["national"],
         "variants": [],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://data.api.abs.gov.au/rest/dataflow/ABS/LABOUR_ACCT_Q/latest",
+            "upstream_title": (
+                "Labour Account Australia, Final Quarterly Balanced: "
+                "Subdivision, Division and Total All Industries"
+            ),
+        },
     },
     "LABOUR_ACCT_A": {
         "id": "LABOUR_ACCT_A",
@@ -369,6 +438,14 @@ ABS_CATALOGUE = {
         "frequencies": ["A"],
         "geographies": ["national"],
         "variants": [],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://data.api.abs.gov.au/rest/dataflow/ABS/ABS_LABOUR_ACCT/latest",
+            "upstream_title": (
+                "Labour Account Australia, Annual Balanced: Subdivision, Division "
+                "and Total All Industries"
+            ),
+        },
     },
     "JV": {
         "id": "JV",
@@ -390,6 +467,11 @@ ABS_CATALOGUE = {
         "frequencies": ["Q"],
         "geographies": ["national"],
         "variants": [],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://data.api.abs.gov.au/rest/dataflow/ABS/JV/latest",
+            "upstream_title": "Job Vacancies",
+        },
     },
     "ANA_AGG": {
         "id": "ANA_AGG",
@@ -423,6 +505,11 @@ ABS_CATALOGUE = {
                 "abs_key": "M2.GPM.20.AUS.Q",
             }
         ],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://data.api.abs.gov.au/rest/dataflow/ABS/ANA_AGG/latest",
+            "upstream_title": "Australian National Accounts Key Aggregates",
+        },
     },
     "ANA_EXP": {
         "id": "ANA_EXP",
@@ -447,6 +534,13 @@ ABS_CATALOGUE = {
         "frequencies": ["Q"],
         "geographies": ["national"],
         "variants": [],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://data.api.abs.gov.au/rest/dataflow/ABS/ANA_EXP/latest",
+            "upstream_title": (
+                "Australian National Accounts - Expenditure on Gross Domestic Product (GDP (E))"
+            ),
+        },
     },
     "ANA_INC": {
         "id": "ANA_INC",
@@ -471,6 +565,13 @@ ABS_CATALOGUE = {
         "frequencies": ["Q"],
         "geographies": ["national"],
         "variants": [],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://data.api.abs.gov.au/rest/dataflow/ABS/ANA_INC/latest",
+            "upstream_title": (
+                "Australian National Accounts - Income from Gross Domestic Product (GDP (I))"
+            ),
+        },
     },
     "ANA_IND_GVA": {
         "id": "ANA_IND_GVA",
@@ -499,6 +600,13 @@ ABS_CATALOGUE = {
         "frequencies": ["Q"],
         "geographies": ["national"],
         "variants": [],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://data.api.abs.gov.au/rest/dataflow/ABS/ANA_IND_GVA/latest",
+            "upstream_title": (
+                "Australian National Accounts - Production of Gross Domestic Product (GDP (P))"
+            ),
+        },
     },
     "ANA_SFD": {
         "id": "ANA_SFD",
@@ -536,6 +644,11 @@ ABS_CATALOGUE = {
             "act",
         ],
         "variants": [],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://data.api.abs.gov.au/rest/dataflow/ABS/ANA_SFD/latest",
+            "upstream_title": "Australian National Accounts - State Final Demand",
+        },
     },
     "RT": {
         "id": "RT",
@@ -560,7 +673,12 @@ ABS_CATALOGUE = {
         "frequencies": ["M"],
         "geographies": ["national"],
         "variants": [],
-        "discontinued": True,
+        "ceased": True,
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://data.api.abs.gov.au/rest/dataflow/ABS/RT/latest",
+            "upstream_title": "Retail Trade",
+        },
     },
     "BUSINESS_TURNOVER": {
         "id": "BUSINESS_TURNOVER",
@@ -585,7 +703,12 @@ ABS_CATALOGUE = {
         "frequencies": ["M"],
         "geographies": ["national"],
         "variants": [],
-        "discontinued": True,
+        "ceased": True,
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://data.api.abs.gov.au/rest/dataflow/ABS/BUSINESS_TURNOVER/latest",
+            "upstream_title": "Monthly Business Turnover Indicator",
+        },
     },
     "QBIS": {
         "id": "QBIS",
@@ -615,6 +738,11 @@ ABS_CATALOGUE = {
             {"name": "sales", "aliases": [], "abs_key": None},
             {"name": "wages", "aliases": [], "abs_key": None},
         ],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://data.api.abs.gov.au/rest/dataflow/ABS/QBIS/latest",
+            "upstream_title": "Business Indicators",
+        },
     },
     "HSI_M": {
         "id": "HSI_M",
@@ -637,6 +765,11 @@ ABS_CATALOGUE = {
         "frequencies": ["M"],
         "geographies": ["national"],
         "variants": [],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://data.api.abs.gov.au/rest/dataflow/ABS/HSI_M/latest",
+            "upstream_title": "Monthly Household Spending Indicator",
+        },
     },
     "CAPEX": {
         "id": "CAPEX",
@@ -660,6 +793,11 @@ ABS_CATALOGUE = {
         "frequencies": ["Q"],
         "geographies": ["national"],
         "variants": [],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://data.api.abs.gov.au/rest/dataflow/ABS/CAPEX/latest",
+            "upstream_title": "Private New Capital Expenditure and Expected Expenditure",
+        },
     },
     "BUILDING_ACTIVITY": {
         "id": "BUILDING_ACTIVITY",
@@ -684,6 +822,11 @@ ABS_CATALOGUE = {
         "frequencies": ["Q"],
         "geographies": ["national"],
         "variants": [],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://data.api.abs.gov.au/rest/dataflow/ABS/BUILDING_ACTIVITY/latest",
+            "upstream_title": "Building Activity",
+        },
     },
     "CWD": {
         "id": "CWD",
@@ -713,6 +856,11 @@ ABS_CATALOGUE = {
                 "abs_key": None,
             },
         ],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://data.api.abs.gov.au/rest/dataflow/ABS/CWD/latest",
+            "upstream_title": "Construction Work Done, Preliminary",
+        },
     },
     "EWD": {
         "id": "EWD",
@@ -739,6 +887,11 @@ ABS_CATALOGUE = {
         "frequencies": ["Q"],
         "geographies": ["national"],
         "variants": [],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://data.api.abs.gov.au/rest/dataflow/ABS/EWD/latest",
+            "upstream_title": "Engineering Construction Work Done, Preliminary",
+        },
     },
     "RES_DWELL": {
         "id": "RES_DWELL",
@@ -760,6 +913,14 @@ ABS_CATALOGUE = {
         "frequencies": ["Q"],
         "geographies": ["national"],
         "variants": [],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://data.api.abs.gov.au/rest/dataflow/ABS/RES_DWELL/latest",
+            "upstream_title": (
+                "Residential Dwellings: Unstratified Medians and Transfer Counts "
+                "by Dwelling Type, GCCSA and Rest of State"
+            ),
+        },
     },
     "RPPI": {
         "id": "RPPI",
@@ -784,7 +945,12 @@ ABS_CATALOGUE = {
         "frequencies": ["Q"],
         "geographies": ["national"],
         "variants": [],
-        "discontinued": True,
+        "ceased": True,
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://data.api.abs.gov.au/rest/dataflow/ABS/RPPI/latest",
+            "upstream_title": "Residential Property Price Index",
+        },
     },
     "ITGS": {
         "id": "ITGS",
@@ -810,6 +976,11 @@ ABS_CATALOGUE = {
             {"name": "imports", "aliases": [], "abs_key": None},
             {"name": "trade_balance", "aliases": ["net exports"], "abs_key": None},
         ],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://data.api.abs.gov.au/rest/dataflow/ABS/ITGS/latest",
+            "upstream_title": "International Trade in Goods",
+        },
     },
     "MERCH_EXP": {
         "id": "MERCH_EXP",
@@ -831,6 +1002,11 @@ ABS_CATALOGUE = {
         "frequencies": ["M"],
         "geographies": ["national"],
         "variants": [],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://data.api.abs.gov.au/rest/dataflow/ABS/MERCH_EXP/latest",
+            "upstream_title": "Merchandise Exports by Commodity (SITC), Country and State",
+        },
     },
     "MERCH_IMP": {
         "id": "MERCH_IMP",
@@ -852,6 +1028,11 @@ ABS_CATALOGUE = {
         "frequencies": ["M"],
         "geographies": ["national"],
         "variants": [],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://data.api.abs.gov.au/rest/dataflow/ABS/MERCH_IMP/latest",
+            "upstream_title": "Merchandise Imports by Commodity (SITC), Country and State",
+        },
     },
     "BOP": {
         "id": "BOP",
@@ -877,6 +1058,11 @@ ABS_CATALOGUE = {
             {"name": "capital_account", "aliases": [], "abs_key": None},
             {"name": "financial_account", "aliases": [], "abs_key": None},
         ],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://data.api.abs.gov.au/rest/dataflow/ABS/BOP/latest",
+            "upstream_title": "Balance of Payments",
+        },
     },
     "BOP_GOODS": {
         "id": "BOP_GOODS",
@@ -898,6 +1084,11 @@ ABS_CATALOGUE = {
         "frequencies": ["Q"],
         "geographies": ["national"],
         "variants": [],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://data.api.abs.gov.au/rest/dataflow/ABS/BOP_GOODS/latest",
+            "upstream_title": "Balance of Payments: Goods Exports and Imports",
+        },
     },
     "BOP_STATE": {
         "id": "BOP_STATE",
@@ -931,6 +1122,11 @@ ABS_CATALOGUE = {
             "act",
         ],
         "variants": [],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://data.api.abs.gov.au/rest/dataflow/ABS/BOP_STATE/latest",
+            "upstream_title": "Balance of Payments by State",
+        },
     },
     "IIP": {
         "id": "IIP",
@@ -952,6 +1148,11 @@ ABS_CATALOGUE = {
         "frequencies": ["Q"],
         "geographies": ["national"],
         "variants": [],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://data.api.abs.gov.au/rest/dataflow/ABS/IIP/latest",
+            "upstream_title": "International Investment Position",
+        },
     },
     "LEND_HOUSING": {
         "id": "LEND_HOUSING",
@@ -976,6 +1177,11 @@ ABS_CATALOGUE = {
             {"name": "owner_occupier", "aliases": ["owner-occupier"], "abs_key": None},
             {"name": "investor", "aliases": ["investment"], "abs_key": None},
         ],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://data.api.abs.gov.au/rest/dataflow/ABS/LEND_HOUSING/latest",
+            "upstream_title": "Lending Indicators Housing Finance",
+        },
     },
     "LEND_BUSINESS": {
         "id": "LEND_BUSINESS",
@@ -997,6 +1203,11 @@ ABS_CATALOGUE = {
         "frequencies": ["M"],
         "geographies": ["national"],
         "variants": [],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://data.api.abs.gov.au/rest/dataflow/ABS/LEND_BUSINESS/latest",
+            "upstream_title": "Lending Indicators Business Finance",
+        },
     },
     "LEND_PERSONAL": {
         "id": "LEND_PERSONAL",
@@ -1018,6 +1229,11 @@ ABS_CATALOGUE = {
         "frequencies": ["M"],
         "geographies": ["national"],
         "variants": [],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://data.api.abs.gov.au/rest/dataflow/ABS/LEND_PERSONAL/latest",
+            "upstream_title": "Lending Indicators Personal Finance",
+        },
     },
     "ERP_Q": {
         "id": "ERP_Q",
@@ -1041,6 +1257,13 @@ ABS_CATALOGUE = {
         "frequencies": ["Q"],
         "geographies": ["national"],
         "variants": [],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://data.api.abs.gov.au/rest/dataflow/ABS/ERP_Q/latest",
+            "upstream_title": (
+                "Quarterly Population Estimates (ERP), by State/Territory, Sex and Age"
+            ),
+        },
     },
     "ERP_COMP_Q": {
         "id": "ERP_COMP_Q",
@@ -1070,6 +1293,13 @@ ABS_CATALOGUE = {
         "frequencies": ["Q"],
         "geographies": ["national"],
         "variants": [],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://data.api.abs.gov.au/rest/dataflow/ABS/ERP_COMP_Q/latest",
+            "upstream_title": (
+                "Population and components of change - national, states and territories"
+            ),
+        },
     },
     "POP_PROJ": {
         "id": "POP_PROJ",
@@ -1095,6 +1325,11 @@ ABS_CATALOGUE = {
         "frequencies": ["A"],
         "geographies": ["national"],
         "variants": [],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://data.api.abs.gov.au/rest/dataflow/ABS/POP_PROJ/latest",
+            "upstream_title": "Population Projections, Australia, 2022-2071",
+        },
     },
     "NOM_FY": {
         "id": "NOM_FY",
@@ -1116,6 +1351,14 @@ ABS_CATALOGUE = {
         "frequencies": ["A"],
         "geographies": ["national"],
         "variants": [],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://data.api.abs.gov.au/rest/dataflow/ABS/NOM_FY/latest",
+            "upstream_title": (
+                "Net overseas migration: Arrivals, departures and net, State/territory, "
+                "Age and sex - Financial years, 2004-05 onwards"
+            ),
+        },
     },
     "OAD_COUNTRY": {
         "id": "OAD_COUNTRY",
@@ -1137,5 +1380,13 @@ ABS_CATALOGUE = {
         "frequencies": ["M"],
         "geographies": ["national"],
         "variants": [],
+        "audit": {
+            "last_audited": "2026-04-18",
+            "upstream_url": "https://data.api.abs.gov.au/rest/dataflow/ABS/OAD_COUNTRY/latest",
+            "upstream_title": (
+                "Visitor arrivals and resident "
+                "returns, Selected Countries of Residence/Destinations"
+            ),
+        },
     },
 }

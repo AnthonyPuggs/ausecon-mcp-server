@@ -35,15 +35,24 @@ jobs:
           set -o pipefail
           uv run pytest integration_tests/ -v | tee pytest-output.log
 
+      - name: Run catalogue audit
+        id: run_audit
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          uv run python scripts/audit_catalogue.py | tee audit-output.md
+
       - name: Upload test output
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: pytest-output
-          path: pytest-output.log
+          path: |
+            pytest-output.log
+            audit-output.md
 
       - name: Open or update drift issue on failure
-        if: steps.run_tests.outcome == 'failure'
+        if: steps.run_tests.outcome == 'failure' || steps.run_audit.outcome == 'failure'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
@@ -57,7 +66,8 @@ jobs:
           existing=$(gh issue list --label "$LABEL" --state open --json number --jq '.[0].number' || echo "")
 
           tail_log=$(tail -n 60 pytest-output.log || true)
-          body=$(printf "The nightly integration suite failed on %s.\n\nRun: %s\n\nLast lines of pytest output:\n\n\`\`\`\n%s\n\`\`\`\n" "$(date -u +%FT%TZ)" "$RUN_URL" "$tail_log")
+          audit_tail=$(tail -n 80 audit-output.md 2>/dev/null || echo "_audit output unavailable_")
+          body=$(printf "The nightly integration suite failed on %s.\n\nRun: %s\n\nLast lines of pytest output:\n\n\`\`\`\n%s\n\`\`\`\n\nCatalogue audit tail:\n\n%s\n" "$(date -u +%FT%TZ)" "$RUN_URL" "$tail_log" "$audit_tail")
 
           if [ -n "$existing" ]; then
             printf '%s\n' "$body" | gh issue comment "$existing" --body-file -
@@ -65,6 +75,6 @@ jobs:
             printf '%s\n' "$body" | gh issue create --title "$TITLE" --label "$LABEL" --body-file -
           fi
 
-      - name: Fail the job if tests failed
-        if: steps.run_tests.outcome == 'failure'
+      - name: Fail the job if tests or audit failed
+        if: steps.run_tests.outcome == 'failure' || steps.run_audit.outcome == 'failure'
         run: exit 1

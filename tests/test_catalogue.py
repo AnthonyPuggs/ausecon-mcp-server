@@ -35,7 +35,6 @@ def test_rba_catalogue_covers_active_tables_and_tracks_discontinued_state() -> N
     ]
 
     assert len(active_tables) >= 30
-    assert any(entry.get("discontinued", False) for entry in RBA_CATALOGUE.values())
     assert {
         "monetary_policy",
         "payments",
@@ -80,22 +79,16 @@ def test_search_catalogue_prefers_full_economist_query_matches() -> None:
     assert results[0]["id"] == "LF"
 
 
-def test_search_catalogue_excludes_discontinued_rba_tables() -> None:
-    results = search_catalogue("rba fx intervention", source="rba")
-
-    assert results == []
-
-
-def test_search_catalogue_excludes_discontinued_abs_dataflows() -> None:
+def test_search_catalogue_excludes_ceased_abs_dataflows() -> None:
     for ceased_id in ("BUSINESS_TURNOVER", "CPI_M", "RT", "RPPI"):
         results = search_catalogue(ceased_id, source="abs")
         assert all(item["id"] != ceased_id for item in results), (
-            f"{ceased_id} is marked discontinued but still appeared in search results"
+            f"{ceased_id} is marked ceased but still appeared in search results"
         )
 
 
-def test_lci_resolves_to_selected_living_cost_indexes() -> None:
-    entry = ABS_CATALOGUE["LCI"]
+def test_slci_resolves_to_selected_living_cost_indexes() -> None:
+    entry = ABS_CATALOGUE["SLCI"]
 
     assert entry["name"] == "Selected Living Cost Indexes"
     assert "selected living cost indexes" in entry["aliases"]

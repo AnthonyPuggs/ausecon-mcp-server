@@ -88,7 +88,7 @@ def register_prompts(mcp: FastMCP) -> None:
     @mcp.prompt(
         name="living_costs_vs_cpi",
         description=(
-            "Compare Selected Living Cost Indexes (LCI) across household types "
+            "Compare Selected Living Cost Indexes (SLCI) across household types "
             "against headline CPI to show cost-of-living divergence."
         ),
     )
@@ -97,17 +97,17 @@ def register_prompts(mcp: FastMCP) -> None:
         return (
             "The user wants to see how cost-of-living pressures differ across "
             "Australian household types compared with the headline CPI. "
-            "LCI weights reflect actual spending patterns for each household "
+            "SLCI weights reflect actual spending patterns for each household "
             "type, so the series can diverge materially from CPI.\n"
             "\n"
             "Do the following using tools from this MCP server:\n"
-            f"1. Call `get_abs_data` with dataflow_id=\"LCI\" and {start_clause} "
+            f'1. Call `get_abs_data` with dataflow_id="SLCI" and {start_clause} '
             "to retrieve Selected Living Cost Indexes across household types.\n"
             f'2. Call `get_economic_series` with concept="headline_cpi" '
             f"using {start_clause} for the CPI benchmark.\n"
             "\n"
             "Then write 4-6 sentences covering:\n"
-            "- the LCI household type with the highest annual change and its value,\n"
+            "- the SLCI household type with the highest annual change and its value,\n"
             "- the household type with the lowest, and the gap between them,\n"
             "- how both compare to headline CPI over the same window,\n"
             "- a plain-language interpretation (which households are feeling "

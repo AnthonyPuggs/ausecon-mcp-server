@@ -72,7 +72,7 @@ async def test_living_costs_vs_cpi_references_lci_and_cpi() -> None:
     async with Client(mcp) as client:
         text = await _get_prompt_text(client, "living_costs_vs_cpi", {"start": "2021-Q1"})
 
-    assert "LCI" in text
+    assert "SLCI" in text
     assert "headline_cpi" in text
     assert "2021-Q1" in text
 
