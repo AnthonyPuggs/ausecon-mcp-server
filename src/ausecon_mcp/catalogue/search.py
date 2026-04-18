@@ -53,6 +53,46 @@ def search_catalogue(query: str, source: str | None = None) -> list[dict]:
     return sorted(results, key=lambda item: (-item["score"], item["source"], item["id"]))
 
 
+def list_catalogue(
+    source: str | None = None,
+    category: str | None = None,
+    tag: str | None = None,
+    include_ceased: bool = False,
+    include_discontinued: bool = False,
+) -> list[dict]:
+    """Return unranked catalogue rows, optionally filtered by source, category, or tag.
+
+    Complements ``search_catalogue`` (ranked keyword search) by exposing the full
+    catalogue with lightweight filtering. Excludes ceased/discontinued entries by
+    default; callers opt in via the ``include_*`` toggles.
+    """
+    tag_normalised = tag.lower() if tag else None
+    results: list[dict] = []
+    for collection_source, collection in _iter_collections(source):
+        for entry in collection.values():
+            if entry.get("ceased", False) and not include_ceased:
+                continue
+            if entry.get("discontinued", False) and not include_discontinued:
+                continue
+            if category is not None and entry.get("category") != category:
+                continue
+            if tag_normalised is not None:
+                entry_tags = [t.lower() for t in entry.get("tags", [])]
+                if tag_normalised not in entry_tags:
+                    continue
+            results.append(
+                {
+                    "id": entry["id"],
+                    "source": collection_source,
+                    "name": entry["name"],
+                    "category": entry.get("category"),
+                    "frequency": entry.get("frequency"),
+                    "tags": list(entry.get("tags", [])),
+                }
+            )
+    return sorted(results, key=lambda item: (item["source"], item["id"]))
+
+
 def _iter_collections(source: str | None) -> Iterable[tuple[str, dict]]:
     if source in (None, "abs"):
         yield "abs", ABS_CATALOGUE

@@ -421,6 +421,81 @@ async def test_service_forwards_tranche_a_rba_concepts(
 
 
 @pytest.mark.asyncio
+async def test_list_catalogue_unfiltered_returns_abs_and_rba_entries() -> None:
+    service = AuseconService(abs_provider=StubABSProvider(), rba_provider=StubRBAProvider())
+
+    rows = await service.list_catalogue()
+
+    sources = {row["source"] for row in rows}
+    assert sources == {"abs", "rba"}
+    assert all(row.keys() == {"id", "source", "name", "category", "frequency", "tags"} for row in rows)
+
+
+@pytest.mark.asyncio
+async def test_list_catalogue_filters_by_source() -> None:
+    service = AuseconService(abs_provider=StubABSProvider(), rba_provider=StubRBAProvider())
+
+    rows = await service.list_catalogue(source="rba")
+
+    assert rows
+    assert {row["source"] for row in rows} == {"rba"}
+
+
+@pytest.mark.asyncio
+async def test_list_catalogue_filters_by_category() -> None:
+    service = AuseconService(abs_provider=StubABSProvider(), rba_provider=StubRBAProvider())
+
+    rows = await service.list_catalogue(category="inflation")
+
+    assert rows
+    assert {row["category"] for row in rows} == {"inflation"}
+
+
+@pytest.mark.asyncio
+async def test_list_catalogue_filters_by_tag_case_insensitive() -> None:
+    service = AuseconService(abs_provider=StubABSProvider(), rba_provider=StubRBAProvider())
+
+    rows = await service.list_catalogue(tag="Yield Curve")
+
+    assert rows
+    assert any("yield curve" in [t.lower() for t in row["tags"]] for row in rows)
+
+
+@pytest.mark.asyncio
+async def test_list_catalogue_excludes_ceased_and_discontinued_by_default() -> None:
+    service = AuseconService(abs_provider=StubABSProvider(), rba_provider=StubRBAProvider())
+
+    rows = await service.list_catalogue()
+    ids = {row["id"] for row in rows}
+
+    # BUSINESS_TURNOVER is ceased; a5 was un-discontinued but check no ceased/discontinued.
+    from ausecon_mcp.catalogue.abs import ABS_CATALOGUE
+    from ausecon_mcp.catalogue.rba import RBA_CATALOGUE
+
+    for entry in list(ABS_CATALOGUE.values()) + list(RBA_CATALOGUE.values()):
+        if entry.get("ceased") or entry.get("discontinued"):
+            assert entry["id"] not in ids
+
+
+@pytest.mark.asyncio
+async def test_list_catalogue_includes_ceased_when_opted_in() -> None:
+    service = AuseconService(abs_provider=StubABSProvider(), rba_provider=StubRBAProvider())
+
+    rows = await service.list_catalogue(include_ceased=True)
+    ids = {row["id"] for row in rows}
+
+    assert "BUSINESS_TURNOVER" in ids
+
+
+@pytest.mark.asyncio
+async def test_list_catalogue_rejects_unknown_source() -> None:
+    service = AuseconService(abs_provider=StubABSProvider(), rba_provider=StubRBAProvider())
+
+    with pytest.raises(ValueError, match="source"):
+        await service.list_catalogue(source="fred")
+
+
+@pytest.mark.asyncio
 async def test_service_forwards_last_n_to_abs_provider_for_semantic_call() -> None:
     abs_provider = StubABSProvider()
     service = AuseconService(abs_provider=abs_provider, rba_provider=StubRBAProvider())

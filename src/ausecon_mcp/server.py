@@ -9,7 +9,10 @@ from ausecon_mcp.catalogue.resolver import (
     resolve_abs_dataflow_id,
     resolve_rba_csv_path,
 )
-from ausecon_mcp.catalogue.search import search_catalogue
+from ausecon_mcp.catalogue.search import (
+    list_catalogue as _list_catalogue,
+    search_catalogue,
+)
 from ausecon_mcp.logging import configure_logging, get_logger
 from ausecon_mcp.prompts import register_prompts
 from ausecon_mcp.providers.abs import ABSProvider
@@ -41,6 +44,23 @@ class AuseconService:
         validated_query = validate_search_query(query)
         validated_source = validate_source(source)
         return search_catalogue(validated_query, source=validated_source)
+
+    async def list_catalogue(
+        self,
+        source: str | None = None,
+        category: str | None = None,
+        tag: str | None = None,
+        include_ceased: bool = False,
+        include_discontinued: bool = False,
+    ) -> list[dict]:
+        validated_source = validate_source(source)
+        return _list_catalogue(
+            source=validated_source,
+            category=category,
+            tag=tag,
+            include_ceased=include_ceased,
+            include_discontinued=include_discontinued,
+        )
 
     async def get_abs_dataset_structure(self, dataflow_id: str) -> dict:
         validated_dataflow_id = require_non_empty("dataflow_id", dataflow_id)
@@ -178,6 +198,24 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
     async def search_datasets(query: str, source: str | None = None) -> list[dict]:
         """Search curated ABS and RBA economic datasets."""
         return await app_service.search_datasets(query=query, source=source)
+
+    @mcp.tool(annotations={"readOnlyHint": True, "openWorldHint": True})
+    async def list_catalogue(
+        source: str | None = None,
+        category: str | None = None,
+        tag: str | None = None,
+        include_ceased: bool = False,
+        include_discontinued: bool = False,
+    ) -> list[dict]:
+        """List curated ABS and RBA catalogue entries, optionally filtered by source,
+        category, or tag. Unranked complement to ``search_datasets``."""
+        return await app_service.list_catalogue(
+            source=source,
+            category=category,
+            tag=tag,
+            include_ceased=include_ceased,
+            include_discontinued=include_discontinued,
+        )
 
     @mcp.tool(annotations={"readOnlyHint": True, "openWorldHint": True})
     async def get_abs_dataset_structure(dataflow_id: str) -> dict:
