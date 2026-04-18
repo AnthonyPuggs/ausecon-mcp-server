@@ -12,8 +12,6 @@ if str(SRC) not in sys.path:
 
 @pytest.fixture(autouse=True)
 def _isolated_cache_dir(tmp_path, monkeypatch):
-    """Point the cache at a per-test tmp dir so unit tests never touch the real cache."""
-    cache_dir = tmp_path / "ausecon-cache"
-    monkeypatch.setenv("AUSECON_CACHE_DIR", str(cache_dir))
+    """Integration tests must never touch the user's real cache."""
+    monkeypatch.setenv("AUSECON_CACHE_DIR", str(tmp_path / "ausecon-cache"))
     monkeypatch.delenv("AUSECON_CACHE_DISABLED", raising=False)
-    yield cache_dir

@@ -6,6 +6,7 @@ from fastmcp import FastMCP
 
 from ausecon_mcp.catalogue.resolver import resolve
 from ausecon_mcp.catalogue.search import search_catalogue
+from ausecon_mcp.logging import configure_logging, get_logger
 from ausecon_mcp.prompts import register_prompts
 from ausecon_mcp.providers.abs import ABSProvider
 from ausecon_mcp.providers.rba import RBAProvider
@@ -249,4 +250,6 @@ mcp = build_server()
 
 
 def main() -> None:
+    configure_logging()
+    get_logger("server").info("server.start")
     mcp.run()

@@ -1,0 +1,70 @@
+name: Integration
+
+on:
+  schedule:
+    - cron: '17 19 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: integration
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  live:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - uses: astral-sh/setup-uv@v6
+
+      - name: Install dependencies
+        run: uv sync --python 3.12 --extra dev
+
+      - name: Run live integration tests
+        id: run_tests
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          uv run pytest integration_tests/ -v | tee pytest-output.log
+
+      - name: Upload test output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pytest-output
+          path: pytest-output.log
+
+      - name: Open or update drift issue on failure
+        if: steps.run_tests.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          LABEL="upstream-drift"
+          TITLE="Integration drift: live ABS/RBA suite failing"
+
+          gh label create "$LABEL" --color "b60205" --description "Live upstream integration suite is failing" || true
+
+          existing=$(gh issue list --label "$LABEL" --state open --json number --jq '.[0].number' || echo "")
+
+          tail_log=$(tail -n 60 pytest-output.log || true)
+          body=$(printf "The nightly integration suite failed on %s.\n\nRun: %s\n\nLast lines of pytest output:\n\n\`\`\`\n%s\n\`\`\`\n" "$(date -u +%FT%TZ)" "$RUN_URL" "$tail_log")
+
+          if [ -n "$existing" ]; then
+            printf '%s\n' "$body" | gh issue comment "$existing" --body-file -
+          else
+            printf '%s\n' "$body" | gh issue create --title "$TITLE" --label "$LABEL" --body-file -
+          fi
+
+      - name: Fail the job if tests failed
+        if: steps.run_tests.outcome == 'failure'
+        run: exit 1

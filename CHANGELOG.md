@@ -4,6 +4,50 @@ All notable changes to `ausecon-mcp-server` are recorded here. The format follow
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres
 to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.0] - 2026-04-18
+
+Production hardening release.
+
+### Added
+- **Structured JSON logging** for the `ausecon_mcp` namespace.
+  Events cover `request.start`, `request.success` (with
+  `duration_ms`, `status_code`, `bytes`), `request.retry`,
+  `request.failed`, `request.stale_fallback`, `parse.failed`, and
+  cache hit/miss at `DEBUG`. Logs are written to stderr only so the
+  stdio MCP transport is never interfered with.
+- **Identified User-Agent** on every outgoing upstream request:
+  `ausecon-mcp-server/<version> (+https://github.com/AnthonyPuggs/ausecon-mcp-server)`.
+- **Persistent on-disk cache**. The in-memory `TTLCache` is now a
+  memory + disk dual-layer cache that survives process restarts,
+  so `uvx`-spawned server sessions no longer pay full upstream
+  latency on every first call. Disk I/O is fail-soft: corrupt
+  JSON, schema mismatches, and write errors self-heal and log a
+  warning without failing the request.
+- **`stale-if-error` fallback**. If an upstream request fails
+  (`AuseconUpstreamError`) and a previously cached payload exists
+  on disk, the server returns the cached payload with
+  `metadata.stale = true`, `metadata.cached_at`, and
+  `metadata.expires_at`. Parse errors (`AuseconParseError`) are
+  **not** masked — those still raise, so upstream shape drift
+  remains a first-class signal.
+- **`metadata.server_version`** on every data response so bug
+  reports can reference the exact release that produced them.
+- **Nightly integration suite** in `integration_tests/` that hits
+  the live ABS and RBA endpoints, plus a GitHub Actions workflow
+  (`integration.yml`) that runs on a cron schedule, uploads pytest
+  output as an artefact, and upserts a single `upstream-drift`
+  issue on failure instead of opening duplicates.
+- Environment knobs `AUSECON_CACHE_DIR`, `AUSECON_CACHE_DISABLED`,
+  and `AUSECON_LOG_LEVEL` documented in a new README "Operations"
+  section.
+
+### Changed
+- `TTLCache` config (disk directory, disabled flag, TTL) is now
+  resolved in `__init__`, not at import. Cache reads return deep
+  copies so callers cannot mutate stored payloads.
+- Added `platformdirs` as a direct dependency for cache location
+  resolution.
+
 ## [0.6.0] - 2026-04-18
 
 ### Added
@@ -211,6 +255,7 @@ Initial public release.
 - Initial curated catalogues for ABS and RBA, plus a four-concept
   `CURATED_SERIES` semantic shortcut map.
 
+[0.7.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v0.5.5...v0.6.0
 [0.5.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v0.3.2...v0.4.0

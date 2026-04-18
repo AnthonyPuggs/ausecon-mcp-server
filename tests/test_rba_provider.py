@@ -153,3 +153,108 @@ async def test_rba_provider_supports_a2_event_tables() -> None:
     assert result["observations"][0]["raw_value"] == "-0.50 to -1.00"
     assert result["observations"][-1]["series_id"] == "ARBAMPNORR"
     assert result["observations"][-1]["value"] == 7.25
+
+
+@pytest.mark.asyncio
+async def test_rba_provider_stamps_server_version_in_metadata() -> None:
+    provider = RBAProvider()
+    csv_payload = (FIXTURES / "rba_g1_sample.csv").read_text()
+
+    with respx.mock(assert_all_called=True) as router:
+        router.get("https://www.rba.gov.au/statistics/tables/csv/g1-data.csv").mock(
+            return_value=Response(200, text=csv_payload)
+        )
+
+        result = await provider.get_table("g1")
+
+    assert isinstance(result["metadata"]["server_version"], str)
+    assert result["metadata"]["server_version"]
+
+
+@pytest.mark.asyncio
+async def test_rba_provider_returns_stale_on_upstream_failure(tmp_path) -> None:
+    import json as _json
+
+    from httpx import ConnectTimeout
+
+    from ausecon_mcp.cache import TTLCache
+
+    cache = TTLCache(disk_dir=tmp_path / "cache", ttl_seconds=60)
+    provider = RBAProvider(cache=cache)
+    csv_payload = (FIXTURES / "rba_g1_sample.csv").read_text()
+
+    with respx.mock(assert_all_called=True) as router:
+        router.get("https://www.rba.gov.au/statistics/tables/csv/g1-data.csv").mock(
+            return_value=Response(200, text=csv_payload)
+        )
+        await provider.get_table("g1")
+
+    (file,) = (tmp_path / "cache").glob("*.json")
+    data = _json.loads(file.read_text())
+    data["expires_at"] = 0.0
+    file.write_text(_json.dumps(data))
+
+    fresh_cache = TTLCache(disk_dir=tmp_path / "cache", ttl_seconds=60)
+    fresh_provider = RBAProvider(cache=fresh_cache)
+
+    with respx.mock(assert_all_called=True) as router:
+        router.get("https://www.rba.gov.au/statistics/tables/csv/g1-data.csv").mock(
+            side_effect=ConnectTimeout("network down")
+        )
+
+        stale = await fresh_provider.get_table("g1")
+
+    assert stale["metadata"]["stale"] is True
+    assert "cached_at" in stale["metadata"]
+    assert "expires_at" in stale["metadata"]
+    assert stale["observations"]
+
+
+@pytest.mark.asyncio
+async def test_rba_provider_parse_failure_is_not_masked_by_stale(tmp_path) -> None:
+    import json as _json
+
+    from ausecon_mcp.cache import TTLCache
+
+    cache = TTLCache(disk_dir=tmp_path / "cache", ttl_seconds=60)
+    provider = RBAProvider(cache=cache)
+    csv_payload = (FIXTURES / "rba_g1_sample.csv").read_text()
+
+    with respx.mock(assert_all_called=True) as router:
+        router.get("https://www.rba.gov.au/statistics/tables/csv/g1-data.csv").mock(
+            return_value=Response(200, text=csv_payload)
+        )
+        await provider.get_table("g1")
+
+    (file,) = (tmp_path / "cache").glob("*.json")
+    data = _json.loads(file.read_text())
+    data["expires_at"] = 0.0
+    file.write_text(_json.dumps(data))
+
+    fresh_cache = TTLCache(disk_dir=tmp_path / "cache", ttl_seconds=60)
+    fresh_provider = RBAProvider(cache=fresh_cache)
+
+    with respx.mock(assert_all_called=True) as router:
+        router.get("https://www.rba.gov.au/statistics/tables/csv/g1-data.csv").mock(
+            return_value=Response(200, text="")
+        )
+
+        with pytest.raises(Exception, match="Failed to parse RBA table payload"):
+            await fresh_provider.get_table("g1")
+
+
+@pytest.mark.asyncio
+async def test_rba_provider_sends_identified_user_agent() -> None:
+    provider = RBAProvider()
+    csv_payload = (FIXTURES / "rba_g1_sample.csv").read_text()
+
+    with respx.mock(assert_all_called=True) as router:
+        route = router.get("https://www.rba.gov.au/statistics/tables/csv/g1-data.csv").mock(
+            return_value=Response(200, text=csv_payload)
+        )
+
+        await provider.get_table("g1")
+
+    ua = route.calls.last.request.headers["user-agent"]
+    assert ua.startswith("ausecon-mcp-server/")
+    assert "github.com/AnthonyPuggs/ausecon-mcp-server" in ua

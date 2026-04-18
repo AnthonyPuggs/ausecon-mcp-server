@@ -331,6 +331,32 @@ get_economic_series(
 )
 ```
 
+## Operations
+
+The server writes structured JSON log lines to **stderr** (never
+stdout — the stdio MCP transport owns stdout). Each line is a single
+JSON object with at least `ts`, `level`, `logger`, and `msg` fields;
+retrieval events add `source`, `identifier`, `url`, `status_code`,
+`duration_ms`, and `bytes` so operators can trace every upstream call.
+
+Upstream responses are cached to disk, so repeated calls survive
+process restarts (e.g. `uvx` spawning a fresh server per client
+session). On upstream failure, if a stale cached copy exists, the
+server returns it and marks `metadata.stale = true` alongside
+`cached_at` and `expires_at`; **parse errors are never masked this
+way** — they still raise so upstream shape drift stays visible.
+
+Data responses also include `metadata.server_version` so bug reports
+can reference the exact release that produced them.
+
+### Environment variables
+
+| Variable | Purpose | Default |
+| --- | --- | --- |
+| `AUSECON_CACHE_DIR` | Override the on-disk cache directory. | Platform default (`~/.cache/ausecon-mcp/` on Linux, `~/Library/Caches/ausecon-mcp/` on macOS). |
+| `AUSECON_CACHE_DISABLED` | Set to `1` / `true` / `yes` to turn off **all** caching (memory and disk). Useful for debugging. | unset (caching on). |
+| `AUSECON_LOG_LEVEL` | Logger level for the `ausecon_mcp` namespace (`DEBUG`, `INFO`, `WARNING`, `ERROR`). `DEBUG` enables cache-hit/miss events. | `INFO`. |
+
 ## Development
 
 Install the development environment:
@@ -358,7 +384,8 @@ src/ausecon_mcp/
   catalogue/   Curated ABS and RBA discovery metadata
   parsers/     Source-specific parsers for ABS and RBA payloads
   providers/   HTTP retrieval and cache-aware source adapters
-  cache.py     Simple in-memory TTL cache
+  cache.py     Dual-layer TTL cache (memory + on-disk JSON)
+  logging.py   JSON-lines stderr logger for the ausecon_mcp namespace
   models.py    Shared normalised data structures
   server.py    FastMCP server entry point and tool registration
 tests/
