@@ -149,6 +149,60 @@ def register_prompts(mcp: FastMCP) -> None:
         )
 
     @mcp.prompt(
+        name="labour_slack_snapshot",
+        description=(
+            "Summarise Australian labour-market slack using the unemployment and "
+            "underemployment rates over a recent window."
+        ),
+    )
+    def labour_slack_snapshot(last_n: int = 12) -> str:
+        return (
+            "The user wants a clear read on Australian labour-market slack over "
+            f"the last {last_n} monthly observations.\n"
+            "\n"
+            "Do the following using tools from this MCP server:\n"
+            f'1. Call `get_economic_series` with concept="unemployment_rate", last_n={last_n}.\n'
+            f'2. Call `get_economic_series` with concept="underemployment_rate", '
+            f"last_n={last_n}.\n"
+            "\n"
+            "Then write 3-5 sentences covering:\n"
+            "- the latest unemployment rate and its observation date,\n"
+            "- the latest underemployment rate and its observation date,\n"
+            "- the combined underutilisation signal and whether slack is "
+            "tightening or loosening,\n"
+            "- one sentence of context on what that implies for wages pressure.\n"
+            "\n"
+            "Use only the values returned by the tools."
+        )
+
+    @mcp.prompt(
+        name="yield_curve_snapshot",
+        description=(
+            "Compare the 3-year and 10-year Australian Government Security yields "
+            "over a recent window to describe the curve shape."
+        ),
+    )
+    def yield_curve_snapshot(last_n: int = 60) -> str:
+        return (
+            f"Build a snapshot of the Australian Government Security yield curve "
+            f"using the last {last_n} daily observations.\n"
+            "\n"
+            "Do the following using tools from this MCP server:\n"
+            f'1. Call `get_economic_series` with concept="government_bond_yield_3y", '
+            f"last_n={last_n}.\n"
+            f'2. Call `get_economic_series` with concept="government_bond_yield_10y", '
+            f"last_n={last_n}.\n"
+            "\n"
+            "Then write 3-5 sentences covering:\n"
+            "- the latest 3y and 10y yields and their observation date,\n"
+            "- the 10y-minus-3y spread and whether the curve is positively "
+            "sloped, flat, or inverted,\n"
+            "- how the curve has shifted over the window shown.\n"
+            "\n"
+            "Report only the values the tools return."
+        )
+
+    @mcp.prompt(
         name="discover_dataset",
         description=(
             "Find and recommend the best ABS datasets or RBA tables for a given economic topic."

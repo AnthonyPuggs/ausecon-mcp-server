@@ -25,6 +25,8 @@ async def test_prompts_are_listed() -> None:
         "macro_snapshot",
         "living_costs_vs_cpi",
         "construction_pipeline",
+        "labour_slack_snapshot",
+        "yield_curve_snapshot",
         "discover_dataset",
     } <= names
 
@@ -86,6 +88,28 @@ async def test_construction_pipeline_references_all_series() -> None:
     for dataflow in ("CWD", "EWD", "BUILDING_ACTIVITY"):
         assert dataflow in text
     assert "12" in text
+
+
+async def test_labour_slack_snapshot_references_both_rates() -> None:
+    mcp = build_server()
+
+    async with Client(mcp) as client:
+        text = await _get_prompt_text(client, "labour_slack_snapshot", {"last_n": 24})
+
+    assert "unemployment_rate" in text
+    assert "underemployment_rate" in text
+    assert "24" in text
+
+
+async def test_yield_curve_snapshot_references_both_tenors() -> None:
+    mcp = build_server()
+
+    async with Client(mcp) as client:
+        text = await _get_prompt_text(client, "yield_curve_snapshot", {"last_n": 90})
+
+    assert "government_bond_yield_3y" in text
+    assert "government_bond_yield_10y" in text
+    assert "90" in text
 
 
 async def test_discover_dataset_embeds_topic() -> None:
