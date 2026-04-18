@@ -18,21 +18,12 @@ research, policy, and analytical workflows.
 
 Releases are published to [PyPI](https://pypi.org/project/ausecon-mcp-server/) and versioned via git tags. See [`CHANGELOG.md`](CHANGELOG.md) for release history.
 
-The current release includes:
+Current capabilities:
 
-- curated discovery across expanded ABS and RBA catalogues
-- deterministic search ranking across dataset IDs, aliases, names, tags, and descriptions
-- active-only RBA table discovery by default, with optional inclusion of discontinued tables
-- ABS dataset structure retrieval
-- ABS data retrieval in a normalised response shape
-- compatibility with current live ABS structure and CSV payload shapes
-- RBA table listing and retrieval
-- a semantic resolver whose curated default concepts now narrow to concrete series
-- stricter validation for tool inputs and parameter ranges
-- source-aware upstream and parse error messages
-- retry logic for transient ABS and RBA upstream failures
-- provider caching keyed to upstream requests rather than client-side filters
-- support for RBA event-style tables such as `a2`
+- six read-only MCP tools covering dataset discovery, ABS structure inspection, ABS and RBA data retrieval, and a small semantic shortcut layer for common macroeconomic concepts
+- three read-only MCP resources exposing the curated catalogue and per-entry metadata without making live upstream calls
+- four MCP prompt templates for common economist workflows such as inflation summaries, macro snapshots, and dataset discovery
+- provenance-rich JSON responses, structured JSON logging to stderr, and dual-layer caching that survives client restarts
 
 At this stage, the server should still be treated as an opinionated early release rather than a
 complete coverage layer for all ABS and RBA content.
@@ -103,8 +94,7 @@ R, or other analytical environments.
 
 ## Discovery Coverage
 
-The curated catalogue is still intentionally selective, but `v0.5.0` covers the main analyst
-workflows more credibly:
+The curated catalogue is intentionally selective, but it covers the main analyst workflows across:
 
 - ABS prices and inflation, labour, national accounts, activity, housing and construction,
   external sector, and lending indicators
@@ -360,6 +350,20 @@ The on-disk cache location is fixed to the platform app-cache directory
 (`~/.cache/ausecon-mcp/` on Linux, `~/Library/Caches/ausecon-mcp/` on macOS).
 `AUSECON_CACHE_DIR` is no longer supported.
 
+## Upgrading From Pre-v0.8.0
+
+If you used a release earlier than `v0.8.0`, the main operational change is the cache-root
+behaviour:
+
+- `AUSECON_CACHE_DIR` is no longer supported.
+- on-disk cache writes now stay under the platform app-cache directory for the server
+  (`~/.cache/ausecon-mcp/` on Linux, `~/Library/Caches/ausecon-mcp/` on macOS).
+- this is a behavioural hardening change only; the MCP tool, resource, and prompt surface is
+  unchanged.
+
+If you previously redirected the cache into a mounted volume, shared directory, or CI-specific
+path, update that operational setup before upgrading.
+
 ## Development
 
 Install the development environment:
@@ -399,16 +403,19 @@ examples/
 
 If you want to publish a release from this repository:
 
-1. ensure `pyproject.toml` contains the intended version
-2. commit the release-ready state
-3. create an annotated git tag such as `vX.Y.Z`
-4. push the branch and the tag to GitHub
-5. create a GitHub Release from that tag with release notes
+1. ensure the release-ready state is committed, including any changelog updates
+2. create a git tag in the repository's `vX.Y.Z` format on the intended release commit
+3. push the branch and the tag to GitHub
+4. allow the `Release` workflow to build and publish the tagged version
+5. draft the GitHub Release notes from that tag
 
-An example tag command is:
+The package version is derived from git tags via `hatch-vcs`, so you do not manually edit a target
+version in `pyproject.toml` when cutting a release.
+
+This repository's existing releases use lightweight tags, so a typical release sequence is:
 
 ```bash
-git tag -a vX.Y.Z -m "vX.Y.Z"
+git tag vX.Y.Z
 git push origin main
 git push origin vX.Y.Z
 ```

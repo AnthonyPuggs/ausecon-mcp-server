@@ -1,3 +1,5 @@
+import json
+import re
 import sys
 from pathlib import Path
 
@@ -12,6 +14,8 @@ CLAUDE_EXAMPLE = ROOT / "examples" / "claude_desktop_config.json"
 PYPROJECT = ROOT / "pyproject.toml"
 LICENSE = ROOT / "LICENSE"
 CI_WORKFLOW = ROOT / ".github" / "workflows" / "ci.yml"
+SERVER_JSON = ROOT / "server.json"
+CHANGELOG = ROOT / "CHANGELOG.md"
 
 
 def test_readme_and_example_advertise_pypi_uvx_install() -> None:
@@ -81,3 +85,29 @@ def test_readme_tracks_current_release_state() -> None:
     assert "codex mcp add ausecon -- uvx ausecon-mcp-server" in readme_text
     assert "This repository currently provides a local stdio MCP server only." in readme_text
     assert "`v0.3.0` is a discovery release" not in readme_text
+    assert "The current release includes:" not in readme_text
+    assert "`v0.5.0` covers the main analyst workflows more credibly" not in readme_text
+
+
+def test_readme_release_instructions_match_tag_derived_versioning() -> None:
+    readme_text = README.read_text(encoding="utf-8")
+
+    assert "version is derived from git tags via `hatch-vcs`" in readme_text
+    assert "ensure `pyproject.toml` contains the intended version" not in readme_text
+    assert "git tag -a vX.Y.Z" not in readme_text
+
+
+def test_server_metadata_matches_current_changelog_release() -> None:
+    changelog_text = CHANGELOG.read_text(encoding="utf-8")
+    server_metadata = json.loads(SERVER_JSON.read_text(encoding="utf-8"))
+
+    match = re.search(r"^## \[(\d+\.\d+\.\d+)\] - ", changelog_text, re.MULTILINE)
+    assert match is not None
+    current_release = match.group(1)
+
+    assert server_metadata["version"] == current_release
+    assert server_metadata["packages"][0]["version"] == current_release
+    assert (
+        f"[{current_release}]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/"
+        in changelog_text
+    )

@@ -272,6 +272,7 @@ Initial public release.
 - Initial curated catalogues for ABS and RBA, plus a four-concept
   `CURATED_SERIES` semantic shortcut map.
 
+[0.8.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v0.5.5...v0.6.0
 [0.5.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v0.4.0...v0.5.0
