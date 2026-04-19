@@ -75,8 +75,8 @@ def test_ci_workflow_exists_with_quality_checks_and_hygiene_guard() -> None:
 def test_readme_tracks_current_release_state() -> None:
     readme_text = README.read_text(encoding="utf-8")
     tool_row = (
-        "`get_economic_series` | Resolve a small set of high-value economic concepts to ABS or "
-        "RBA retrievals | `concept`, `variant`, `geography`, `frequency`, `start`, `end` |"
+        "`get_economic_series` | Resolve a curated economic concept to an ABS or RBA retrieval | "
+        "`concept`, `variant`, `geography`, `frequency`, `start`, `end`, `last_n` |"
     )
 
     assert "https://pypi.org/project/ausecon-mcp-server/" in readme_text

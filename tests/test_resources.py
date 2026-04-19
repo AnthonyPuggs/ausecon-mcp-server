@@ -5,6 +5,7 @@ from fastmcp import Client
 
 from ausecon_mcp.catalogue.abs import ABS_CATALOGUE
 from ausecon_mcp.catalogue.rba import RBA_CATALOGUE
+from ausecon_mcp.catalogue.resolver import CURATED_SHORTCUTS
 from ausecon_mcp.server import build_server
 
 
@@ -46,6 +47,21 @@ async def test_rba_resource_returns_full_catalogue_entry() -> None:
         payload = await _read_json(client, "ausecon://rba/g1")
 
     assert payload == RBA_CATALOGUE["g1"]
+
+
+async def test_concepts_resource_lists_every_curated_shortcut() -> None:
+    mcp = build_server()
+
+    async with Client(mcp) as client:
+        payload = await _read_json(client, "ausecon://concepts")
+
+    concepts = {row["concept"] for row in payload}
+    assert concepts == set(CURATED_SHORTCUTS)
+    for row in payload:
+        expected = CURATED_SHORTCUTS[row["concept"]]
+        assert row["source"] == expected["source"]
+        assert row["dataset_id"] == expected["dataset_id"]
+        assert row["variant"] == expected.get("variant")
 
 
 async def test_abs_resource_raises_for_unknown_dataflow_id() -> None:

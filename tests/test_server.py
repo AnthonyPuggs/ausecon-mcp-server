@@ -244,7 +244,7 @@ async def test_service_rejects_unpopulated_rba_variant() -> None:
     service = AuseconService(abs_provider=StubABSProvider(), rba_provider=StubRBAProvider())
 
     with pytest.raises(ValueError, match="rba_series_ids populated"):
-        await service.get_economic_series("trimmed_mean_inflation", variant="weighted_median")
+        await service.get_economic_series("g3", variant="market")
 
 
 @pytest.mark.asyncio
@@ -369,6 +369,210 @@ async def test_service_defaults_rba_csv_path_when_not_declared() -> None:
 
     assert rba_provider.last_get_table_kwargs is not None
     assert rba_provider.last_get_table_kwargs["csv_path"] == "f16-data.csv"
+
+
+TRANCHE_A_ABS_SERVICE = [
+    ("employment", "LF", "M3.3.1599.20.AUS.M"),
+    ("unemployment_rate", "LF", "M13.3.1599.20.AUS.M"),
+    ("participation_rate", "LF", "M12.3.1599.20.AUS.M"),
+    ("wage_growth", "WPI", "3.THRPEB.7.TOT.20.AUS.Q"),
+    ("trade_balance", "ITGS", "M1.170.20.AUS.M"),
+]
+
+TRANCHE_A_RBA_SERVICE = [
+    ("weighted_median_inflation", "g1", ["GCPIOCPMWMYP"]),
+    ("monthly_inflation", "g4", ["GCPIAGSAMP"]),
+    ("aud_usd", "f11", ["FXRUSD"]),
+    ("trade_weighted_index", "f11", ["FXRTWI"]),
+    ("government_bond_yield_3y", "f17", ["FZCY300D"]),
+    ("government_bond_yield_10y", "f17", ["FZCY1000D"]),
+    ("housing_credit", "d2", ["DLCACOHS", "DLCACIHS"]),
+]
+
+
+@pytest.mark.parametrize(("concept", "dataflow_id", "abs_key"), TRANCHE_A_ABS_SERVICE)
+@pytest.mark.asyncio
+async def test_service_forwards_tranche_a_abs_concepts(
+    concept: str, dataflow_id: str, abs_key: str
+) -> None:
+    abs_provider = StubABSProvider()
+    service = AuseconService(abs_provider=abs_provider, rba_provider=StubRBAProvider())
+
+    await service.get_economic_series(concept)
+
+    assert abs_provider.last_get_data_kwargs is not None
+    assert abs_provider.last_get_data_kwargs["dataflow_id"] == dataflow_id
+    assert abs_provider.last_get_data_kwargs["key"] == abs_key
+
+
+@pytest.mark.parametrize(("concept", "table_id", "series_ids"), TRANCHE_A_RBA_SERVICE)
+@pytest.mark.asyncio
+async def test_service_forwards_tranche_a_rba_concepts(
+    concept: str, table_id: str, series_ids: list[str]
+) -> None:
+    rba = StubRBAProvider()
+    service = AuseconService(abs_provider=StubABSProvider(), rba_provider=rba)
+
+    await service.get_economic_series(concept)
+
+    assert rba.last_get_table_kwargs is not None
+    assert rba.last_get_table_kwargs["table_id"] == table_id
+    assert rba.last_get_table_kwargs["series_ids"] == series_ids
+
+
+@pytest.mark.asyncio
+async def test_list_catalogue_unfiltered_returns_abs_and_rba_entries() -> None:
+    service = AuseconService(abs_provider=StubABSProvider(), rba_provider=StubRBAProvider())
+
+    rows = await service.list_catalogue()
+
+    sources = {row["source"] for row in rows}
+    assert sources == {"abs", "rba"}
+    expected_keys = {"id", "source", "name", "category", "frequency", "tags"}
+    assert all(row.keys() == expected_keys for row in rows)
+
+
+@pytest.mark.asyncio
+async def test_list_catalogue_filters_by_source() -> None:
+    service = AuseconService(abs_provider=StubABSProvider(), rba_provider=StubRBAProvider())
+
+    rows = await service.list_catalogue(source="rba")
+
+    assert rows
+    assert {row["source"] for row in rows} == {"rba"}
+
+
+@pytest.mark.asyncio
+async def test_list_catalogue_filters_by_category() -> None:
+    service = AuseconService(abs_provider=StubABSProvider(), rba_provider=StubRBAProvider())
+
+    rows = await service.list_catalogue(category="inflation")
+
+    assert rows
+    assert {row["category"] for row in rows} == {"inflation"}
+
+
+@pytest.mark.asyncio
+async def test_list_catalogue_filters_by_tag_case_insensitive() -> None:
+    service = AuseconService(abs_provider=StubABSProvider(), rba_provider=StubRBAProvider())
+
+    rows = await service.list_catalogue(tag="Yield Curve")
+
+    assert rows
+    assert any("yield curve" in [t.lower() for t in row["tags"]] for row in rows)
+
+
+@pytest.mark.asyncio
+async def test_list_catalogue_excludes_ceased_and_discontinued_by_default() -> None:
+    service = AuseconService(abs_provider=StubABSProvider(), rba_provider=StubRBAProvider())
+
+    rows = await service.list_catalogue()
+    ids = {row["id"] for row in rows}
+
+    # BUSINESS_TURNOVER is ceased; a5 was un-discontinued but check no ceased/discontinued.
+    from ausecon_mcp.catalogue.abs import ABS_CATALOGUE
+    from ausecon_mcp.catalogue.rba import RBA_CATALOGUE
+
+    for entry in list(ABS_CATALOGUE.values()) + list(RBA_CATALOGUE.values()):
+        if entry.get("ceased") or entry.get("discontinued"):
+            assert entry["id"] not in ids
+
+
+@pytest.mark.asyncio
+async def test_list_catalogue_includes_ceased_when_opted_in() -> None:
+    service = AuseconService(abs_provider=StubABSProvider(), rba_provider=StubRBAProvider())
+
+    rows = await service.list_catalogue(include_ceased=True)
+    ids = {row["id"] for row in rows}
+
+    assert "BUSINESS_TURNOVER" in ids
+
+
+@pytest.mark.asyncio
+async def test_list_catalogue_rejects_unknown_source() -> None:
+    service = AuseconService(abs_provider=StubABSProvider(), rba_provider=StubRBAProvider())
+
+    with pytest.raises(ValueError, match="source"):
+        await service.list_catalogue(source="fred")
+
+
+@pytest.mark.asyncio
+async def test_service_forwards_last_n_to_abs_provider_for_semantic_call() -> None:
+    abs_provider = StubABSProvider()
+    service = AuseconService(abs_provider=abs_provider, rba_provider=StubRBAProvider())
+
+    await service.get_economic_series("headline_cpi", last_n=4)
+
+    assert abs_provider.last_get_data_kwargs is not None
+    assert abs_provider.last_get_data_kwargs["last_n"] == 4
+
+
+@pytest.mark.asyncio
+async def test_service_forwards_last_n_to_rba_provider_for_semantic_call() -> None:
+    rba = StubRBAProvider()
+    service = AuseconService(abs_provider=StubABSProvider(), rba_provider=rba)
+
+    await service.get_economic_series("cash_rate_target", last_n=12)
+
+    assert rba.last_get_table_kwargs is not None
+    assert rba.last_get_table_kwargs["last_n"] == 12
+
+
+@pytest.mark.asyncio
+async def test_service_rejects_non_positive_semantic_last_n() -> None:
+    service = AuseconService(abs_provider=StubABSProvider(), rba_provider=StubRBAProvider())
+
+    with pytest.raises(ValueError, match="last_n"):
+        await service.get_economic_series("cash_rate_target", last_n=0)
+
+
+TRANCHE_B_ABS_SERVICE = [
+    ("current_account_balance", "BOP", "1.100.20.Q"),
+    ("underemployment_rate", "LF_UNDER", "M23.3.1599.20.AUS.M"),
+    ("hours_worked", "LF_HOURS", "M18.3.1599.TOT.20.AUS.M"),
+    ("job_vacancies", "JV", "M1.7.TOT.20.AUS.Q"),
+    ("population", "ERP_Q", "1.3.TOT.AUS.Q"),
+    ("producer_price_inflation", "PPI_FD", "3.TOT.TOT.TOTXE.Q"),
+    ("household_spending", "HSI_M", "7.TOT.CUR.20.AUS.M"),
+]
+
+TRANCHE_B_RBA_SERVICE = [
+    ("business_credit", "d2", ["DLCACBS"]),
+    ("mortgage_rate", "f6", ["FLRHOOVA"]),
+    ("business_lending_rate", "f7", ["FLRBFOSBT"]),
+    ("inflation_expectations", "g3", ["GCONEXP"]),
+    ("commodity_prices", "i2", ["GRCPAISDR"]),
+]
+
+
+@pytest.mark.parametrize(("concept", "dataflow_id", "abs_key"), TRANCHE_B_ABS_SERVICE)
+@pytest.mark.asyncio
+async def test_service_forwards_tranche_b_abs_concepts(
+    concept: str, dataflow_id: str, abs_key: str
+) -> None:
+    abs_provider = StubABSProvider()
+    service = AuseconService(abs_provider=abs_provider, rba_provider=StubRBAProvider())
+
+    await service.get_economic_series(concept)
+
+    assert abs_provider.last_get_data_kwargs is not None
+    assert abs_provider.last_get_data_kwargs["dataflow_id"] == dataflow_id
+    assert abs_provider.last_get_data_kwargs["key"] == abs_key
+
+
+@pytest.mark.parametrize(("concept", "table_id", "series_ids"), TRANCHE_B_RBA_SERVICE)
+@pytest.mark.asyncio
+async def test_service_forwards_tranche_b_rba_concepts(
+    concept: str, table_id: str, series_ids: list[str]
+) -> None:
+    rba = StubRBAProvider()
+    service = AuseconService(abs_provider=StubABSProvider(), rba_provider=rba)
+
+    await service.get_economic_series(concept)
+
+    assert rba.last_get_table_kwargs is not None
+    assert rba.last_get_table_kwargs["table_id"] == table_id
+    assert rba.last_get_table_kwargs["series_ids"] == series_ids
 
 
 async def test_service_resolves_abs_upstream_id_before_calling_provider() -> None:

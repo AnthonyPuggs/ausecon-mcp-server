@@ -9,7 +9,12 @@ from ausecon_mcp.catalogue.resolver import (
     resolve_abs_dataflow_id,
     resolve_rba_csv_path,
 )
-from ausecon_mcp.catalogue.search import search_catalogue
+from ausecon_mcp.catalogue.search import (
+    list_catalogue as _list_catalogue,
+)
+from ausecon_mcp.catalogue.search import (
+    search_catalogue,
+)
 from ausecon_mcp.logging import configure_logging, get_logger
 from ausecon_mcp.prompts import register_prompts
 from ausecon_mcp.providers.abs import ABSProvider
@@ -41,6 +46,23 @@ class AuseconService:
         validated_query = validate_search_query(query)
         validated_source = validate_source(source)
         return search_catalogue(validated_query, source=validated_source)
+
+    async def list_catalogue(
+        self,
+        source: str | None = None,
+        category: str | None = None,
+        tag: str | None = None,
+        include_ceased: bool = False,
+        include_discontinued: bool = False,
+    ) -> list[dict]:
+        validated_source = validate_source(source)
+        return _list_catalogue(
+            source=validated_source,
+            category=category,
+            tag=tag,
+            include_ceased=include_ceased,
+            include_discontinued=include_discontinued,
+        )
 
     async def get_abs_dataset_structure(self, dataflow_id: str) -> dict:
         validated_dataflow_id = require_non_empty("dataflow_id", dataflow_id)
@@ -122,8 +144,10 @@ class AuseconService:
         frequency: str | None = None,
         start: str | None = None,
         end: str | None = None,
+        last_n: int | None = None,
     ) -> dict:
         validated_concept = require_non_empty("concept", concept)
+        validated_last_n = validate_positive_int("last_n", last_n)
         resolved = await resolve(
             validated_concept,
             variant=variant,
@@ -144,7 +168,7 @@ class AuseconService:
                 series_ids=resolved.rba_series_ids,
                 start_date=validated_start,
                 end_date=validated_end,
-                last_n=None,
+                last_n=validated_last_n,
             )
 
         validated_start, validated_end = validate_abs_period_range(
@@ -158,6 +182,7 @@ class AuseconService:
             key=resolved.abs_key or "all",
             start_period=validated_start,
             end_period=validated_end,
+            last_n=validated_last_n,
         )
 
 
@@ -175,6 +200,24 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
     async def search_datasets(query: str, source: str | None = None) -> list[dict]:
         """Search curated ABS and RBA economic datasets."""
         return await app_service.search_datasets(query=query, source=source)
+
+    @mcp.tool(annotations={"readOnlyHint": True, "openWorldHint": True})
+    async def list_catalogue(
+        source: str | None = None,
+        category: str | None = None,
+        tag: str | None = None,
+        include_ceased: bool = False,
+        include_discontinued: bool = False,
+    ) -> list[dict]:
+        """List curated ABS and RBA catalogue entries, optionally filtered by source,
+        category, or tag. Unranked complement to ``search_datasets``."""
+        return await app_service.list_catalogue(
+            source=source,
+            category=category,
+            tag=tag,
+            include_ceased=include_ceased,
+            include_discontinued=include_discontinued,
+        )
 
     @mcp.tool(annotations={"readOnlyHint": True, "openWorldHint": True})
     async def get_abs_dataset_structure(dataflow_id: str) -> dict:
@@ -236,9 +279,11 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
         frequency: str | None = None,
         start: str | None = None,
         end: str | None = None,
+        last_n: int | None = None,
     ) -> dict:
         """Resolve an economic concept to an ABS or RBA retrieval, optionally narrowing by
-        variant, geography, and frequency."""
+        variant, geography, and frequency. Use ``last_n`` to cap observations to the most
+        recent N."""
         return await app_service.get_economic_series(
             concept=concept,
             variant=variant,
@@ -246,6 +291,7 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
             frequency=frequency,
             start=start,
             end=end,
+            last_n=last_n,
         )
 
     register_resources(mcp)

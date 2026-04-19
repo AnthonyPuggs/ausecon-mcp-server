@@ -47,6 +47,21 @@ def resolve_abs_dataflow_id(dataflow_id: str) -> str:
     return entry.get("upstream_id", dataflow_id)
 
 
+def resolve_abs_structure_id(dataflow_id: str) -> str:
+    """Map a catalogue key to its upstream ABS SDMX DataStructure ID.
+
+    Some ABS dataflows expose their DataStructure under a different ID than the
+    dataflow itself (for example, dataflow ``LF_UNDER`` has structure
+    ``DS_LF_UNDER``). Catalogue entries may declare an optional ``structure_id``
+    to capture this. Falls back to the dataflow id so unknown keys and entries
+    without ``structure_id`` pass through unchanged.
+    """
+    entry = ABS_CATALOGUE.get(dataflow_id)
+    if entry is None:
+        return dataflow_id
+    return entry.get("structure_id", dataflow_id)
+
+
 def resolve_rba_csv_path(table_id: str) -> str:
     """Map a catalogue key to its upstream RBA CSV filename.
 
@@ -67,6 +82,52 @@ CURATED_SHORTCUTS: dict[str, dict[str, Any]] = {
     "headline_cpi": {"source": "abs", "dataset_id": "CPI", "variant": "headline"},
     "trimmed_mean_inflation": {"source": "rba", "dataset_id": "g1", "variant": "trimmed_mean"},
     "gdp_growth": {"source": "abs", "dataset_id": "ANA_AGG", "variant": "gdp_growth"},
+    # Tranche A
+    "employment": {"source": "abs", "dataset_id": "LF", "variant": "employment"},
+    "unemployment_rate": {"source": "abs", "dataset_id": "LF", "variant": "unemployment_rate"},
+    "participation_rate": {"source": "abs", "dataset_id": "LF", "variant": "participation_rate"},
+    "wage_growth": {"source": "abs", "dataset_id": "WPI", "variant": "headline_wpi"},
+    "trade_balance": {"source": "abs", "dataset_id": "ITGS", "variant": "trade_balance"},
+    "weighted_median_inflation": {
+        "source": "rba",
+        "dataset_id": "g1",
+        "variant": "weighted_median",
+    },
+    "monthly_inflation": {"source": "rba", "dataset_id": "g4", "variant": "headline_monthly"},
+    "aud_usd": {"source": "rba", "dataset_id": "f11", "variant": "aud_usd"},
+    "trade_weighted_index": {"source": "rba", "dataset_id": "f11", "variant": "twi"},
+    "government_bond_yield_3y": {"source": "rba", "dataset_id": "f17", "variant": "ags_3y"},
+    "government_bond_yield_10y": {"source": "rba", "dataset_id": "f17", "variant": "ags_10y"},
+    "housing_credit": {"source": "rba", "dataset_id": "d2", "variant": "housing"},
+    # Tranche B
+    "business_credit": {"source": "rba", "dataset_id": "d2", "variant": "business"},
+    "current_account_balance": {
+        "source": "abs",
+        "dataset_id": "BOP",
+        "variant": "current_account",
+    },
+    "underemployment_rate": {
+        "source": "abs",
+        "dataset_id": "LF_UNDER",
+        "variant": "headline_underemployment",
+    },
+    "hours_worked": {"source": "abs", "dataset_id": "LF_HOURS", "variant": "headline_hours"},
+    "job_vacancies": {"source": "abs", "dataset_id": "JV", "variant": "headline_vacancies"},
+    "mortgage_rate": {"source": "rba", "dataset_id": "f6", "variant": "owner_occupier_variable"},
+    "business_lending_rate": {
+        "source": "rba",
+        "dataset_id": "f7",
+        "variant": "small_business_indicator",
+    },
+    "population": {"source": "abs", "dataset_id": "ERP_Q", "variant": "headline_population"},
+    "inflation_expectations": {"source": "rba", "dataset_id": "g3", "variant": "consumer"},
+    "producer_price_inflation": {"source": "abs", "dataset_id": "PPI_FD", "variant": "producer"},
+    "household_spending": {
+        "source": "abs",
+        "dataset_id": "HSI_M",
+        "variant": "headline_spending",
+    },
+    "commodity_prices": {"source": "rba", "dataset_id": "i2", "variant": "rba_commodity_index"},
 }
 
 
@@ -272,7 +333,7 @@ async def _resolve_abs_key(
             f"Resolving {entry['id']!r} with variant/frequency/geography requires the "
             "ABS dataset structure; no abs_structure_fetcher was provided."
         )
-    structure = await abs_structure_fetcher(entry["id"])
+    structure = await abs_structure_fetcher(resolve_abs_structure_id(entry["id"]))
 
     fragment: dict[str, str] = {}
     if variant_key is not None:

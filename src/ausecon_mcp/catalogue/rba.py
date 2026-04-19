@@ -560,8 +560,16 @@ RBA_CATALOGUE = {
         "frequencies": ["M"],
         "geographies": ["national"],
         "variants": [
-            {"name": "housing", "aliases": ["housing credit"], "rba_series_ids": None},
-            {"name": "business", "aliases": ["business credit"], "rba_series_ids": None},
+            {
+                "name": "housing",
+                "aliases": ["housing credit"],
+                "rba_series_ids": ["DLCACOHS", "DLCACIHS"],
+            },
+            {
+                "name": "business",
+                "aliases": ["business credit"],
+                "rba_series_ids": ["DLCACBS"],
+            },
             {"name": "household", "aliases": ["household credit"], "rba_series_ids": None},
         ],
         "audit": {
@@ -1043,6 +1051,11 @@ RBA_CATALOGUE = {
         "geographies": ["national"],
         "variants": [
             {"name": "owner_occupier", "aliases": ["owner-occupier"], "rba_series_ids": None},
+            {
+                "name": "owner_occupier_variable",
+                "aliases": ["owner-occupier variable rate", "variable mortgage rate"],
+                "rba_series_ids": ["FLRHOOVA"],
+            },
             {"name": "investor", "aliases": ["investment"], "rba_series_ids": None},
         ],
         "audit": {
@@ -1072,6 +1085,11 @@ RBA_CATALOGUE = {
         "geographies": ["national"],
         "variants": [
             {"name": "small_business", "aliases": ["sme rates"], "rba_series_ids": None},
+            {
+                "name": "small_business_indicator",
+                "aliases": ["small business indicator rate"],
+                "rba_series_ids": ["FLRBFOSBT"],
+            },
             {"name": "large_business", "aliases": [], "rba_series_ids": None},
         ],
         "audit": {
@@ -1133,7 +1151,18 @@ RBA_CATALOGUE = {
         ],
         "frequencies": ["D"],
         "geographies": ["national"],
-        "variants": [],
+        "variants": [
+            {
+                "name": "aud_usd",
+                "aliases": ["aud usd", "usd", "aud-usd"],
+                "rba_series_ids": ["FXRUSD"],
+            },
+            {
+                "name": "twi",
+                "aliases": ["trade weighted index", "trade-weighted index"],
+                "rba_series_ids": ["FXRTWI"],
+            },
+        ],
         "audit": {
             "last_audited": "2026-04-18",
             "upstream_url": "https://www.rba.gov.au/statistics/tables/csv/f11-data.csv",
@@ -1285,7 +1314,18 @@ RBA_CATALOGUE = {
         ],
         "frequencies": ["D"],
         "geographies": ["national"],
-        "variants": [],
+        "variants": [
+            {
+                "name": "ags_3y",
+                "aliases": ["3 year yield", "3y"],
+                "rba_series_ids": ["FZCY300D"],
+            },
+            {
+                "name": "ags_10y",
+                "aliases": ["10 year yield", "10y"],
+                "rba_series_ids": ["FZCY1000D"],
+            },
+        ],
         "audit": {
             "last_audited": "2026-04-18",
             "upstream_url": "https://www.rba.gov.au/statistics/tables/csv/f17-yields.csv",
@@ -1327,7 +1367,7 @@ RBA_CATALOGUE = {
             {
                 "name": "weighted_median",
                 "aliases": ["weighted median inflation"],
-                "rba_series_ids": None,
+                "rba_series_ids": ["GCPIOCPMWMYP"],
             },
         ],
         "audit": {
@@ -1382,7 +1422,11 @@ RBA_CATALOGUE = {
         "frequencies": ["M", "Q"],
         "geographies": ["national"],
         "variants": [
-            {"name": "consumer", "aliases": ["consumer expectations"], "rba_series_ids": None},
+            {
+                "name": "consumer",
+                "aliases": ["consumer expectations"],
+                "rba_series_ids": ["GCONEXP"],
+            },
             {"name": "market", "aliases": ["market expectations"], "rba_series_ids": None},
             {"name": "union", "aliases": [], "rba_series_ids": None},
         ],
@@ -1416,7 +1460,13 @@ RBA_CATALOGUE = {
         ],
         "frequencies": ["M"],
         "geographies": ["national"],
-        "variants": [],
+        "variants": [
+            {
+                "name": "headline_monthly",
+                "aliases": ["monthly headline", "monthly cpi"],
+                "rba_series_ids": ["GCPIAGSAMP"],
+            },
+        ],
         "audit": {
             "last_audited": "2026-04-18",
             "upstream_url": "https://www.rba.gov.au/statistics/tables/csv/g4-data.csv",
@@ -1637,7 +1687,13 @@ RBA_CATALOGUE = {
         ],
         "frequencies": ["M"],
         "geographies": ["national"],
-        "variants": [],
+        "variants": [
+            {
+                "name": "rba_commodity_index",
+                "aliases": ["rba commodity price index", "all items sdr"],
+                "rba_series_ids": ["GRCPAISDR"],
+            },
+        ],
         "audit": {
             "last_audited": "2026-04-18",
             "upstream_url": "https://www.rba.gov.au/statistics/tables/csv/i2-data.csv",
