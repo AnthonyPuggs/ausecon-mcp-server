@@ -3,6 +3,9 @@
 > **Status (2026-04-19): resolved in v0.10.0** — see
 > [Resolution](#resolution--v0100-2026-04-19) at the bottom for the item-by-item
 > outcome. The sections below preserve the original audit findings.
+>
+> **Follow-up (2026-04-20):** `RT` was re-validated live and is active again in
+> `v0.13.0`; `RPPI` remains ceased pending a clean like-for-like replacement.
 
 Phase 0 audit of every entry in `src/ausecon_mcp/catalogue/abs.py` and
 `src/ausecon_mcp/catalogue/rba.py` against live upstream sources.

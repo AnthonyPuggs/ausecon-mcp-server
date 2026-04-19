@@ -101,3 +101,11 @@ async def test_live_semantic_commodity_prices() -> None:
     assert result["metadata"]["dataset_id"] == "i2"
     series_ids = {s["series_id"] for s in result["series"]}
     assert "GRCPAISDR" in series_ids
+
+
+async def test_live_semantic_dwelling_approvals() -> None:
+    result = await _call("dwelling_approvals")
+
+    assert result["metadata"]["source"] == "abs"
+    assert result["metadata"]["dataset_id"] == "BA_GCCSA"
+    assert result["observations"]

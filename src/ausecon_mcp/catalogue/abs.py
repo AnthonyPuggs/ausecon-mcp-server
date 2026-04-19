@@ -1,4 +1,6 @@
-ABS_CATALOGUE = {
+from ausecon_mcp.catalogue._runtime import strip_unwired_variants
+
+_RAW_ABS_CATALOGUE = {
     "CPI": {
         "id": "CPI",
         "source": "abs",
@@ -688,10 +690,10 @@ ABS_CATALOGUE = {
     "RT": {
         "id": "RT",
         "source": "abs",
-        "name": "Retail Trade (Ceased)",
+        "name": "Retail Trade",
         "description": (
-            "Ceased monthly retail trade dataflow. Superseded by a new ABS monthly "
-            "retail indicator; retained here for historical reference."
+            "Monthly retail turnover by industry and geography, including original, "
+            "seasonally adjusted, and trend measures."
         ),
         "frequency": "Monthly",
         "category": "activity",
@@ -708,9 +710,8 @@ ABS_CATALOGUE = {
         "frequencies": ["M"],
         "geographies": ["national"],
         "variants": [],
-        "ceased": True,
         "audit": {
-            "last_audited": "2026-04-18",
+            "last_audited": "2026-04-20",
             "upstream_url": "https://data.api.abs.gov.au/rest/dataflow/ABS/RT/latest",
             "upstream_title": "Retail Trade",
         },
@@ -851,7 +852,6 @@ ABS_CATALOGUE = {
         "category": "housing_construction",
         "aliases": [
             "building activity",
-            "building approvals",
             "dwelling commencements",
             "building completions",
         ],
@@ -867,6 +867,45 @@ ABS_CATALOGUE = {
             "last_audited": "2026-04-18",
             "upstream_url": "https://data.api.abs.gov.au/rest/dataflow/ABS/BUILDING_ACTIVITY/latest",
             "upstream_title": "Building Activity",
+        },
+    },
+    "BUILDING_APPROVALS": {
+        "id": "BUILDING_APPROVALS",
+        "source": "abs",
+        "upstream_id": "BA_GCCSA",
+        "name": "Building Approvals",
+        "description": (
+            "Monthly dwelling-unit approvals and building-job values from the live ABS "
+            "building approvals collection, with a national residential approvals default."
+        ),
+        "frequency": "Monthly",
+        "category": "housing_construction",
+        "aliases": [
+            "building approvals",
+            "dwelling approvals",
+            "residential approvals",
+        ],
+        "tags": [
+            "approvals",
+            "housing pipeline",
+            "new dwellings",
+        ],
+        "frequencies": ["M"],
+        "geographies": ["national"],
+        "variants": [
+            {
+                "name": "headline_approvals",
+                "aliases": ["dwelling approvals", "residential approvals"],
+                "abs_key": "1.1.9.TOT.100.10.AUS.M",
+            },
+        ],
+        "audit": {
+            "last_audited": "2026-04-20",
+            "upstream_url": "https://data.api.abs.gov.au/rest/dataflow/ABS/BA_GCCSA/latest",
+            "upstream_title": (
+                "Building Approvals by Greater Capital Cities Statistical Area "
+                "(GCCSA) and above"
+            ),
         },
     },
     "CWD": {
@@ -1441,3 +1480,6 @@ ABS_CATALOGUE = {
         },
     },
 }
+
+
+ABS_CATALOGUE = strip_unwired_variants(_RAW_ABS_CATALOGUE, key_name="abs_key")

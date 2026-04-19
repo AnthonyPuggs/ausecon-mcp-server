@@ -24,5 +24,6 @@ RBA catalogue variants declare one or more `rba_series_ids`. The resolver passes
 ## Resolver Rules
 
 - Unknown concepts and unsupported variants raise explicit validation errors.
-- Variants declared without a concrete ABS key or `rba_series_ids` raise a clear “not yet wired” error.
+- The runtime catalogue exposes only fully wired variants. Placeholder candidates stay in
+  `docs/variant_candidates.md` until they have a concrete ABS key or `rba_series_ids`.
 - The semantic layer only exposes curated source-native concepts. Derived concepts remain deferred until after the retrieval contract is stable.

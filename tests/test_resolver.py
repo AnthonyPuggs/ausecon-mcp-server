@@ -76,8 +76,8 @@ async def test_resolve_rba_variant_returns_populated_series_ids() -> None:
 
 
 @pytest.mark.asyncio
-async def test_resolve_rba_unpopulated_variant_raises() -> None:
-    with pytest.raises(ValueError, match="rba_series_ids populated"):
+async def test_resolve_removed_runtime_variant_is_unknown() -> None:
+    with pytest.raises(ValueError, match="Unknown variant"):
         await resolve("g3", variant="market")
 
 
@@ -285,6 +285,7 @@ def test_curated_shortcuts_cover_v0110_tranches_ab_concepts() -> None:
         "headline_cpi",
         "trimmed_mean_inflation",
         "gdp_growth",
+        "dwelling_approvals",
         # Tranche A
         "employment",
         "unemployment_rate",
@@ -312,6 +313,16 @@ def test_curated_shortcuts_cover_v0110_tranches_ab_concepts() -> None:
         "household_spending",
         "commodity_prices",
     }
+
+
+@pytest.mark.asyncio
+async def test_resolve_dwelling_approvals_defaults_to_live_abs_key() -> None:
+    result = await resolve("dwelling_approvals")
+
+    assert result.source == "abs"
+    assert result.dataset_id == "BUILDING_APPROVALS"
+    assert result.variant == "headline_approvals"
+    assert result.abs_key == "1.1.9.TOT.100.10.AUS.M"
 
 
 TRANCHE_B_ABS = [

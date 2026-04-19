@@ -82,6 +82,11 @@ CURATED_SHORTCUTS: dict[str, dict[str, Any]] = {
     "headline_cpi": {"source": "abs", "dataset_id": "CPI", "variant": "headline"},
     "trimmed_mean_inflation": {"source": "rba", "dataset_id": "g1", "variant": "trimmed_mean"},
     "gdp_growth": {"source": "abs", "dataset_id": "ANA_AGG", "variant": "gdp_growth"},
+    "dwelling_approvals": {
+        "source": "abs",
+        "dataset_id": "BUILDING_APPROVALS",
+        "variant": "headline_approvals",
+    },
     # Tranche A
     "employment": {"source": "abs", "dataset_id": "LF", "variant": "employment"},
     "unemployment_rate": {"source": "abs", "dataset_id": "LF", "variant": "unemployment_rate"},

@@ -17,6 +17,8 @@ CI_WORKFLOW = ROOT / ".github" / "workflows" / "ci.yml"
 RELEASE_WORKFLOW = ROOT / ".github" / "workflows" / "release.yml"
 SERVER_JSON = ROOT / "server.json"
 CHANGELOG = ROOT / "CHANGELOG.md"
+CONTRIBUTING = ROOT / "docs" / "contributing.md"
+CLIENT_SMOKE = ROOT / "scripts" / "mcp_client_smoke.py"
 
 
 def test_readme_and_example_advertise_pypi_uvx_install() -> None:
@@ -102,6 +104,21 @@ def test_contract_and_architecture_docs_exist() -> None:
     assert (ROOT / "docs" / "architecture.md").is_file()
     assert (ROOT / "docs" / "variants.md").is_file()
     assert (ROOT / "docs" / "response-schema.md").is_file()
+    assert CONTRIBUTING.is_file()
+
+
+def test_contributing_doc_mentions_client_smoke_path() -> None:
+    text = CONTRIBUTING.read_text(encoding="utf-8")
+
+    assert "mcp_client_smoke.py" in text
+    assert "search_datasets" in text
+    assert "list_catalogue" in text
+    assert "get_abs_data" in text
+    assert "get_economic_series" in text
+
+
+def test_client_smoke_script_exists() -> None:
+    assert CLIENT_SMOKE.is_file()
 
 
 def test_release_workflow_smoke_tests_built_wheel() -> None:

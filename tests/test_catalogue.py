@@ -80,11 +80,18 @@ def test_search_catalogue_prefers_full_economist_query_matches() -> None:
 
 
 def test_search_catalogue_excludes_ceased_abs_dataflows() -> None:
-    for ceased_id in ("BUSINESS_TURNOVER", "CPI_M", "RT", "RPPI"):
+    for ceased_id in ("BUSINESS_TURNOVER", "CPI_M", "RPPI"):
         results = search_catalogue(ceased_id, source="abs")
         assert all(item["id"] != ceased_id for item in results), (
             f"{ceased_id} is marked ceased but still appeared in search results"
         )
+
+
+def test_search_catalogue_returns_reactivated_retail_trade() -> None:
+    results = search_catalogue("retail trade", source="abs")
+
+    assert results
+    assert results[0]["id"] == "RT"
 
 
 def test_slci_resolves_to_selected_living_cost_indexes() -> None:
@@ -107,30 +114,43 @@ def test_every_catalogue_entry_declares_resolver_schema_fields() -> None:
         assert isinstance(entry.get("variants"), list), entry["id"]
 
 
-def test_abs_variants_carry_name_aliases_and_optional_sdmx_key() -> None:
+def test_abs_variants_carry_name_aliases_and_wired_sdmx_key() -> None:
     for entry in ABS_CATALOGUE.values():
         for variant in entry["variants"]:
             assert isinstance(variant.get("name"), str) and variant["name"], entry["id"]
             assert isinstance(variant.get("aliases"), list), entry["id"]
             assert "abs_key" in variant, f"{entry['id']}/{variant['name']}"
             key = variant["abs_key"]
-            if key is not None:
-                assert isinstance(key, str) and SDMX_KEY_PATTERN.match(key), (
-                    f"{entry['id']}/{variant['name']}: {key!r} is not a valid SDMX key"
-                )
+            assert isinstance(key, str) and SDMX_KEY_PATTERN.match(key), (
+                f"{entry['id']}/{variant['name']}: {key!r} is not a valid wired SDMX key"
+            )
 
 
-def test_rba_variants_carry_name_aliases_and_optional_series_ids() -> None:
+def test_rba_variants_carry_name_aliases_and_wired_series_ids() -> None:
     for entry in RBA_CATALOGUE.values():
         for variant in entry["variants"]:
             assert isinstance(variant.get("name"), str) and variant["name"], entry["id"]
             assert isinstance(variant.get("aliases"), list), entry["id"]
             assert "rba_series_ids" in variant, f"{entry['id']}/{variant['name']}"
             series_ids = variant["rba_series_ids"]
-            if series_ids is not None:
-                assert isinstance(series_ids, list) and series_ids, (
-                    f"{entry['id']}/{variant['name']}: rba_series_ids must be None or non-empty"
-                )
-                assert all(isinstance(s, str) and s for s in series_ids), (
-                    f"{entry['id']}/{variant['name']}: all series ids must be non-empty strings"
-                )
+            assert isinstance(series_ids, list) and series_ids, (
+                f"{entry['id']}/{variant['name']}: rba_series_ids must be wired and non-empty"
+            )
+            assert all(isinstance(s, str) and s for s in series_ids), (
+                f"{entry['id']}/{variant['name']}: all series ids must be non-empty strings"
+            )
+
+
+def test_building_approvals_entry_has_wired_default_variant() -> None:
+    entry = ABS_CATALOGUE["BUILDING_APPROVALS"]
+
+    assert entry["name"] == "Building Approvals"
+    assert entry["frequency"] == "Monthly"
+    assert entry["category"] == "housing_construction"
+    assert entry["variants"] == [
+        {
+            "name": "headline_approvals",
+            "aliases": ["dwelling approvals", "residential approvals"],
+            "abs_key": "1.1.9.TOT.100.10.AUS.M",
+        }
+    ]

@@ -38,6 +38,13 @@ async def test_abs_resource_returns_full_catalogue_entry() -> None:
         payload = await _read_json(client, "ausecon://abs/CPI")
 
     assert payload == ABS_CATALOGUE["CPI"]
+    assert payload["variants"] == [
+        {
+            "name": "headline",
+            "aliases": ["headline cpi", "all groups"],
+            "abs_key": "1.10001.10.50.Q",
+        }
+    ]
 
 
 async def test_rba_resource_returns_full_catalogue_entry() -> None:
@@ -62,6 +69,22 @@ async def test_concepts_resource_lists_every_curated_shortcut() -> None:
         assert row["source"] == expected["source"]
         assert row["dataset_id"] == expected["dataset_id"]
         assert row["variant"] == expected.get("variant")
+
+
+async def test_abs_resource_exposes_new_building_approvals_entry() -> None:
+    mcp = build_server()
+
+    async with Client(mcp) as client:
+        payload = await _read_json(client, "ausecon://abs/BUILDING_APPROVALS")
+
+    assert payload == ABS_CATALOGUE["BUILDING_APPROVALS"]
+    assert payload["variants"] == [
+        {
+            "name": "headline_approvals",
+            "aliases": ["dwelling approvals", "residential approvals"],
+            "abs_key": "1.1.9.TOT.100.10.AUS.M",
+        }
+    ]
 
 
 async def test_abs_resource_raises_for_unknown_dataflow_id() -> None:

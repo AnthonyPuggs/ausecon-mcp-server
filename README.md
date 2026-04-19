@@ -47,7 +47,7 @@ For new integrations that need an unranked browse surface, prefer
 
 ### Currently supported semantic concepts
 
-`get_economic_series` resolves 28 curated concepts across prices, labour, activity, monetary
+`get_economic_series` resolves 29 curated concepts across prices, labour, activity, monetary
 policy, financial markets, external sector, and credit. The full list is also available at runtime
 via the `ausecon://concepts` resource. Resolver variant rules are summarised in
 [`docs/variants.md`](docs/variants.md), and the retrieval contract is documented in
@@ -83,6 +83,7 @@ via the `ausecon://concepts` resource. Resolver variant rules are summarised in
 | --- | --- | --- |
 | `gdp_growth` | ABS `ANA_AGG` | Quarterly real GDP growth (`M2.GPM.20.AUS.Q`) |
 | `household_spending` | ABS `HSI_M` | Household Spending Indicator, Australia, seasonally adjusted, current prices |
+| `dwelling_approvals` | ABS `BUILDING_APPROVALS` | Residential dwelling approvals, Australia, monthly (`1.1.9.TOT.100.10.AUS.M`) |
 | `population` | ABS `ERP_Q` | Estimated resident population, Australia, quarterly |
 
 **Monetary policy and rates**
@@ -131,11 +132,16 @@ A few defaults deserve calling out explicitly:
 - **`underemployment_rate` uses `LF_UNDER`** (dataflow id) but composes its SDMX key against
   structure id `DS_LF_UNDER`, because the live ABS SDMX structure is exposed under the
   `DS_`-prefixed id.
+- **`dwelling_approvals` uses `BUILDING_APPROVALS` → `BA_GCCSA`** with the live national
+  residential approvals series. The current ABS approvals collection does not expose a clean
+  seasonally adjusted national residential default, so the shipped semantic default is the original
+  Australia total.
 
 `variant`, `geography`, and `frequency` are validated against the catalogue entry. For ABS
 datasets, populated variants can be literal SDMX keys or partial fragments that are completed
 against the live structure. For RBA tables, populated variants narrow the response to the declared
-series IDs. Variants that are declared but not yet populated raise a clear "not yet wired" error.
+series IDs. The runtime catalogue only exposes fully wired variants; future candidates stay in
+[`docs/variant_candidates.md`](docs/variant_candidates.md) until they have a real series binding.
 
 ## Discovery And Validation
 
