@@ -2,21 +2,21 @@
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.AnthonyPuggs/ausecon-mcp-server",
   "title": "Australian Economic Data (RBA & ABS)",
-  "description": "Australian economic data (ABS + RBA): CPI, GDP, cash rate, labour, external sector.",
-  "version": "0.11.0",
-  "repository": {
-    "url": "https://github.com/AnthonyPuggs/ausecon-mcp-server",
-    "source": "github"
-  },
+  "description": "Australian economic data from the Reserve Bank of Australia (RBA) and Australian Bureau of Statistics (ABS): CPI, GDP, cash rate, labour force, and external sector.",
+  "version": "0.12.0",
   "packages": [
     {
-      "registryType": "pypi",
       "identifier": "ausecon-mcp-server",
-      "version": "0.11.0",
+      "registryType": "pypi",
+      "runtimeHint": "uvx",
+      "version": "0.12.0",
       "transport": {
         "type": "stdio"
-      },
-      "runtimeHint": "uvx"
+      }
     }
-  ]
+  ],
+  "repository": {
+    "source": "github",
+    "url": "https://github.com/AnthonyPuggs/ausecon-mcp-server"
+  }
 }
