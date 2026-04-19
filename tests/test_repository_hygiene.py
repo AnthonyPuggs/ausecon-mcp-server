@@ -73,7 +73,12 @@ def test_ci_workflow_exists_with_quality_checks_and_hygiene_guard() -> None:
     assert "uv run ruff check src tests" in workflow_text
     assert "uv run pytest" in workflow_text
     assert "test -f LICENSE" in workflow_text
+    assert 'command -v rg >/dev/null 2>&1' in workflow_text
     assert 'rg -n "rba_abs_mcp|<your-repo-url>" README.md examples pyproject.toml' in workflow_text
+    assert (
+        'grep -R -n -E "rba_abs_mcp|<your-repo-url>" README.md examples pyproject.toml'
+        in workflow_text
+    )
 
 
 def test_readme_tracks_current_release_state() -> None:
@@ -133,6 +138,7 @@ def test_release_workflow_smoke_tests_built_wheel() -> None:
 def test_dockerfile_supports_local_and_pypi_install_modes() -> None:
     dockerfile_text = DOCKERFILE.read_text(encoding="utf-8")
 
+    assert "apt-get install --yes --no-install-recommends git" in dockerfile_text
     assert "ARG AUSECON_INSTALL_SOURCE=local" in dockerfile_text
     assert "ARG AUSECON_VERSION=" in dockerfile_text
     assert "COPY --chown=ausecon:ausecon . /home/ausecon/src" in dockerfile_text

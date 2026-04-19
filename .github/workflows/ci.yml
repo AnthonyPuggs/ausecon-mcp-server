@@ -24,7 +24,13 @@ jobs:
         shell: bash
         run: |
           test -f LICENSE
-          if rg -n "rba_abs_mcp|<your-repo-url>" README.md examples pyproject.toml; then
+          if command -v rg >/dev/null 2>&1; then
+            stale_refs=$(rg -n "rba_abs_mcp|<your-repo-url>" README.md examples pyproject.toml || true)
+          else
+            stale_refs=$(grep -R -n -E "rba_abs_mcp|<your-repo-url>" README.md examples pyproject.toml || true)
+          fi
+          if [ -n "$stale_refs" ]; then
+            printf '%s\n' "$stale_refs"
             echo "Found stale public references"
             exit 1
           fi
