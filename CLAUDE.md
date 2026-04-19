@@ -4,6 +4,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Commands
 
+Python 3.12 is recommended for local development. The package metadata and CI matrix support Python 3.10+.
+
 ```bash
 # Install dependencies
 uv sync --python 3.12
@@ -37,7 +39,7 @@ providers/         → Async httpx clients for each source (ABS, RBA), TTLCache 
 parsers/           → Pure functions: raw HTTP response text → normalised dicts
 catalogue/         → Static curated dicts (abs.py, rba.py) + search.py ranking logic
 models.py          → SeriesDescriptor and Observation dataclasses; shared to_dict() helpers
-cache.py           → In-memory TTLCache (monotonic clock, per-instance, no persistence)
+cache.py           → Dual-layer TTLCache (memory + on-disk JSON cache)
 ```
 
 ### Data flow
@@ -46,7 +48,7 @@ cache.py           → In-memory TTLCache (monotonic clock, per-instance, no per
 2. `AuseconService` → `ABSProvider` or `RBAProvider` (checks TTLCache first)
 3. Provider → httpx GET → raw CSV or XML response
 4. Parser (`parse_abs_csv`, `parse_rba_csv`, `parse_abs_structure`) → `{metadata, series, observations}` dict
-5. Optional post-fetch filtering (`_slice_observations`, `_filter_rba_payload`) for `last_n`, date ranges, series IDs
+5. Optional post-fetch filtering (`filters.py`) for `last_n`, date ranges, and series IDs
 6. Result cached and returned as dict (not model instances)
 
 ### ABS vs RBA differences
@@ -64,7 +66,7 @@ cache.py           → In-memory TTLCache (monotonic clock, per-instance, no per
 
 ### Response shape
 
-All retrieval tools return `{metadata: {...}, series: [...], observations: [...]}`. Provenance fields (`retrieval_url`, `truncated`, `updated_after`) are added to `metadata` after parsing.
+All retrieval tools return `{metadata: {...}, series: [...], observations: [...]}`. Provenance fields such as `retrieval_url`, `retrieved_at`, `truncated`, `updated_after`, and `server_version` are stamped onto `metadata` after parsing. The checked-in contract lives at `schemas/response.schema.json`.
 
 ## Key conventions
 

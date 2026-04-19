@@ -57,6 +57,7 @@ dependencies = [
 
 [package.optional-dependencies]
 dev = [
+    { name = "jsonschema" },
     { name = "pytest" },
     { name = "pytest-asyncio" },
     { name = "respx" },
@@ -68,6 +69,7 @@ dev = [
 requires-dist = [
     { name = "fastmcp", specifier = ">=2.5.1" },
     { name = "httpx", specifier = ">=0.27,<1" },
+    { name = "jsonschema", marker = "extra == 'dev'", specifier = ">=4.26,<5" },
     { name = "platformdirs", specifier = ">=4.0,<5" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=9.0.3,<10" },
     { name = "pytest-asyncio", marker = "extra == 'dev'", specifier = ">=0.24,<2" },

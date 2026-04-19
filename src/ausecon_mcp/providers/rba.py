@@ -9,9 +9,10 @@ import httpx
 from ausecon_mcp.cache import TTLCache
 from ausecon_mcp.catalogue.rba import RBA_CATALOGUE
 from ausecon_mcp.errors import AuseconParseError, AuseconUpstreamError
+from ausecon_mcp.filters import filter_payload
 from ausecon_mcp.logging import get_logger
 from ausecon_mcp.parsers.rba_csv import parse_rba_csv
-from ausecon_mcp.providers._http import build_client, resolve_version
+from ausecon_mcp.providers._http import build_client, resolve_version, utc_now_iso
 from ausecon_mcp.providers._retry import get_with_retries
 
 _logger = get_logger("providers.rba")
@@ -118,9 +119,10 @@ class RBAProvider:
                         f"Failed to parse RBA table payload for '{table_id}'."
                     ) from exc
                 raw_payload["metadata"]["retrieval_url"] = str(response.request.url)
+                raw_payload["metadata"]["retrieved_at"] = utc_now_iso()
                 raw_payload = self._cache.set(cache_key, raw_payload, self._ttl_seconds)
 
-        payload = _filter_rba_payload(
+        payload = filter_payload(
             deepcopy(raw_payload),
             series_ids=series_ids,
             start_date=start_date,
@@ -133,32 +135,3 @@ class RBAProvider:
             payload["metadata"]["cached_at"] = stale_meta["cached_at"]
             payload["metadata"]["expires_at"] = stale_meta["expires_at"]
         return payload
-
-
-def _filter_rba_payload(
-    payload: dict[str, Any],
-    series_ids: list[str] | None,
-    start_date: str | None,
-    end_date: str | None,
-    last_n: int | None,
-) -> dict[str, Any]:
-    observations = payload["observations"]
-    if series_ids:
-        allowed = set(series_ids)
-        observations = [item for item in observations if item["series_id"] in allowed]
-        payload["series"] = [item for item in payload["series"] if item["series_id"] in allowed]
-    if start_date:
-        observations = [item for item in observations if item["date"] >= start_date]
-    if end_date:
-        observations = [item for item in observations if item["date"] <= end_date]
-
-    truncated = False
-    if last_n is not None and last_n > 0 and len(observations) > last_n:
-        observations = observations[-last_n:]
-        truncated = True
-
-    series_id_set = {item["series_id"] for item in observations}
-    payload["series"] = [item for item in payload["series"] if item["series_id"] in series_id_set]
-    payload["observations"] = observations
-    payload["metadata"]["truncated"] = truncated
-    return payload

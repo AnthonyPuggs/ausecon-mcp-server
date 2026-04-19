@@ -1,0 +1,49 @@
+{
+  "metadata": {
+    "source": "rba",
+    "dataset_id": "g1",
+    "title": "G1 CONSUMER PRICE INFLATION",
+    "publication_date": "2026-01-28",
+    "retrieval_url": "https://www.rba.gov.au/statistics/tables/csv/g1-data.csv",
+    "retrieved_at": "2026-04-19T10:00:00Z",
+    "server_version": "0.12.0",
+    "truncated": true
+  },
+  "series": [
+    {
+      "series_id": "GCPIAGYP",
+      "label": "Consumer Price Index; All groups",
+      "unit": "Per cent",
+      "frequency": "Quarterly",
+      "dimensions": {
+        "description": {
+          "code": "",
+          "label": "Year-ended percentage change"
+        },
+        "type": {
+          "code": "",
+          "label": "Original"
+        },
+        "source": {
+          "code": "",
+          "label": "ABS"
+        }
+      },
+      "source_key": "GCPIAGYP"
+    }
+  ],
+  "observations": [
+    {
+      "date": "2025-03-31",
+      "series_id": "GCPIAGYP",
+      "value": 2.9,
+      "dimensions": {}
+    },
+    {
+      "date": "2025-06-30",
+      "series_id": "GCPIAGYP",
+      "value": 3.1,
+      "dimensions": {}
+    }
+  ]
+}

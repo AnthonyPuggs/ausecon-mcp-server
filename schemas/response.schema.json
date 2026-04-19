@@ -1,0 +1,146 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Ausecon Retrieval Response",
+  "type": "object",
+  "required": ["metadata", "series", "observations"],
+  "additionalProperties": false,
+  "properties": {
+    "metadata": {
+      "$ref": "#/$defs/metadata"
+    },
+    "series": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/series_descriptor"
+      }
+    },
+    "observations": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/observation"
+      }
+    }
+  },
+  "$defs": {
+    "metadata": {
+      "type": "object",
+      "required": ["source", "dataset_id"],
+      "additionalProperties": false,
+      "properties": {
+        "source": {
+          "type": "string",
+          "enum": ["abs", "rba"]
+        },
+        "dataset_id": {
+          "type": "string"
+        },
+        "frequency": {
+          "type": ["string", "null"]
+        },
+        "title": {
+          "type": ["string", "null"]
+        },
+        "publication_date": {
+          "type": ["string", "null"]
+        },
+        "retrieval_url": {
+          "type": "string"
+        },
+        "retrieved_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "server_version": {
+          "type": "string"
+        },
+        "truncated": {
+          "type": "boolean"
+        },
+        "updated_after": {
+          "type": ["string", "null"]
+        },
+        "stale": {
+          "type": "boolean"
+        },
+        "cached_at": {
+          "type": "number"
+        },
+        "expires_at": {
+          "type": "number"
+        },
+        "bundle": {
+          "type": ["string", "array", "object", "null"]
+        }
+      }
+    },
+    "dimension_value": {
+      "type": "object",
+      "required": ["code", "label"],
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        }
+      }
+    },
+    "dimensions": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/dimension_value"
+      }
+    },
+    "series_descriptor": {
+      "type": "object",
+      "required": ["series_id", "label", "dimensions"],
+      "additionalProperties": false,
+      "properties": {
+        "series_id": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "unit": {
+          "type": ["string", "null"]
+        },
+        "frequency": {
+          "type": ["string", "null"]
+        },
+        "dimensions": {
+          "$ref": "#/$defs/dimensions"
+        },
+        "source_key": {
+          "type": ["string", "null"]
+        }
+      }
+    },
+    "observation": {
+      "type": "object",
+      "required": ["date", "series_id", "value", "dimensions"],
+      "additionalProperties": false,
+      "properties": {
+        "date": {
+          "type": "string"
+        },
+        "series_id": {
+          "type": "string"
+        },
+        "value": {
+          "type": ["number", "null"]
+        },
+        "raw_value": {
+          "type": ["string", "null"]
+        },
+        "dimensions": {
+          "$ref": "#/$defs/dimensions"
+        },
+        "status": {
+          "type": ["string", "null"]
+        }
+      }
+    }
+  }
+}

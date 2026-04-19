@@ -9,10 +9,11 @@ import httpx
 
 from ausecon_mcp.cache import TTLCache
 from ausecon_mcp.errors import AuseconParseError, AuseconUpstreamError
+from ausecon_mcp.filters import filter_payload
 from ausecon_mcp.logging import get_logger
 from ausecon_mcp.parsers.abs_csv import parse_abs_csv
 from ausecon_mcp.parsers.abs_structure import parse_abs_structure
-from ausecon_mcp.providers._http import build_client, resolve_version
+from ausecon_mcp.providers._http import build_client, resolve_version, utc_now_iso
 from ausecon_mcp.providers._retry import get_with_retries
 
 _logger = get_logger("providers.abs")
@@ -147,26 +148,14 @@ class ABSProvider:
                         f"Failed to parse ABS data payload for '{dataflow_id}'."
                     ) from exc
                 raw_payload["metadata"]["retrieval_url"] = str(response.request.url)
+                raw_payload["metadata"]["retrieved_at"] = utc_now_iso()
                 raw_payload["metadata"]["updated_after"] = updated_after
                 raw_payload = self._cache.set(cache_key, raw_payload, self._ttl_seconds)
 
-        payload = _slice_observations(deepcopy(raw_payload), last_n)
+        payload = filter_payload(deepcopy(raw_payload), last_n=last_n)
         payload["metadata"]["server_version"] = resolve_version()
         if stale_meta is not None:
             payload["metadata"]["stale"] = True
             payload["metadata"]["cached_at"] = stale_meta["cached_at"]
             payload["metadata"]["expires_at"] = stale_meta["expires_at"]
         return payload
-
-
-def _slice_observations(payload: dict[str, Any], last_n: int | None) -> dict[str, Any]:
-    observations = payload["observations"]
-    if last_n is None or last_n <= 0 or len(observations) <= last_n:
-        payload["metadata"]["truncated"] = False
-        return payload
-
-    payload["observations"] = observations[-last_n:]
-    series_ids = {item["series_id"] for item in payload["observations"]}
-    payload["series"] = [item for item in payload["series"] if item["series_id"] in series_ids]
-    payload["metadata"]["truncated"] = True
-    return payload

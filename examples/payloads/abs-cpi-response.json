@@ -1,0 +1,101 @@
+{
+  "metadata": {
+    "source": "abs",
+    "dataset_id": "CPI",
+    "frequency": "Q",
+    "retrieval_url": "https://data.api.abs.gov.au/rest/data/CPI/all?format=csvfile",
+    "retrieved_at": "2026-04-19T10:00:00Z",
+    "server_version": "0.12.0",
+    "truncated": true,
+    "updated_after": null
+  },
+  "series": [
+    {
+      "series_id": "MEASURE=1|INDEX=10001|TSEST=10|REGION=50|FREQ=Q",
+      "label": "Index numbers / 10001 / 10 / 50 / Q",
+      "unit": "IN",
+      "frequency": "Q",
+      "dimensions": {
+        "MEASURE": {
+          "code": "1",
+          "label": "Index numbers"
+        },
+        "INDEX": {
+          "code": "10001",
+          "label": "10001"
+        },
+        "TSEST": {
+          "code": "10",
+          "label": "10"
+        },
+        "REGION": {
+          "code": "50",
+          "label": "50"
+        },
+        "FREQ": {
+          "code": "Q",
+          "label": "Q"
+        }
+      },
+      "source_key": "ABS:CPI(1.0.0)"
+    }
+  ],
+  "observations": [
+    {
+      "date": "2025-Q1",
+      "series_id": "MEASURE=1|INDEX=10001|TSEST=10|REGION=50|FREQ=Q",
+      "value": 139.4,
+      "dimensions": {
+        "MEASURE": {
+          "code": "1",
+          "label": "Index numbers"
+        },
+        "INDEX": {
+          "code": "10001",
+          "label": "10001"
+        },
+        "TSEST": {
+          "code": "10",
+          "label": "10"
+        },
+        "REGION": {
+          "code": "50",
+          "label": "50"
+        },
+        "FREQ": {
+          "code": "Q",
+          "label": "Q"
+        }
+      },
+      "status": null
+    },
+    {
+      "date": "2025-Q2",
+      "series_id": "MEASURE=1|INDEX=10001|TSEST=10|REGION=50|FREQ=Q",
+      "value": 140.2,
+      "dimensions": {
+        "MEASURE": {
+          "code": "1",
+          "label": "Index numbers"
+        },
+        "INDEX": {
+          "code": "10001",
+          "label": "10001"
+        },
+        "TSEST": {
+          "code": "10",
+          "label": "10"
+        },
+        "REGION": {
+          "code": "50",
+          "label": "50"
+        },
+        "FREQ": {
+          "code": "Q",
+          "label": "Q"
+        }
+      },
+      "status": null
+    }
+  ]
+}

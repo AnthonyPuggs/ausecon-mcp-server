@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import datetime, timezone
 from importlib.metadata import PackageNotFoundError
 from importlib.metadata import version as _pkg_version
 
@@ -22,6 +23,10 @@ def resolve_version() -> str:
 
 def build_user_agent() -> str:
     return f"ausecon-mcp-server/{resolve_version()} (+{_HOMEPAGE})"
+
+
+def utc_now_iso() -> str:
+    return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
 
 def build_client(timeout: float = 30.0) -> httpx.AsyncClient:

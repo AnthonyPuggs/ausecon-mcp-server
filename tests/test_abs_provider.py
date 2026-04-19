@@ -1,3 +1,4 @@
+from datetime import datetime
 from pathlib import Path
 
 import pytest
@@ -7,6 +8,10 @@ from httpx import ConnectTimeout, Response
 from ausecon_mcp.providers.abs import ABSProvider
 
 FIXTURES = Path(__file__).parent / "fixtures"
+
+
+def _parse_iso_utc(value: str) -> datetime:
+    return datetime.fromisoformat(value.replace("Z", "+00:00"))
 
 
 @pytest.mark.asyncio
@@ -146,6 +151,22 @@ async def test_abs_provider_stamps_server_version_in_metadata() -> None:
 
     assert isinstance(result["metadata"]["server_version"], str)
     assert result["metadata"]["server_version"]
+
+
+@pytest.mark.asyncio
+async def test_abs_provider_stamps_retrieved_at_in_metadata() -> None:
+    provider = ABSProvider()
+    csv_payload = (FIXTURES / "abs_cpi_sample.csv").read_text()
+
+    with respx.mock(assert_all_called=True) as router:
+        router.get("https://data.api.abs.gov.au/rest/data/CPI/all").mock(
+            return_value=Response(200, text=csv_payload)
+        )
+
+        result = await provider.get_data("CPI")
+
+    assert isinstance(result["metadata"]["retrieved_at"], str)
+    assert _parse_iso_utc(result["metadata"]["retrieved_at"]).tzinfo is not None
 
 
 @pytest.mark.asyncio

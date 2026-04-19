@@ -4,6 +4,22 @@ All notable changes to `ausecon-mcp-server` are recorded here. The format follow
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres
 to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- Checked-in response contract artefacts for the retrieval surface:
+  `schemas/response.schema.json`, `docs/response-schema.md`, and example
+  payloads under `examples/payloads/`.
+- Additive `metadata.retrieved_at` on ABS and RBA retrieval responses so
+  downstream users can distinguish upstream retrieval time from cache state.
+
+### Changed
+- Shared retrieval filtering now lives in `src/ausecon_mcp/filters.py`,
+  keeping `last_n`, date-window, and series-pruning behaviour aligned across
+  ABS and RBA payloads.
+- The release workflow now smoke-installs the built wheel and verifies the
+  `ausecon-mcp-server` console script before PyPI publish.
+
 ## [0.11.0] - 2026-04-19
 
 ### Added
