@@ -1,0 +1,49 @@
+{
+  "metadata": {
+    "source": "rba",
+    "dataset_id": "a2",
+    "title": "A2 RESERVE BANK OF AUSTRALIA – CHANGES IN MONETARY POLICY AND ADMINISTERED RATES",
+    "publication_date": "2026-01-28",
+    "retrieval_url": "https://www.rba.gov.au/statistics/tables/csv/a2-data.csv",
+    "retrieved_at": "2026-04-19T10:00:00Z",
+    "server_version": "0.12.0",
+    "truncated": false
+  },
+  "series": [
+    {
+      "series_id": "ARBAMPCNCRT",
+      "label": "Cash rate target",
+      "unit": "Per cent",
+      "frequency": null,
+      "dimensions": {
+        "description": {
+          "code": "",
+          "label": "Target cash rate"
+        },
+        "type": {
+          "code": "",
+          "label": "Administered rate"
+        },
+        "source": {
+          "code": "",
+          "label": "RBA"
+        }
+      },
+      "source_key": "ARBAMPCNCRT"
+    }
+  ],
+  "observations": [
+    {
+      "date": "2024-11-05",
+      "series_id": "ARBAMPCNCRT",
+      "value": 4.35,
+      "dimensions": {}
+    },
+    {
+      "date": "2025-02-18",
+      "series_id": "ARBAMPCNCRT",
+      "value": 4.1,
+      "dimensions": {}
+    }
+  ]
+}

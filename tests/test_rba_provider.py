@@ -1,3 +1,4 @@
+from datetime import datetime
 from pathlib import Path
 
 import pytest
@@ -7,6 +8,10 @@ from httpx import Response
 from ausecon_mcp.providers.rba import RBAProvider
 
 FIXTURES = Path(__file__).parent / "fixtures"
+
+
+def _parse_iso_utc(value: str) -> datetime:
+    return datetime.fromisoformat(value.replace("Z", "+00:00"))
 
 
 def test_rba_provider_lists_tables_by_category() -> None:
@@ -166,6 +171,22 @@ async def test_rba_provider_stamps_server_version_in_metadata() -> None:
 
     assert isinstance(result["metadata"]["server_version"], str)
     assert result["metadata"]["server_version"]
+
+
+@pytest.mark.asyncio
+async def test_rba_provider_stamps_retrieved_at_in_metadata() -> None:
+    provider = RBAProvider()
+    csv_payload = (FIXTURES / "rba_g1_sample.csv").read_text()
+
+    with respx.mock(assert_all_called=True) as router:
+        router.get("https://www.rba.gov.au/statistics/tables/csv/g1-data.csv").mock(
+            return_value=Response(200, text=csv_payload)
+        )
+
+        result = await provider.get_table("g1")
+
+    assert isinstance(result["metadata"]["retrieved_at"], str)
+    assert _parse_iso_utc(result["metadata"]["retrieved_at"]).tzinfo is not None
 
 
 @pytest.mark.asyncio

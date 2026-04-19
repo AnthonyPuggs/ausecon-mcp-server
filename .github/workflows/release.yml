@@ -25,6 +25,27 @@ jobs:
       - name: Build sdist and wheel
         run: python -m build
 
+      - name: Smoke-test built wheel
+        run: |
+          python -m venv .release-smoke
+          .release-smoke/bin/python -m pip install --upgrade pip
+          .release-smoke/bin/python -m pip install --no-deps dist/*.whl
+          .release-smoke/bin/python - <<'PY'
+          from importlib.metadata import distribution
+          from pathlib import Path
+          import sys
+
+          script = Path(sys.executable).with_name("ausecon-mcp-server")
+          assert script.is_file(), f"console script missing: {script}"
+          dist = distribution("ausecon-mcp-server")
+          assert any(
+              entry_point.group == "console_scripts"
+              and entry_point.name == "ausecon-mcp-server"
+              for entry_point in dist.entry_points
+          )
+          print(script)
+          PY
+
       - uses: actions/upload-artifact@v4
         with:
           name: dist

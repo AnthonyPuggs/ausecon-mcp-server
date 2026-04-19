@@ -14,6 +14,7 @@ CLAUDE_EXAMPLE = ROOT / "examples" / "claude_desktop_config.json"
 PYPROJECT = ROOT / "pyproject.toml"
 LICENSE = ROOT / "LICENSE"
 CI_WORKFLOW = ROOT / ".github" / "workflows" / "ci.yml"
+RELEASE_WORKFLOW = ROOT / ".github" / "workflows" / "release.yml"
 SERVER_JSON = ROOT / "server.json"
 CHANGELOG = ROOT / "CHANGELOG.md"
 
@@ -87,6 +88,41 @@ def test_readme_tracks_current_release_state() -> None:
     assert "`v0.3.0` is a discovery release" not in readme_text
     assert "The current release includes:" not in readme_text
     assert "`v0.5.0` covers the main analyst workflows more credibly" not in readme_text
+
+
+def test_readme_documents_schema_and_preferred_rba_listing_surface() -> None:
+    readme_text = README.read_text(encoding="utf-8")
+
+    assert "schemas/response.schema.json" in readme_text
+    assert "docs/response-schema.md" in readme_text
+    assert 'list_catalogue(source="rba")' in readme_text
+
+
+def test_contract_and_architecture_docs_exist() -> None:
+    assert (ROOT / "docs" / "architecture.md").is_file()
+    assert (ROOT / "docs" / "variants.md").is_file()
+    assert (ROOT / "docs" / "response-schema.md").is_file()
+
+
+def test_release_workflow_smoke_tests_built_wheel() -> None:
+    workflow_text = RELEASE_WORKFLOW.read_text(encoding="utf-8")
+
+    assert "Smoke-test built wheel" in workflow_text
+    assert "dist/*.whl" in workflow_text
+    assert "ausecon-mcp-server" in workflow_text
+
+
+def test_python_version_story_is_consistent_across_docs_and_ci() -> None:
+    readme_text = README.read_text(encoding="utf-8")
+    claude_text = (ROOT / "CLAUDE.md").read_text(encoding="utf-8")
+    pyproject = tomllib.loads(PYPROJECT.read_text(encoding="utf-8"))
+    workflow_text = CI_WORKFLOW.read_text(encoding="utf-8")
+
+    assert pyproject["project"]["requires-python"] == ">=3.10"
+    assert "Python 3.12 is recommended for local development" in readme_text
+    assert "Python 3.10+" in readme_text
+    assert "Python 3.12 is recommended for local development" in claude_text
+    assert "python-version: ['3.10', '3.12']" in workflow_text
 
 
 def test_readme_release_instructions_match_tag_derived_versioning() -> None:

@@ -23,7 +23,7 @@ Current capabilities:
 - seven read-only MCP tools covering dataset discovery (including an unranked `list_catalogue` complement to `search_datasets`), ABS structure inspection, ABS and RBA data retrieval, and a semantic shortcut layer with 28 curated macroeconomic concepts
 - four read-only MCP resources exposing the curated catalogue, per-entry metadata, and an `ausecon://concepts` index of every semantic shortcut with its resolved target
 - eight MCP prompt templates for common economist workflows such as inflation summaries, macro snapshots, living-cost comparisons, construction pipeline reviews, labour slack, yield curve snapshots, and dataset discovery
-- provenance-rich JSON responses, structured JSON logging to stderr, and dual-layer caching that survives client restarts
+- provenance-rich JSON responses, a checked-in retrieval contract at [`schemas/response.schema.json`](schemas/response.schema.json), structured JSON logging to stderr, and dual-layer caching that survives client restarts
 
 At this stage, the server should still be treated as an opinionated early release rather than a
 complete coverage layer for all ABS and RBA content.
@@ -38,15 +38,21 @@ The MCP server currently exposes the following tools:
 | `list_catalogue` | List catalogue entries unranked, optionally filtered by source, category, or tag | `source`, `category`, `tag`, `include_ceased`, `include_discontinued` |
 | `get_abs_dataset_structure` | Retrieve ABS SDMX dimensions and code lists | `dataflow_id` |
 | `get_abs_data` | Retrieve ABS data in a normalised response shape | `dataflow_id`, `key`, `start_period`, `end_period`, `last_n`, `updated_after` |
-| `list_rba_tables` | List curated RBA statistical tables | `category`, `include_discontinued` |
+| `list_rba_tables` | List curated RBA statistical tables (kept for backwards compatibility) | `category`, `include_discontinued` |
 | `get_rba_table` | Retrieve an RBA statistical table in a normalised response shape | `table_id`, `series_ids`, `start_date`, `end_date`, `last_n` |
 | `get_economic_series` | Resolve a curated economic concept to an ABS or RBA retrieval | `concept`, `variant`, `geography`, `frequency`, `start`, `end`, `last_n` |
+
+For new integrations that need an unranked browse surface, prefer
+`list_catalogue(source="rba")`. `list_rba_tables` remains available as the narrow RBA-only listing surface for existing clients.
 
 ### Currently supported semantic concepts
 
 `get_economic_series` resolves 28 curated concepts across prices, labour, activity, monetary
 policy, financial markets, external sector, and credit. The full list is also available at runtime
-via the `ausecon://concepts` resource.
+via the `ausecon://concepts` resource. Resolver variant rules are summarised in
+[`docs/variants.md`](docs/variants.md), and the retrieval contract is documented in
+[`schemas/response.schema.json`](schemas/response.schema.json) and
+[`docs/response-schema.md`](docs/response-schema.md).
 
 **Prices and inflation**
 
@@ -57,15 +63,15 @@ via the `ausecon://concepts` resource.
 | `weighted_median_inflation` | RBA `g1` | Year-ended weighted median inflation (`GCPIOCPMWMYP`) |
 | `monthly_inflation` | RBA `g4` | Monthly headline CPI year-ended (`GCPIAGSAMP`) |
 | `producer_price_inflation` | ABS `PPI_FD` | Final demand PPI, Australia, quarterly |
-| `living_cost_index` | ABS `SLCI` | Selected Living Cost Indexes |
+| `inflation_expectations` | RBA `g3` | Consumer inflation expectations |
 
 **Labour**
 
 | Concept | Source | Default mapping |
 | --- | --- | --- |
+| `employment` | ABS `LF` | Employed people, Australia, seasonally adjusted, monthly |
 | `unemployment_rate` | ABS `LF` | Unemployment rate, Australia, seasonally adjusted, monthly |
 | `underemployment_rate` | ABS `LF_UNDER` | Underemployment rate, Australia, seasonally adjusted, monthly (composed via structure `DS_LF_UNDER`) |
-| `employment_total` | ABS `LF` | Employed total, Australia, seasonally adjusted, monthly |
 | `participation_rate` | ABS `LF` | Participation rate, Australia, seasonally adjusted, monthly |
 | `hours_worked` | ABS `LF_HOURS` | Monthly hours worked in all jobs, Australia, seasonally adjusted |
 | `job_vacancies` | ABS `JV` | Total job vacancies, Australia, seasonally adjusted, quarterly |
@@ -87,7 +93,7 @@ via the `ausecon://concepts` resource.
 | `government_bond_yield_3y` | RBA `f17` | 3-year zero-coupon AGS yield (`FZCY0300D`) |
 | `government_bond_yield_10y` | RBA `f17` | 10-year zero-coupon AGS yield (`FZCY1000D`) |
 | `mortgage_rate` | RBA `f6` | Owner-occupier variable housing rate (`FLRHOOVA`) |
-| `small_business_rate` | RBA `f7` | Small business lending rate indicator |
+| `business_lending_rate` | RBA `f7` | Small business lending rate indicator |
 
 **FX**
 
@@ -100,8 +106,7 @@ via the `ausecon://concepts` resource.
 
 | Concept | Source | Default mapping |
 | --- | --- | --- |
-| `exports_goods_services` | ABS `ITGS` | Total exports of goods and services |
-| `imports_goods_services` | ABS `ITGS` | Total imports of goods and services |
+| `trade_balance` | ABS `ITGS` | Balance on goods and services, Australia, monthly |
 | `current_account_balance` | ABS `BOP` | Current account balance, Australia, seasonally adjusted, quarterly |
 | `commodity_prices` | RBA `i2` | RBA Index of Commodity Prices (SDR terms, `GRCPAISDR`) |
 
@@ -111,7 +116,6 @@ via the `ausecon://concepts` resource.
 | --- | --- | --- |
 | `housing_credit` | RBA `d2` | Owner-occupier + investor housing credit, seasonally adjusted (`DLCACOHS`, `DLCACIHS`) |
 | `business_credit` | RBA `d2` | Business credit, seasonally adjusted (`DLCACBS`) |
-| `consumer_credit` | RBA `g3` | Consumer credit outstanding |
 
 **Locked default choices**
 
@@ -331,10 +335,10 @@ Discover relevant datasets:
 search_datasets(query="cash rate")
 ```
 
-Inspect active inflation tables and optionally include discontinued RBA coverage:
+Inspect active inflation tables from the preferred unranked browse surface:
 
 ```text
-list_rba_tables(category="inflation", include_discontinued=True)
+list_catalogue(source="rba", category="inflation", include_discontinued=True)
 ```
 
 Inspect ABS dataset structure before querying:
@@ -416,7 +420,11 @@ server returns it and marks `metadata.stale = true` alongside
 way** — they still raise so upstream shape drift stays visible.
 
 Data responses also include `metadata.server_version` so bug reports
-can reference the exact release that produced them.
+can reference the exact release that produced them. Fresh retrievals also include
+`metadata.retrieved_at`, which records when the upstream payload was fetched.
+The stable retrieval contract is documented in
+[`schemas/response.schema.json`](schemas/response.schema.json) and explained in
+[`docs/response-schema.md`](docs/response-schema.md).
 
 ### Environment variables
 
@@ -444,6 +452,9 @@ If you previously redirected the cache into a mounted volume, shared directory, 
 path, update that operational setup before upgrading.
 
 ## Development
+
+Python 3.12 is recommended for local development, and the package metadata and CI matrix support
+Python 3.10+.
 
 Install the development environment:
 
