@@ -127,4 +127,5 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
+            AUSECON_INSTALL_SOURCE=pypi
             AUSECON_VERSION=${{ steps.version.outputs.value }}

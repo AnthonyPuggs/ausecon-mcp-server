@@ -11,11 +11,21 @@ RUN useradd --create-home --shell /usr/sbin/nologin ausecon
 USER ausecon
 WORKDIR /home/ausecon
 
+ARG AUSECON_INSTALL_SOURCE=local
 ARG AUSECON_VERSION=
-RUN if [ -n "$AUSECON_VERSION" ]; then \
+COPY --chown=ausecon:ausecon . /home/ausecon/src
+
+RUN if [ "$AUSECON_INSTALL_SOURCE" = "local" ]; then \
+      uv tool install /home/ausecon/src; \
+    elif [ "$AUSECON_INSTALL_SOURCE" = "pypi" ]; then \
+      if [ -z "$AUSECON_VERSION" ]; then \
+        echo "AUSECON_VERSION must be set when AUSECON_INSTALL_SOURCE=pypi" >&2; \
+        exit 1; \
+      fi; \
       uv tool install "ausecon-mcp-server==${AUSECON_VERSION}"; \
     else \
-      uv tool install ausecon-mcp-server; \
+      echo "Unsupported AUSECON_INSTALL_SOURCE: ${AUSECON_INSTALL_SOURCE}" >&2; \
+      exit 1; \
     fi
 
 ENV PATH="/home/ausecon/.local/bin:${PATH}"

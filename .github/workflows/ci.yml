@@ -43,3 +43,6 @@ jobs:
 
       - name: Test
         run: uv run pytest
+
+      - name: Docker smoke build
+        run: docker build .

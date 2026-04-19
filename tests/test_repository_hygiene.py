@@ -15,6 +15,7 @@ PYPROJECT = ROOT / "pyproject.toml"
 LICENSE = ROOT / "LICENSE"
 CI_WORKFLOW = ROOT / ".github" / "workflows" / "ci.yml"
 RELEASE_WORKFLOW = ROOT / ".github" / "workflows" / "release.yml"
+DOCKERFILE = ROOT / "Dockerfile"
 SERVER_JSON = ROOT / "server.json"
 CHANGELOG = ROOT / "CHANGELOG.md"
 CONTRIBUTING = ROOT / "docs" / "contributing.md"
@@ -127,6 +128,33 @@ def test_release_workflow_smoke_tests_built_wheel() -> None:
     assert "Smoke-test built wheel" in workflow_text
     assert "dist/*.whl" in workflow_text
     assert "ausecon-mcp-server" in workflow_text
+
+
+def test_dockerfile_supports_local_and_pypi_install_modes() -> None:
+    dockerfile_text = DOCKERFILE.read_text(encoding="utf-8")
+
+    assert "ARG AUSECON_INSTALL_SOURCE=local" in dockerfile_text
+    assert "ARG AUSECON_VERSION=" in dockerfile_text
+    assert "COPY --chown=ausecon:ausecon . /home/ausecon/src" in dockerfile_text
+    assert 'if [ "$AUSECON_INSTALL_SOURCE" = "local" ]; then' in dockerfile_text
+    assert "uv tool install /home/ausecon/src" in dockerfile_text
+    assert 'elif [ "$AUSECON_INSTALL_SOURCE" = "pypi" ]; then' in dockerfile_text
+    assert 'if [ -z "$AUSECON_VERSION" ]; then' in dockerfile_text
+    assert 'uv tool install "ausecon-mcp-server==${AUSECON_VERSION}"' in dockerfile_text
+
+
+def test_release_workflow_builds_container_from_pypi_release_artifact() -> None:
+    workflow_text = RELEASE_WORKFLOW.read_text(encoding="utf-8")
+
+    assert "AUSECON_INSTALL_SOURCE=pypi" in workflow_text
+    assert "AUSECON_VERSION=${{ steps.version.outputs.value }}" in workflow_text
+
+
+def test_ci_workflow_runs_local_docker_smoke_build() -> None:
+    workflow_text = CI_WORKFLOW.read_text(encoding="utf-8")
+
+    assert "Docker smoke build" in workflow_text
+    assert "docker build ." in workflow_text
 
 
 def test_python_version_story_is_consistent_across_docs_and_ci() -> None:
