@@ -11,6 +11,8 @@ from ausecon_mcp.catalogue.resolver import (
 )
 from ausecon_mcp.catalogue.search import (
     list_catalogue as _list_catalogue,
+)
+from ausecon_mcp.catalogue.search import (
     search_catalogue,
 )
 from ausecon_mcp.logging import configure_logging, get_logger

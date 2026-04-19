@@ -144,3 +144,34 @@ This tranche should come last because it either needs catalogue replacement work
 - prefer one documented default series per concept
 - use variants only where the distinction is already legible in the catalogue
 - avoid broad computed concepts before the source-native backlog is largely complete
+
+## Implementation Notes (v0.11.0, Tranches A + B)
+
+Locked decisions recorded at implementation time so future reviewers
+can see why the defaults look the way they do:
+
+- **Bond-yield tenors resolve to `f17`, not `f16`.** `f17` (zero-coupon
+  yields) is the modelling-friendly series and avoids the coupon-driven
+  distortions in `f16`. Series IDs: `FZCY0300D` (3y), `FZCY1000D` (10y).
+- **`housing_credit` returns two SA series, not an aggregate.** The
+  default resolves `d2` to `DLCACOHS` (owner-occupier) and `DLCACIHS`
+  (investor). Clients that want a total can sum them; we deliberately
+  do not derive an aggregate to keep provenance clean.
+- **`business_credit` uses broad SA `DLCACBS`**, not the narrower
+  non-financial business series, because the broad aggregate is the
+  headline analysts reach for.
+- **`producer_price_inflation` uses `PPI_FD`**, not the input-stage
+  `PPI`, so the default matches the commonly reported final-demand
+  headline.
+- **`household_spending` uses `HSI_M` SA current-price totals.** The
+  chain-volume Australia-total series is not cleanly exposed in
+  `HSI_M`, so the current-price SA total is the least-surprising
+  default.
+- **`commodity_prices` uses the SDR index (`GRCPAISDR`)**, not the
+  AUD-denominated variant, so AUD moves are not baked into the default.
+- **`underemployment_rate` composes via structure id `DS_LF_UNDER`.**
+  The dataflow id is `LF_UNDER` but the live SDMX DataStructure is
+  exposed as `DS_LF_UNDER`; a new `resolve_abs_structure_id()` helper
+  and an optional `structure_id` field on ABS catalogue entries route
+  the structure fetch to the correct id without changing the dataflow
+  id used for data requests.

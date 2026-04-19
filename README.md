@@ -20,9 +20,9 @@ Releases are published to [PyPI](https://pypi.org/project/ausecon-mcp-server/) a
 
 Current capabilities:
 
-- six read-only MCP tools covering dataset discovery, ABS structure inspection, ABS and RBA data retrieval, and a small semantic shortcut layer for common macroeconomic concepts
-- three read-only MCP resources exposing the curated catalogue and per-entry metadata without making live upstream calls
-- six MCP prompt templates for common economist workflows such as inflation summaries, macro snapshots, living-cost comparisons, construction pipeline reviews, and dataset discovery
+- seven read-only MCP tools covering dataset discovery (including an unranked `list_catalogue` complement to `search_datasets`), ABS structure inspection, ABS and RBA data retrieval, and a semantic shortcut layer with 28 curated macroeconomic concepts
+- four read-only MCP resources exposing the curated catalogue, per-entry metadata, and an `ausecon://concepts` index of every semantic shortcut with its resolved target
+- eight MCP prompt templates for common economist workflows such as inflation summaries, macro snapshots, living-cost comparisons, construction pipeline reviews, labour slack, yield curve snapshots, and dataset discovery
 - provenance-rich JSON responses, structured JSON logging to stderr, and dual-layer caching that survives client restarts
 
 At this stage, the server should still be treated as an opinionated early release rather than a
@@ -35,27 +35,98 @@ The MCP server currently exposes the following tools:
 | Tool | Purpose | Key inputs |
 | --- | --- | --- |
 | `search_datasets` | Search the curated ABS and RBA catalogue with deterministic ranking | `query`, `source` |
+| `list_catalogue` | List catalogue entries unranked, optionally filtered by source, category, or tag | `source`, `category`, `tag`, `include_ceased`, `include_discontinued` |
 | `get_abs_dataset_structure` | Retrieve ABS SDMX dimensions and code lists | `dataflow_id` |
 | `get_abs_data` | Retrieve ABS data in a normalised response shape | `dataflow_id`, `key`, `start_period`, `end_period`, `last_n`, `updated_after` |
 | `list_rba_tables` | List curated RBA statistical tables | `category`, `include_discontinued` |
 | `get_rba_table` | Retrieve an RBA statistical table in a normalised response shape | `table_id`, `series_ids`, `start_date`, `end_date`, `last_n` |
-| `get_economic_series` | Resolve a small set of high-value economic concepts to ABS or RBA retrievals | `concept`, `variant`, `geography`, `frequency`, `start`, `end` |
+| `get_economic_series` | Resolve a curated economic concept to an ABS or RBA retrieval | `concept`, `variant`, `geography`, `frequency`, `start`, `end`, `last_n` |
 
 ### Currently supported semantic concepts
 
-`get_economic_series` currently supports:
+`get_economic_series` resolves 28 curated concepts across prices, labour, activity, monetary
+policy, financial markets, external sector, and credit. The full list is also available at runtime
+via the `ausecon://concepts` resource.
 
-- `cash_rate_target`
-- `headline_cpi`
-- `trimmed_mean_inflation`
-- `gdp_growth`
+**Prices and inflation**
 
-By default, these currently resolve to the following narrowed series:
+| Concept | Source | Default mapping |
+| --- | --- | --- |
+| `headline_cpi` | ABS `CPI` | All groups CPI, Australia, quarterly (`1.10001.10.50.Q`) |
+| `trimmed_mean_inflation` | RBA `g1` | Year-ended trimmed mean inflation (`GCPIOCPMTMYP`) |
+| `weighted_median_inflation` | RBA `g1` | Year-ended weighted median inflation (`GCPIOCPMWMYP`) |
+| `monthly_inflation` | RBA `g4` | Monthly headline CPI year-ended (`GCPIAGSAMP`) |
+| `producer_price_inflation` | ABS `PPI_FD` | Final demand PPI, Australia, quarterly |
+| `living_cost_index` | ABS `SLCI` | Selected Living Cost Indexes |
 
-- `cash_rate_target` -> RBA `a2` cash rate target series (`ARBAMPCNCRT`)
-- `headline_cpi` -> ABS `CPI` all groups CPI index for Australia, quarterly (`1.10001.10.50.Q`)
-- `trimmed_mean_inflation` -> RBA `g1` year-ended trimmed mean inflation (`GCPIOCPMTMYP`)
-- `gdp_growth` -> ABS `ANA_AGG` quarterly real GDP growth (`M2.GPM.20.AUS.Q`)
+**Labour**
+
+| Concept | Source | Default mapping |
+| --- | --- | --- |
+| `unemployment_rate` | ABS `LF` | Unemployment rate, Australia, seasonally adjusted, monthly |
+| `underemployment_rate` | ABS `LF_UNDER` | Underemployment rate, Australia, seasonally adjusted, monthly (composed via structure `DS_LF_UNDER`) |
+| `employment_total` | ABS `LF` | Employed total, Australia, seasonally adjusted, monthly |
+| `participation_rate` | ABS `LF` | Participation rate, Australia, seasonally adjusted, monthly |
+| `hours_worked` | ABS `LF_HOURS` | Monthly hours worked in all jobs, Australia, seasonally adjusted |
+| `job_vacancies` | ABS `JV` | Total job vacancies, Australia, seasonally adjusted, quarterly |
+| `wage_growth` | ABS `WPI` | Wage Price Index, Australia, all sectors, quarterly |
+
+**Activity**
+
+| Concept | Source | Default mapping |
+| --- | --- | --- |
+| `gdp_growth` | ABS `ANA_AGG` | Quarterly real GDP growth (`M2.GPM.20.AUS.Q`) |
+| `household_spending` | ABS `HSI_M` | Household Spending Indicator, Australia, seasonally adjusted, current prices |
+| `population` | ABS `ERP_Q` | Estimated resident population, Australia, quarterly |
+
+**Monetary policy and rates**
+
+| Concept | Source | Default mapping |
+| --- | --- | --- |
+| `cash_rate_target` | RBA `a2` | Cash rate target (`ARBAMPCNCRT`) |
+| `government_bond_yield_3y` | RBA `f17` | 3-year zero-coupon AGS yield (`FZCY0300D`) |
+| `government_bond_yield_10y` | RBA `f17` | 10-year zero-coupon AGS yield (`FZCY1000D`) |
+| `mortgage_rate` | RBA `f6` | Owner-occupier variable housing rate (`FLRHOOVA`) |
+| `small_business_rate` | RBA `f7` | Small business lending rate indicator |
+
+**FX**
+
+| Concept | Source | Default mapping |
+| --- | --- | --- |
+| `aud_usd` | RBA `f11` | AUD/USD spot (`FXRUSD`) |
+| `trade_weighted_index` | RBA `f11` | Trade-weighted index (`FXRTWI`) |
+
+**External sector**
+
+| Concept | Source | Default mapping |
+| --- | --- | --- |
+| `exports_goods_services` | ABS `ITGS` | Total exports of goods and services |
+| `imports_goods_services` | ABS `ITGS` | Total imports of goods and services |
+| `current_account_balance` | ABS `BOP` | Current account balance, Australia, seasonally adjusted, quarterly |
+| `commodity_prices` | RBA `i2` | RBA Index of Commodity Prices (SDR terms, `GRCPAISDR`) |
+
+**Credit**
+
+| Concept | Source | Default mapping |
+| --- | --- | --- |
+| `housing_credit` | RBA `d2` | Owner-occupier + investor housing credit, seasonally adjusted (`DLCACOHS`, `DLCACIHS`) |
+| `business_credit` | RBA `d2` | Business credit, seasonally adjusted (`DLCACBS`) |
+| `consumer_credit` | RBA `g3` | Consumer credit outstanding |
+
+**Locked default choices**
+
+A few defaults deserve calling out explicitly:
+
+- **`government_bond_yield_*` resolve to `f17`** (zero-coupon AGS yields), not `f16` (indicative
+  yields). `f17` is maintained for modelling and avoids the coupon-driven quirks of `f16`.
+- **`housing_credit` returns two series from `d2`** (`DLCACOHS` owner-occupier + `DLCACIHS`
+  investor) rather than a pre-aggregated total. Clients can sum them; we do not derive an
+  aggregate series.
+- **`producer_price_inflation` uses `PPI_FD`** (final demand), not the input-stage `PPI`, because
+  final demand is the headline measure most analysts track.
+- **`underemployment_rate` uses `LF_UNDER`** (dataflow id) but composes its SDMX key against
+  structure id `DS_LF_UNDER`, because the live ABS SDMX structure is exposed under the
+  `DS_`-prefixed id.
 
 `variant`, `geography`, and `frequency` are validated against the catalogue entry. For ABS
 datasets, populated variants can be literal SDMX keys or partial fragments that are completed
@@ -202,6 +273,7 @@ calling `search_datasets` first.
 | `ausecon://catalogue` | Flat index of every curated ABS and RBA entry (id, source, name, description, category, frequency, tags). |
 | `ausecon://abs/{dataflow_id}` | Full curated catalogue entry for a single ABS dataflow (e.g. `ausecon://abs/CPI`). |
 | `ausecon://rba/{table_id}` | Full curated catalogue entry for a single RBA statistical table (e.g. `ausecon://rba/g1`). |
+| `ausecon://concepts` | Index of every curated semantic shortcut with its resolved source, dataset id, variant, frequencies, and geographies. |
 
 All resources are read-only, served as `application/json`, and sourced
 from the static curated catalogue — no network calls are made to
@@ -209,7 +281,7 @@ render them.
 
 ## Prompts
 
-The server registers six prompt templates that chain the existing
+The server registers eight prompt templates that chain the existing
 tools into common economist workflows. Clients such as Claude Desktop
 surface these as slash-commands.
 
@@ -220,6 +292,8 @@ surface these as slash-commands.
 | `macro_snapshot` | `as_of: str \| None` | Assembles a compact snapshot table of cash rate, headline CPI, trimmed-mean CPI, and real GDP growth. |
 | `living_costs_vs_cpi` | `start: str \| None` | Compares Selected Living Cost Indexes across household types against headline CPI to highlight cost-of-living divergence. |
 | `construction_pipeline` | `last_n: int = 8` | Summarises construction pipeline strength across total, engineering, and residential/non-residential building activity. |
+| `labour_slack_snapshot` | `last_n: int = 12` | Reads `unemployment_rate` and `underemployment_rate` and narrates the combined slack signal. |
+| `yield_curve_snapshot` | `last_n: int = 60` | Reads the 3-year and 10-year AGS yields and describes the curve shape and recent shift. |
 | `discover_dataset` | `topic: str` | Runs `search_datasets` and `list_rba_tables` for the topic, then recommends the top two candidates. |
 
 Each tool is also annotated with `readOnlyHint` and `openWorldHint` so

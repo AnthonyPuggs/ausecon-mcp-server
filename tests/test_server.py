@@ -428,7 +428,8 @@ async def test_list_catalogue_unfiltered_returns_abs_and_rba_entries() -> None:
 
     sources = {row["source"] for row in rows}
     assert sources == {"abs", "rba"}
-    assert all(row.keys() == {"id", "source", "name", "category", "frequency", "tags"} for row in rows)
+    expected_keys = {"id", "source", "name", "category", "frequency", "tags"}
+    assert all(row.keys() == expected_keys for row in rows)
 
 
 @pytest.mark.asyncio
