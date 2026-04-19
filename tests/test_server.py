@@ -240,11 +240,23 @@ async def test_service_forwards_default_abs_key_for_gdp_growth() -> None:
 
 
 @pytest.mark.asyncio
-async def test_service_rejects_unpopulated_rba_variant() -> None:
+async def test_service_rejects_removed_runtime_rba_variant() -> None:
     service = AuseconService(abs_provider=StubABSProvider(), rba_provider=StubRBAProvider())
 
-    with pytest.raises(ValueError, match="rba_series_ids populated"):
+    with pytest.raises(ValueError, match="Unknown variant"):
         await service.get_economic_series("g3", variant="market")
+
+
+@pytest.mark.asyncio
+async def test_service_forwards_default_abs_key_for_dwelling_approvals() -> None:
+    abs_provider = StubABSProvider()
+    service = AuseconService(abs_provider=abs_provider, rba_provider=StubRBAProvider())
+
+    await service.get_economic_series("dwelling_approvals")
+
+    assert abs_provider.last_get_data_kwargs is not None
+    assert abs_provider.last_get_data_kwargs["dataflow_id"] == "BA_GCCSA"
+    assert abs_provider.last_get_data_kwargs["key"] == "1.1.9.TOT.100.10.AUS.M"
 
 
 @pytest.mark.asyncio

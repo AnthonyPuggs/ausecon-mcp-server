@@ -6,6 +6,26 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.13.0] - 2026-04-20
+
+### Added
+- New ABS catalogue entry `BUILDING_APPROVALS`, backed by live ABS dataflow
+  `BA_GCCSA`, with a national residential approvals default.
+- New semantic shortcut `dwelling_approvals` resolving to
+  `BUILDING_APPROVALS.headline_approvals`.
+- New maintainer docs at `docs/contributing.md`, a checked-in stdio client
+  smoke path at `scripts/mcp_client_smoke.py`, and a release migration note at
+  `docs/migration-v0.13.0.md`.
+
+### Changed
+- Runtime catalogue entries now expose only fully wired variants; placeholder
+  ABS and RBA variants are no longer public in resources or semantic
+  resolution.
+- `RT` has been re-activated after live validation showed the ABS retail trade
+  dataflow is current again.
+- `BUILDING_ACTIVITY` no longer carries `building approvals` aliasing now that
+  approvals have a dedicated live entry.
+
 ## [0.12.1] - 2026-04-19
 
 ### Fixed
@@ -349,7 +369,8 @@ Initial public release.
 - Initial curated catalogues for ABS and RBA, plus a four-concept
   `CURATED_SERIES` semantic shortcut map.
 
-[Unreleased]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v0.12.1...HEAD
+[Unreleased]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v0.13.0...HEAD
+[0.13.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v0.12.1...v0.13.0
 [0.12.1]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v0.12.0...v0.12.1
 [0.12.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v0.11.0...v0.12.0
 [0.11.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v0.10.0...v0.11.0

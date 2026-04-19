@@ -3,6 +3,7 @@ from __future__ import annotations
 import pytest
 
 from ausecon_mcp.providers.abs import ABSProvider
+from ausecon_mcp.server import AuseconService
 
 pytestmark = pytest.mark.asyncio
 
@@ -33,3 +34,17 @@ async def test_abs_cpi_data_returns_observations() -> None:
         assert field in obs, f"observation missing field {field!r}"
     assert result["metadata"]["source"] == "abs"
     assert isinstance(result["metadata"]["server_version"], str)
+
+
+async def test_abs_building_approvals_entry_returns_observations() -> None:
+    service = AuseconService()
+
+    result = await service.get_abs_data(
+        "BUILDING_APPROVALS",
+        key="1.1.9.TOT.100.10.AUS.M",
+        last_n=3,
+    )
+
+    assert result["metadata"]["source"] == "abs"
+    assert result["metadata"]["dataset_id"] == "BA_GCCSA"
+    assert result["observations"], "expected observations for BUILDING_APPROVALS"

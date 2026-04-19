@@ -1,4 +1,6 @@
-RBA_CATALOGUE = {
+from ausecon_mcp.catalogue._runtime import strip_unwired_variants
+
+_RAW_RBA_CATALOGUE = {
     "a1": {
         "id": "a1",
         "source": "rba",
@@ -1764,3 +1766,6 @@ RBA_CATALOGUE = {
         },
     },
 }
+
+
+RBA_CATALOGUE = strip_unwired_variants(_RAW_RBA_CATALOGUE, key_name="rba_series_ids")
