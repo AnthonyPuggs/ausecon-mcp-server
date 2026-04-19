@@ -4,6 +4,57 @@ All notable changes to `ausecon-mcp-server` are recorded here. The format follow
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres
 to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.11.0] - 2026-04-19
+
+### Added
+- 24 new curated semantic concepts for `get_economic_series` across
+  prices, labour, activity, rates, FX, external sector, and credit —
+  taking the total from 4 to 28. Locked default mappings include
+  `f17` for bond-yield tenors, two-series `housing_credit` from `d2`,
+  `PPI_FD` for producer-price inflation, and the SDR index for
+  `commodity_prices`.
+- ABS structure-ID hardening via a new `resolve_abs_structure_id()`
+  helper and optional `structure_id` field on ABS catalogue entries;
+  `underemployment_rate` now composes its SDMX key against
+  `DS_LF_UNDER` while keeping dataflow id `LF_UNDER` for data
+  requests.
+- `last_n` parameter on `get_economic_series`, forwarded to the
+  underlying ABS or RBA call.
+- New `list_catalogue` tool — unranked complement to
+  `search_datasets` with source, category, tag, and
+  ceased/discontinued filters.
+- New `ausecon://concepts` MCP resource listing every curated
+  shortcut with its resolved target.
+- Two new prompt templates: `labour_slack_snapshot` and
+  `yield_curve_snapshot`.
+
+## [0.10.0] - 2026-04-19
+
+### Changed
+- Renamed catalogue entry `LCI` → `SLCI` to match the live ABS
+  dataflow label; `upstream_id` indirection preserves resolver
+  behaviour.
+- Reclassified 4 ABS entries (`CPI_M`, `RT`, `BUSINESS_TURNOVER`,
+  `RPPI`) from `discontinued` to `ceased` to distinguish
+  upstream-dead from semantically retired datasets.
+- Re-activated RBA table `a5` after confirming it is still live
+  upstream; recategorised under `exchange_rates`.
+
+### Added
+- Every catalogue entry now carries an `audit` block
+  (`last_audited`, `upstream_url`, `upstream_title`) calibrated
+  against live ABS and RBA.
+- `scripts/audit_catalogue.py` diffs the catalogue against the live
+  ABS SDMX dataflow index and the RBA tables index and emits a
+  markdown drift report.
+
+## [0.9.0] - 2026-04-18
+
+### Added
+- Expanded RBA and ABS catalogue coverage with new data entries.
+- Hardened CSV path resolution for RBA tables with non-standard
+  URLs, plus supporting service tests.
+
 ## [0.8.0] - 2026-04-18
 
 ### Changed
@@ -272,6 +323,9 @@ Initial public release.
 - Initial curated catalogues for ABS and RBA, plus a four-concept
   `CURATED_SERIES` semantic shortcut map.
 
+[0.11.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v0.10.0...v0.11.0
+[0.10.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v0.9.0...v0.10.0
+[0.9.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v0.5.5...v0.6.0

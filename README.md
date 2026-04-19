@@ -483,10 +483,12 @@ examples/
 If you want to publish a release from this repository:
 
 1. ensure the release-ready state is committed, including any changelog updates
-2. create a git tag in the repository's `vX.Y.Z` format on the intended release commit
-3. push the branch and the tag to GitHub
-4. allow the `Release` workflow to build and publish the tagged version
-5. draft the GitHub Release notes from that tag
+2. bump `server.json` (`version` + `packages[0].version`) to the new `X.Y.Z` so the MCP registry stays in sync with PyPI; the hygiene test enforces that `server.json` matches the top `CHANGELOG.md` entry
+3. create a git tag in the repository's `vX.Y.Z` format on the intended release commit
+4. push the branch and the tag to GitHub
+5. allow the `Release` workflow to build and publish the tagged version
+6. draft the GitHub Release notes from that tag
+7. re-publish `server.json` to the MCP registry with `mcp-publisher publish` so downstream directories (PulseMCP, etc.) re-scrape the new version
 
 The package version is derived from git tags via `hatch-vcs`, so you do not manually edit a target
 version in `pyproject.toml` when cutting a release.
