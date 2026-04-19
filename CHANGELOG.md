@@ -6,6 +6,16 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.12.1] - 2026-04-19
+
+### Fixed
+- Synced `server.json` with the tagged release after `v0.12.0` was cut
+  with stale MCP registry metadata (`0.11.0`).
+- Promoted the `v0.12.0` contract-freeze notes out of `Unreleased` so the
+  changelog reflects the actual tagged release history.
+
+## [0.12.0] - 2026-04-19
+
 ### Added
 - Checked-in response contract artefacts for the retrieval surface:
   `schemas/response.schema.json`, `docs/response-schema.md`, and example
@@ -339,6 +349,9 @@ Initial public release.
 - Initial curated catalogues for ABS and RBA, plus a four-concept
   `CURATED_SERIES` semantic shortcut map.
 
+[Unreleased]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v0.12.1...HEAD
+[0.12.1]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v0.12.0...v0.12.1
+[0.12.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v0.11.0...v0.12.0
 [0.11.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v0.8.0...v0.9.0
