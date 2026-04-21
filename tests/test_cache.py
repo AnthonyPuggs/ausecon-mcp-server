@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
 import time
 from pathlib import Path
 
@@ -153,6 +154,56 @@ def test_disk_write_failure_is_fail_soft(tmp_path, monkeypatch) -> None:
         assert cache.get("k") == {"v": 1}
     finally:
         bad_dir.parent.chmod(0o700)
+
+
+def test_permission_denied_write_disables_disk_layer_once(caplog, monkeypatch) -> None:
+    cache = TTLCache(ttl_seconds=60)
+    attempts = 0
+
+    def raising_named_tempfile(*args, **kwargs):
+        nonlocal attempts
+        attempts += 1
+        raise PermissionError("sandbox denied cache write")
+
+    monkeypatch.setattr(cache_module.tempfile, "NamedTemporaryFile", raising_named_tempfile)
+
+    with caplog.at_level(logging.WARNING, logger="ausecon_mcp.cache"):
+        cache.set("first", {"v": 1})
+        cache.set("second", {"v": 2})
+
+    assert cache.get("first") == {"v": 1}
+    assert cache.get("second") == {"v": 2}
+    assert cache._disk_enabled is False
+    assert attempts == 1
+    assert [
+        record.getMessage()
+        for record in caplog.records
+        if record.name == "ausecon_mcp.cache" and record.levelno >= logging.WARNING
+    ] == []
+
+
+def test_disk_disabled_cache_skips_future_disk_reads(monkeypatch) -> None:
+    cache = TTLCache(ttl_seconds=60)
+
+    def raising_named_tempfile(*args, **kwargs):
+        raise PermissionError("sandbox denied cache write")
+
+    monkeypatch.setattr(cache_module.tempfile, "NamedTemporaryFile", raising_named_tempfile)
+    cache.set("k", {"v": 1})
+
+    def unexpected_disk_read(_key):
+        raise AssertionError("disk read should be skipped once disk cache is disabled")
+
+    monkeypatch.setattr(cache, "_read_disk", unexpected_disk_read)
+
+    assert cache.get("k") == {"v": 1}
+    assert cache.get("missing") is None
+    stale = cache.get_stale("k")
+    assert stale is not None
+    assert stale["value"] == {"v": 1}
+    assert stale["cached_at"] == cache._entries["k"].cached_at
+    assert stale["expires_at"] == cache._entries["k"].expires_at
+    assert cache.get_stale("missing") is None
 
 
 def test_set_returns_stored_value() -> None:

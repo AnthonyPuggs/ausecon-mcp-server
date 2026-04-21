@@ -6,6 +6,11 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+- Disk-cache permission failures now degrade a cache instance to in-process
+  memory caching instead of emitting repeated warning-level `cache.disk_error`
+  events on every access attempt.
+
 ## [0.13.0] - 2026-04-20
 
 ### Added

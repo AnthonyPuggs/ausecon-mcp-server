@@ -442,6 +442,9 @@ The stable retrieval contract is documented in
 The on-disk cache location is fixed to the platform app-cache directory
 (`~/.cache/ausecon-mcp/` on Linux, `~/Library/Caches/ausecon-mcp/` on macOS).
 `AUSECON_CACHE_DIR` is no longer supported.
+If that directory is unavailable, the server automatically falls back to
+in-process memory caching for the lifetime of the process. Cross-process cache
+persistence and disk-backed stale reuse are unavailable in that degraded mode.
 
 ## Upgrading From Pre-v0.8.0
 

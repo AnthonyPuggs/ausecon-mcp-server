@@ -38,6 +38,7 @@ class TTLCache:
     ) -> None:
         self._entries: dict[str, _CacheEntry] = {}
         self._ttl_seconds = ttl_seconds
+        self._disk_enabled = True
 
         if disabled is None:
             disabled = os.environ.get("AUSECON_CACHE_DISABLED", "").lower() in {"1", "true", "yes"}
@@ -56,6 +57,9 @@ class TTLCache:
             if entry.expires_at >= now:
                 return deepcopy(entry.value)
             self._entries.pop(key, None)
+
+        if not self._disk_enabled:
+            return None
 
         disk = self._read_disk(key)
         if disk is None:
@@ -82,7 +86,11 @@ class TTLCache:
         if self._disabled:
             return None
 
-        entry = self._entries.get(key) or self._read_disk(key)
+        entry = self._entries.get(key)
+        if entry is None:
+            if not self._disk_enabled:
+                return None
+            entry = self._read_disk(key)
         if entry is None:
             return None
         return {
@@ -104,9 +112,9 @@ class TTLCache:
                 extra={"op": "read", "error_type": type(exc).__name__},
             )
             return None
-        if not path.is_file():
-            return None
         try:
+            if not path.is_file():
+                return None
             data = json.loads(path.read_text())
             if data.get("schema") != _SCHEMA_VERSION:
                 raise ValueError(f"unsupported cache schema: {data.get('schema')!r}")
@@ -115,6 +123,9 @@ class TTLCache:
                 expires_at=float(data["expires_at"]),
                 value=data["value"],
             )
+        except PermissionError as exc:
+            self._disable_disk("read", exc)
+            return None
         except (OSError, ValueError, KeyError, TypeError) as exc:
             _logger.warning(
                 "cache.disk_error",
@@ -124,6 +135,8 @@ class TTLCache:
             return None
 
     def _write_disk(self, key: str, entry: _CacheEntry) -> None:
+        if not self._disk_enabled:
+            return
         path = self._path_for(key)
         payload = {
             "schema": _SCHEMA_VERSION,
@@ -150,11 +163,24 @@ class TTLCache:
                 if tmp_path is not None:
                     self._unlink(tmp_path)
                 raise
+        except PermissionError as exc:
+            if tmp_path is not None:
+                self._unlink(tmp_path)
+            self._disable_disk("write", exc)
         except (OSError, ValueError) as exc:
             _logger.warning(
                 "cache.disk_error",
                 extra={"op": "write", "error_type": type(exc).__name__},
             )
+
+    def _disable_disk(self, op: str, exc: Exception) -> None:
+        if not self._disk_enabled:
+            return
+        self._disk_enabled = False
+        _logger.debug(
+            "cache.disk_disabled",
+            extra={"op": op, "error_type": type(exc).__name__},
+        )
 
     def _checked_path(self, path: Path) -> Path:
         resolved_path = Path(path).expanduser().resolve(strict=False)
