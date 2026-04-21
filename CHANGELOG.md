@@ -6,6 +6,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.13.1] - 2026-04-21
+
 ### Fixed
 - Disk-cache permission failures now degrade a cache instance to in-process
   memory caching instead of emitting repeated warning-level `cache.disk_error`
@@ -374,7 +376,8 @@ Initial public release.
 - Initial curated catalogues for ABS and RBA, plus a four-concept
   `CURATED_SERIES` semantic shortcut map.
 
-[Unreleased]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v0.13.0...HEAD
+[Unreleased]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v0.13.1...HEAD
+[0.13.1]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v0.13.0...v0.13.1
 [0.13.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v0.12.1...v0.13.0
 [0.12.1]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v0.12.0...v0.12.1
 [0.12.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v0.11.0...v0.12.0
