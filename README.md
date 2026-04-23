@@ -1,9 +1,12 @@
-# ausecon-mcp-server
+# Australian Economic Data (RBA & ABS) MCP Server
 
 <!-- mcp-name: io.github.AnthonyPuggs/ausecon-mcp-server -->
 
 [![CI](https://github.com/AnthonyPuggs/ausecon-mcp-server/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/AnthonyPuggs/ausecon-mcp-server/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/tag/AnthonyPuggs/ausecon-mcp-server?sort=semver&label=release)](https://github.com/AnthonyPuggs/ausecon-mcp-server/tags)
+[![Transport](https://img.shields.io/badge/Transport-stdio-blue)]()
+[![API](https://img.shields.io/badge/API-JSON%2FSDMX-green)]()
+[![License-MIT](https://img.shields.io/badge/License-MIT-lightgrey)]()
 
 `ausecon-mcp-server` is a Python Model Context Protocol (MCP) server for structured Australian
 macroeconomic and financial data. It exposes a small, source-aware tool surface over Australian
