@@ -1,6 +1,36 @@
 from __future__ import annotations
 
+from datetime import date
+from math import ceil
+
 from fastmcp import FastMCP
+
+
+def _quarters_for_months(months: int) -> int:
+    return max(1, ceil(months / 3))
+
+
+def _iso_date_to_abs_quarter(value: str | None) -> str | None:
+    if value is None:
+        return None
+    try:
+        parsed = date.fromisoformat(value)
+    except ValueError:
+        return value
+    quarter = ((parsed.month - 1) // 3) + 1
+    return f"{parsed.year}-Q{quarter}"
+
+
+def _call_suffix(**kwargs: str | int | None) -> str:
+    parts = []
+    for key, value in kwargs.items():
+        if value is None:
+            continue
+        if isinstance(value, int):
+            parts.append(f"{key}={value}")
+        else:
+            parts.append(f'{key}="{value}"')
+    return ", ".join(parts)
 
 
 def register_prompts(mcp: FastMCP) -> None:
@@ -12,13 +42,15 @@ def register_prompts(mcp: FastMCP) -> None:
         ),
     )
     def summarise_latest_inflation(months: int = 12) -> str:
+        last_n = _quarters_for_months(months)
         return (
             f"You are helping the user understand Australian inflation over the last "
             f"{months} months.\n"
             "\n"
             "Do the following using tools from this MCP server:\n"
-            '1. Call `get_economic_series` with concept="headline_cpi".\n'
-            '2. Call `get_economic_series` with concept="trimmed_mean_inflation".\n'
+            f'1. Call `get_economic_series` with concept="headline_cpi", last_n={last_n}.\n'
+            f'2. Call `get_economic_series` with concept="trimmed_mean_inflation", '
+            f"last_n={last_n}.\n"
             "3. If the user has given a start date, pass it as `start`; otherwise leave it "
             "unset and take the most recent observations from the returned series.\n"
             "\n"
@@ -40,6 +72,8 @@ def register_prompts(mcp: FastMCP) -> None:
     )
     def compare_cash_rate_to_cpi(start: str, end: str | None = None) -> str:
         end_clause = f"up to {end}" if end else "through to the most recent observation"
+        cpi_start = _iso_date_to_abs_quarter(start)
+        cpi_end = _iso_date_to_abs_quarter(end)
         return (
             "You are helping the user see how Australian monetary policy has interacted "
             f"with headline inflation from {start} {end_clause}.\n"
@@ -48,8 +82,8 @@ def register_prompts(mcp: FastMCP) -> None:
             f'1. Call `get_economic_series` with concept="cash_rate_target", start="{start}"'
             + (f', end="{end}"' if end else "")
             + ".\n"
-            f'2. Call `get_economic_series` with concept="headline_cpi", start="{start}"'
-            + (f', end="{end}"' if end else "")
+            f'2. Call `get_economic_series` with concept="headline_cpi", start="{cpi_start}"'
+            + (f', end="{cpi_end}"' if cpi_end else "")
             + ".\n"
             "\n"
             "Then narrate the relationship in 4–6 sentences:\n"
@@ -70,14 +104,25 @@ def register_prompts(mcp: FastMCP) -> None:
     )
     def macro_snapshot(as_of: str | None = None) -> str:
         as_of_clause = f"as of {as_of}" if as_of else "as of the most recent observations available"
+        rba_end_suffix = _call_suffix(end=as_of)
+        abs_end = _iso_date_to_abs_quarter(as_of)
+        abs_end_suffix = _call_suffix(end=abs_end)
         return (
             f"Build an Australian macro snapshot {as_of_clause}.\n"
             "\n"
             "Do the following using tools from this MCP server:\n"
-            '1. `get_economic_series` concept="cash_rate_target".\n'
-            '2. `get_economic_series` concept="headline_cpi".\n'
-            '3. `get_economic_series` concept="trimmed_mean_inflation".\n'
-            '4. `get_economic_series` concept="gdp_growth".\n'
+            f'1. `get_economic_series` concept="cash_rate_target"'
+            + (f", {rba_end_suffix}" if rba_end_suffix else "")
+            + ".\n"
+            '2. `get_economic_series` concept="headline_cpi"'
+            + (f", {abs_end_suffix}" if abs_end_suffix else "")
+            + ".\n"
+            '3. `get_economic_series` concept="trimmed_mean_inflation"'
+            + (f", {rba_end_suffix}" if rba_end_suffix else "")
+            + ".\n"
+            '4. `get_economic_series` concept="gdp_growth"'
+            + (f", {abs_end_suffix}" if abs_end_suffix else "")
+            + ".\n"
             "\n"
             "Present the results as a compact markdown table with columns:\n"
             "`Indicator | Latest value | As of | Frequency`.\n"
@@ -93,7 +138,8 @@ def register_prompts(mcp: FastMCP) -> None:
         ),
     )
     def living_costs_vs_cpi(start: str | None = None) -> str:
-        start_clause = f'start="{start}"' if start else "the default window"
+        abs_start_clause = f', start_period="{start}"' if start else ""
+        cpi_start_clause = f', start="{start}"' if start else ""
         return (
             "The user wants to see how cost-of-living pressures differ across "
             "Australian household types compared with the headline CPI. "
@@ -101,10 +147,10 @@ def register_prompts(mcp: FastMCP) -> None:
             "type, so the series can diverge materially from CPI.\n"
             "\n"
             "Do the following using tools from this MCP server:\n"
-            f'1. Call `get_abs_data` with dataflow_id="SLCI" and {start_clause} '
+            f'1. Call `get_abs_data` with dataflow_id="SLCI"{abs_start_clause} '
             "to retrieve Selected Living Cost Indexes across household types.\n"
-            f'2. Call `get_economic_series` with concept="headline_cpi" '
-            f"using {start_clause} for the CPI benchmark.\n"
+            f'2. Call `get_economic_series` with concept="headline_cpi"{cpi_start_clause} '
+            "for the CPI benchmark.\n"
             "\n"
             "Then write 4-6 sentences covering:\n"
             "- the SLCI household type with the highest annual change and its value,\n"
@@ -216,7 +262,7 @@ def register_prompts(mcp: FastMCP) -> None:
             f"1. Call `search_datasets` with query={topic!r}.\n"
             "2. If the top results are RBA tables, also call `list_rba_tables` with a "
             '`category` argument that matches the topic (for example, "inflation", '
-            '"monetary_policy", "labour"). Leave `include_discontinued` as the default.\n'
+            '"monetary_policy", "output_labour"). Leave `include_discontinued` as the default.\n'
             "3. Inspect the top candidates and pick the two most relevant.\n"
             "\n"
             "Return a short recommendation:\n"

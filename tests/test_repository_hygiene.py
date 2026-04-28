@@ -90,6 +90,10 @@ def test_readme_tracks_current_release_state() -> None:
 
     assert "https://pypi.org/project/ausecon-mcp-server/" in readme_text
     assert tool_row in readme_text
+    assert "29 curated macroeconomic concepts" in readme_text
+    assert "28 curated macroeconomic concepts" not in readme_text
+    assert "FZCY300D" in readme_text
+    assert "FZCY0300D" not in readme_text
     assert "claude mcp add --transport stdio ausecon -- uvx ausecon-mcp-server" in readme_text
     assert "codex mcp add ausecon -- uvx ausecon-mcp-server" in readme_text
     assert "This repository currently provides a local stdio MCP server only." in readme_text
@@ -198,3 +202,14 @@ def test_server_metadata_matches_current_changelog_release() -> None:
         f"[{current_release}]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/"
         in changelog_text
     )
+
+
+def test_claude_session_lock_is_not_tracked() -> None:
+    assert not (ROOT / ".claude" / "scheduled_tasks.lock").exists()
+
+
+def test_integration_fixture_monkeypatches_cache_root_directly() -> None:
+    text = (ROOT / "integration_tests" / "conftest.py").read_text(encoding="utf-8")
+
+    assert "AUSECON_CACHE_DIR" not in text
+    assert 'monkeypatch.setattr(cache_module, "_default_disk_dir"' in text

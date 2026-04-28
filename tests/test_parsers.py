@@ -42,17 +42,33 @@ def test_parse_abs_csv_normalises_series_and_observations() -> None:
     assert parsed["observations"][0]["dimensions"]["INDEX"]["code"] == "10001"
 
 
-def test_parse_abs_csv_ignores_unit_multiplier_columns_in_live_ana_payload() -> None:
+def test_parse_abs_csv_preserves_unit_multiplier_and_status_metadata() -> None:
     parsed = parse_abs_csv((FIXTURES / "abs_ana_agg_sample.csv").read_text())
 
     assert parsed["metadata"]["dataset_id"] == "ANA_AGG"
     assert parsed["metadata"]["frequency"] == "Q"
     assert len(parsed["series"]) == 1
     assert parsed["series"][0]["unit"] == "PCT"
+    assert parsed["series"][0]["unit_multiplier"] == 0
     assert "UNIT_MULT" not in parsed["series"][0]["dimensions"]
     assert parsed["observations"][0]["value"] is None
     assert parsed["observations"][0]["status"] == "m"
     assert parsed["observations"][1]["value"] == 0.9
+
+
+def test_parse_abs_csv_preserves_decimals_base_period_and_comments() -> None:
+    csv_text = "\n".join(
+        [
+            "DATAFLOW,MEASURE,INDEX,TSEST,REGION,FREQ,TIME_PERIOD,OBS_VALUE,"
+            "UNIT_MEASURE,OBS_STATUS,DECIMALS,OBS_COMMENT,BASE_PERIOD",
+            "ABS:CPI(2.0.0),1,10001,10,50,Q,2025-Q2,140.2,IN,,1,sample comment,2011-12",
+        ]
+    )
+    parsed = parse_abs_csv(csv_text)
+
+    assert parsed["series"][0]["decimals"] == 1
+    assert parsed["series"][0]["base_period"] == "2011-12"
+    assert parsed["observations"][0]["comment"] == "sample comment"
 
 
 def test_parse_rba_csv_extracts_metadata_and_long_observations() -> None:

@@ -34,9 +34,10 @@ Optional fields appear when relevant:
 ## Series And Observations
 
 - `series` entries describe each returned series with `series_id`, `label`, optional `unit`,
-  optional `frequency`, and a `dimensions` map.
+  optional `frequency`, and a `dimensions` map. ABS payloads may also include
+  `unit_multiplier`, `decimals`, and `base_period` when the upstream CSV supplies them.
 - `observations` entries carry `date`, `series_id`, nullable `value`, optional `raw_value`,
-  a `dimensions` map, and optional `status`.
+  a `dimensions` map, optional `status`, and optional ABS `comment`.
 
 The `dimensions` map is intentionally shared across ABS and RBA payloads so downstream consumers can
 parse one stable shape.

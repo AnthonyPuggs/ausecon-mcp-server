@@ -50,6 +50,13 @@ def parse_abs_csv(csv_text: str) -> dict:
                 frequency=dimension_values.get("FREQ", {}).get("label"),
                 dimensions=dimension_values,
                 source_key=row["DATAFLOW"],
+                unit_multiplier=_parse_int(
+                    _row_value(row, "UNIT_MULT", "UNIT_MULT: Unit Multiplier")
+                ),
+                decimals=_parse_int(_row_value(row, "DECIMALS", "DECIMALS: Decimals")),
+                base_period=_none_if_empty(
+                    _row_value(row, "BASE_PERIOD", "BASE_PERIOD: Reference Base Period")
+                ),
             )
 
         observations.append(
@@ -62,6 +69,9 @@ def parse_abs_csv(csv_text: str) -> dict:
                     _row_value(row, "OBS_STATUS", "OBS_STATUS: Observation Status")
                 )[0]
                 or None,
+                comment=_none_if_empty(
+                    _row_value(row, "OBS_COMMENT", "OBS_COMMENT: Observation Comment")
+                ),
             ).to_dict()
         )
 
@@ -98,3 +108,15 @@ def _row_value(row: dict[str, str], *candidates: str) -> str:
         if value is not None:
             return value
     return ""
+
+
+def _none_if_empty(value: str) -> str | None:
+    text = (value or "").strip()
+    return text or None
+
+
+def _parse_int(value: str) -> int | None:
+    text = (value or "").strip()
+    if not text:
+        return None
+    return int(text)

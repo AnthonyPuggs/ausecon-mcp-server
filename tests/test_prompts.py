@@ -40,6 +40,7 @@ async def test_summarise_latest_inflation_references_required_concepts() -> None
     assert "24" in text
     assert "headline_cpi" in text
     assert "trimmed_mean_inflation" in text
+    assert "last_n=8" in text
 
 
 async def test_compare_cash_rate_to_cpi_embeds_range() -> None:
@@ -54,18 +55,24 @@ async def test_compare_cash_rate_to_cpi_embeds_range() -> None:
 
     assert "2020-01-01" in text
     assert "2024-01-01" in text
+    assert 'concept="cash_rate_target", start="2020-01-01", end="2024-01-01"' in text
+    assert 'concept="headline_cpi", start="2020-Q1", end="2024-Q1"' in text
     assert "cash_rate_target" in text
     assert "headline_cpi" in text
 
 
-async def test_macro_snapshot_lists_all_indicators() -> None:
+async def test_macro_snapshot_lists_all_indicators_and_passes_as_of_bounds() -> None:
     mcp = build_server()
 
     async with Client(mcp) as client:
-        text = await _get_prompt_text(client, "macro_snapshot", {})
+        text = await _get_prompt_text(client, "macro_snapshot", {"as_of": "2024-06-30"})
 
     for concept in ("cash_rate_target", "headline_cpi", "trimmed_mean_inflation", "gdp_growth"):
         assert concept in text
+    assert 'concept="cash_rate_target", end="2024-06-30"' in text
+    assert 'concept="headline_cpi", end="2024-Q2"' in text
+    assert 'concept="trimmed_mean_inflation", end="2024-06-30"' in text
+    assert 'concept="gdp_growth", end="2024-Q2"' in text
 
 
 async def test_living_costs_vs_cpi_references_lci_and_cpi() -> None:
@@ -76,7 +83,8 @@ async def test_living_costs_vs_cpi_references_lci_and_cpi() -> None:
 
     assert "SLCI" in text
     assert "headline_cpi" in text
-    assert "2021-Q1" in text
+    assert 'start_period="2021-Q1"' in text
+    assert 'concept="headline_cpi", start="2021-Q1"' in text
 
 
 async def test_construction_pipeline_references_all_series() -> None:
@@ -121,3 +129,5 @@ async def test_discover_dataset_embeds_topic() -> None:
     assert "labour market" in text
     assert "search_datasets" in text
     assert "list_rba_tables" in text
+    assert '"labour"' not in text
+    assert '"output_labour"' in text

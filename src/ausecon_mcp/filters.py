@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections import defaultdict
 from typing import Any
 
 
@@ -23,8 +24,15 @@ def filter_payload(
 
     truncated = False
     if last_n is not None and last_n > 0 and len(observations) > last_n:
-        observations = observations[-last_n:]
-        truncated = True
+        keep_indices: set[int] = set()
+        seen_by_series: dict[str, int] = defaultdict(int)
+        for index in range(len(observations) - 1, -1, -1):
+            series_id = observations[index]["series_id"]
+            seen_by_series[series_id] += 1
+            if seen_by_series[series_id] <= last_n:
+                keep_indices.add(index)
+        truncated = len(keep_indices) < len(observations)
+        observations = [item for index, item in enumerate(observations) if index in keep_indices]
 
     series_id_set = {item["series_id"] for item in observations}
     payload["series"] = [item for item in payload["series"] if item["series_id"] in series_id_set]

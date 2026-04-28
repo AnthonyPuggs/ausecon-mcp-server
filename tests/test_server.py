@@ -607,6 +607,15 @@ async def test_service_passes_through_dataflow_id_when_no_upstream_id_declared()
     assert abs_provider.last_get_data_kwargs["dataflow_id"] == "CPI"
 
 
+async def test_service_uses_abs_structure_id_for_structure_tool() -> None:
+    abs_provider = StubABSProvider()
+    service = AuseconService(abs_provider=abs_provider, rba_provider=StubRBAProvider())
+
+    result = await service.get_abs_dataset_structure("LF_UNDER")
+
+    assert result["id"] == "DS_LF_UNDER"
+
+
 async def test_registered_tools_carry_readonly_and_openworld_annotations() -> None:
     mcp = build_server()
 
@@ -619,3 +628,57 @@ async def test_registered_tools_carry_readonly_and_openworld_annotations() -> No
         assert annotations is not None, f"{tool.name} has no annotations"
         assert annotations.readOnlyHint is True, f"{tool.name} missing readOnlyHint"
         assert annotations.openWorldHint is True, f"{tool.name} missing openWorldHint"
+
+
+async def test_registered_tools_expose_input_schema_constraints_and_descriptions() -> None:
+    mcp = build_server()
+
+    async with Client(mcp) as client:
+        tools = {tool.name: tool for tool in await client.list_tools()}
+
+    source_schema = tools["search_datasets"].inputSchema["properties"]["source"]
+    assert {"enum": ["abs", "rba"], "type": "string"} in source_schema["anyOf"]
+    assert source_schema["description"]
+
+    last_n_schema = tools["get_abs_data"].inputSchema["properties"]["last_n"]
+    assert {"minimum": 1, "type": "integer"} in last_n_schema["anyOf"]
+    assert last_n_schema["description"]
+
+    start_period_schema = tools["get_abs_data"].inputSchema["properties"]["start_period"]
+    assert start_period_schema["anyOf"][0]["pattern"]
+    assert "ABS period" in start_period_schema["description"]
+
+    start_date_schema = tools["get_rba_table"].inputSchema["properties"]["start_date"]
+    assert start_date_schema["anyOf"][0]["format"] == "date"
+    assert "ISO date" in start_date_schema["description"]
+
+    category_schema = tools["list_rba_tables"].inputSchema["properties"]["category"]
+    expected_categories = [
+        "exchange_rates",
+        "external_sector",
+        "household_finance",
+        "inflation",
+        "interest_rates",
+        "monetary_policy",
+        "money_credit",
+        "output_labour",
+        "payments",
+    ]
+    assert {"enum": expected_categories, "type": "string"} in category_schema["anyOf"]
+
+    semantic_start_schema = tools["get_economic_series"].inputSchema["properties"]["start"]
+    assert "ABS period" in semantic_start_schema["description"]
+    assert "ISO date" in semantic_start_schema["description"]
+
+
+async def test_retrieval_tools_expose_response_output_schema() -> None:
+    mcp = build_server()
+
+    async with Client(mcp) as client:
+        tools = {tool.name: tool for tool in await client.list_tools()}
+
+    for name in ("get_abs_data", "get_rba_table", "get_economic_series"):
+        output_schema = tools[name].outputSchema
+        assert output_schema["type"] == "object"
+        assert output_schema["additionalProperties"] is False
+        assert output_schema["required"] == ["metadata", "series", "observations"]

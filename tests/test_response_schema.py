@@ -77,3 +77,19 @@ def test_checked_in_payload_examples_validate_against_schema() -> None:
     assert paths, "expected checked-in example payloads under examples/payloads/"
     for path in paths:
         validator.validate(json.loads(path.read_text(encoding="utf-8")))
+
+
+def test_response_schema_documents_contract_and_abs_metadata_fields() -> None:
+    schema = json.loads(SCHEMA_PATH.read_text(encoding="utf-8"))
+    series_properties = schema["$defs"]["series_descriptor"]["properties"]
+    observation_properties = schema["$defs"]["observation"]["properties"]
+
+    assert "$id" in schema
+    assert "server_version" in schema["$defs"]["metadata"]["required"]
+    assert "truncated" in schema["$defs"]["metadata"]["required"]
+    assert schema["properties"]["metadata"]["description"]
+    assert series_properties["unit_multiplier"]["type"] == ["integer", "null"]
+    assert series_properties["decimals"]["type"] == ["integer", "null"]
+    assert series_properties["base_period"]["type"] == ["string", "null"]
+    assert observation_properties["date"]["oneOf"]
+    assert observation_properties["comment"]["type"] == ["string", "null"]

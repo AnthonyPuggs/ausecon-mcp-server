@@ -79,6 +79,14 @@ def test_search_catalogue_prefers_full_economist_query_matches() -> None:
     assert results[0]["id"] == "LF"
 
 
+def test_search_catalogue_handles_common_real_gdp_phrase() -> None:
+    results = search_catalogue("real gdp")
+
+    assert results
+    assert results[0]["source"] == "abs"
+    assert results[0]["id"] == "ANA_AGG"
+
+
 def test_search_catalogue_excludes_ceased_abs_dataflows() -> None:
     for ceased_id in ("BUSINESS_TURNOVER", "CPI_M", "RPPI"):
         results = search_catalogue(ceased_id, source="abs")

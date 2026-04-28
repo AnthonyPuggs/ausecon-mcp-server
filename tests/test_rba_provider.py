@@ -50,7 +50,7 @@ async def test_rba_provider_fetches_table_and_uses_cache() -> None:
 
     assert route.call_count == 1
     assert first == second
-    assert len(first["observations"]) == 2
+    assert len(first["observations"]) == 5
     assert first["metadata"]["truncated"] is True
     assert first["metadata"]["retrieval_url"].endswith("/g1-data.csv")
 
@@ -70,7 +70,7 @@ async def test_rba_provider_reuses_cached_raw_payload_across_client_side_filters
 
     assert route.call_count == 1
     assert len(first["observations"]) == 1
-    assert len(second["observations"]) == 2
+    assert len(second["observations"]) == 3
 
 
 @pytest.mark.asyncio

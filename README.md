@@ -23,7 +23,7 @@ Releases are published to [PyPI](https://pypi.org/project/ausecon-mcp-server/) a
 
 Current capabilities:
 
-- seven read-only MCP tools covering dataset discovery (including an unranked `list_catalogue` complement to `search_datasets`), ABS structure inspection, ABS and RBA data retrieval, and a semantic shortcut layer with 28 curated macroeconomic concepts
+- seven read-only MCP tools covering dataset discovery (including an unranked `list_catalogue` complement to `search_datasets`), ABS structure inspection, ABS and RBA data retrieval, and a semantic shortcut layer with 29 curated macroeconomic concepts
 - four read-only MCP resources exposing the curated catalogue, per-entry metadata, and an `ausecon://concepts` index of every semantic shortcut with its resolved target
 - eight MCP prompt templates for common economist workflows such as inflation summaries, macro snapshots, living-cost comparisons, construction pipeline reviews, labour slack, yield curve snapshots, and dataset discovery
 - provenance-rich JSON responses, a checked-in retrieval contract at [`schemas/response.schema.json`](schemas/response.schema.json), structured JSON logging to stderr, and dual-layer caching that survives client restarts
@@ -94,7 +94,7 @@ via the `ausecon://concepts` resource. Resolver variant rules are summarised in
 | Concept | Source | Default mapping |
 | --- | --- | --- |
 | `cash_rate_target` | RBA `a2` | Cash rate target (`ARBAMPCNCRT`) |
-| `government_bond_yield_3y` | RBA `f17` | 3-year zero-coupon AGS yield (`FZCY0300D`) |
+| `government_bond_yield_3y` | RBA `f17` | 3-year zero-coupon AGS yield (`FZCY300D`) |
 | `government_bond_yield_10y` | RBA `f17` | 10-year zero-coupon AGS yield (`FZCY1000D`) |
 | `mortgage_rate` | RBA `f6` | Owner-occupier variable housing rate (`FLRHOOVA`) |
 | `business_lending_rate` | RBA `f7` | Small business lending rate indicator |

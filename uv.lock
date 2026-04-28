@@ -53,6 +53,7 @@ dependencies = [
     { name = "fastmcp" },
     { name = "httpx" },
     { name = "platformdirs" },
+    { name = "pydantic" },
 ]
 
 [package.optional-dependencies]
@@ -71,6 +72,7 @@ requires-dist = [
     { name = "httpx", specifier = ">=0.27,<1" },
     { name = "jsonschema", marker = "extra == 'dev'", specifier = ">=4.26,<5" },
     { name = "platformdirs", specifier = ">=4.0,<5" },
+    { name = "pydantic", specifier = ">=2,<3" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=9.0.3,<10" },
     { name = "pytest-asyncio", marker = "extra == 'dev'", specifier = ">=0.24,<2" },
     { name = "respx", marker = "extra == 'dev'", specifier = ">=0.22,<1" },

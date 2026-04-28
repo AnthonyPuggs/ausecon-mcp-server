@@ -9,6 +9,18 @@ from fastmcp.client import UvStdioTransport
 ROOT = Path(__file__).resolve().parents[1]
 
 
+def _as_dict(data):
+    if hasattr(data, "model_dump"):
+        return data.model_dump()
+    if isinstance(data, list):
+        return [_as_dict(item) for item in data]
+    if isinstance(data, dict):
+        return {key: _as_dict(value) for key, value in data.items()}
+    if hasattr(data, "__dict__"):
+        return {key: _as_dict(value) for key, value in vars(data).items()}
+    return data
+
+
 async def main() -> None:
     transport = UvStdioTransport(
         "ausecon-mcp-server",
@@ -51,15 +63,17 @@ async def main() -> None:
                 "last_n": 3,
             },
         )
-        assert abs_data.data["metadata"]["source"] == "abs"
-        assert abs_data.data["observations"]
+        abs_payload = _as_dict(abs_data.data)
+        assert abs_payload["metadata"]["source"] == "abs"
+        assert abs_payload["observations"]
 
         semantic = await client.call_tool(
             "get_economic_series",
             {"concept": "dwelling_approvals", "last_n": 3},
         )
-        assert semantic.data["metadata"]["source"] == "abs"
-        assert semantic.data["observations"]
+        semantic_payload = _as_dict(semantic.data)
+        assert semantic_payload["metadata"]["source"] == "abs"
+        assert semantic_payload["observations"]
 
     print("mcp-smoke-ok")
 

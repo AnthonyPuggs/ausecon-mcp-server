@@ -27,9 +27,14 @@ class RBAProvider:
         cache: TTLCache | None = None,
         ttl_seconds: int = 3600,
     ) -> None:
+        self._owns_client = client is None
         self._client = client or build_client()
         self._cache = cache or TTLCache()
         self._ttl_seconds = ttl_seconds
+
+    async def aclose(self) -> None:
+        if self._owns_client:
+            await self._client.aclose()
 
     def list_tables(
         self,

@@ -522,6 +522,7 @@ _RAW_ABS_CATALOGUE = {
         "category": "national_accounts",
         "aliases": [
             "gdp",
+            "real gdp",
             "gdp growth",
             "national accounts",
             "national accounts aggregates",

@@ -54,7 +54,7 @@ cache.py           → Dual-layer TTLCache (memory + on-disk JSON cache)
 ### ABS vs RBA differences
 
 - **ABS** uses SDMX REST (`data.api.abs.gov.au/rest`): structure endpoint returns XML, data endpoint returns CSV with `format=csvfile`.
-- **RBA** serves static CSVs at `rba.gov.au/statistics/tables/csv/{table_id}-data.csv`; all filtering is done client-side after download.
+- **RBA** serves static CSVs at `rba.gov.au/statistics/tables/csv/`; most files use `{table_id}-data.csv`, while catalogue `csv_path` overrides cover exceptions such as `f17-yields.csv`. Filtering is done client-side after download.
 
 ### Tool injection pattern
 
@@ -62,7 +62,7 @@ cache.py           → Dual-layer TTLCache (memory + on-disk JSON cache)
 
 ### Catalogue search scoring
 
-`search_catalogue` in `catalogue/search.py` ranks entries by weighted keyword matching: exact alias match (+120) > exact name match (+100) > substring in name (+45) > substring in description (+25) > alias term overlap (+20 per term). Source filtering (`source="abs"` or `"rba"`) is applied before scoring.
+`search_catalogue` in `catalogue/search.py` ranks entries deterministically: exact ID (1000) > exact alias (900) > exact name (800) > full query-term coverage in aliases/name/tags (700+) > partial term overlap (400+) > description overlap (100+). Source filtering (`source="abs"` or `"rba"`) is applied before scoring.
 
 ### Response shape
 

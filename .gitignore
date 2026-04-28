@@ -1,4 +1,6 @@
 .venv/
+.uv-cache/
+.worktrees/
 __pycache__/
 .pytest_cache/
 .ruff_cache/
@@ -11,6 +13,6 @@ ausecon-mcp-server-future-releases.png
 ausecon-mcp-roadmap.md
 ausecon-mcp-roadmap-2.md
 .DS_Store
+.claude/*.lock
 src/ausecon_mcp/_version.py
 releases/
-

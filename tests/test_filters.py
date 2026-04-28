@@ -18,11 +18,26 @@ def _sample_payload() -> dict:
     }
 
 
-def test_filter_payload_truncates_latest_observations_and_prunes_series() -> None:
+def test_filter_payload_truncates_latest_observations_per_series_and_prunes_series() -> None:
     payload = filter_payload(deepcopy(_sample_payload()), last_n=2)
 
+    assert payload["metadata"]["truncated"] is False
+    assert [item["date"] for item in payload["observations"]] == [
+        "2024-01-01",
+        "2024-02-01",
+        "2024-03-01",
+    ]
+    assert {item["series_id"] for item in payload["series"]} == {"A", "B"}
+
+
+def test_filter_payload_last_n_applies_per_series_not_globally() -> None:
+    payload = filter_payload(deepcopy(_sample_payload()), last_n=1)
+
     assert payload["metadata"]["truncated"] is True
-    assert [item["date"] for item in payload["observations"]] == ["2024-02-01", "2024-03-01"]
+    assert payload["observations"] == [
+        {"date": "2024-02-01", "series_id": "B", "value": 2.0, "dimensions": {}},
+        {"date": "2024-03-01", "series_id": "A", "value": 3.0, "dimensions": {}},
+    ]
     assert {item["series_id"] for item in payload["series"]} == {"A", "B"}
 
 

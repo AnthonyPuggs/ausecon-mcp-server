@@ -27,6 +27,9 @@ class SeriesDescriptor:
     frequency: str | None = None
     dimensions: dict[str, dict[str, str]] = field(default_factory=dict)
     source_key: str | None = None
+    unit_multiplier: int | None = None
+    decimals: int | None = None
+    base_period: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -36,6 +39,9 @@ class SeriesDescriptor:
             "frequency": self.frequency,
             "dimensions": self.dimensions,
             "source_key": self.source_key,
+            "unit_multiplier": self.unit_multiplier,
+            "decimals": self.decimals,
+            "base_period": self.base_period,
         }
 
 
@@ -47,6 +53,7 @@ class Observation:
     raw_value: str | None = None
     dimensions: dict[str, dict[str, str]] = field(default_factory=dict)
     status: str | None = None
+    comment: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
         payload = {
@@ -55,6 +62,7 @@ class Observation:
             "value": self.value,
             "dimensions": self.dimensions,
             "status": self.status,
+            "comment": self.comment,
         }
         if self.raw_value is not None:
             payload["raw_value"] = self.raw_value

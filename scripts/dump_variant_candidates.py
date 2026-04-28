@@ -35,6 +35,10 @@ if str(SRC) not in sys.path:
 
 from ausecon_mcp.catalogue.abs import ABS_CATALOGUE  # noqa: E402
 from ausecon_mcp.catalogue.rba import RBA_CATALOGUE  # noqa: E402
+from ausecon_mcp.catalogue.resolver import (  # noqa: E402
+    resolve_abs_dataflow_id,
+    resolve_abs_structure_id,
+)
 from ausecon_mcp.providers.abs import ABSProvider  # noqa: E402
 from ausecon_mcp.providers.rba import RBAProvider  # noqa: E402
 
@@ -65,14 +69,20 @@ async def _dump_rba(ids: set[str] | None) -> list[str]:
             lines.append("> no series rows")
             lines.append("")
             continue
-        lines.append("| series_id | title | description | type | units |")
+        lines.append("| series_id | label | description | type | unit |")
         lines.append("| --- | --- | --- | --- | --- |")
         for row in series_rows:
+            dimensions = row.get("dimensions", {})
             lines.append(
                 "| "
                 + " | ".join(
-                    _cell(row.get(key, ""))
-                    for key in ("series_id", "title", "description", "type", "units")
+                    [
+                        _cell(row.get("series_id", "")),
+                        _cell(row.get("label", "")),
+                        _cell((dimensions.get("description") or {}).get("label", "")),
+                        _cell((dimensions.get("type") or {}).get("label", "")),
+                        _cell(row.get("unit", "")),
+                    ]
                 )
                 + " |"
             )
@@ -93,7 +103,10 @@ async def _dump_abs(ids: set[str] | None) -> list[str]:
         lines.append(f"- declared variants: {declared or '_none_'}")
         lines.append("")
         try:
-            structure = await provider.get_dataset_structure(dataflow_id)
+            structure_id = resolve_abs_structure_id(dataflow_id)
+            if structure_id == dataflow_id:
+                structure_id = resolve_abs_dataflow_id(dataflow_id)
+            structure = await provider.get_dataset_structure(structure_id)
         except Exception as exc:  # noqa: BLE001
             lines.append(f"> **fetch failed:** {exc}")
             lines.append("")

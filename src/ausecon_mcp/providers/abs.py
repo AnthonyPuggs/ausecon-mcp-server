@@ -28,9 +28,14 @@ class ABSProvider:
         cache: TTLCache | None = None,
         ttl_seconds: int = 3600,
     ) -> None:
+        self._owns_client = client is None
         self._client = client or build_client()
         self._cache = cache or TTLCache()
         self._ttl_seconds = ttl_seconds
+
+    async def aclose(self) -> None:
+        if self._owns_client:
+            await self._client.aclose()
 
     async def get_dataset_structure(self, dataflow_id: str) -> dict[str, Any]:
         cache_key = f"abs-structure:{dataflow_id}"

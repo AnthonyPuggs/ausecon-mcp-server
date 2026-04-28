@@ -1,12 +1,14 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import Annotated, Any, Literal
 
 from fastmcp import FastMCP
+from pydantic import Field
 
 from ausecon_mcp.catalogue.resolver import (
     resolve,
     resolve_abs_dataflow_id,
+    resolve_abs_structure_id,
     resolve_rba_csv_path,
 )
 from ausecon_mcp.catalogue.search import (
@@ -15,6 +17,7 @@ from ausecon_mcp.catalogue.search import (
 from ausecon_mcp.catalogue.search import (
     search_catalogue,
 )
+from ausecon_mcp.contracts import response_output_schema
 from ausecon_mcp.logging import configure_logging, get_logger
 from ausecon_mcp.prompts import register_prompts
 from ausecon_mcp.providers.abs import ABSProvider
@@ -31,6 +34,66 @@ from ausecon_mcp.validation import (
     validate_series_ids,
     validate_source,
 )
+
+ABS_PERIOD_PATTERN = r"^(\d{4}|\d{4}-Q[1-4]|\d{4}-(0[1-9]|1[0-2])|\d{4}-S[1-2])$"
+SourceFilter = Annotated[
+    Literal["abs", "rba"] | None,
+    Field(default=None, description="Optional source filter: abs or rba."),
+]
+RbaCategoryFilter = Annotated[
+    Literal[
+        "exchange_rates",
+        "external_sector",
+        "household_finance",
+        "inflation",
+        "interest_rates",
+        "monetary_policy",
+        "money_credit",
+        "output_labour",
+        "payments",
+    ]
+    | None,
+    Field(default=None, description="Optional RBA catalogue category filter."),
+]
+SearchQuery = Annotated[str, Field(min_length=1, description="Discovery query text.")]
+Identifier = Annotated[str, Field(min_length=1, description="Non-empty dataset or table id.")]
+AbsKey = Annotated[
+    str,
+    Field(default="all", min_length=1, description='ABS SDMX key, or "all" for all series.'),
+]
+AbsPeriod = Annotated[
+    Annotated[str, Field(pattern=ABS_PERIOD_PATTERN)] | None,
+    Field(
+        default=None,
+        description="ABS period in YYYY, YYYY-QN, YYYY-MM, or YYYY-SN format.",
+    ),
+]
+IsoDate = Annotated[
+    Annotated[str, Field(json_schema_extra={"format": "date"})] | None,
+    Field(default=None, description="ISO date in YYYY-MM-DD format."),
+]
+IsoDateTime = Annotated[
+    str | None,
+    Field(default=None, description="ISO date or datetime accepted by the ABS updatedAfter API."),
+]
+PositiveInt = Annotated[
+    Annotated[int, Field(ge=1)] | None,
+    Field(default=None, description="Positive observation count limit."),
+]
+SeriesIdList = Annotated[
+    list[Annotated[str, Field(min_length=1)]] | None,
+    Field(default=None, description="Optional list of non-empty RBA series IDs to keep."),
+]
+SemanticStartEnd = Annotated[
+    str | None,
+    Field(
+        default=None,
+        description=(
+            "Source-specific bound: ABS period for ABS-backed concepts, ISO date for "
+            "RBA-backed concepts."
+        ),
+    ),
+]
 
 
 class AuseconService:
@@ -66,8 +129,10 @@ class AuseconService:
 
     async def get_abs_dataset_structure(self, dataflow_id: str) -> dict:
         validated_dataflow_id = require_non_empty("dataflow_id", dataflow_id)
-        upstream_id = resolve_abs_dataflow_id(validated_dataflow_id)
-        return await self.abs_provider.get_dataset_structure(upstream_id)
+        structure_id = resolve_abs_structure_id(validated_dataflow_id)
+        if structure_id == validated_dataflow_id:
+            structure_id = resolve_abs_dataflow_id(validated_dataflow_id)
+        return await self.abs_provider.get_dataset_structure(structure_id)
 
     async def get_abs_data(
         self,
@@ -185,6 +250,12 @@ class AuseconService:
             last_n=validated_last_n,
         )
 
+    async def aclose(self) -> None:
+        for provider in (self.abs_provider, self.rba_provider):
+            close = getattr(provider, "aclose", None)
+            if close is not None:
+                await close()
+
 
 def build_server(service: AuseconService | None = None) -> FastMCP:
     app_service = service or AuseconService()
@@ -197,13 +268,13 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
     )
 
     @mcp.tool(annotations={"readOnlyHint": True, "openWorldHint": True})
-    async def search_datasets(query: str, source: str | None = None) -> list[dict]:
+    async def search_datasets(query: SearchQuery, source: SourceFilter = None) -> list[dict]:
         """Search curated ABS and RBA economic datasets."""
         return await app_service.search_datasets(query=query, source=source)
 
     @mcp.tool(annotations={"readOnlyHint": True, "openWorldHint": True})
     async def list_catalogue(
-        source: str | None = None,
+        source: SourceFilter = None,
         category: str | None = None,
         tag: str | None = None,
         include_ceased: bool = False,
@@ -220,18 +291,21 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
         )
 
     @mcp.tool(annotations={"readOnlyHint": True, "openWorldHint": True})
-    async def get_abs_dataset_structure(dataflow_id: str) -> dict:
+    async def get_abs_dataset_structure(dataflow_id: Identifier) -> dict:
         """Get ABS SDMX dataset dimensions and codelists."""
         return await app_service.get_abs_dataset_structure(dataflow_id=dataflow_id)
 
-    @mcp.tool(annotations={"readOnlyHint": True, "openWorldHint": True})
+    @mcp.tool(
+        annotations={"readOnlyHint": True, "openWorldHint": True},
+        output_schema=response_output_schema(),
+    )
     async def get_abs_data(
-        dataflow_id: str,
-        key: str = "all",
-        start_period: str | None = None,
-        end_period: str | None = None,
-        last_n: int | None = None,
-        updated_after: str | None = None,
+        dataflow_id: Identifier,
+        key: AbsKey = "all",
+        start_period: AbsPeriod = None,
+        end_period: AbsPeriod = None,
+        last_n: PositiveInt = None,
+        updated_after: IsoDateTime = None,
     ) -> dict:
         """Fetch ABS data in a normalised response shape."""
         return await app_service.get_abs_data(
@@ -245,7 +319,7 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
 
     @mcp.tool(annotations={"readOnlyHint": True, "openWorldHint": True})
     async def list_rba_tables(
-        category: str | None = None,
+        category: RbaCategoryFilter = None,
         include_discontinued: bool = False,
     ) -> list[dict]:
         """List curated RBA statistical tables."""
@@ -254,13 +328,16 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
             include_discontinued=include_discontinued,
         )
 
-    @mcp.tool(annotations={"readOnlyHint": True, "openWorldHint": True})
+    @mcp.tool(
+        annotations={"readOnlyHint": True, "openWorldHint": True},
+        output_schema=response_output_schema(),
+    )
     async def get_rba_table(
-        table_id: str,
-        series_ids: list[str] | None = None,
-        start_date: str | None = None,
-        end_date: str | None = None,
-        last_n: int | None = None,
+        table_id: Identifier,
+        series_ids: SeriesIdList = None,
+        start_date: IsoDate = None,
+        end_date: IsoDate = None,
+        last_n: PositiveInt = None,
     ) -> dict:
         """Fetch an RBA statistical table in a normalised response shape."""
         return await app_service.get_rba_table(
@@ -271,15 +348,18 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
             last_n=last_n,
         )
 
-    @mcp.tool(annotations={"readOnlyHint": True, "openWorldHint": True})
+    @mcp.tool(
+        annotations={"readOnlyHint": True, "openWorldHint": True},
+        output_schema=response_output_schema(),
+    )
     async def get_economic_series(
-        concept: str,
+        concept: Annotated[str, Field(min_length=1, description="Curated semantic concept name.")],
         variant: str | None = None,
         geography: str | None = None,
         frequency: str | None = None,
-        start: str | None = None,
-        end: str | None = None,
-        last_n: int | None = None,
+        start: SemanticStartEnd = None,
+        end: SemanticStartEnd = None,
+        last_n: PositiveInt = None,
     ) -> dict:
         """Resolve an economic concept to an ABS or RBA retrieval, optionally narrowing by
         variant, geography, and frequency. Use ``last_n`` to cap observations to the most
