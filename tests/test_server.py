@@ -4,6 +4,43 @@ from fastmcp import Client
 from ausecon_mcp.server import AuseconService, build_server
 
 
+def _walk_schema(schema):
+    if isinstance(schema, dict):
+        yield schema
+        for value in schema.values():
+            yield from _walk_schema(value)
+    elif isinstance(schema, list):
+        for value in schema:
+            yield from _walk_schema(value)
+
+
+def _has_schema_description(schema: dict) -> bool:
+    return any(node.get("description") for node in _walk_schema(schema))
+
+
+def _has_string_enum(schema: dict, values: list[str]) -> bool:
+    return any(
+        node.get("type") == "string" and node.get("enum") == values
+        for node in _walk_schema(schema)
+    )
+
+
+def _has_integer_minimum(schema: dict, minimum: int) -> bool:
+    return any(
+        node.get("type") == "integer" and node.get("minimum") == minimum
+        for node in _walk_schema(schema)
+    )
+
+
+def _has_schema_property(schema: dict, key: str, value: object | None = None) -> bool:
+    for node in _walk_schema(schema):
+        if key not in node:
+            continue
+        if value is None or node[key] == value:
+            return True
+    return False
+
+
 class StubABSProvider:
     def __init__(self) -> None:
         self.last_get_data_kwargs: dict | None = None
@@ -637,20 +674,20 @@ async def test_registered_tools_expose_input_schema_constraints_and_descriptions
         tools = {tool.name: tool for tool in await client.list_tools()}
 
     source_schema = tools["search_datasets"].inputSchema["properties"]["source"]
-    assert {"enum": ["abs", "rba"], "type": "string"} in source_schema["anyOf"]
-    assert source_schema["description"]
+    assert _has_string_enum(source_schema, ["abs", "rba"])
+    assert _has_schema_description(source_schema)
 
     last_n_schema = tools["get_abs_data"].inputSchema["properties"]["last_n"]
-    assert {"minimum": 1, "type": "integer"} in last_n_schema["anyOf"]
-    assert last_n_schema["description"]
+    assert _has_integer_minimum(last_n_schema, 1)
+    assert _has_schema_description(last_n_schema)
 
     start_period_schema = tools["get_abs_data"].inputSchema["properties"]["start_period"]
-    assert start_period_schema["anyOf"][0]["pattern"]
-    assert "ABS period" in start_period_schema["description"]
+    assert _has_schema_property(start_period_schema, "pattern")
+    assert "ABS period" in str(start_period_schema)
 
     start_date_schema = tools["get_rba_table"].inputSchema["properties"]["start_date"]
-    assert start_date_schema["anyOf"][0]["format"] == "date"
-    assert "ISO date" in start_date_schema["description"]
+    assert _has_schema_property(start_date_schema, "format", "date")
+    assert "ISO date" in str(start_date_schema)
 
     category_schema = tools["list_rba_tables"].inputSchema["properties"]["category"]
     expected_categories = [
@@ -664,11 +701,11 @@ async def test_registered_tools_expose_input_schema_constraints_and_descriptions
         "output_labour",
         "payments",
     ]
-    assert {"enum": expected_categories, "type": "string"} in category_schema["anyOf"]
+    assert _has_string_enum(category_schema, expected_categories)
 
     semantic_start_schema = tools["get_economic_series"].inputSchema["properties"]["start"]
-    assert "ABS period" in semantic_start_schema["description"]
-    assert "ISO date" in semantic_start_schema["description"]
+    assert "ABS period" in str(semantic_start_schema)
+    assert "ISO date" in str(semantic_start_schema)
 
 
 async def test_retrieval_tools_expose_response_output_schema() -> None:
