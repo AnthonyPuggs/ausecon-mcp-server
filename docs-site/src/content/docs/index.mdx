@@ -1,0 +1,43 @@
+---
+title: Australian Economic Data MCP Server
+description: Structured ABS and RBA data retrieval for MCP clients.
+template: splash
+hero:
+  tagline: A small, source-aware MCP server for Australian macroeconomic and financial data from the ABS and RBA.
+  actions:
+    - text: Get started
+      link: /getting-started/
+      icon: right-arrow
+      variant: primary
+    - text: View on GitHub
+      link: https://github.com/AnthonyPuggs/ausecon-mcp-server
+      icon: external
+---
+
+`ausecon-mcp-server` exposes read-only MCP tools for official Australian economic data. It is
+designed for analysts, economists, and MCP clients that need reliable discovery, provenance-rich
+retrieval, and stable JSON outputs without turning the server into a general economic chatbot.
+
+## What it provides
+
+- Dataset discovery across curated Australian Bureau of Statistics (ABS) and Reserve Bank of
+  Australia (RBA) entries.
+- Analyst-friendly semantic concepts such as CPI, GDP growth, unemployment, cash rate, yields,
+  credit, and external-sector indicators.
+- Source-native retrieval tools for exact ABS SDMX keys and RBA statistical tables.
+- Normalised retrieval responses with explicit metadata, series descriptors, observations, and
+  server-version provenance.
+- Read-only MCP resources and prompt templates for common economist workflows.
+
+## Current status
+
+Version `1.0.0` is the stable release baseline. The server remains intentionally selective: it
+covers the main analyst workflows, but it does not aim to mirror every ABS or RBA release.
+
+## Quick install
+
+```bash
+uvx ausecon-mcp-server
+```
+
+The server speaks MCP over standard input/output and is normally launched by your MCP client.

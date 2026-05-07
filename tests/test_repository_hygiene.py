@@ -1,5 +1,6 @@
 import json
 import re
+import subprocess
 import sys
 from pathlib import Path
 
@@ -14,12 +15,17 @@ CLAUDE_EXAMPLE = ROOT / "examples" / "claude_desktop_config.json"
 PYPROJECT = ROOT / "pyproject.toml"
 LICENSE = ROOT / "LICENSE"
 CI_WORKFLOW = ROOT / ".github" / "workflows" / "ci.yml"
+DOCS_WORKFLOW = ROOT / ".github" / "workflows" / "docs.yml"
 RELEASE_WORKFLOW = ROOT / ".github" / "workflows" / "release.yml"
 DOCKERFILE = ROOT / "Dockerfile"
 SERVER_JSON = ROOT / "server.json"
+FASTMCP_JSON = ROOT / "fastmcp.json"
 CHANGELOG = ROOT / "CHANGELOG.md"
 CONTRIBUTING = ROOT / "docs" / "contributing.md"
 CLIENT_SMOKE = ROOT / "scripts" / "mcp_client_smoke.py"
+DOCS_SITE = ROOT / "docs-site"
+DOCS_URL = "https://anthonypuggs.github.io/ausecon-mcp-server/"
+REPOSITORY_URL = "https://github.com/AnthonyPuggs/ausecon-mcp-server"
 
 
 def test_readme_and_example_advertise_pypi_uvx_install() -> None:
@@ -28,6 +34,7 @@ def test_readme_and_example_advertise_pypi_uvx_install() -> None:
 
     assert "uvx ausecon-mcp-server" in readme_text
     assert "https://pypi.org/project/ausecon-mcp-server/" in readme_text
+    assert DOCS_URL in readme_text
     assert '"uvx"' in example_text
     assert '"ausecon-mcp-server"' in example_text
     assert "<your-repo-url>" not in readme_text
@@ -43,10 +50,17 @@ def test_project_metadata_points_to_license_file_and_repository_urls() -> None:
     assert "version" in project.get("dynamic", [])
     assert project["license"] == {"file": "LICENSE"}
     assert project["urls"] == {
-        "Homepage": "https://github.com/AnthonyPuggs/ausecon-mcp-server",
-        "Repository": "https://github.com/AnthonyPuggs/ausecon-mcp-server",
-        "Issues": "https://github.com/AnthonyPuggs/ausecon-mcp-server/issues",
+        "Homepage": DOCS_URL,
+        "Documentation": DOCS_URL,
+        "Repository": REPOSITORY_URL,
+        "Issues": f"{REPOSITORY_URL}/issues",
     }
+
+
+def test_fastmcp_metadata_points_homepage_to_docs_site() -> None:
+    metadata = json.loads(FASTMCP_JSON.read_text(encoding="utf-8"))
+
+    assert metadata["homepage"] == DOCS_URL
 
 
 def test_repository_root_includes_visible_mit_license_file() -> None:
@@ -70,48 +84,52 @@ def test_ci_workflow_exists_with_quality_checks_and_hygiene_guard() -> None:
     assert "astral-sh/setup-uv@" in workflow_text
     assert "python-version: ['3.10', '3.12']" in workflow_text
     assert "uv sync --python ${{ matrix.python-version }} --extra dev" in workflow_text
-    assert "uv run ruff check src tests" in workflow_text
+    assert "uv run ruff check src tests scripts" in workflow_text
     assert "uv run pytest" in workflow_text
     assert "test -f LICENSE" in workflow_text
     assert 'command -v rg >/dev/null 2>&1' in workflow_text
-    assert 'rg -n "rba_abs_mcp|<your-repo-url>" README.md examples pyproject.toml' in workflow_text
     assert (
-        'grep -R -n -E "rba_abs_mcp|<your-repo-url>" README.md examples pyproject.toml'
+        'rg -n "rba_abs_mcp|<your-repo-url>" README.md docs-site examples '
+        "pyproject.toml fastmcp.json server.json" in workflow_text
+    )
+    assert (
+        'grep -R -n -E "rba_abs_mcp|<your-repo-url>" README.md docs-site examples '
+        "pyproject.toml fastmcp.json server.json"
         in workflow_text
     )
 
 
-def test_readme_tracks_current_release_state() -> None:
+def test_readme_is_slim_landing_page_for_current_release_state() -> None:
     readme_text = README.read_text(encoding="utf-8")
-    tool_row = (
-        "`get_economic_series` | Preferred analyst-facing retrieval tool for curated economic "
-        "concepts | "
-        "`concept`, `variant`, `geography`, `frequency`, `start`, `end`, `last_n` |"
-    )
 
-    assert "https://pypi.org/project/ausecon-mcp-server/" in readme_text
-    assert tool_row in readme_text
+    assert len(readme_text.splitlines()) < 140
+    assert "Version `1.0.0` is the stable release baseline." in readme_text
     assert "eight read-only MCP tools" in readme_text
-    assert "`list_economic_concepts` | List analyst-friendly semantic concepts" in readme_text
     assert "29 curated macroeconomic concepts" in readme_text
     assert "28 curated macroeconomic concepts" not in readme_text
-    assert "FZCY300D" in readme_text
-    assert "FZCY0300D" not in readme_text
+    assert DOCS_URL in readme_text
     assert "claude mcp add --transport stdio ausecon -- uvx ausecon-mcp-server" in readme_text
     assert "codex mcp add ausecon -- uvx ausecon-mcp-server" in readme_text
-    assert "This repository currently provides a local stdio MCP server only." in readme_text
+    assert "get_economic_series" in readme_text
+    assert "## Releasing" not in readme_text
+    assert "## Operations" not in readme_text
     assert "`v0.3.0` is a discovery release" not in readme_text
     assert "The current release includes:" not in readme_text
     assert "`v0.5.0` covers the main analyst workflows more credibly" not in readme_text
 
 
-def test_readme_documents_schema_and_preferred_rba_listing_surface() -> None:
-    readme_text = README.read_text(encoding="utf-8")
+def test_docs_site_documents_schema_and_preferred_rba_listing_surface() -> None:
+    tools_text = (DOCS_SITE / "src/content/docs/reference/tools.md").read_text(encoding="utf-8")
+    schema_text = (DOCS_SITE / "src/content/docs/reference/response-schema.md").read_text(
+        encoding="utf-8"
+    )
+    user_guide_text = (
+        DOCS_SITE / "src/content/docs/user-guide/discovery-and-retrieval.md"
+    ).read_text(encoding="utf-8")
 
-    assert "schemas/response.schema.json" in readme_text
-    assert "docs/response-schema.md" in readme_text
-    assert 'list_catalogue(source="rba")' in readme_text
-    assert "deprecated `list_rba_tables`" in readme_text
+    assert "schemas/response.schema.json" in schema_text
+    assert 'list_catalogue(source="rba")' in user_guide_text
+    assert "Deprecated compatibility alias" in tools_text
 
 
 def test_contract_and_architecture_docs_exist() -> None:
@@ -119,6 +137,47 @@ def test_contract_and_architecture_docs_exist() -> None:
     assert (ROOT / "docs" / "variants.md").is_file()
     assert (ROOT / "docs" / "response-schema.md").is_file()
     assert CONTRIBUTING.is_file()
+
+
+def test_docs_site_scaffold_exists_with_github_pages_configuration() -> None:
+    package_json = json.loads((DOCS_SITE / "package.json").read_text(encoding="utf-8"))
+    astro_config = (DOCS_SITE / "astro.config.mjs").read_text(encoding="utf-8")
+
+    assert (DOCS_SITE / ".nvmrc").read_text(encoding="utf-8").strip() == "22.12.0"
+    assert package_json["scripts"]["check"] == "astro check"
+    assert package_json["scripts"]["build"] == "astro build"
+    assert package_json["dependencies"]["@astrojs/starlight"].startswith("^")
+    assert "site: 'https://anthonypuggs.github.io'" in astro_config
+    assert "base: '/ausecon-mcp-server'" in astro_config
+    assert "reference/semantic-concepts" in astro_config
+
+
+def test_docs_workflow_builds_and_deploys_github_pages_site() -> None:
+    workflow_text = DOCS_WORKFLOW.read_text(encoding="utf-8")
+
+    assert "name: Docs" in workflow_text
+    assert "node-version-file: docs-site/.nvmrc" in workflow_text
+    assert "cache-dependency-path: docs-site/package-lock.json" in workflow_text
+    assert "working-directory: docs-site" in workflow_text
+    assert "npm ci" in workflow_text
+    assert "npm run check" in workflow_text
+    assert "npm run build" in workflow_text
+    assert "actions/upload-pages-artifact@" in workflow_text
+    assert "actions/deploy-pages@" in workflow_text
+    assert "pages: write" in workflow_text
+    assert "id-token: write" in workflow_text
+
+
+def test_generated_semantic_concepts_reference_is_current() -> None:
+    result = subprocess.run(
+        [sys.executable, "scripts/update_docs_reference.py", "--check"],
+        cwd=ROOT,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 0, result.stdout + result.stderr
 
 
 def test_contributing_doc_mentions_client_smoke_path() -> None:
@@ -186,11 +245,13 @@ def test_python_version_story_is_consistent_across_docs_and_ci() -> None:
 
 
 def test_readme_release_instructions_match_tag_derived_versioning() -> None:
-    readme_text = README.read_text(encoding="utf-8")
+    releasing_text = (DOCS_SITE / "src/content/docs/maintainers/releasing.md").read_text(
+        encoding="utf-8"
+    )
 
-    assert "version is derived from git tags via `hatch-vcs`" in readme_text
-    assert "ensure `pyproject.toml` contains the intended version" not in readme_text
-    assert "git tag -a vX.Y.Z" not in readme_text
+    assert "version is derived from git tags via `hatch-vcs`" in releasing_text
+    assert "ensure `pyproject.toml` contains the intended version" not in releasing_text
+    assert "git tag -a vX.Y.Z" not in releasing_text
 
 
 def test_server_metadata_matches_current_changelog_release() -> None:

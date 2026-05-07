@@ -1,9 +1,12 @@
 .venv/
 .uv-cache/
+.npm-cache/
 .worktrees/
 __pycache__/
 .pytest_cache/
 .ruff_cache/
+docs-site/node_modules/
+docs-site/.astro/
 dist/
 build/
 *.egg-info/
