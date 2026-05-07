@@ -5,7 +5,7 @@ from fastmcp.exceptions import ResourceError
 
 from ausecon_mcp.catalogue.abs import ABS_CATALOGUE
 from ausecon_mcp.catalogue.rba import RBA_CATALOGUE
-from ausecon_mcp.catalogue.resolver import CURATED_SHORTCUTS
+from ausecon_mcp.catalogue.resolver import list_economic_concepts
 
 _CATALOGUE_SUMMARY_FIELDS = (
     "id",
@@ -50,23 +50,7 @@ def register_resources(mcp: FastMCP) -> None:
         annotations={"readOnlyHint": True},
     )
     def concepts_index() -> list[dict]:
-        rows: list[dict] = []
-        for concept, shortcut in CURATED_SHORTCUTS.items():
-            source = shortcut["source"]
-            dataset_id = shortcut["dataset_id"]
-            catalogue = ABS_CATALOGUE if source == "abs" else RBA_CATALOGUE
-            entry = catalogue.get(dataset_id, {})
-            rows.append(
-                {
-                    "concept": concept,
-                    "source": source,
-                    "dataset_id": dataset_id,
-                    "variant": shortcut.get("variant"),
-                    "frequencies": list(entry.get("frequencies", [])),
-                    "geographies": list(entry.get("geographies", [])),
-                }
-            )
-        return rows
+        return list_economic_concepts()
 
     @mcp.resource(
         "ausecon://abs/{dataflow_id}",

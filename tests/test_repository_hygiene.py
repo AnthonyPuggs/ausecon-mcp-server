@@ -84,12 +84,15 @@ def test_ci_workflow_exists_with_quality_checks_and_hygiene_guard() -> None:
 def test_readme_tracks_current_release_state() -> None:
     readme_text = README.read_text(encoding="utf-8")
     tool_row = (
-        "`get_economic_series` | Resolve a curated economic concept to an ABS or RBA retrieval | "
+        "`get_economic_series` | Preferred analyst-facing retrieval tool for curated economic "
+        "concepts | "
         "`concept`, `variant`, `geography`, `frequency`, `start`, `end`, `last_n` |"
     )
 
     assert "https://pypi.org/project/ausecon-mcp-server/" in readme_text
     assert tool_row in readme_text
+    assert "eight read-only MCP tools" in readme_text
+    assert "`list_economic_concepts` | List analyst-friendly semantic concepts" in readme_text
     assert "29 curated macroeconomic concepts" in readme_text
     assert "28 curated macroeconomic concepts" not in readme_text
     assert "FZCY300D" in readme_text
@@ -108,6 +111,7 @@ def test_readme_documents_schema_and_preferred_rba_listing_surface() -> None:
     assert "schemas/response.schema.json" in readme_text
     assert "docs/response-schema.md" in readme_text
     assert 'list_catalogue(source="rba")' in readme_text
+    assert "deprecated `list_rba_tables`" in readme_text
 
 
 def test_contract_and_architecture_docs_exist() -> None:
@@ -122,6 +126,7 @@ def test_contributing_doc_mentions_client_smoke_path() -> None:
 
     assert "mcp_client_smoke.py" in text
     assert "search_datasets" in text
+    assert "list_economic_concepts" in text
     assert "list_catalogue" in text
     assert "get_abs_data" in text
     assert "get_economic_series" in text

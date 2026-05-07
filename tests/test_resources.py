@@ -69,6 +69,8 @@ async def test_concepts_resource_lists_every_curated_shortcut() -> None:
         assert row["source"] == expected["source"]
         assert row["dataset_id"] == expected["dataset_id"]
         assert row["variant"] == expected.get("variant")
+        assert row["recommended_call"]["tool"] == "get_economic_series"
+        assert row["recommended_call"]["arguments"] == {"concept": row["concept"]}
 
 
 async def test_abs_resource_exposes_new_building_approvals_entry() -> None:

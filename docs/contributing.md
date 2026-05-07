@@ -33,6 +33,7 @@ env UV_CACHE_DIR=.uv-cache uv run python scripts/mcp_client_smoke.py
 This uses a real FastMCP stdio client transport and verifies:
 
 - `search_datasets`
+- `list_economic_concepts`
 - `list_catalogue`
 - `get_abs_data`
 - `get_economic_series`

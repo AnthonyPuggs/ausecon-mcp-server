@@ -23,7 +23,7 @@ Releases are published to [PyPI](https://pypi.org/project/ausecon-mcp-server/) a
 
 Current capabilities:
 
-- seven read-only MCP tools covering dataset discovery (including an unranked `list_catalogue` complement to `search_datasets`), ABS structure inspection, ABS and RBA data retrieval, and a semantic shortcut layer with 29 curated macroeconomic concepts
+- eight read-only MCP tools covering dataset discovery (including a model-controlled `list_economic_concepts` surface and an unranked `list_catalogue` complement to `search_datasets`), ABS structure inspection, ABS and RBA data retrieval, and a semantic shortcut layer with 29 curated macroeconomic concepts
 - four read-only MCP resources exposing the curated catalogue, per-entry metadata, and an `ausecon://concepts` index of every semantic shortcut with its resolved target
 - eight MCP prompt templates for common economist workflows such as inflation summaries, macro snapshots, living-cost comparisons, construction pipeline reviews, labour slack, yield curve snapshots, and dataset discovery
 - provenance-rich JSON responses, a checked-in retrieval contract at [`schemas/response.schema.json`](schemas/response.schema.json), structured JSON logging to stderr, and dual-layer caching that survives client restarts
@@ -39,14 +39,16 @@ The MCP server currently exposes the following tools:
 | --- | --- | --- |
 | `search_datasets` | Search the curated ABS and RBA catalogue with deterministic ranking | `query`, `source` |
 | `list_catalogue` | List catalogue entries unranked, optionally filtered by source, category, or tag | `source`, `category`, `tag`, `include_ceased`, `include_discontinued` |
+| `list_economic_concepts` | List analyst-friendly semantic concepts accepted by `get_economic_series` | `query`, `source`, `category` |
 | `get_abs_dataset_structure` | Retrieve ABS SDMX dimensions and code lists | `dataflow_id` |
 | `get_abs_data` | Retrieve ABS data in a normalised response shape | `dataflow_id`, `key`, `start_period`, `end_period`, `last_n`, `updated_after` |
-| `list_rba_tables` | List curated RBA statistical tables (kept for backwards compatibility) | `category`, `include_discontinued` |
+| `list_rba_tables` | Deprecated compatibility alias for listing curated RBA statistical tables | `category`, `include_discontinued` |
 | `get_rba_table` | Retrieve an RBA statistical table in a normalised response shape | `table_id`, `series_ids`, `start_date`, `end_date`, `last_n` |
-| `get_economic_series` | Resolve a curated economic concept to an ABS or RBA retrieval | `concept`, `variant`, `geography`, `frequency`, `start`, `end`, `last_n` |
+| `get_economic_series` | Preferred analyst-facing retrieval tool for curated economic concepts | `concept`, `variant`, `geography`, `frequency`, `start`, `end`, `last_n` |
 
-For new integrations that need an unranked browse surface, prefer
-`list_catalogue(source="rba")`. `list_rba_tables` remains available as the narrow RBA-only listing surface for existing clients.
+For LLM-facing integrations, prefer `list_economic_concepts` followed by
+`get_economic_series`. For source-native browsing, prefer `list_catalogue(source="rba")`;
+`list_rba_tables` remains available only as a compatibility alias for existing clients.
 
 ### Currently supported semantic concepts
 
@@ -152,14 +154,16 @@ series IDs. The runtime catalogue only exposes fully wired variants; future cand
   then broader multi-term matches.
 - common economist phrasing is normalised for ranking, including terms such as "jobless",
   "mortgage", "rates", and "fx".
+- `list_economic_concepts` exposes every curated semantic shortcut as a model-controlled discovery
+  tool, including aliases and the recommended `get_economic_series` call.
 - discontinued RBA tables are excluded from `search_datasets` by default.
-- `list_rba_tables` excludes discontinued tables by default and returns a `discontinued` boolean
-  field on every row.
+- `list_rba_tables` is deprecated; use `list_catalogue(source="rba")` for new RBA browse flows.
 - empty identifiers and empty search queries are rejected before any network call.
 - `last_n` must be positive when provided.
 - `get_abs_data` validates annual, quarterly, monthly, and half-yearly ABS period strings.
 - `get_rba_table` validates ISO date bounds.
-- `get_economic_series` validates `start` and `end` after resolving the target source.
+- `get_economic_series` accepts natural analyst bounds (`YYYY`, `YYYY-QN`, `YYYY-SN`,
+  `YYYY-MM`, or `YYYY-MM-DD`) and normalises them to the resolved ABS/RBA source.
 - transient ABS and RBA upstream failures are retried automatically.
 - malformed upstream payloads are surfaced as source-aware parse failures.
 - `search_datasets` scores should be treated as ranking metadata rather than a stable contract.
@@ -172,6 +176,9 @@ Data retrieval tools return a normalised payload with three top-level sections:
 - `series`: long-form series descriptors including labels, units, frequency, and dimensions
 - `observations`: long-form observations keyed by `date`, `series_id`, and `value`; some RBA
   observations may also include `raw_value` when the upstream cell is non-numeric
+
+Responses returned through `get_economic_series` also include `metadata.semantic`, which records
+the requested concept, resolved source target, requested bounds, and source-native resolved bounds.
 
 This design keeps source provenance explicit while making downstream processing simpler in Python,
 R, or other analytical environments.
@@ -286,7 +293,7 @@ calling `search_datasets` first.
 | `ausecon://catalogue` | Flat index of every curated ABS and RBA entry (id, source, name, description, category, frequency, tags). |
 | `ausecon://abs/{dataflow_id}` | Full curated catalogue entry for a single ABS dataflow (e.g. `ausecon://abs/CPI`). |
 | `ausecon://rba/{table_id}` | Full curated catalogue entry for a single RBA statistical table (e.g. `ausecon://rba/g1`). |
-| `ausecon://concepts` | Index of every curated semantic shortcut with its resolved source, dataset id, variant, frequencies, and geographies. |
+| `ausecon://concepts` | Index of every curated semantic shortcut with its resolved source, dataset id, variant, aliases, and recommended call. |
 
 All resources are read-only, served as `application/json`, and sourced
 from the static curated catalogue — no network calls are made to
@@ -303,11 +310,11 @@ surface these as slash-commands.
 | `summarise_latest_inflation` | `months: int = 12` | Pulls headline and trimmed-mean CPI via `get_economic_series` and summarises them against the RBA 2–3% target band. |
 | `compare_cash_rate_to_cpi` | `start: str`, `end: str \| None` | Narrates the path of the cash rate target against headline CPI over the window. |
 | `macro_snapshot` | `as_of: str \| None` | Assembles a compact snapshot table of cash rate, headline CPI, trimmed-mean CPI, and real GDP growth. |
-| `living_costs_vs_cpi` | `start: str \| None` | Compares Selected Living Cost Indexes across household types against headline CPI to highlight cost-of-living divergence. |
+| `living_costs_vs_cpi` | `start: str \| None`, `last_n: int = 8` | Compares Selected Living Cost Indexes across household types against headline CPI to highlight cost-of-living divergence. |
 | `construction_pipeline` | `last_n: int = 8` | Summarises construction pipeline strength across total, engineering, and residential/non-residential building activity. |
 | `labour_slack_snapshot` | `last_n: int = 12` | Reads `unemployment_rate` and `underemployment_rate` and narrates the combined slack signal. |
 | `yield_curve_snapshot` | `last_n: int = 60` | Reads the 3-year and 10-year AGS yields and describes the curve shape and recent shift. |
-| `discover_dataset` | `topic: str` | Runs `search_datasets` and `list_rba_tables` for the topic, then recommends the top two candidates. |
+| `discover_dataset` | `topic: str` | Runs `list_economic_concepts`, `search_datasets`, and `list_catalogue` for the topic, then recommends the top candidates. |
 
 Each tool is also annotated with `readOnlyHint` and `openWorldHint` so
 compliant clients can indicate that the server only reads from
@@ -317,11 +324,14 @@ external, evolving sources.
 
 The most reliable workflow is:
 
-1. Use `search_datasets` when you do not yet know the exact ABS dataset or RBA table.
-2. Use `get_abs_dataset_structure` before `get_abs_data` when you need to inspect valid ABS
-   dimensions and keys.
-3. Use `get_abs_data` or `get_rba_table` for retrieval once you know the target dataset or table.
-4. Use `get_economic_series` only for the small curated semantic shortcuts listed above.
+1. Use `list_economic_concepts` when the user asks for a normal economic concept such as GDP,
+   CPI, unemployment, cash rate, credit, or yields.
+2. Use `get_economic_series` for the selected concept. Its `start` and `end` bounds accept natural
+   analyst date strings and are normalised to the underlying ABS or RBA source.
+3. Use `search_datasets`, `list_catalogue`, `get_abs_dataset_structure`, `get_abs_data`, and
+   `get_rba_table` when the user needs source-native ABS/RBA tables, SDMX keys, or expert control.
+4. Use `list_catalogue(source="rba")` instead of the deprecated `list_rba_tables` alias in new
+   integrations.
 
 ### Example client requests
 
@@ -342,6 +352,12 @@ Discover relevant datasets:
 
 ```text
 search_datasets(query="cash rate")
+```
+
+Discover curated analyst-facing concepts:
+
+```text
+list_economic_concepts(query="cash rate")
 ```
 
 Inspect active inflation tables from the preferred unranked browse surface:
@@ -409,7 +425,7 @@ Resolve quarterly real GDP growth:
 ```text
 get_economic_series(
   concept="gdp_growth",
-  start="2020-Q1"
+  start="2020-01-01"
 )
 ```
 

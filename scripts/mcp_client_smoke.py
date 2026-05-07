@@ -39,11 +39,15 @@ async def main() -> None:
         tools = await client.list_tools()
         tool_names = {tool.name for tool in tools}
         assert {
+            "list_economic_concepts",
             "search_datasets",
             "list_catalogue",
             "get_abs_data",
             "get_economic_series",
         } <= tool_names
+
+        concepts = await client.call_tool("list_economic_concepts", {"query": "dwelling approvals"})
+        assert concepts.data and concepts.data[0]["concept"] == "dwelling_approvals"
 
         search = await client.call_tool("search_datasets", {"query": "cash rate"})
         assert search.data and search.data[0]["id"] == "a2"

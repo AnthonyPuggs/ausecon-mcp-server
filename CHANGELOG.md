@@ -6,6 +6,37 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-05-07
+
+### Added
+- Added `list_economic_concepts`, a model-controlled discovery tool for
+  analyst-friendly concepts with source, dataset, variant, frequency,
+  geography, aliases, and recommended `get_economic_series` calls.
+- Added semantic bounds normalisation for `get_economic_series`, accepting
+  `YYYY`, `YYYY-Qn`, `YYYY-Sn`, `YYYY-MM`, and `YYYY-MM-DD` while forwarding
+  source-native ABS periods or RBA ISO dates internally.
+- Added semantic provenance metadata to retrieval responses, including the
+  requested bounds, resolved bounds, concept, variant, geography, frequency,
+  and upstream target.
+- Added response-schema coverage for optional semantic metadata and stronger
+  prompt tests that validate documented tool-call snippets against the
+  registered MCP tool contracts.
+
+### Changed
+- Reframed `get_economic_series` as the preferred LLM-facing retrieval tool,
+  with raw ABS and RBA tools documented as expert source-native surfaces.
+- Rewrote MCP prompts so suggested calls are valid, bounded, and aligned with
+  the semantic workflow.
+- Updated tool descriptions, human-readable annotation titles, server
+  instructions, README workflows, architecture notes, and client smoke coverage
+  for the V1 MCP user experience.
+- `ausecon://concepts` now shares the same concept-index implementation as
+  `list_economic_concepts`.
+
+### Deprecated
+- Marked `list_rba_tables` as a compatibility alias. New prompts and docs
+  prefer `list_catalogue(source="rba")`.
+
 ## [0.13.1] - 2026-04-21
 
 ### Fixed
@@ -376,7 +407,8 @@ Initial public release.
 - Initial curated catalogues for ABS and RBA, plus a four-concept
   `CURATED_SERIES` semantic shortcut map.
 
-[Unreleased]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v0.13.1...HEAD
+[Unreleased]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v0.13.1...v1.0.0
 [0.13.1]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v0.13.0...v0.13.1
 [0.13.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v0.12.1...v0.13.0
 [0.12.1]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v0.12.0...v0.12.1

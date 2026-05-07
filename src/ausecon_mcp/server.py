@@ -5,18 +5,18 @@ from typing import Annotated, Any, Literal
 from fastmcp import FastMCP
 from pydantic import Field
 
+from ausecon_mcp.bounds import NormalisedSemanticBounds, normalise_semantic_bounds
+from ausecon_mcp.catalogue.resolver import (
+    list_economic_concepts as _list_economic_concepts,
+)
 from ausecon_mcp.catalogue.resolver import (
     resolve,
     resolve_abs_dataflow_id,
     resolve_abs_structure_id,
     resolve_rba_csv_path,
 )
-from ausecon_mcp.catalogue.search import (
-    list_catalogue as _list_catalogue,
-)
-from ausecon_mcp.catalogue.search import (
-    search_catalogue,
-)
+from ausecon_mcp.catalogue.search import list_catalogue as _list_catalogue
+from ausecon_mcp.catalogue.search import search_catalogue
 from ausecon_mcp.contracts import response_output_schema
 from ausecon_mcp.logging import configure_logging, get_logger
 from ausecon_mcp.prompts import register_prompts
@@ -55,6 +55,10 @@ RbaCategoryFilter = Annotated[
     Field(description="Optional RBA catalogue category filter."),
 ]
 SearchQuery = Annotated[str, Field(min_length=1, description="Discovery query text.")]
+ConceptQuery = Annotated[
+    str,
+    Field(min_length=1, description="Optional semantic concept discovery query."),
+]
 Identifier = Annotated[str, Field(min_length=1, description="Non-empty dataset or table id.")]
 AbsKey = Annotated[
     str,
@@ -88,11 +92,15 @@ SemanticStartEnd = Annotated[
     str,
     Field(
         description=(
-            "Source-specific bound: ABS period for ABS-backed concepts, ISO date for "
-            "RBA-backed concepts."
+            "Analyst-friendly date bound: YYYY, YYYY-QN, YYYY-SN, YYYY-MM, or YYYY-MM-DD. "
+            "Semantic retrieval normalises this to the resolved source frequency."
         ),
     ),
 ]
+
+
+def _tool_annotations(title: str) -> dict[str, bool | str]:
+    return {"title": title, "readOnlyHint": True, "openWorldHint": True}
 
 
 class AuseconService:
@@ -124,6 +132,21 @@ class AuseconService:
             tag=tag,
             include_ceased=include_ceased,
             include_discontinued=include_discontinued,
+        )
+
+    async def list_economic_concepts(
+        self,
+        query: str | None = None,
+        source: str | None = None,
+        category: str | None = None,
+    ) -> list[dict]:
+        validated_query = None if query is None else validate_search_query(query)
+        validated_source = validate_source(source)
+        validated_category = None if category is None else require_non_empty("category", category)
+        return _list_economic_concepts(
+            query=validated_query,
+            source=validated_source,
+            category=validated_category,
         )
 
     async def get_abs_dataset_structure(self, dataflow_id: str) -> dict:
@@ -219,35 +242,40 @@ class AuseconService:
             frequency=frequency,
             abs_structure_fetcher=self.abs_provider.get_dataset_structure,
         )
+        bounds = normalise_semantic_bounds(resolved, start=start, end=end)
 
         if resolved.source == "rba":
             validated_start, validated_end = validate_iso_date_range(
-                start,
-                end,
+                bounds.start,
+                bounds.end,
                 start_name="start",
                 end_name="end",
             )
-            return await self.get_rba_table(
+            payload = await self.get_rba_table(
                 resolved.dataset_id,
                 series_ids=resolved.rba_series_ids,
                 start_date=validated_start,
                 end_date=validated_end,
                 last_n=validated_last_n,
             )
+            _stamp_semantic_metadata(payload, validated_concept, resolved, bounds)
+            return payload
 
         validated_start, validated_end = validate_abs_period_range(
-            start,
-            end,
+            bounds.start,
+            bounds.end,
             start_name="start",
             end_name="end",
         )
-        return await self.get_abs_data(
+        payload = await self.get_abs_data(
             resolved.dataset_id,
             key=resolved.abs_key or "all",
             start_period=validated_start,
             end_period=validated_end,
             last_n=validated_last_n,
         )
+        _stamp_semantic_metadata(payload, validated_concept, resolved, bounds)
+        return payload
 
     async def aclose(self) -> None:
         for provider in (self.abs_provider, self.rba_provider):
@@ -261,17 +289,20 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
     mcp = FastMCP(
         "ausecon",
         instructions=(
-            "Australian economic data tools for ABS and RBA datasets. "
-            "Use search_datasets first when the user does not know the exact dataset or table."
+            "Australian economic data tools for official ABS and RBA datasets. "
+            "Use list_economic_concepts before get_economic_series for ordinary analyst "
+            "requests such as GDP, CPI, unemployment, cash rate, credit, or yields. "
+            "Use search_datasets and list_catalogue for source-native ABS/RBA discovery, "
+            "then get_abs_data or get_rba_table when exact dataset/table control is needed."
         ),
     )
 
-    @mcp.tool(annotations={"readOnlyHint": True, "openWorldHint": True})
+    @mcp.tool(annotations=_tool_annotations("Search Datasets"))
     async def search_datasets(query: SearchQuery, source: SourceFilter | None = None) -> list[dict]:
         """Search curated ABS and RBA economic datasets."""
         return await app_service.search_datasets(query=query, source=source)
 
-    @mcp.tool(annotations={"readOnlyHint": True, "openWorldHint": True})
+    @mcp.tool(annotations=_tool_annotations("List Catalogue"))
     async def list_catalogue(
         source: SourceFilter | None = None,
         category: str | None = None,
@@ -289,13 +320,26 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
             include_discontinued=include_discontinued,
         )
 
-    @mcp.tool(annotations={"readOnlyHint": True, "openWorldHint": True})
+    @mcp.tool(annotations=_tool_annotations("List Economic Concepts"))
+    async def list_economic_concepts(
+        query: ConceptQuery | None = None,
+        source: SourceFilter | None = None,
+        category: str | None = None,
+    ) -> list[dict]:
+        """List analyst-friendly semantic economic concepts accepted by get_economic_series."""
+        return await app_service.list_economic_concepts(
+            query=query,
+            source=source,
+            category=category,
+        )
+
+    @mcp.tool(annotations=_tool_annotations("Get ABS Dataset Structure"))
     async def get_abs_dataset_structure(dataflow_id: Identifier) -> dict:
         """Get ABS SDMX dataset dimensions and codelists."""
         return await app_service.get_abs_dataset_structure(dataflow_id=dataflow_id)
 
     @mcp.tool(
-        annotations={"readOnlyHint": True, "openWorldHint": True},
+        annotations=_tool_annotations("Get ABS Data"),
         output_schema=response_output_schema(),
     )
     async def get_abs_data(
@@ -306,7 +350,7 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
         last_n: PositiveInt | None = None,
         updated_after: IsoDateTime | None = None,
     ) -> dict:
-        """Fetch ABS data in a normalised response shape."""
+        """Expert/source-native ABS SDMX retrieval in a normalised response shape."""
         return await app_service.get_abs_data(
             dataflow_id=dataflow_id,
             key=key,
@@ -316,19 +360,19 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
             updated_after=updated_after,
         )
 
-    @mcp.tool(annotations={"readOnlyHint": True, "openWorldHint": True})
+    @mcp.tool(annotations=_tool_annotations("List RBA Tables"))
     async def list_rba_tables(
         category: RbaCategoryFilter | None = None,
         include_discontinued: bool = False,
     ) -> list[dict]:
-        """List curated RBA statistical tables."""
+        """Deprecated compatibility alias. Prefer list_catalogue(source="rba")."""
         return await app_service.list_rba_tables(
             category=category,
             include_discontinued=include_discontinued,
         )
 
     @mcp.tool(
-        annotations={"readOnlyHint": True, "openWorldHint": True},
+        annotations=_tool_annotations("Get RBA Table"),
         output_schema=response_output_schema(),
     )
     async def get_rba_table(
@@ -338,7 +382,7 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
         end_date: IsoDate | None = None,
         last_n: PositiveInt | None = None,
     ) -> dict:
-        """Fetch an RBA statistical table in a normalised response shape."""
+        """Expert/source-native RBA statistical table retrieval in a normalised response shape."""
         return await app_service.get_rba_table(
             table_id=table_id,
             series_ids=series_ids,
@@ -348,7 +392,7 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
         )
 
     @mcp.tool(
-        annotations={"readOnlyHint": True, "openWorldHint": True},
+        annotations=_tool_annotations("Get Economic Series"),
         output_schema=response_output_schema(),
     )
     async def get_economic_series(
@@ -360,9 +404,11 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
         end: SemanticStartEnd | None = None,
         last_n: PositiveInt | None = None,
     ) -> dict:
-        """Resolve an economic concept to an ABS or RBA retrieval, optionally narrowing by
-        variant, geography, and frequency. Use ``last_n`` to cap observations to the most
-        recent N."""
+        """Preferred analyst-facing retrieval tool for curated ABS/RBA economic concepts.
+
+        Use list_economic_concepts for discovery. Date bounds accept YYYY, YYYY-QN,
+        YYYY-SN, YYYY-MM, or YYYY-MM-DD and are normalised to the resolved source.
+        """
         return await app_service.get_economic_series(
             concept=concept,
             variant=variant,
@@ -377,6 +423,40 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
     register_prompts(mcp)
 
     return mcp
+
+
+def _stamp_semantic_metadata(
+    payload: dict,
+    concept: str,
+    resolved: Any,
+    bounds: NormalisedSemanticBounds,
+) -> None:
+    target = {
+        "source": resolved.source,
+        "dataset_id": resolved.dataset_id,
+        "upstream_id": (
+            resolve_abs_dataflow_id(resolved.dataset_id)
+            if resolved.source == "abs"
+            else resolved.dataset_id
+        ),
+        "abs_key": resolved.abs_key,
+        "rba_series_ids": resolved.rba_series_ids,
+    }
+    payload.setdefault("metadata", {})["semantic"] = {
+        "concept": concept,
+        "variant": resolved.variant,
+        "geography": resolved.geography,
+        "frequency": resolved.frequency or resolved.entry.get("frequency"),
+        "requested_bounds": {
+            "start": bounds.requested_start,
+            "end": bounds.requested_end,
+        },
+        "resolved_bounds": {
+            "start": bounds.start,
+            "end": bounds.end,
+        },
+        "target": target,
+    }
 
 
 mcp = build_server()

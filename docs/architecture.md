@@ -1,8 +1,9 @@
 # Architecture
 
 `ausecon-mcp-server` is a thin FastMCP surface over curated ABS and RBA retrieval layers.
-The server stays deliberately narrow: it exposes discovery, retrieval, and a small semantic
-shortcut layer, but it does not try to become a generic analytics engine.
+The server stays deliberately narrow: it exposes model-controlled concept discovery,
+source-native discovery, retrieval, and a small semantic shortcut layer, but it does not try to
+become a generic analytics engine.
 
 ## Layers
 
@@ -12,6 +13,8 @@ shortcut layer, but it does not try to become a generic analytics engine.
 - `src/ausecon_mcp/parsers/`: Pure payload normalisers from upstream CSV/XML into the shared response shape.
 - `src/ausecon_mcp/filters.py`: Shared client-side filtering for `last_n`, date windows, and series pruning.
 - `src/ausecon_mcp/resources.py` and `src/ausecon_mcp/prompts.py`: Read-only MCP resources and prompt templates.
+- `src/ausecon_mcp/bounds.py`: Semantic-only date-bound normalisation from analyst inputs to
+  ABS periods or RBA ISO dates.
 
 ## Retrieval Flow
 
@@ -21,6 +24,9 @@ shortcut layer, but it does not try to become a generic analytics engine.
 4. A parser converts the raw response into `{metadata, series, observations}`.
 5. Shared filtering trims the response and prunes unused series.
 6. Providers stamp provenance fields such as `retrieval_url`, `retrieved_at`, and `server_version`.
+
+For `get_economic_series`, analyst-friendly `start` and `end` values are normalised after semantic
+resolution. Raw ABS/RBA tools deliberately keep source-native date conventions.
 
 ## Scope Boundaries
 

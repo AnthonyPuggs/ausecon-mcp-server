@@ -75,6 +75,85 @@
         },
         "bundle": {
           "type": ["string", "array", "object", "null"]
+        },
+        "semantic": {
+          "description": "Semantic concept provenance when returned by get_economic_series.",
+          "$ref": "#/$defs/semantic_metadata"
+        }
+      }
+    },
+    "semantic_bounds": {
+      "type": "object",
+      "required": ["start", "end"],
+      "additionalProperties": false,
+      "properties": {
+        "start": {
+          "type": ["string", "null"]
+        },
+        "end": {
+          "type": ["string", "null"]
+        }
+      }
+    },
+    "semantic_target": {
+      "type": "object",
+      "required": ["source", "dataset_id", "upstream_id", "abs_key", "rba_series_ids"],
+      "additionalProperties": false,
+      "properties": {
+        "source": {
+          "type": "string",
+          "enum": ["abs", "rba"]
+        },
+        "dataset_id": {
+          "type": "string"
+        },
+        "upstream_id": {
+          "type": "string"
+        },
+        "abs_key": {
+          "type": ["string", "null"]
+        },
+        "rba_series_ids": {
+          "type": ["array", "null"],
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "semantic_metadata": {
+      "type": "object",
+      "required": [
+        "concept",
+        "variant",
+        "geography",
+        "frequency",
+        "requested_bounds",
+        "resolved_bounds",
+        "target"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "concept": {
+          "type": "string"
+        },
+        "variant": {
+          "type": ["string", "null"]
+        },
+        "geography": {
+          "type": ["string", "null"]
+        },
+        "frequency": {
+          "type": ["string", "null"]
+        },
+        "requested_bounds": {
+          "$ref": "#/$defs/semantic_bounds"
+        },
+        "resolved_bounds": {
+          "$ref": "#/$defs/semantic_bounds"
+        },
+        "target": {
+          "$ref": "#/$defs/semantic_target"
         }
       }
     },

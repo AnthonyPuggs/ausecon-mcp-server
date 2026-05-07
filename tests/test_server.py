@@ -277,6 +277,63 @@ async def test_service_forwards_default_abs_key_for_gdp_growth() -> None:
 
 
 @pytest.mark.asyncio
+async def test_service_normalises_semantic_abs_iso_bounds_for_quarterly_concept() -> None:
+    abs_provider = StubABSProvider()
+    service = AuseconService(abs_provider=abs_provider, rba_provider=StubRBAProvider())
+
+    result = await service.get_economic_series(
+        "gdp_growth",
+        start="2020-01-01",
+        end="2024-06-30",
+    )
+
+    assert abs_provider.last_get_data_kwargs is not None
+    assert abs_provider.last_get_data_kwargs["start_period"] == "2020-Q1"
+    assert abs_provider.last_get_data_kwargs["end_period"] == "2024-Q2"
+    assert result["metadata"]["semantic"]["concept"] == "gdp_growth"
+    assert result["metadata"]["semantic"]["requested_bounds"] == {
+        "start": "2020-01-01",
+        "end": "2024-06-30",
+    }
+    assert result["metadata"]["semantic"]["resolved_bounds"] == {
+        "start": "2020-Q1",
+        "end": "2024-Q2",
+    }
+
+
+@pytest.mark.asyncio
+async def test_service_normalises_semantic_abs_quarter_bounds_for_monthly_concept() -> None:
+    abs_provider = StubABSProvider()
+    service = AuseconService(abs_provider=abs_provider, rba_provider=StubRBAProvider())
+
+    await service.get_economic_series("trade_balance", start="2020-Q1", end="2020-Q2")
+
+    assert abs_provider.last_get_data_kwargs is not None
+    assert abs_provider.last_get_data_kwargs["start_period"] == "2020-01"
+    assert abs_provider.last_get_data_kwargs["end_period"] == "2020-06"
+
+
+@pytest.mark.asyncio
+async def test_service_normalises_semantic_rba_coarse_bounds_to_iso_dates() -> None:
+    rba = StubRBAProvider()
+    service = AuseconService(abs_provider=StubABSProvider(), rba_provider=rba)
+
+    result = await service.get_economic_series(
+        "cash_rate_target",
+        start="2020-Q1",
+        end="2020-02",
+    )
+
+    assert rba.last_get_table_kwargs is not None
+    assert rba.last_get_table_kwargs["start_date"] == "2020-01-01"
+    assert rba.last_get_table_kwargs["end_date"] == "2020-02-29"
+    assert result["metadata"]["semantic"]["resolved_bounds"] == {
+        "start": "2020-01-01",
+        "end": "2020-02-29",
+    }
+
+
+@pytest.mark.asyncio
 async def test_service_rejects_removed_runtime_rba_variant() -> None:
     service = AuseconService(abs_provider=StubABSProvider(), rba_provider=StubRBAProvider())
 
@@ -369,18 +426,10 @@ async def test_service_rejects_invalid_rba_iso_dates() -> None:
 
 
 @pytest.mark.asyncio
-async def test_service_rejects_invalid_semantic_rba_dates_after_resolution() -> None:
+async def test_service_rejects_invalid_semantic_bounds_after_resolution() -> None:
     service = AuseconService(abs_provider=StubABSProvider(), rba_provider=StubRBAProvider())
 
-    with pytest.raises(ValueError, match="ISO"):
-        await service.get_economic_series("cash_rate_target", start="2024-Q1")
-
-
-@pytest.mark.asyncio
-async def test_service_rejects_invalid_semantic_abs_periods_after_resolution() -> None:
-    service = AuseconService(abs_provider=StubABSProvider(), rba_provider=StubRBAProvider())
-
-    with pytest.raises(ValueError, match="ABS period"):
+    with pytest.raises(ValueError, match="YYYY"):
         await service.get_economic_series("headline_cpi", start="2024/01")
 
 
@@ -546,6 +595,27 @@ async def test_list_catalogue_rejects_unknown_source() -> None:
 
 
 @pytest.mark.asyncio
+async def test_list_economic_concepts_filters_and_recommends_calls() -> None:
+    service = AuseconService(abs_provider=StubABSProvider(), rba_provider=StubRBAProvider())
+
+    rows = await service.list_economic_concepts(
+        query="cash",
+        source="rba",
+        category="monetary_policy",
+    )
+
+    assert rows
+    assert rows[0]["concept"] == "cash_rate_target"
+    assert rows[0]["source"] == "rba"
+    assert rows[0]["dataset_id"] == "a2"
+    assert rows[0]["variant"] == "target"
+    assert rows[0]["recommended_call"] == {
+        "tool": "get_economic_series",
+        "arguments": {"concept": "cash_rate_target"},
+    }
+
+
+@pytest.mark.asyncio
 async def test_service_forwards_last_n_to_abs_provider_for_semantic_call() -> None:
     abs_provider = StubABSProvider()
     service = AuseconService(abs_provider=abs_provider, rba_provider=StubRBAProvider())
@@ -663,6 +733,7 @@ async def test_registered_tools_carry_readonly_and_openworld_annotations() -> No
     for tool in tools:
         annotations = tool.annotations
         assert annotations is not None, f"{tool.name} has no annotations"
+        assert annotations.title, f"{tool.name} missing human-readable title"
         assert annotations.readOnlyHint is True, f"{tool.name} missing readOnlyHint"
         assert annotations.openWorldHint is True, f"{tool.name} missing openWorldHint"
 
@@ -676,6 +747,10 @@ async def test_registered_tools_expose_input_schema_constraints_and_descriptions
     source_schema = tools["search_datasets"].inputSchema["properties"]["source"]
     assert _has_string_enum(source_schema, ["abs", "rba"])
     assert _has_schema_description(source_schema)
+
+    concepts_source_schema = tools["list_economic_concepts"].inputSchema["properties"]["source"]
+    assert _has_string_enum(concepts_source_schema, ["abs", "rba"])
+    assert "economic concepts" in tools["list_economic_concepts"].description
 
     last_n_schema = tools["get_abs_data"].inputSchema["properties"]["last_n"]
     assert _has_integer_minimum(last_n_schema, 1)
@@ -704,8 +779,8 @@ async def test_registered_tools_expose_input_schema_constraints_and_descriptions
     assert _has_string_enum(category_schema, expected_categories)
 
     semantic_start_schema = tools["get_economic_series"].inputSchema["properties"]["start"]
-    assert "ABS period" in str(semantic_start_schema)
-    assert "ISO date" in str(semantic_start_schema)
+    assert "YYYY-QN" in str(semantic_start_schema)
+    assert "YYYY-MM-DD" in str(semantic_start_schema)
 
 
 async def test_retrieval_tools_expose_response_output_schema() -> None:

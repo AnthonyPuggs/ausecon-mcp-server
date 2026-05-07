@@ -67,6 +67,8 @@ async def test_response_schema_validates_semantic_payload() -> None:
 
         payload = await service.get_economic_series("cash_rate_target", last_n=4)
 
+    assert payload["metadata"]["semantic"]["concept"] == "cash_rate_target"
+    assert payload["metadata"]["semantic"]["target"]["dataset_id"] == "a2"
     _assert_valid(payload)
 
 
@@ -93,3 +95,4 @@ def test_response_schema_documents_contract_and_abs_metadata_fields() -> None:
     assert series_properties["base_period"]["type"] == ["string", "null"]
     assert observation_properties["date"]["oneOf"]
     assert observation_properties["comment"]["type"] == ["string", "null"]
+    assert "semantic" in schema["$defs"]["metadata"]["properties"]

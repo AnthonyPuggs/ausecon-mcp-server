@@ -32,6 +32,7 @@ from ausecon_mcp.errors import AuseconValidationError
 
 _FRAGMENT_PIECE_RE = re.compile(r"^([A-Z_][A-Z0-9_]*)=([0-9A-Z_+]+)$")
 _LITERAL_KEY_RE = re.compile(r"^[0-9A-Z_+]+(\.[0-9A-Z_+]+)*$")
+_TOKEN_RE = re.compile(r"[a-z0-9]+")
 
 
 def resolve_abs_dataflow_id(dataflow_id: str) -> str:
@@ -134,6 +135,81 @@ CURATED_SHORTCUTS: dict[str, dict[str, Any]] = {
     },
     "commodity_prices": {"source": "rba", "dataset_id": "i2", "variant": "rba_commodity_index"},
 }
+
+
+def list_economic_concepts(
+    *,
+    query: str | None = None,
+    source: str | None = None,
+    category: str | None = None,
+) -> list[dict[str, Any]]:
+    """Return model-controlled discovery rows for semantic shortcuts."""
+    query_terms = set(_tokens(query or ""))
+    rows = []
+    for concept in sorted(CURATED_SHORTCUTS):
+        shortcut = CURATED_SHORTCUTS[concept]
+        shortcut_source = shortcut["source"]
+        if source is not None and shortcut_source != source:
+            continue
+
+        dataset_id = shortcut["dataset_id"]
+        catalogue = ABS_CATALOGUE if shortcut_source == "abs" else RBA_CATALOGUE
+        entry = catalogue[dataset_id]
+        if category is not None and entry.get("category") != category:
+            continue
+
+        variant_name = shortcut.get("variant")
+        variant = _match_variant(entry, variant_name) if variant_name else None
+        aliases = _concept_aliases(concept, entry, variant)
+        haystack = " ".join(
+            [
+                concept.replace("_", " "),
+                entry.get("name", ""),
+                entry.get("description", ""),
+                entry.get("category", ""),
+                " ".join(entry.get("tags", [])),
+                " ".join(aliases),
+            ]
+        )
+        if query_terms and not query_terms <= set(_tokens(haystack)):
+            continue
+
+        rows.append(
+            {
+                "concept": concept,
+                "source": shortcut_source,
+                "dataset_id": dataset_id,
+                "variant": variant_name,
+                "category": entry.get("category"),
+                "frequency": entry.get("frequency"),
+                "frequencies": list(entry.get("frequencies", [])),
+                "geographies": list(entry.get("geographies", [])),
+                "description": entry.get("description"),
+                "aliases": aliases,
+                "recommended_call": {
+                    "tool": "get_economic_series",
+                    "arguments": {"concept": concept},
+                },
+            }
+        )
+    return rows
+
+
+def _concept_aliases(
+    concept: str,
+    entry: dict[str, Any],
+    variant: dict[str, Any] | None,
+) -> list[str]:
+    aliases = {concept.replace("_", " ")}
+    aliases.update(entry.get("aliases", []))
+    if variant is not None:
+        aliases.add(variant["name"].replace("_", " "))
+        aliases.update(variant.get("aliases", []))
+    return sorted(alias for alias in aliases if alias)
+
+
+def _tokens(value: str) -> list[str]:
+    return _TOKEN_RE.findall(value.lower())
 
 
 @dataclass(frozen=True)
