@@ -12,3 +12,5 @@ build/
 htmlcov/
 docs-site/node_modules/
 docs-site/dist/
+README.html
+README_files/

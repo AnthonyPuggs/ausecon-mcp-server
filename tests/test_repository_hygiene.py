@@ -251,7 +251,8 @@ def test_smithery_dockerfile_uses_multistage_non_root_runtime_without_git_copy()
 
     assert "FROM python:3.12-slim AS builder" in dockerfile_text
     assert "FROM python:3.12-slim AS runtime" in dockerfile_text
-    assert "ARG AUSECON_VERSION=0.0.0+smithery" in dockerfile_text
+    assert "ARG AUSECON_VERSION=" in dockerfile_text
+    assert "server.json" in dockerfile_text
     assert "SETUPTOOLS_SCM_PRETEND_VERSION_FOR_AUSECON_MCP_SERVER" in dockerfile_text
     assert "apt-get install --yes --no-install-recommends git" in dockerfile_text
     assert "uv build --wheel --out-dir /dist" in dockerfile_text
@@ -274,6 +275,8 @@ def test_dockerignore_keeps_git_for_smithery_builder_but_excludes_local_state() 
     assert ".venv/" in ignored
     assert ".worktrees/" in ignored
     assert "docs-site/node_modules/" in ignored
+    assert "README.html" in ignored
+    assert "README_files/" in ignored
 
 
 def test_release_workflow_builds_container_from_pypi_release_artifact() -> None:

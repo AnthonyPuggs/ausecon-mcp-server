@@ -75,7 +75,8 @@ Smithery:
 This repository also includes `smithery.yaml` and `Dockerfile.smithery` for hosted Smithery custom
 container deployment over MCP Streamable HTTP at `/mcp`. The hosted HTTP entrypoint is
 `ausecon-mcp-http`; local users should keep using the stdio command above unless they are testing a
-container deployment.
+container deployment. Maintainers can follow the deployment checklist in
+[`docs/smithery-deployment.md`](docs/smithery-deployment.md).
 
 ## Basic Workflow
 

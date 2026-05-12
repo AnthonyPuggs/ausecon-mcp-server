@@ -14,11 +14,11 @@ RUN pip install --no-cache-dir "uv>=0.5"
 WORKDIR /build
 COPY . .
 
-ARG AUSECON_VERSION=0.0.0+smithery
-ENV SETUPTOOLS_SCM_PRETEND_VERSION=${AUSECON_VERSION} \
-    SETUPTOOLS_SCM_PRETEND_VERSION_FOR_AUSECON_MCP_SERVER=${AUSECON_VERSION}
-
-RUN uv build --wheel --out-dir /dist
+ARG AUSECON_VERSION=
+RUN resolved_version="${AUSECON_VERSION:-$(python -c 'import json; print(json.load(open("server.json", encoding="utf-8"))["version"])')}" \
+    && SETUPTOOLS_SCM_PRETEND_VERSION="${resolved_version}" \
+       SETUPTOOLS_SCM_PRETEND_VERSION_FOR_AUSECON_MCP_SERVER="${resolved_version}" \
+       uv build --wheel --out-dir /dist
 
 FROM python:3.12-slim AS runtime
 
