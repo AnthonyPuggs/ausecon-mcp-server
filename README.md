@@ -6,7 +6,7 @@
 [![Release](https://img.shields.io/github/v/tag/AnthonyPuggs/ausecon-mcp-server?sort=semver&label=release)](https://github.com/AnthonyPuggs/ausecon-mcp-server/tags)
 [![Docs](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://anthonypuggs.github.io/ausecon-mcp-server/)
 [![PyPI](https://img.shields.io/pypi/v/ausecon-mcp-server?label=PyPI)](https://pypi.org/project/ausecon-mcp-server/)
-[![Transport](https://img.shields.io/badge/Transport-stdio-blue)]()
+[![Transport](https://img.shields.io/badge/Transport-stdio%20%2B%20HTTP-blue)]()
 [![License-MIT](https://img.shields.io/badge/License-MIT-lightgrey)]()
 
 `ausecon-mcp-server` is a Python Model Context Protocol (MCP) server for structured Australian
@@ -69,6 +69,13 @@ Codex:
 ```bash
 codex mcp add ausecon -- uvx ausecon-mcp-server
 ```
+
+Smithery:
+
+This repository also includes `smithery.yaml` and `Dockerfile.smithery` for hosted Smithery custom
+container deployment over MCP Streamable HTTP at `/mcp`. The hosted HTTP entrypoint is
+`ausecon-mcp-http`; local users should keep using the stdio command above unless they are testing a
+container deployment.
 
 ## Basic Workflow
 

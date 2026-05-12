@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+import os
 from typing import Annotated, Any, Literal
 
 from fastmcp import FastMCP
 from pydantic import Field
+from starlette.middleware import Middleware
+from starlette.middleware.cors import CORSMiddleware
 
 from ausecon_mcp.bounds import NormalisedSemanticBounds, normalise_semantic_bounds
 from ausecon_mcp.catalogue.resolver import (
@@ -33,6 +36,7 @@ from ausecon_mcp.validation import (
     validate_search_query,
     validate_series_ids,
     validate_source,
+    validate_source_token,
 )
 
 ABS_PERIOD_PATTERN = r"^(\d{4}|\d{4}-Q[1-4]|\d{4}-(0[1-9]|1[0-2])|\d{4}-S[1-2])$"
@@ -150,7 +154,7 @@ class AuseconService:
         )
 
     async def get_abs_dataset_structure(self, dataflow_id: str) -> dict:
-        validated_dataflow_id = require_non_empty("dataflow_id", dataflow_id)
+        validated_dataflow_id = validate_source_token("dataflow_id", dataflow_id)
         structure_id = resolve_abs_structure_id(validated_dataflow_id)
         if structure_id == validated_dataflow_id:
             structure_id = resolve_abs_dataflow_id(validated_dataflow_id)
@@ -165,8 +169,8 @@ class AuseconService:
         last_n: int | None = None,
         updated_after: str | None = None,
     ) -> dict:
-        validated_dataflow_id = require_non_empty("dataflow_id", dataflow_id)
-        validated_key = require_non_empty("key", key)
+        validated_dataflow_id = validate_source_token("dataflow_id", dataflow_id)
+        validated_key = validate_source_token("key", key)
         validated_start_period, validated_end_period = validate_abs_period_range(
             start_period,
             end_period,
@@ -204,7 +208,7 @@ class AuseconService:
         end_date: str | None = None,
         last_n: int | None = None,
     ) -> dict:
-        validated_table_id = require_non_empty("table_id", table_id)
+        validated_table_id = validate_source_token("table_id", table_id)
         validated_series_ids = validate_series_ids(series_ids)
         validated_start_date, validated_end_date = validate_iso_date_range(
             start_date,
@@ -462,7 +466,46 @@ def _stamp_semantic_metadata(
 mcp = build_server()
 
 
+def resolve_http_port() -> int:
+    raw_port = os.environ.get("PORT", "8081")
+    try:
+        port = int(raw_port)
+    except ValueError as exc:
+        raise ValueError("PORT must be an integer between 1 and 65535.") from exc
+    if not 1 <= port <= 65535:
+        raise ValueError("PORT must be an integer between 1 and 65535.")
+    return port
+
+
+def build_http_middleware() -> list[Middleware]:
+    return [
+        Middleware(
+            CORSMiddleware,
+            allow_origins=["*"],
+            allow_credentials=False,
+            allow_methods=["GET", "POST", "DELETE", "OPTIONS"],
+            allow_headers=["*"],
+            expose_headers=["mcp-session-id", "mcp-protocol-version"],
+            max_age=86400,
+        )
+    ]
+
+
 def main() -> None:
     configure_logging()
     get_logger("server").info("server.start")
     mcp.run()
+
+
+def main_http() -> None:
+    configure_logging()
+    get_logger("server").info("server.start", extra={"transport": "streamable-http"})
+    mcp.run(
+        transport="streamable-http",
+        host="0.0.0.0",
+        port=resolve_http_port(),
+        path="/mcp",
+        middleware=build_http_middleware(),
+        show_banner=False,
+        uvicorn_config={"access_log": False},
+    )

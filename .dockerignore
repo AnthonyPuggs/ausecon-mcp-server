@@ -1,0 +1,14 @@
+.venv/
+.worktrees/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+__pycache__/
+*.py[cod]
+dist/
+build/
+*.egg-info/
+.coverage
+htmlcov/
+docs-site/node_modules/
+docs-site/dist/

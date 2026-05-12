@@ -17,6 +17,24 @@ Set `AUSECON_LOG_LEVEL` to control logging for the `ausecon_mcp` namespace:
 | --- | --- | --- |
 | `AUSECON_LOG_LEVEL` | Logger level: `DEBUG`, `INFO`, `WARNING`, or `ERROR`. | `INFO` |
 
+For Smithery HTTP containers, Uvicorn access logs are disabled by default. Application logs still go
+to stderr and should not contain request bodies or session configuration.
+
+## HTTP safety
+
+The Smithery container exposes MCP Streamable HTTP at `/mcp`. It is suitable for public deployment
+only because all tools are read-only and retrieve public ABS/RBA data from fixed upstream hosts.
+
+Key safety constraints:
+
+- Local users should prefer stdio. If testing HTTP locally, bind to `127.0.0.1`, not a public
+  interface.
+- The Smithery entrypoint binds `0.0.0.0` only inside the container so the platform can route to it.
+- CORS is wildcard but non-credentialed; `mcp-session-id` is transport state, not authentication.
+- Source-native identifiers reject URL and path characters before provider URL construction.
+- Large unauthenticated requests remain the main residual risk, so callers should prefer `last_n`
+  or explicit date bounds for broad datasets.
+
 ## Cache
 
 Upstream responses are cached in memory and on disk. Repeated calls can reuse payloads across
