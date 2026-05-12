@@ -47,7 +47,22 @@ from ausecon_mcp.validation import (
 ABS_PERIOD_PATTERN = r"^(\d{4}|\d{4}-Q[1-4]|\d{4}-(0[1-9]|1[0-2])|\d{4}-S[1-2])$"
 HOMEPAGE_URL = "https://anthonypuggs.github.io/ausecon-mcp-server/"
 SERVER_ICON_URL = f"{HOMEPAGE_URL}ausecon-icon.svg"
-SERVER_DESCRIPTION = "Australian economic data from the RBA and ABS via MCP."
+SERVER_DISPLAY_NAME = "AusEcon MCP Server"
+SERVER_DESCRIPTION = (
+    "Australian economic data from the Reserve Bank of Australia and "
+    "Australian Bureau of Statistics via MCP."
+)
+SERVER_LICENSE = "MIT"
+TOOL_TITLES = {
+    "search_datasets": "Search Datasets",
+    "list_catalogue": "List Catalogue",
+    "list_economic_concepts": "List Economic Concepts",
+    "get_abs_dataset_structure": "Get ABS Dataset Structure",
+    "get_abs_data": "Get ABS Data",
+    "list_rba_tables": "List RBA Tables",
+    "get_rba_table": "Get RBA Table",
+    "get_economic_series": "Get Economic Series",
+}
 SearchQuery = Annotated[str, Field(min_length=1, description="Discovery query text.")]
 Identifier = Annotated[str, Field(min_length=1, description="Non-empty dataset or table id.")]
 AbsKey = Annotated[
@@ -405,6 +420,7 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
     )
 
     @mcp.tool(
+        title=TOOL_TITLES["search_datasets"],
         annotations=_tool_annotations("Search Datasets"),
         output_schema=_list_output_schema("Ranked ABS and RBA catalogue search results."),
     )
@@ -416,6 +432,7 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
         return await app_service.search_datasets(query=query, source=source)
 
     @mcp.tool(
+        title=TOOL_TITLES["list_catalogue"],
         annotations=_tool_annotations("List Catalogue"),
         output_schema=_list_output_schema("Curated ABS and RBA catalogue entries."),
     )
@@ -437,6 +454,7 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
         )
 
     @mcp.tool(
+        title=TOOL_TITLES["list_economic_concepts"],
         annotations=_tool_annotations("List Economic Concepts"),
         output_schema=_list_output_schema("Curated semantic economic concepts."),
     )
@@ -453,6 +471,7 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
         )
 
     @mcp.tool(
+        title=TOOL_TITLES["get_abs_dataset_structure"],
         annotations=_tool_annotations("Get ABS Dataset Structure"),
         output_schema=_abs_structure_output_schema(),
     )
@@ -461,6 +480,7 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
         return await app_service.get_abs_dataset_structure(dataflow_id=dataflow_id)
 
     @mcp.tool(
+        title=TOOL_TITLES["get_abs_data"],
         annotations=_tool_annotations("Get ABS Data"),
         output_schema=response_output_schema(),
     )
@@ -483,6 +503,7 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
         )
 
     @mcp.tool(
+        title=TOOL_TITLES["list_rba_tables"],
         annotations=_tool_annotations("List RBA Tables"),
         output_schema=_list_output_schema("Curated RBA table catalogue entries."),
     )
@@ -497,6 +518,7 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
         )
 
     @mcp.tool(
+        title=TOOL_TITLES["get_rba_table"],
         annotations=_tool_annotations("Get RBA Table"),
         output_schema=response_output_schema(),
     )
@@ -517,6 +539,7 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
         )
 
     @mcp.tool(
+        title=TOOL_TITLES["get_economic_series"],
         annotations=_tool_annotations("Get Economic Series"),
         output_schema=response_output_schema(),
     )
@@ -616,9 +639,12 @@ async def http_root(_request: Request) -> JSONResponse:
     return JSONResponse(
         {
             "name": "ausecon-mcp-server",
+            "displayName": SERVER_DISPLAY_NAME,
             "description": SERVER_DESCRIPTION,
             "homepage": HOMEPAGE_URL,
+            "iconUrl": SERVER_ICON_URL,
             "icon": SERVER_ICON_URL,
+            "license": SERVER_LICENSE,
             "mcp_endpoint": "/mcp",
             "server_card": "/.well-known/mcp/server-card.json",
             "health": "/healthz",
@@ -630,6 +656,13 @@ async def http_healthz(_request: Request) -> JSONResponse:
     return JSONResponse({"status": "ok"})
 
 
+def _json_metadata(value: Any) -> Any:
+    model_dump = getattr(value, "model_dump", None)
+    if callable(model_dump):
+        return model_dump(mode="json", exclude_none=True)
+    return value
+
+
 async def build_server_card_response(server: FastMCP) -> JSONResponse:
     tools = await server.list_tools(run_middleware=False)
     return JSONResponse(
@@ -638,9 +671,10 @@ async def build_server_card_response(server: FastMCP) -> JSONResponse:
                 "name": "ausecon-mcp-server",
                 "version": resolve_version(),
             },
-            "displayName": "AusEcon MCP Server",
+            "displayName": SERVER_DISPLAY_NAME,
             "description": SERVER_DESCRIPTION,
             "homepage": HOMEPAGE_URL,
+            "iconUrl": SERVER_ICON_URL,
             "icons": [
                 {
                     "src": SERVER_ICON_URL,
@@ -648,14 +682,19 @@ async def build_server_card_response(server: FastMCP) -> JSONResponse:
                     "sizes": ["64x64"],
                 }
             ],
+            "license": SERVER_LICENSE,
             "authentication": {
                 "required": False,
             },
             "tools": [
                 {
                     "name": tool.name,
+                    "title": tool.title
+                    or TOOL_TITLES.get(tool.name, tool.name.replace("_", " ").title()),
                     "description": tool.description or "",
                     "inputSchema": tool.parameters,
+                    "outputSchema": tool.output_schema,
+                    "annotations": _json_metadata(tool.annotations) or {},
                 }
                 for tool in tools
             ],

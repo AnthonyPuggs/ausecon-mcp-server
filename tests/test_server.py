@@ -6,6 +6,17 @@ from starlette.testclient import TestClient
 import ausecon_mcp.server as server_module
 from ausecon_mcp.server import AuseconService, build_server
 
+EXPECTED_TOOL_TITLES = {
+    "search_datasets": "Search Datasets",
+    "list_catalogue": "List Catalogue",
+    "list_economic_concepts": "List Economic Concepts",
+    "get_abs_dataset_structure": "Get ABS Dataset Structure",
+    "get_abs_data": "Get ABS Data",
+    "list_rba_tables": "List RBA Tables",
+    "get_rba_table": "Get RBA Table",
+    "get_economic_series": "Get Economic Series",
+}
+
 
 def _walk_schema(schema):
     if isinstance(schema, dict):
@@ -244,16 +255,27 @@ def test_http_app_exposes_smithery_static_server_card() -> None:
     assert payload["displayName"] == "AusEcon MCP Server"
     assert "Australian economic data" in payload["description"]
     assert payload["homepage"] == server_module.HOMEPAGE_URL
+    assert payload["iconUrl"] == server_module.SERVER_ICON_URL
     assert payload["icons"][0]["src"] == server_module.SERVER_ICON_URL
+    assert payload["license"] == "MIT"
     assert payload["authentication"] == {"required": False}
-    tool_names = {tool["name"] for tool in payload["tools"]}
-    assert {
-        "list_economic_concepts",
-        "get_economic_series",
-        "search_datasets",
-        "get_abs_data",
-        "get_rba_table",
-    } <= tool_names
+    tools = {tool["name"]: tool for tool in payload["tools"]}
+    assert set(tools) == set(EXPECTED_TOOL_TITLES)
+
+    for name, title in EXPECTED_TOOL_TITLES.items():
+        tool = tools[name]
+        assert tool["title"] == title
+        assert tool["description"], f"{name} missing description"
+        assert tool["inputSchema"]["type"] == "object"
+        assert tool["outputSchema"]["type"] == "object"
+        assert tool["annotations"]["title"] == title
+        assert tool["annotations"]["readOnlyHint"] is True
+        assert tool["annotations"]["destructiveHint"] is False
+        assert tool["annotations"]["idempotentHint"] is True
+        assert tool["annotations"]["openWorldHint"] is True
+
+        for parameter, schema in tool["inputSchema"].get("properties", {}).items():
+            assert schema.get("description"), f"{name}.{parameter} missing description"
 
 
 @pytest.mark.asyncio
@@ -955,6 +977,16 @@ async def test_registered_tools_carry_readonly_and_openworld_annotations() -> No
         assert annotations.destructiveHint is False, f"{tool.name} missing destructiveHint"
         assert annotations.idempotentHint is True, f"{tool.name} missing idempotentHint"
         assert annotations.openWorldHint is True, f"{tool.name} missing openWorldHint"
+
+
+async def test_registered_tools_expose_top_level_titles_for_hosted_registries() -> None:
+    mcp = build_server()
+
+    tools = {tool.name: tool for tool in await mcp.list_tools(run_middleware=False)}
+
+    assert set(tools) == set(EXPECTED_TOOL_TITLES)
+    for name, title in EXPECTED_TOOL_TITLES.items():
+        assert tools[name].title == title
 
 
 def test_server_metadata_is_complete_for_hosted_registries() -> None:
