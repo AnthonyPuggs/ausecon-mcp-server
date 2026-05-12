@@ -3,10 +3,13 @@ from __future__ import annotations
 import os
 from typing import Annotated, Any, Literal
 
+import uvicorn
 from fastmcp import FastMCP
 from pydantic import Field
 from starlette.middleware import Middleware
 from starlette.middleware.cors import CORSMiddleware
+from starlette.requests import Request
+from starlette.responses import JSONResponse
 
 from ausecon_mcp.bounds import NormalisedSemanticBounds, normalise_semantic_bounds
 from ausecon_mcp.catalogue.resolver import (
@@ -23,6 +26,7 @@ from ausecon_mcp.catalogue.search import search_catalogue
 from ausecon_mcp.contracts import response_output_schema
 from ausecon_mcp.logging import configure_logging, get_logger
 from ausecon_mcp.prompts import register_prompts
+from ausecon_mcp.providers._http import resolve_version
 from ausecon_mcp.providers.abs import ABSProvider
 from ausecon_mcp.providers.rba import RBAProvider
 from ausecon_mcp.resources import register_resources
@@ -491,6 +495,72 @@ def build_http_middleware() -> list[Middleware]:
     ]
 
 
+async def http_root(_request: Request) -> JSONResponse:
+    return JSONResponse(
+        {
+            "name": "ausecon-mcp-server",
+            "description": "Australian economic data MCP server for public ABS and RBA data.",
+            "mcp_endpoint": "/mcp",
+            "server_card": "/.well-known/mcp/server-card.json",
+            "health": "/healthz",
+        }
+    )
+
+
+async def http_healthz(_request: Request) -> JSONResponse:
+    return JSONResponse({"status": "ok"})
+
+
+async def build_server_card_response(server: FastMCP) -> JSONResponse:
+    tools = await server.list_tools(run_middleware=False)
+    return JSONResponse(
+        {
+            "serverInfo": {
+                "name": "ausecon-mcp-server",
+                "version": resolve_version(),
+            },
+            "authentication": {
+                "required": False,
+            },
+            "tools": [
+                {
+                    "name": tool.name,
+                    "description": tool.description or "",
+                    "inputSchema": tool.parameters,
+                }
+                for tool in tools
+            ],
+            "resources": [],
+            "prompts": [],
+        }
+    )
+
+
+async def http_server_card(_request: Request) -> JSONResponse:
+    return await build_server_card_response(mcp)
+
+
+def build_http_app(server: FastMCP | None = None):
+    active_server = server or mcp
+    app = active_server.http_app(
+        path="/mcp",
+        transport="streamable-http",
+        middleware=build_http_middleware(),
+    )
+    app.add_route("/", http_root, methods=["GET", "HEAD"])
+    app.add_route("/healthz", http_healthz, methods=["GET", "HEAD"])
+
+    async def server_card(_request: Request) -> JSONResponse:
+        return await build_server_card_response(active_server)
+
+    app.add_route(
+        "/.well-known/mcp/server-card.json",
+        server_card,
+        methods=["GET", "HEAD"],
+    )
+    return app
+
+
 def main() -> None:
     configure_logging()
     get_logger("server").info("server.start")
@@ -500,12 +570,12 @@ def main() -> None:
 def main_http() -> None:
     configure_logging()
     get_logger("server").info("server.start", extra={"transport": "streamable-http"})
-    mcp.run(
-        transport="streamable-http",
+    uvicorn.run(
+        build_http_app(),
         host="0.0.0.0",
         port=resolve_http_port(),
-        path="/mcp",
-        middleware=build_http_middleware(),
-        show_banner=False,
-        uvicorn_config={"access_log": False},
+        access_log=False,
+        timeout_graceful_shutdown=2,
+        lifespan="on",
+        ws="websockets-sansio",
     )

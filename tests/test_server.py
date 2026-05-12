@@ -1,6 +1,7 @@
 import pytest
 from fastmcp import Client
 from starlette.middleware.cors import CORSMiddleware
+from starlette.testclient import TestClient
 
 import ausecon_mcp.server as server_module
 from ausecon_mcp.server import AuseconService, build_server
@@ -190,31 +191,65 @@ def test_http_middleware_configures_non_credentialed_cors() -> None:
 def test_main_http_runs_streamable_http_on_smithery_endpoint(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    fake = FakeMCP()
-    monkeypatch.setattr(server_module, "mcp", fake)
+    calls = {}
+
+    def fake_run(app, **kwargs):
+        calls["app"] = app
+        calls["kwargs"] = kwargs
+
+    monkeypatch.setattr(server_module, "build_http_app", lambda: "http-app")
+    monkeypatch.setattr(server_module.uvicorn, "run", fake_run)
     monkeypatch.setenv("PORT", "9090")
 
     server_module.main_http()
 
-    assert fake.run_kwargs is not None
-    assert fake.run_kwargs["transport"] == "streamable-http"
-    assert fake.run_kwargs["host"] == "0.0.0.0"
-    assert fake.run_kwargs["port"] == 9090
-    assert fake.run_kwargs["path"] == "/mcp"
-    assert fake.run_kwargs["show_banner"] is False
-    assert fake.run_kwargs["uvicorn_config"]["access_log"] is False
-    assert fake.run_kwargs["middleware"]
+    assert calls["app"] == "http-app"
+    assert calls["kwargs"]["host"] == "0.0.0.0"
+    assert calls["kwargs"]["port"] == 9090
+    assert calls["kwargs"]["access_log"] is False
+    assert calls["kwargs"]["lifespan"] == "on"
 
 
 def test_http_app_uses_smithery_mcp_path() -> None:
-    app = build_server().http_app(
-        path="/mcp",
-        transport="streamable-http",
-        middleware=server_module.build_http_middleware(),
-    )
+    app = server_module.build_http_app(build_server())
 
     assert app.state.path == "/mcp"
     assert app.state.transport_type == "streamable-http"
+
+
+def test_http_app_exposes_status_endpoints_for_hosted_publish_flow() -> None:
+    app = server_module.build_http_app(build_server())
+
+    with TestClient(app) as client:
+        root = client.get("/")
+        health = client.get("/healthz")
+
+    assert root.status_code == 200
+    assert root.json()["mcp_endpoint"] == "/mcp"
+    assert root.json()["server_card"] == "/.well-known/mcp/server-card.json"
+    assert health.status_code == 200
+    assert health.json() == {"status": "ok"}
+
+
+def test_http_app_exposes_smithery_static_server_card() -> None:
+    app = server_module.build_http_app(build_server())
+
+    with TestClient(app) as client:
+        response = client.get("/.well-known/mcp/server-card.json")
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["serverInfo"]["name"] == "ausecon-mcp-server"
+    assert payload["serverInfo"]["version"]
+    assert payload["authentication"] == {"required": False}
+    tool_names = {tool["name"] for tool in payload["tools"]}
+    assert {
+        "list_economic_concepts",
+        "get_economic_series",
+        "search_datasets",
+        "get_abs_data",
+        "get_rba_table",
+    } <= tool_names
 
 
 @pytest.mark.asyncio

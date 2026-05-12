@@ -73,6 +73,14 @@ Use the Smithery Playground for smoke tests:
 - `get_economic_series(concept="cash_rate_target", last_n=5)`
 - `search_datasets(query="unemployment rate", source="abs")`
 
+The hosted service also exposes operational endpoints for platforms and
+registries:
+
+- `/` returns a small JSON status document that points clients to `/mcp`.
+- `/healthz` returns `200` for HTTP health checks.
+- `/.well-known/mcp/server-card.json` returns a static server card for Smithery
+  if automatic scanning cannot complete.
+
 Keep the listing private or unlisted until these checks pass, then switch to
 public discovery.
 
@@ -107,6 +115,12 @@ validation and authentication must be implemented before public deployment.
 - Build failure: check whether the failure is in Docker, `uv build`, or runtime
   dependency installation.
 - Scan failure: confirm the path is `/mcp`, not `/`.
+- Browser shows `Not Acceptable: Client must accept text/event-stream`: this is
+  expected for a plain browser request to `/mcp`; use an MCP client or Smithery's
+  scanner instead.
+- Smithery requires parameters even though the server has none: publish with an
+  empty configuration schema if the UI allows it, or rely on the static server
+  card at `/.well-known/mcp/server-card.json`.
 - Missing tools: confirm the container entrypoint is `ausecon-mcp-http`, not the
   stdio command.
 - 403 during scan: check whether any future WAF, bot filter, or Origin guard is
