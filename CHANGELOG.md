@@ -6,6 +6,28 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-05-12
+
+### Added
+- Added `ausecon-mcp-http`, a Streamable HTTP entrypoint for hosted MCP
+  deployments at `/mcp`.
+- Added Smithery custom-container packaging with `smithery.yaml` and
+  `Dockerfile.smithery`.
+- Added HTTP entrypoint, CORS, Smithery metadata, Docker packaging, and
+  source-native identifier validation tests.
+
+### Changed
+- Documented Smithery as an additional hosted transport while preserving stdio
+  as the default local and registry-oriented transport.
+- Raised the FastMCP dependency floor for Streamable HTTP support and added
+  Starlette as a direct dependency for HTTP middleware.
+
+### Security
+- Hardened source-native ABS/RBA identifiers and search inputs before HTTP
+  exposure.
+- Configured HTTP CORS without credentials and documented that the public
+  Smithery design is only appropriate for read-only public-data tools.
+
 ## [1.0.0] - 2026-05-07
 
 ### Added
@@ -407,7 +429,8 @@ Initial public release.
 - Initial curated catalogues for ABS and RBA, plus a four-concept
   `CURATED_SERIES` semantic shortcut map.
 
-[Unreleased]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v0.13.1...v1.0.0
 [0.13.1]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v0.13.0...v0.13.1
 [0.13.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v0.12.1...v0.13.0
