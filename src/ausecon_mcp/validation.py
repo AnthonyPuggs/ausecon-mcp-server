@@ -15,10 +15,25 @@ _ABS_PERIOD_PATTERNS = {
 
 _RBA_CATEGORIES = {entry["category"] for entry in RBA_CATALOGUE.values()}
 _ALLOWED_SOURCES = {"abs", "rba"}
+_MAX_QUERY_LENGTH = 200
+_MAX_SOURCE_TOKEN_LENGTH = 128
+_QUERY_UNSAFE = re.compile(r"[\x00-\x1f\x7f/\\?#]")
+_SOURCE_TOKEN_UNSAFE = re.compile(r"[\x00-\x1f\x7f:/\\?#]")
+_URI_SCHEME = re.compile(r"^[A-Za-z][A-Za-z0-9+.-]*:")
 
 
 def validate_search_query(query: str) -> str:
-    return require_non_empty("query", query)
+    raw = query or ""
+    if _QUERY_UNSAFE.search(raw):
+        raise AuseconValidationError("query must be plain search text, not a URL or path.")
+    normalised = require_non_empty("query", query)
+    if len(normalised) > _MAX_QUERY_LENGTH:
+        raise AuseconValidationError(
+            f"query must be no more than {_MAX_QUERY_LENGTH} characters."
+        )
+    if _URI_SCHEME.match(normalised):
+        raise AuseconValidationError("query must be plain search text, not a URL or path.")
+    return normalised
 
 
 def validate_source(source: str | None) -> str | None:
@@ -50,6 +65,27 @@ def require_non_empty(field_name: str, value: str) -> str:
     return normalised
 
 
+def validate_source_token(
+    field_name: str,
+    value: str,
+    *,
+    max_length: int = _MAX_SOURCE_TOKEN_LENGTH,
+) -> str:
+    raw = value or ""
+    if _SOURCE_TOKEN_UNSAFE.search(raw):
+        raise AuseconValidationError(
+            f"{field_name} contains unsupported URL or path characters."
+        )
+    normalised = require_non_empty(field_name, value)
+    if len(normalised) > max_length:
+        raise AuseconValidationError(f"{field_name} must be no more than {max_length} characters.")
+    if _URI_SCHEME.match(normalised):
+        raise AuseconValidationError(
+            f"{field_name} contains unsupported URL or path characters."
+        )
+    return normalised
+
+
 def validate_positive_int(field_name: str, value: int | None) -> int | None:
     if value is None:
         return None
@@ -62,10 +98,15 @@ def validate_series_ids(series_ids: list[str] | None) -> list[str] | None:
     if series_ids is None:
         return None
 
-    normalised = [series_id.strip() for series_id in series_ids]
-    if any(not series_id for series_id in normalised):
-        raise AuseconValidationError("series_ids must contain only non-empty values.")
-    return normalised
+    try:
+        return [
+            validate_source_token("series_ids", series_id)
+            for series_id in series_ids
+        ]
+    except AuseconValidationError as exc:
+        raise AuseconValidationError(
+            "series_ids must contain only non-empty source-native identifiers."
+        ) from exc
 
 
 def validate_iso_date(field_name: str, value: str | None) -> str | None:

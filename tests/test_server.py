@@ -1,6 +1,8 @@
 import pytest
 from fastmcp import Client
+from starlette.middleware.cors import CORSMiddleware
 
+import ausecon_mcp.server as server_module
 from ausecon_mcp.server import AuseconService, build_server
 
 
@@ -39,6 +41,14 @@ def _has_schema_property(schema: dict, key: str, value: object | None = None) ->
         if value is None or node[key] == value:
             return True
     return False
+
+
+class FakeMCP:
+    def __init__(self) -> None:
+        self.run_kwargs: dict | None = None
+
+    def run(self, **kwargs) -> None:
+        self.run_kwargs = kwargs
 
 
 class StubABSProvider:
@@ -143,6 +153,70 @@ class StubRBAProvider:
         }
 
 
+def test_http_port_defaults_to_smithery_port(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("PORT", raising=False)
+
+    assert server_module.resolve_http_port() == 8081
+
+
+def test_http_port_accepts_valid_environment_port(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("PORT", "9090")
+
+    assert server_module.resolve_http_port() == 9090
+
+
+@pytest.mark.parametrize("port", ["abc", "0", "65536", "-1"])
+def test_http_port_rejects_invalid_environment_port(
+    monkeypatch: pytest.MonkeyPatch,
+    port: str,
+) -> None:
+    monkeypatch.setenv("PORT", port)
+
+    with pytest.raises(ValueError, match="PORT must be an integer between 1 and 65535"):
+        server_module.resolve_http_port()
+
+
+def test_http_middleware_configures_non_credentialed_cors() -> None:
+    middleware = server_module.build_http_middleware()
+
+    cors = next(item for item in middleware if item.cls is CORSMiddleware)
+    assert cors.kwargs["allow_origins"] == ["*"]
+    assert cors.kwargs["allow_credentials"] is False
+    assert cors.kwargs["allow_methods"] == ["GET", "POST", "DELETE", "OPTIONS"]
+    assert cors.kwargs["allow_headers"] == ["*"]
+    assert cors.kwargs["expose_headers"] == ["mcp-session-id", "mcp-protocol-version"]
+
+
+def test_main_http_runs_streamable_http_on_smithery_endpoint(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fake = FakeMCP()
+    monkeypatch.setattr(server_module, "mcp", fake)
+    monkeypatch.setenv("PORT", "9090")
+
+    server_module.main_http()
+
+    assert fake.run_kwargs is not None
+    assert fake.run_kwargs["transport"] == "streamable-http"
+    assert fake.run_kwargs["host"] == "0.0.0.0"
+    assert fake.run_kwargs["port"] == 9090
+    assert fake.run_kwargs["path"] == "/mcp"
+    assert fake.run_kwargs["show_banner"] is False
+    assert fake.run_kwargs["uvicorn_config"]["access_log"] is False
+    assert fake.run_kwargs["middleware"]
+
+
+def test_http_app_uses_smithery_mcp_path() -> None:
+    app = build_server().http_app(
+        path="/mcp",
+        transport="streamable-http",
+        middleware=server_module.build_http_middleware(),
+    )
+
+    assert app.state.path == "/mcp"
+    assert app.state.transport_type == "streamable-http"
+
+
 @pytest.mark.asyncio
 async def test_service_searches_curated_catalogue() -> None:
     service = AuseconService(abs_provider=StubABSProvider(), rba_provider=StubRBAProvider())
@@ -150,6 +224,26 @@ async def test_service_searches_curated_catalogue() -> None:
     results = await service.search_datasets("cash rate")
 
     assert results[0]["id"] == "a2"
+
+
+@pytest.mark.parametrize(
+    "query",
+    [
+        "https://example.com",
+        "cash/rate",
+        "cash?rate",
+        "cash#rate",
+        "cash\\rate",
+        "cash\nrate",
+        "x" * 201,
+    ],
+)
+@pytest.mark.asyncio
+async def test_service_rejects_unsafe_search_queries(query: str) -> None:
+    service = AuseconService(abs_provider=StubABSProvider(), rba_provider=StubRBAProvider())
+
+    with pytest.raises(ValueError, match="query"):
+        await service.search_datasets(query)
 
 
 @pytest.mark.asyncio
@@ -198,6 +292,90 @@ async def test_service_fetches_abs_data() -> None:
     result = await service.get_abs_data("CPI", start_period="2024-Q1")
 
     assert result["metadata"]["dataset_id"] == "CPI"
+
+
+@pytest.mark.parametrize(
+    "dataflow_id",
+    [
+        "https://example.com",
+        "../CPI",
+        "CPI?x=1",
+        "CPI#frag",
+        "CPI\\path",
+        "CPI\n",
+        "x" * 129,
+    ],
+)
+@pytest.mark.asyncio
+async def test_service_rejects_unsafe_abs_identifiers_before_provider_call(
+    dataflow_id: str,
+) -> None:
+    abs_provider = StubABSProvider()
+    service = AuseconService(abs_provider=abs_provider, rba_provider=StubRBAProvider())
+
+    with pytest.raises(ValueError, match="dataflow_id"):
+        await service.get_abs_data(dataflow_id)
+
+    assert abs_provider.last_get_data_kwargs is None
+
+
+@pytest.mark.asyncio
+async def test_service_allows_source_native_abs_identifiers_and_keys() -> None:
+    abs_provider = StubABSProvider()
+    service = AuseconService(abs_provider=abs_provider, rba_provider=StubRBAProvider())
+
+    await service.get_abs_data("ANA_AGG", key="M2.GPM.20.AUS.Q")
+
+    assert abs_provider.last_get_data_kwargs is not None
+    assert abs_provider.last_get_data_kwargs["dataflow_id"] == "ANA_AGG"
+    assert abs_provider.last_get_data_kwargs["key"] == "M2.GPM.20.AUS.Q"
+
+
+@pytest.mark.parametrize(
+    "table_id",
+    [
+        "https://example.com",
+        "../g1",
+        "g1?x=1",
+        "g1#frag",
+        "g1\\path",
+        "g1\n",
+        "x" * 129,
+    ],
+)
+@pytest.mark.asyncio
+async def test_service_rejects_unsafe_rba_table_ids_before_provider_call(table_id: str) -> None:
+    rba = StubRBAProvider()
+    service = AuseconService(abs_provider=StubABSProvider(), rba_provider=rba)
+
+    with pytest.raises(ValueError, match="table_id"):
+        await service.get_rba_table(table_id)
+
+    assert rba.last_get_table_kwargs is None
+
+
+@pytest.mark.parametrize("series_id", ["https://example.com", "../GCPIAG", "GCPIAG?x=1"])
+@pytest.mark.asyncio
+async def test_service_rejects_unsafe_rba_series_ids_before_provider_call(series_id: str) -> None:
+    rba = StubRBAProvider()
+    service = AuseconService(abs_provider=StubABSProvider(), rba_provider=rba)
+
+    with pytest.raises(ValueError, match="series_ids"):
+        await service.get_rba_table("g1", series_ids=[series_id])
+
+    assert rba.last_get_table_kwargs is None
+
+
+@pytest.mark.asyncio
+async def test_service_allows_source_native_rba_table_and_series_ids() -> None:
+    rba = StubRBAProvider()
+    service = AuseconService(abs_provider=StubABSProvider(), rba_provider=rba)
+
+    await service.get_rba_table("c1.2", series_ids=["GCPIAG"])
+
+    assert rba.last_get_table_kwargs is not None
+    assert rba.last_get_table_kwargs["table_id"] == "c1.2"
+    assert rba.last_get_table_kwargs["series_ids"] == ["GCPIAG"]
 
 
 @pytest.mark.asyncio

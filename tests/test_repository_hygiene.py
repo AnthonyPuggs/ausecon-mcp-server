@@ -4,6 +4,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+import yaml
+
 if sys.version_info >= (3, 11):
     import tomllib
 else:
@@ -18,6 +20,9 @@ CI_WORKFLOW = ROOT / ".github" / "workflows" / "ci.yml"
 DOCS_WORKFLOW = ROOT / ".github" / "workflows" / "docs.yml"
 RELEASE_WORKFLOW = ROOT / ".github" / "workflows" / "release.yml"
 DOCKERFILE = ROOT / "Dockerfile"
+DOCKERIGNORE = ROOT / ".dockerignore"
+SMITHERY_YAML = ROOT / "smithery.yaml"
+SMITHERY_DOCKERFILE = ROOT / "Dockerfile.smithery"
 SERVER_JSON = ROOT / "server.json"
 FASTMCP_JSON = ROOT / "fastmcp.json"
 CHANGELOG = ROOT / "CHANGELOG.md"
@@ -57,6 +62,16 @@ def test_project_metadata_points_to_license_file_and_repository_urls() -> None:
     }
 
 
+def test_project_metadata_includes_http_container_entrypoint_dependencies() -> None:
+    pyproject = tomllib.loads(PYPROJECT.read_text(encoding="utf-8"))
+    project = pyproject["project"]
+
+    assert project["scripts"]["ausecon-mcp-server"] == "ausecon_mcp.server:main"
+    assert project["scripts"]["ausecon-mcp-http"] == "ausecon_mcp.server:main_http"
+    assert "fastmcp>=3.2.4" in project["dependencies"]
+    assert "starlette>=0.27,<1" in project["dependencies"]
+
+
 def test_fastmcp_metadata_points_homepage_to_docs_site() -> None:
     metadata = json.loads(FASTMCP_JSON.read_text(encoding="utf-8"))
 
@@ -90,11 +105,12 @@ def test_ci_workflow_exists_with_quality_checks_and_hygiene_guard() -> None:
     assert 'command -v rg >/dev/null 2>&1' in workflow_text
     assert (
         'rg -n "rba_abs_mcp|<your-repo-url>" README.md docs-site examples '
-        "pyproject.toml fastmcp.json server.json" in workflow_text
+        "pyproject.toml fastmcp.json server.json smithery.yaml Dockerfile.smithery"
+        in workflow_text
     )
     assert (
         'grep -R -n -E "rba_abs_mcp|<your-repo-url>" README.md docs-site examples '
-        "pyproject.toml fastmcp.json server.json"
+        "pyproject.toml fastmcp.json server.json smithery.yaml Dockerfile.smithery"
         in workflow_text
     )
 
@@ -215,6 +231,49 @@ def test_dockerfile_supports_local_and_pypi_install_modes() -> None:
     assert 'elif [ "$AUSECON_INSTALL_SOURCE" = "pypi" ]; then' in dockerfile_text
     assert 'if [ -z "$AUSECON_VERSION" ]; then' in dockerfile_text
     assert 'uv tool install "ausecon-mcp-server==${AUSECON_VERSION}"' in dockerfile_text
+
+
+def test_smithery_yaml_declares_http_container_without_session_config() -> None:
+    metadata = yaml.safe_load(SMITHERY_YAML.read_text(encoding="utf-8"))
+
+    assert metadata["runtime"] == "container"
+    assert metadata["build"] == {
+        "dockerfile": "Dockerfile.smithery",
+        "dockerBuildPath": ".",
+    }
+    assert metadata["startCommand"]["type"] == "http"
+    assert "configSchema" not in metadata["startCommand"]
+    assert "exampleConfig" not in metadata["startCommand"]
+
+
+def test_smithery_dockerfile_uses_multistage_non_root_runtime_without_git_copy() -> None:
+    dockerfile_text = SMITHERY_DOCKERFILE.read_text(encoding="utf-8")
+
+    assert "FROM python:3.12-slim AS builder" in dockerfile_text
+    assert "FROM python:3.12-slim AS runtime" in dockerfile_text
+    assert "ARG AUSECON_VERSION=0.0.0+smithery" in dockerfile_text
+    assert "SETUPTOOLS_SCM_PRETEND_VERSION_FOR_AUSECON_MCP_SERVER" in dockerfile_text
+    assert "apt-get install --yes --no-install-recommends git" in dockerfile_text
+    assert "uv build --wheel --out-dir /dist" in dockerfile_text
+    assert "COPY --from=builder /dist/*.whl /tmp/" in dockerfile_text
+    assert "USER ausecon" in dockerfile_text
+    assert "EXPOSE 8081" in dockerfile_text
+    assert 'ENTRYPOINT ["ausecon-mcp-http"]' in dockerfile_text
+    assert "COPY --from=builder /build" not in dockerfile_text
+    assert ".git" not in dockerfile_text
+
+
+def test_dockerignore_keeps_git_for_smithery_builder_but_excludes_local_state() -> None:
+    ignored = {
+        line.strip()
+        for line in DOCKERIGNORE.read_text(encoding="utf-8").splitlines()
+        if line.strip() and not line.startswith("#")
+    }
+
+    assert ".git" not in ignored
+    assert ".venv/" in ignored
+    assert ".worktrees/" in ignored
+    assert "docs-site/node_modules/" in ignored
 
 
 def test_release_workflow_builds_container_from_pypi_release_artifact() -> None:

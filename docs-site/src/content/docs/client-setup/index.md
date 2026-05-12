@@ -3,8 +3,8 @@ title: Client Setup
 description: Configure common MCP clients to launch the server with uvx.
 ---
 
-This repository currently provides a local stdio MCP server. Remote HTTP-based MCP connector
-setups require a separately hosted HTTP service and are out of scope for version `1.0.0`.
+Local clients should use the stdio command published on PyPI. The repository also includes a
+separate Smithery custom-container entrypoint for hosted MCP Streamable HTTP deployments.
 
 ## Claude Desktop
 
@@ -35,6 +35,16 @@ claude mcp add --transport stdio ausecon -- uvx ausecon-mcp-server
 ```bash
 codex mcp add ausecon -- uvx ausecon-mcp-server
 ```
+
+## Smithery
+
+Smithery deployment uses the checked-in `smithery.yaml` and `Dockerfile.smithery`. The container
+runs `ausecon-mcp-http`, listens on the `PORT` environment variable supplied by Smithery, and exposes
+the MCP endpoint at `/mcp`.
+
+The HTTP entrypoint is intentionally separate from the stdio command. It is unauthenticated because
+the server exposes only read-only tools over public ABS and RBA data. Do not reuse this pattern for
+private data sources or write-capable tools without adding authentication and origin controls.
 
 ## Cursor
 

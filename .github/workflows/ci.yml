@@ -25,9 +25,9 @@ jobs:
         run: |
           test -f LICENSE
           if command -v rg >/dev/null 2>&1; then
-            stale_refs=$(rg -n "rba_abs_mcp|<your-repo-url>" README.md docs-site examples pyproject.toml fastmcp.json server.json || true)
+            stale_refs=$(rg -n "rba_abs_mcp|<your-repo-url>" README.md docs-site examples pyproject.toml fastmcp.json server.json smithery.yaml Dockerfile.smithery || true)
           else
-            stale_refs=$(grep -R -n -E "rba_abs_mcp|<your-repo-url>" README.md docs-site examples pyproject.toml fastmcp.json server.json || true)
+            stale_refs=$(grep -R -n -E "rba_abs_mcp|<your-repo-url>" README.md docs-site examples pyproject.toml fastmcp.json server.json smithery.yaml Dockerfile.smithery || true)
           fi
           if [ -n "$stale_refs" ]; then
             printf '%s\n' "$stale_refs"
