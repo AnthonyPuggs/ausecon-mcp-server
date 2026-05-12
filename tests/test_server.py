@@ -241,6 +241,10 @@ def test_http_app_exposes_smithery_static_server_card() -> None:
     payload = response.json()
     assert payload["serverInfo"]["name"] == "ausecon-mcp-server"
     assert payload["serverInfo"]["version"]
+    assert payload["displayName"] == "AusEcon MCP Server"
+    assert "Australian economic data" in payload["description"]
+    assert payload["homepage"] == server_module.HOMEPAGE_URL
+    assert payload["icons"][0]["src"] == server_module.SERVER_ICON_URL
     assert payload["authentication"] == {"required": False}
     tool_names = {tool["name"] for tool in payload["tools"]}
     assert {
@@ -948,7 +952,20 @@ async def test_registered_tools_carry_readonly_and_openworld_annotations() -> No
         assert annotations is not None, f"{tool.name} has no annotations"
         assert annotations.title, f"{tool.name} missing human-readable title"
         assert annotations.readOnlyHint is True, f"{tool.name} missing readOnlyHint"
+        assert annotations.destructiveHint is False, f"{tool.name} missing destructiveHint"
+        assert annotations.idempotentHint is True, f"{tool.name} missing idempotentHint"
         assert annotations.openWorldHint is True, f"{tool.name} missing openWorldHint"
+
+
+def test_server_metadata_is_complete_for_hosted_registries() -> None:
+    mcp = build_server()
+
+    assert mcp.name == "ausecon-mcp-server"
+    assert mcp.version
+    assert mcp.website_url == server_module.HOMEPAGE_URL
+    assert mcp.icons
+    assert mcp.icons[0].src == server_module.SERVER_ICON_URL
+    assert mcp.icons[0].mimeType == "image/svg+xml"
 
 
 async def test_registered_tools_expose_input_schema_constraints_and_descriptions() -> None:
@@ -996,6 +1013,18 @@ async def test_registered_tools_expose_input_schema_constraints_and_descriptions
     assert "YYYY-MM-DD" in str(semantic_start_schema)
 
 
+async def test_all_registered_tool_parameters_have_top_level_descriptions() -> None:
+    mcp = build_server()
+
+    async with Client(mcp) as client:
+        tools = await client.list_tools()
+
+    for tool in tools:
+        properties = tool.inputSchema.get("properties", {})
+        for parameter, schema in properties.items():
+            assert schema.get("description"), f"{tool.name}.{parameter} missing description"
+
+
 async def test_retrieval_tools_expose_response_output_schema() -> None:
     mcp = build_server()
 
@@ -1007,3 +1036,15 @@ async def test_retrieval_tools_expose_response_output_schema() -> None:
         assert output_schema["type"] == "object"
         assert output_schema["additionalProperties"] is False
         assert output_schema["required"] == ["metadata", "series", "observations"]
+
+
+async def test_all_registered_tools_expose_output_schema() -> None:
+    mcp = build_server()
+
+    async with Client(mcp) as client:
+        tools = await client.list_tools()
+
+    for tool in tools:
+        output_schema = tool.outputSchema
+        assert output_schema["type"] == "object", f"{tool.name} missing object output schema"
+        assert output_schema.get("description") or output_schema.get("title")

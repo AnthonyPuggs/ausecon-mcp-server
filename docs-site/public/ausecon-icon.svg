@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title desc">
+  <title id="title">AusEcon MCP Server</title>
+  <desc id="desc">A stylised red and cream mark for Australian economic data over MCP.</desc>
+  <rect width="64" height="64" rx="12" fill="#7f1d1d"/>
+  <path fill="#fff7ed" d="M10 10h20v8H18v9h12v8H18v11h12v8H10z"/>
+  <path fill="#fff7ed" d="M36 10h18v8H44v6h8v8h-8v14h10v8H36z"/>
+  <path fill="#f97316" d="M29 24h8v8h-8zM24 40h8v8h-8zM38 16h8v8h-8z"/>
+</svg>

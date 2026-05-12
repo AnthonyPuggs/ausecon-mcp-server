@@ -84,6 +84,20 @@ registries:
 Keep the listing private or unlisted until these checks pass, then switch to
 public discovery.
 
+## Quality Score
+
+Smithery's quality score is metadata-driven. Before refreshing the listing,
+confirm these fields are present in the deployed MCP metadata:
+
+- Server name, version, homepage, description, and icon.
+- Tool descriptions for all tools.
+- Top-level descriptions for every tool parameter.
+- Output schemas for all tools, including discovery/list tools.
+- Explicit read-only, non-destructive, idempotent, open-world annotations.
+
+If the score remains stale immediately after a Render deploy, redeploy or refresh
+the Smithery scan after the new `/mcp` metadata is live.
+
 ## Security And Safety
 
 The public HTTP deployment is acceptable only because the tools are read-only,

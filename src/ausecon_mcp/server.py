@@ -5,6 +5,7 @@ from typing import Annotated, Any, Literal
 
 import uvicorn
 from fastmcp import FastMCP
+from mcp.types import Icon
 from pydantic import Field
 from starlette.middleware import Middleware
 from starlette.middleware.cors import CORSMiddleware
@@ -44,11 +45,26 @@ from ausecon_mcp.validation import (
 )
 
 ABS_PERIOD_PATTERN = r"^(\d{4}|\d{4}-Q[1-4]|\d{4}-(0[1-9]|1[0-2])|\d{4}-S[1-2])$"
-SourceFilter = Annotated[
-    Literal["abs", "rba"],
-    Field(description="Optional source filter: abs or rba."),
+HOMEPAGE_URL = "https://anthonypuggs.github.io/ausecon-mcp-server/"
+SERVER_ICON_URL = f"{HOMEPAGE_URL}ausecon-icon.svg"
+SERVER_DESCRIPTION = "Australian economic data from the RBA and ABS via MCP."
+SearchQuery = Annotated[str, Field(min_length=1, description="Discovery query text.")]
+Identifier = Annotated[str, Field(min_length=1, description="Non-empty dataset or table id.")]
+AbsKey = Annotated[
+    str,
+    Field(min_length=1, description='ABS SDMX key, or "all" for all series.'),
 ]
-RbaCategoryFilter = Annotated[
+SeriesId = Annotated[str, Field(min_length=1)]
+OptionalSourceFilter = Annotated[
+    Literal["abs", "rba"] | None,
+    Field(
+        description=(
+            "Optional source filter. Use abs for Australian Bureau of Statistics or rba "
+            "for Reserve Bank of Australia."
+        ),
+    ),
+]
+OptionalRbaCategoryFilter = Annotated[
     Literal[
         "exchange_rates",
         "external_sector",
@@ -59,48 +75,80 @@ RbaCategoryFilter = Annotated[
         "money_credit",
         "output_labour",
         "payments",
-    ],
+    ]
+    | None,
     Field(description="Optional RBA catalogue category filter."),
 ]
-SearchQuery = Annotated[str, Field(min_length=1, description="Discovery query text.")]
-ConceptQuery = Annotated[
-    str,
-    Field(min_length=1, description="Optional semantic concept discovery query."),
+OptionalConceptQuery = Annotated[
+    str | None,
+    Field(description="Optional query for filtering semantic economic concepts."),
 ]
-Identifier = Annotated[str, Field(min_length=1, description="Non-empty dataset or table id.")]
-AbsKey = Annotated[
-    str,
-    Field(min_length=1, description='ABS SDMX key, or "all" for all series.'),
+OptionalCategory = Annotated[
+    str | None,
+    Field(description="Optional curated catalogue or semantic concept category filter."),
 ]
-AbsPeriod = Annotated[
-    str,
+OptionalTag = Annotated[
+    str | None,
+    Field(description="Optional curated catalogue tag filter."),
+]
+IncludeCeased = Annotated[
+    bool,
+    Field(description="Whether to include ceased ABS catalogue entries."),
+]
+IncludeDiscontinued = Annotated[
+    bool,
+    Field(description="Whether to include discontinued RBA catalogue entries."),
+]
+OptionalAbsPeriod = Annotated[
+    str | None,
     Field(
         pattern=ABS_PERIOD_PATTERN,
-        description="ABS period in YYYY, YYYY-QN, YYYY-MM, or YYYY-SN format.",
+        description="Optional ABS period bound in YYYY, YYYY-QN, YYYY-MM, or YYYY-SN format.",
     ),
 ]
-IsoDate = Annotated[
-    str,
-    Field(json_schema_extra={"format": "date"}, description="ISO date in YYYY-MM-DD format."),
+OptionalIsoDate = Annotated[
+    str | None,
+    Field(
+        json_schema_extra={"format": "date"},
+        description="Optional ISO date bound in YYYY-MM-DD format.",
+    ),
 ]
-IsoDateTime = Annotated[
-    str,
-    Field(description="ISO date or datetime accepted by the ABS updatedAfter API."),
+OptionalIsoDateTime = Annotated[
+    str | None,
+    Field(description="Optional ISO date or datetime accepted by the ABS updatedAfter API."),
 ]
-PositiveInt = Annotated[
-    int,
-    Field(ge=1, description="Positive observation count limit."),
+OptionalPositiveInt = Annotated[
+    int | None,
+    Field(ge=1, description="Optional positive observation count limit."),
 ]
-SeriesId = Annotated[str, Field(min_length=1)]
-SeriesIdList = Annotated[
-    list[SeriesId],
-    Field(description="Optional list of non-empty RBA series IDs to keep."),
+OptionalSeriesIdList = Annotated[
+    list[SeriesId] | None,
+    Field(description="Optional list of non-empty RBA series IDs to keep after download."),
 ]
-SemanticStartEnd = Annotated[
-    str,
+OptionalVariant = Annotated[
+    str | None,
+    Field(description="Optional curated concept variant, such as headline, underlying, or target."),
+]
+OptionalGeography = Annotated[
+    str | None,
+    Field(
+        description="Optional geography selector for a curated concept, usually aus for Australia.",
+    ),
+]
+OptionalFrequency = Annotated[
+    str | None,
     Field(
         description=(
-            "Analyst-friendly date bound: YYYY, YYYY-QN, YYYY-SN, YYYY-MM, or YYYY-MM-DD. "
+            "Optional requested frequency for a curated concept, such as monthly, "
+            "quarterly, or annual."
+        ),
+    ),
+]
+OptionalSemanticStartEnd = Annotated[
+    str | None,
+    Field(
+        description=(
+            "Optional analyst-friendly date bound: YYYY, YYYY-QN, YYYY-SN, YYYY-MM, or YYYY-MM-DD. "
             "Semantic retrieval normalises this to the resolved source frequency."
         ),
     ),
@@ -108,7 +156,55 @@ SemanticStartEnd = Annotated[
 
 
 def _tool_annotations(title: str) -> dict[str, bool | str]:
-    return {"title": title, "readOnlyHint": True, "openWorldHint": True}
+    return {
+        "title": title,
+        "readOnlyHint": True,
+        "destructiveHint": False,
+        "idempotentHint": True,
+        "openWorldHint": True,
+    }
+
+
+def _list_output_schema(description: str) -> dict[str, Any]:
+    return {
+        "type": "object",
+        "description": description,
+        "additionalProperties": False,
+        "x-fastmcp-wrap-result": True,
+        "required": ["result"],
+        "properties": {
+            "result": {
+                "type": "array",
+                "description": description,
+                "items": {
+                    "type": "object",
+                    "additionalProperties": True,
+                },
+            }
+        },
+    }
+
+
+def _abs_structure_output_schema() -> dict[str, Any]:
+    return {
+        "type": "object",
+        "description": "ABS SDMX dataset structure with dimensions and codelists.",
+        "additionalProperties": True,
+        "properties": {
+            "id": {
+                "type": "string",
+                "description": "Resolved ABS data structure identifier.",
+            },
+            "dimensions": {
+                "type": "array",
+                "description": "Dataset dimensions with positions and allowed values.",
+                "items": {
+                    "type": "object",
+                    "additionalProperties": True,
+                },
+            },
+        },
+    }
 
 
 class AuseconService:
@@ -295,7 +391,10 @@ class AuseconService:
 def build_server(service: AuseconService | None = None) -> FastMCP:
     app_service = service or AuseconService()
     mcp = FastMCP(
-        "ausecon",
+        "ausecon-mcp-server",
+        version=resolve_version(),
+        website_url=HOMEPAGE_URL,
+        icons=[Icon(src=SERVER_ICON_URL, mimeType="image/svg+xml", sizes=["64x64"])],
         instructions=(
             "Australian economic data tools for official ABS and RBA datasets. "
             "Use list_economic_concepts before get_economic_series for ordinary analyst "
@@ -305,18 +404,27 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
         ),
     )
 
-    @mcp.tool(annotations=_tool_annotations("Search Datasets"))
-    async def search_datasets(query: SearchQuery, source: SourceFilter | None = None) -> list[dict]:
+    @mcp.tool(
+        annotations=_tool_annotations("Search Datasets"),
+        output_schema=_list_output_schema("Ranked ABS and RBA catalogue search results."),
+    )
+    async def search_datasets(
+        query: SearchQuery,
+        source: OptionalSourceFilter = None,
+    ) -> list[dict]:
         """Search curated ABS and RBA economic datasets."""
         return await app_service.search_datasets(query=query, source=source)
 
-    @mcp.tool(annotations=_tool_annotations("List Catalogue"))
+    @mcp.tool(
+        annotations=_tool_annotations("List Catalogue"),
+        output_schema=_list_output_schema("Curated ABS and RBA catalogue entries."),
+    )
     async def list_catalogue(
-        source: SourceFilter | None = None,
-        category: str | None = None,
-        tag: str | None = None,
-        include_ceased: bool = False,
-        include_discontinued: bool = False,
+        source: OptionalSourceFilter = None,
+        category: OptionalCategory = None,
+        tag: OptionalTag = None,
+        include_ceased: IncludeCeased = False,
+        include_discontinued: IncludeDiscontinued = False,
     ) -> list[dict]:
         """List curated ABS and RBA catalogue entries, optionally filtered by source,
         category, or tag. Unranked complement to ``search_datasets``."""
@@ -328,11 +436,14 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
             include_discontinued=include_discontinued,
         )
 
-    @mcp.tool(annotations=_tool_annotations("List Economic Concepts"))
+    @mcp.tool(
+        annotations=_tool_annotations("List Economic Concepts"),
+        output_schema=_list_output_schema("Curated semantic economic concepts."),
+    )
     async def list_economic_concepts(
-        query: ConceptQuery | None = None,
-        source: SourceFilter | None = None,
-        category: str | None = None,
+        query: OptionalConceptQuery = None,
+        source: OptionalSourceFilter = None,
+        category: OptionalCategory = None,
     ) -> list[dict]:
         """List analyst-friendly semantic economic concepts accepted by get_economic_series."""
         return await app_service.list_economic_concepts(
@@ -341,7 +452,10 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
             category=category,
         )
 
-    @mcp.tool(annotations=_tool_annotations("Get ABS Dataset Structure"))
+    @mcp.tool(
+        annotations=_tool_annotations("Get ABS Dataset Structure"),
+        output_schema=_abs_structure_output_schema(),
+    )
     async def get_abs_dataset_structure(dataflow_id: Identifier) -> dict:
         """Get ABS SDMX dataset dimensions and codelists."""
         return await app_service.get_abs_dataset_structure(dataflow_id=dataflow_id)
@@ -353,10 +467,10 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
     async def get_abs_data(
         dataflow_id: Identifier,
         key: AbsKey = "all",
-        start_period: AbsPeriod | None = None,
-        end_period: AbsPeriod | None = None,
-        last_n: PositiveInt | None = None,
-        updated_after: IsoDateTime | None = None,
+        start_period: OptionalAbsPeriod = None,
+        end_period: OptionalAbsPeriod = None,
+        last_n: OptionalPositiveInt = None,
+        updated_after: OptionalIsoDateTime = None,
     ) -> dict:
         """Expert/source-native ABS SDMX retrieval in a normalised response shape."""
         return await app_service.get_abs_data(
@@ -368,10 +482,13 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
             updated_after=updated_after,
         )
 
-    @mcp.tool(annotations=_tool_annotations("List RBA Tables"))
+    @mcp.tool(
+        annotations=_tool_annotations("List RBA Tables"),
+        output_schema=_list_output_schema("Curated RBA table catalogue entries."),
+    )
     async def list_rba_tables(
-        category: RbaCategoryFilter | None = None,
-        include_discontinued: bool = False,
+        category: OptionalRbaCategoryFilter = None,
+        include_discontinued: IncludeDiscontinued = False,
     ) -> list[dict]:
         """Deprecated compatibility alias. Prefer list_catalogue(source="rba")."""
         return await app_service.list_rba_tables(
@@ -385,10 +502,10 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
     )
     async def get_rba_table(
         table_id: Identifier,
-        series_ids: SeriesIdList | None = None,
-        start_date: IsoDate | None = None,
-        end_date: IsoDate | None = None,
-        last_n: PositiveInt | None = None,
+        series_ids: OptionalSeriesIdList = None,
+        start_date: OptionalIsoDate = None,
+        end_date: OptionalIsoDate = None,
+        last_n: OptionalPositiveInt = None,
     ) -> dict:
         """Expert/source-native RBA statistical table retrieval in a normalised response shape."""
         return await app_service.get_rba_table(
@@ -405,12 +522,12 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
     )
     async def get_economic_series(
         concept: Annotated[str, Field(min_length=1, description="Curated semantic concept name.")],
-        variant: str | None = None,
-        geography: str | None = None,
-        frequency: str | None = None,
-        start: SemanticStartEnd | None = None,
-        end: SemanticStartEnd | None = None,
-        last_n: PositiveInt | None = None,
+        variant: OptionalVariant = None,
+        geography: OptionalGeography = None,
+        frequency: OptionalFrequency = None,
+        start: OptionalSemanticStartEnd = None,
+        end: OptionalSemanticStartEnd = None,
+        last_n: OptionalPositiveInt = None,
     ) -> dict:
         """Preferred analyst-facing retrieval tool for curated ABS/RBA economic concepts.
 
@@ -499,7 +616,9 @@ async def http_root(_request: Request) -> JSONResponse:
     return JSONResponse(
         {
             "name": "ausecon-mcp-server",
-            "description": "Australian economic data MCP server for public ABS and RBA data.",
+            "description": SERVER_DESCRIPTION,
+            "homepage": HOMEPAGE_URL,
+            "icon": SERVER_ICON_URL,
             "mcp_endpoint": "/mcp",
             "server_card": "/.well-known/mcp/server-card.json",
             "health": "/healthz",
@@ -519,6 +638,16 @@ async def build_server_card_response(server: FastMCP) -> JSONResponse:
                 "name": "ausecon-mcp-server",
                 "version": resolve_version(),
             },
+            "displayName": "AusEcon MCP Server",
+            "description": SERVER_DESCRIPTION,
+            "homepage": HOMEPAGE_URL,
+            "icons": [
+                {
+                    "src": SERVER_ICON_URL,
+                    "mimeType": "image/svg+xml",
+                    "sizes": ["64x64"],
+                }
+            ],
             "authentication": {
                 "required": False,
             },

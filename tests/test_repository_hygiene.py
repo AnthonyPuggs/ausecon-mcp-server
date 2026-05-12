@@ -29,6 +29,7 @@ CHANGELOG = ROOT / "CHANGELOG.md"
 CONTRIBUTING = ROOT / "docs" / "contributing.md"
 CLIENT_SMOKE = ROOT / "scripts" / "mcp_client_smoke.py"
 DOCS_SITE = ROOT / "docs-site"
+DOCS_ICON = DOCS_SITE / "public" / "ausecon-icon.svg"
 DOCS_URL = "https://anthonypuggs.github.io/ausecon-mcp-server/"
 REPOSITORY_URL = "https://github.com/AnthonyPuggs/ausecon-mcp-server"
 
@@ -46,6 +47,13 @@ def test_readme_and_example_advertise_pypi_uvx_install() -> None:
     assert "rba_abs_mcp" not in readme_text
     assert "rba_abs_mcp" not in example_text
     assert "/absolute/path/to/ausecon-mcp-server" not in example_text
+
+
+def test_docs_site_exposes_public_icon_for_hosted_mcp_metadata() -> None:
+    icon_text = DOCS_ICON.read_text(encoding="utf-8")
+
+    assert "<svg" in icon_text
+    assert "AusEcon MCP Server" in icon_text
 
 
 def test_project_metadata_points_to_license_file_and_repository_urls() -> None:
