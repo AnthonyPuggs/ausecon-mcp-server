@@ -30,7 +30,7 @@ CONTRIBUTING = ROOT / "docs" / "contributing.md"
 CLIENT_SMOKE = ROOT / "scripts" / "mcp_client_smoke.py"
 DOCS_SITE = ROOT / "docs-site"
 DOCS_ICON = DOCS_SITE / "public" / "ausecon-icon.svg"
-DOCS_URL = "https://anthonypuggs.github.io/ausecon-mcp-server/"
+DOCS_URL = "https://auseconmcp.com/"
 REPOSITORY_URL = "https://github.com/AnthonyPuggs/ausecon-mcp-server"
 
 
@@ -163,7 +163,7 @@ def test_contract_and_architecture_docs_exist() -> None:
     assert CONTRIBUTING.is_file()
 
 
-def test_docs_site_scaffold_exists_with_github_pages_configuration() -> None:
+def test_docs_site_scaffold_exists_with_custom_domain_configuration() -> None:
     package_json = json.loads((DOCS_SITE / "package.json").read_text(encoding="utf-8"))
     astro_config = (DOCS_SITE / "astro.config.mjs").read_text(encoding="utf-8")
 
@@ -171,8 +171,8 @@ def test_docs_site_scaffold_exists_with_github_pages_configuration() -> None:
     assert package_json["scripts"]["check"] == "astro check"
     assert package_json["scripts"]["build"] == "astro build"
     assert package_json["dependencies"]["@astrojs/starlight"].startswith("^")
-    assert "site: 'https://anthonypuggs.github.io'" in astro_config
-    assert "base: '/ausecon-mcp-server'" in astro_config
+    assert "site: 'https://auseconmcp.com'" in astro_config
+    assert "base: '/ausecon-mcp-server'" not in astro_config
     assert "reference/semantic-concepts" in astro_config
 
 

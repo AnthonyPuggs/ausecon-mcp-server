@@ -12,7 +12,7 @@
     "macro",
     "public-data"
   ],
-  "homepage": "https://anthonypuggs.github.io/ausecon-mcp-server/",
+  "homepage": "https://auseconmcp.com/",
   "source": {
     "path": "src/ausecon_mcp/server.py",
     "entrypoint": "build_server"

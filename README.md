@@ -5,7 +5,7 @@
 [![CI](https://github.com/AnthonyPuggs/ausecon-mcp-server/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/AnthonyPuggs/ausecon-mcp-server/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/tag/AnthonyPuggs/ausecon-mcp-server?sort=semver&label=release)](https://github.com/AnthonyPuggs/ausecon-mcp-server/tags)\
 [![Smithery](https://smithery.ai/badge/anthonypuggs/ausecon-mcp)](https://smithery.ai/servers/anthonypuggs/ausecon-mcp)
-[![Docs](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://anthonypuggs.github.io/ausecon-mcp-server/)
+[![Docs](https://img.shields.io/badge/docs-auseconmcp.com-blue)](https://auseconmcp.com/)
 [![PyPI](https://img.shields.io/pypi/v/ausecon-mcp-server?label=PyPI)](https://pypi.org/project/ausecon-mcp-server/)
 [![Transport](https://img.shields.io/badge/Transport-stdio%20%2B%20HTTP-blue)]()
 [![License-MIT](https://img.shields.io/badge/License-MIT-lightgrey)]()
@@ -21,15 +21,15 @@ analyst-friendly retrieval through `get_economic_series`.
 ## Documentation
 
 Full user and maintainer documentation is published at
-[anthonypuggs.github.io/ausecon-mcp-server](https://anthonypuggs.github.io/ausecon-mcp-server/).
+[auseconmcp.com](https://auseconmcp.com/).
 
 Useful links:
 
-- [Getting started](https://anthonypuggs.github.io/ausecon-mcp-server/getting-started/)
-- [Client setup](https://anthonypuggs.github.io/ausecon-mcp-server/client-setup/)
-- [Tool reference](https://anthonypuggs.github.io/ausecon-mcp-server/reference/tools/)
-- [Semantic concepts](https://anthonypuggs.github.io/ausecon-mcp-server/reference/semantic-concepts/)
-- [Response schema](https://anthonypuggs.github.io/ausecon-mcp-server/reference/response-schema/)
+- [Getting started](https://auseconmcp.com/getting-started/)
+- [Client setup](https://auseconmcp.com/client-setup/)
+- [Tool reference](https://auseconmcp.com/reference/tools/)
+- [Semantic concepts](https://auseconmcp.com/reference/semantic-concepts/)
+- [Response schema](https://auseconmcp.com/reference/response-schema/)
 - [Changelog](CHANGELOG.md)
 
 ## Install

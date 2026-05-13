@@ -22,8 +22,8 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://anthonypuggs.github.io/ausecon-mcp-server/"
-Documentation = "https://anthonypuggs.github.io/ausecon-mcp-server/"
+Homepage = "https://auseconmcp.com/"
+Documentation = "https://auseconmcp.com/"
 Repository = "https://github.com/AnthonyPuggs/ausecon-mcp-server"
 Issues = "https://github.com/AnthonyPuggs/ausecon-mcp-server/issues"
 

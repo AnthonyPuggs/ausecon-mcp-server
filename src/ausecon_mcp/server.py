@@ -45,7 +45,7 @@ from ausecon_mcp.validation import (
 )
 
 ABS_PERIOD_PATTERN = r"^(\d{4}|\d{4}-Q[1-4]|\d{4}-(0[1-9]|1[0-2])|\d{4}-S[1-2])$"
-HOMEPAGE_URL = "https://anthonypuggs.github.io/ausecon-mcp-server/"
+HOMEPAGE_URL = "https://auseconmcp.com/"
 SERVER_ICON_URL = f"{HOMEPAGE_URL}ausecon-icon.svg"
 SERVER_DISPLAY_NAME = "AusEcon MCP Server"
 SERVER_DESCRIPTION = (
