@@ -9,13 +9,14 @@ description: Curated concepts accepted by get_economic_series.
 source-native ABS or RBA target and can be discovered at runtime with
 `list_economic_concepts` or the `ausecon://concepts` resource.
 
-Total concepts: `29`.
+Total concepts: `36`.
 
 ## Activity
 
 | Concept | Source | Dataset | Variant | Frequency | Recommended call |
 | --- | --- | --- | --- | --- | --- |
 | `household_spending` | ABS | `HSI_M` | `headline_spending` | Monthly | `get_economic_series(concept="household_spending")` |
+| `retail_turnover` | ABS | `RT` | `headline_turnover` | Monthly | `get_economic_series(concept="retail_turnover")` |
 
 ## Demographics
 
@@ -57,6 +58,7 @@ Total concepts: `29`.
 
 | Concept | Source | Dataset | Variant | Frequency | Recommended call |
 | --- | --- | --- | --- | --- | --- |
+| `bank_bill_rate` | RBA | `f1` | `bank_bills_3m` | Daily | `get_economic_series(concept="bank_bill_rate")` |
 | `business_lending_rate` | RBA | `f7` | `small_business_indicator` | Monthly | `get_economic_series(concept="business_lending_rate")` |
 | `government_bond_yield_10y` | RBA | `f17` | `ags_10y` | Daily | `get_economic_series(concept="government_bond_yield_10y")` |
 | `government_bond_yield_3y` | RBA | `f17` | `ags_3y` | Daily | `get_economic_series(concept="government_bond_yield_3y")` |
@@ -83,6 +85,7 @@ Total concepts: `29`.
 
 | Concept | Source | Dataset | Variant | Frequency | Recommended call |
 | --- | --- | --- | --- | --- | --- |
+| `broad_money` | RBA | `d3` | `broad_money` | Monthly | `get_economic_series(concept="broad_money")` |
 | `business_credit` | RBA | `d2` | `business` | Monthly | `get_economic_series(concept="business_credit")` |
 | `housing_credit` | RBA | `d2` | `housing` | Monthly | `get_economic_series(concept="housing_credit")` |
 
@@ -91,6 +94,10 @@ Total concepts: `29`.
 | Concept | Source | Dataset | Variant | Frequency | Recommended call |
 | --- | --- | --- | --- | --- | --- |
 | `gdp_growth` | ABS | `ANA_AGG` | `gdp_growth` | Quarterly | `get_economic_series(concept="gdp_growth")` |
+| `household_consumption` | ABS | `ANA_EXP` | `household_consumption` | Quarterly | `get_economic_series(concept="household_consumption")` |
+| `nominal_gdp` | ABS | `ANA_AGG` | `nominal_gdp` | Quarterly | `get_economic_series(concept="nominal_gdp")` |
+| `private_investment` | ABS | `ANA_EXP` | `private_investment` | Quarterly | `get_economic_series(concept="private_investment")` |
+| `real_gdp` | ABS | `ANA_AGG` | `real_gdp` | Quarterly | `get_economic_series(concept="real_gdp")` |
 
 ## Prices Inflation
 

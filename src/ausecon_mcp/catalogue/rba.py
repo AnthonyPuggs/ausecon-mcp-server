@@ -602,7 +602,11 @@ _RAW_RBA_CATALOGUE = {
         "variants": [
             {"name": "currency", "aliases": [], "rba_series_ids": None},
             {"name": "deposits", "aliases": [], "rba_series_ids": None},
-            {"name": "broad_money", "aliases": ["m3"], "rba_series_ids": None},
+            {
+                "name": "broad_money",
+                "aliases": ["broad money", "money supply", "m3"],
+                "rba_series_ids": ["DMABMS"],
+            },
         ],
         "audit": {
             "last_audited": "2026-04-18",
@@ -875,7 +879,16 @@ _RAW_RBA_CATALOGUE = {
         "frequencies": ["D"],
         "geographies": ["national"],
         "variants": [
-            {"name": "bank_bills", "aliases": ["bank bill"], "rba_series_ids": None},
+            {
+                "name": "bank_bills_3m",
+                "aliases": [
+                    "bank bill",
+                    "bank bills",
+                    "3 month bank bill",
+                    "90 day bank bill",
+                ],
+                "rba_series_ids": ["FIRMMBAB90D"],
+            },
             {
                 "name": "overnight",
                 "aliases": ["overnight rates", "overnight indexed swap"],

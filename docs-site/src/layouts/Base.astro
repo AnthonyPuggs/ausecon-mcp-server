@@ -1,6 +1,6 @@
 ---
 import Analytics from '@vercel/analytics/astro'
-import SpeedInsights from "@vercel/speed-insights/astro";
+import SpeedInsights from '@vercel/speed-insights/astro'
 
 interface Props {
   title?: string;
@@ -8,21 +8,6 @@ interface Props {
 }
 
 const { title = 'ausecon MCP', description = 'Australian Economic Data MCP Server' } = Astro.props;
-
-function speedInsightsBeforeSend(payload: any) {
-  try {
-    if (payload?.url) {
-      const u = new URL(payload.url);
-      // remove query params and fragments to avoid sending sensitive data
-      u.search = '';
-      u.hash = '';
-      payload.url = u.toString();
-    }
-  } catch (e) {
-    // ignore malformed URLs
-  }
-  return payload;
-}
 ---
 
 <!doctype html>
@@ -33,7 +18,25 @@ function speedInsightsBeforeSend(payload: any) {
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>{title}</title>
-    <SpeedInsights speedInsightsBeforeSend={speedInsightsBeforeSend} />
+    <script is:inline>
+      function speedInsightsBeforeSend(payload) {
+        try {
+          if (payload?.url) {
+            const u = new URL(payload.url);
+            // remove query params and fragments to avoid sending sensitive data
+            u.search = '';
+            u.hash = '';
+            payload.url = u.toString();
+          }
+        } catch (e) {
+          // ignore malformed URLs
+        }
+        return payload;
+      }
+
+      window.speedInsightsBeforeSend = speedInsightsBeforeSend;
+    </script>
+    <SpeedInsights />
   </head>
   <body>
     <slot />

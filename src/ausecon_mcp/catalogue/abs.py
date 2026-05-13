@@ -538,6 +538,16 @@ _RAW_ABS_CATALOGUE = {
         "geographies": ["national"],
         "variants": [
             {
+                "name": "real_gdp",
+                "aliases": ["real gdp", "gdp level", "chain volume gdp"],
+                "abs_key": "M1.GPM.20.AUS.Q",
+            },
+            {
+                "name": "nominal_gdp",
+                "aliases": ["nominal gdp", "current price gdp", "current prices gdp"],
+                "abs_key": "M3.GPM.20.AUS.Q",
+            },
+            {
                 "name": "gdp_growth",
                 "aliases": ["gdp growth", "economic growth", "real gdp growth"],
                 "abs_key": "M2.GPM.20.AUS.Q",
@@ -571,7 +581,26 @@ _RAW_ABS_CATALOGUE = {
         ],
         "frequencies": ["Q"],
         "geographies": ["national"],
-        "variants": [],
+        "variants": [
+            {
+                "name": "household_consumption",
+                "aliases": [
+                    "household consumption",
+                    "household final consumption",
+                    "private consumption",
+                ],
+                "abs_key": "VCH.FCE.PHS.20.AUS.Q",
+            },
+            {
+                "name": "private_investment",
+                "aliases": [
+                    "private investment",
+                    "private business investment",
+                    "business investment",
+                ],
+                "abs_key": "VCH.GFC_PBI.PSS.20.AUS.Q",
+            },
+        ],
         "audit": {
             "last_audited": "2026-04-18",
             "upstream_url": "https://data.api.abs.gov.au/rest/dataflow/ABS/ANA_EXP/latest",
@@ -710,7 +739,13 @@ _RAW_ABS_CATALOGUE = {
         ],
         "frequencies": ["M"],
         "geographies": ["national"],
-        "variants": [],
+        "variants": [
+            {
+                "name": "headline_turnover",
+                "aliases": ["retail turnover", "retail trade", "retail sales"],
+                "abs_key": "M1.20.20.AUS.M",
+            },
+        ],
         "audit": {
             "last_audited": "2026-04-20",
             "upstream_url": "https://data.api.abs.gov.au/rest/dataflow/ABS/RT/latest",

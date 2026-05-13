@@ -14,9 +14,10 @@
 macroeconomic and financial data from the Australian Bureau of Statistics (ABS) and the Reserve
 Bank of Australia (RBA).
 
-Version `1.0.0` is the stable release baseline. The server exposes eight read-only MCP tools,
-four read-only MCP resources, eight prompt templates, and 29 curated macroeconomic concepts for
-analyst-friendly retrieval through `get_economic_series`.
+Version `1.1.0` is the current hosted release baseline. Transport support is stdio plus
+Streamable HTTP. The server exposes eight read-only MCP tools, four read-only MCP resources, eight
+prompt templates, and 36 curated macroeconomic concepts for analyst-friendly retrieval through
+`get_economic_series`.
 
 ## Documentation
 
@@ -30,6 +31,7 @@ Useful links:
 - [Tool reference](https://auseconmcp.com/reference/tools/)
 - [Semantic concepts](https://auseconmcp.com/reference/semantic-concepts/)
 - [Response schema](https://auseconmcp.com/reference/response-schema/)
+- [Roadmap](https://auseconmcp.com/maintainers/roadmap/)
 - [Changelog](CHANGELOG.md)
 
 ## Install

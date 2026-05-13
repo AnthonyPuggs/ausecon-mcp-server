@@ -30,6 +30,7 @@ CONTRIBUTING = ROOT / "docs" / "contributing.md"
 CLIENT_SMOKE = ROOT / "scripts" / "mcp_client_smoke.py"
 DOCS_SITE = ROOT / "docs-site"
 DOCS_ICON = DOCS_SITE / "public" / "ausecon-icon.svg"
+ROADMAP = ROOT / "docs" / "roadmap.md"
 DOCS_URL = "https://auseconmcp.com/"
 REPOSITORY_URL = "https://github.com/AnthonyPuggs/ausecon-mcp-server"
 
@@ -127,9 +128,11 @@ def test_readme_is_slim_landing_page_for_current_release_state() -> None:
     readme_text = README.read_text(encoding="utf-8")
 
     assert len(readme_text.splitlines()) < 140
-    assert "Version `1.0.0` is the stable release baseline." in readme_text
+    assert "Version `1.1.0` is the current hosted release baseline." in readme_text
+    assert re.search(r"stdio plus\s+Streamable HTTP", readme_text)
     assert "eight read-only MCP tools" in readme_text
-    assert "29 curated macroeconomic concepts" in readme_text
+    assert "36 curated macroeconomic concepts" in readme_text
+    assert "29 curated macroeconomic concepts" not in readme_text
     assert "28 curated macroeconomic concepts" not in readme_text
     assert DOCS_URL in readme_text
     assert "claude mcp add --transport stdio ausecon -- uvx ausecon-mcp-server" in readme_text
@@ -140,6 +143,67 @@ def test_readme_is_slim_landing_page_for_current_release_state() -> None:
     assert "`v0.3.0` is a discovery release" not in readme_text
     assert "The current release includes:" not in readme_text
     assert "`v0.5.0` covers the main analyst workflows more credibly" not in readme_text
+
+
+def test_docs_site_instruments_vercel_observability_without_query_payloads() -> None:
+    package_json = json.loads((DOCS_SITE / "package.json").read_text(encoding="utf-8"))
+    layout_text = (DOCS_SITE / "src/layouts/Base.astro").read_text(encoding="utf-8")
+
+    assert package_json["dependencies"]["@vercel/analytics"].startswith("^")
+    assert package_json["dependencies"]["@vercel/speed-insights"].startswith("^")
+    assert "import Analytics from '@vercel/analytics/astro'" in layout_text
+    assert "import SpeedInsights from '@vercel/speed-insights/astro'" in layout_text
+    assert "function speedInsightsBeforeSend" in layout_text
+    assert "window.speedInsightsBeforeSend = speedInsightsBeforeSend" in layout_text
+    assert "u.search = ''" in layout_text
+    assert "u.hash = ''" in layout_text
+    assert "<SpeedInsights />" in layout_text
+    assert "<Analytics />" in layout_text
+
+
+def test_operations_docs_separate_server_and_docs_site_observability() -> None:
+    operations_text = (
+        DOCS_SITE / "src/content/docs/operations/caching-and-logging.md"
+    ).read_text(encoding="utf-8")
+
+    assert "## Server observability" in operations_text
+    assert "## Documentation-site observability" in operations_text
+    assert "Vercel Analytics" in operations_text
+    assert "Speed Insights" in operations_text
+    assert "does not measure MCP data reliability" in operations_text
+    assert "query strings and fragments" in operations_text
+
+
+def test_hosted_deployment_checklist_is_documented_without_http_smoke_script() -> None:
+    smithery_text = (ROOT / "docs" / "smithery-deployment.md").read_text(encoding="utf-8")
+    docs_page = (
+        DOCS_SITE / "src/content/docs/operations/hosted-deployment.md"
+    ).read_text(encoding="utf-8")
+
+    assert not (ROOT / "scripts" / "mcp_http_smoke.py").exists()
+    for text in (smithery_text, docs_page):
+        assert "Render uptime" in text
+        assert "`/healthz`" in text
+        assert "`/.well-known/mcp/server-card.json`" in text
+        assert "Smithery listing" in text
+        assert "manual MCP tool-call smoke" in text
+
+
+def test_post_v11_roadmap_is_documented_and_contract_preserving() -> None:
+    roadmap_text = ROADMAP.read_text(encoding="utf-8")
+    docs_roadmap_text = (
+        DOCS_SITE / "src/content/docs/maintainers/roadmap.md"
+    ).read_text(encoding="utf-8")
+
+    for text in (roadmap_text, docs_roadmap_text):
+        assert "v1.2" in text
+        assert "v1.3" in text
+        assert "v1.4" in text
+        assert "v2.0" in text
+        assert "APRA" in text
+        assert "after ABS/RBA depth" in text
+        assert "{metadata, series, observations}" in text
+        assert "mcp_http_smoke.py" not in text
 
 
 def test_docs_site_documents_schema_and_preferred_rba_listing_surface() -> None:

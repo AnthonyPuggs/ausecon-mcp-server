@@ -134,6 +134,22 @@ CURATED_SHORTCUTS: dict[str, dict[str, Any]] = {
         "variant": "headline_spending",
     },
     "commodity_prices": {"source": "rba", "dataset_id": "i2", "variant": "rba_commodity_index"},
+    # Tranche C
+    "real_gdp": {"source": "abs", "dataset_id": "ANA_AGG", "variant": "real_gdp"},
+    "nominal_gdp": {"source": "abs", "dataset_id": "ANA_AGG", "variant": "nominal_gdp"},
+    "household_consumption": {
+        "source": "abs",
+        "dataset_id": "ANA_EXP",
+        "variant": "household_consumption",
+    },
+    "private_investment": {
+        "source": "abs",
+        "dataset_id": "ANA_EXP",
+        "variant": "private_investment",
+    },
+    "retail_turnover": {"source": "abs", "dataset_id": "RT", "variant": "headline_turnover"},
+    "broad_money": {"source": "rba", "dataset_id": "d3", "variant": "broad_money"},
+    "bank_bill_rate": {"source": "rba", "dataset_id": "f1", "variant": "bank_bills_3m"},
 }
 
 

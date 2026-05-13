@@ -3,7 +3,7 @@ title: Caching and Logging
 description: Operational behaviour for cache, stale fallback, logging, and upgrades.
 ---
 
-## Logging
+## Server observability
 
 The server writes structured JSON log lines to stderr. It never writes logs to stdout because the
 stdio MCP transport owns stdout.
@@ -19,6 +19,30 @@ Set `AUSECON_LOG_LEVEL` to control logging for the `ausecon_mcp` namespace:
 
 For Smithery HTTP containers, Uvicorn access logs are disabled by default. Application logs still go
 to stderr and should not contain request bodies or session configuration.
+
+Server observability is about data reliability: upstream request logs, integration-test failures,
+catalogue drift, cache fallback, and hosted MCP health. It is separate from documentation-site
+analytics. Documentation-site observability does not measure MCP data reliability, ABS/RBA upstream
+health, cache state, or hosted MCP tool-call success.
+
+## Documentation-site observability
+
+The documentation site includes Vercel Analytics and Speed Insights so maintainers can understand
+documentation usage and page performance. The integration lives in `docs-site/src/layouts/Base.astro`.
+
+Speed Insights receives a sanitised URL. The `speedInsightsBeforeSend` hook strips query strings and
+fragments before forwarding the payload, which avoids sending accidental local search terms or
+client-side fragments from documentation URLs.
+This protects query strings and fragments in documentation telemetry.
+
+Use documentation-site metrics for:
+
+- high-traffic documentation pages that need clearer examples
+- page performance regressions in the Astro/Starlight site
+- evidence that client-setup or hosted-deployment pages are being used
+
+Do not use documentation-site metrics as evidence that the MCP server is healthy. For that, use
+server logs, `/healthz`, Smithery metadata, live integration tests, and catalogue audit output.
 
 ## HTTP safety
 

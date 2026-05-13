@@ -45,13 +45,17 @@ export default defineConfig({
         },
         {
           label: 'Operations',
-          items: [{ label: 'Caching and Logging', slug: 'operations/caching-and-logging' }],
+          items: [
+            { label: 'Caching and Logging', slug: 'operations/caching-and-logging' },
+            { label: 'Hosted Deployment', slug: 'operations/hosted-deployment' },
+          ],
         },
         {
           label: 'Maintainers',
           items: [
             { label: 'Contributing', slug: 'maintainers/contributing' },
             { label: 'Releasing', slug: 'maintainers/releasing' },
+            { label: 'Roadmap', slug: 'maintainers/roadmap' },
           ],
         },
       ],

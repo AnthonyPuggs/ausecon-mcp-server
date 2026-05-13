@@ -902,6 +902,19 @@ TRANCHE_B_RBA_SERVICE = [
     ("commodity_prices", "i2", ["GRCPAISDR"]),
 ]
 
+TRANCHE_C_ABS_SERVICE = [
+    ("real_gdp", "ANA_AGG", "M1.GPM.20.AUS.Q"),
+    ("nominal_gdp", "ANA_AGG", "M3.GPM.20.AUS.Q"),
+    ("household_consumption", "ANA_EXP", "VCH.FCE.PHS.20.AUS.Q"),
+    ("private_investment", "ANA_EXP", "VCH.GFC_PBI.PSS.20.AUS.Q"),
+    ("retail_turnover", "RT", "M1.20.20.AUS.M"),
+]
+
+TRANCHE_C_RBA_SERVICE = [
+    ("broad_money", "d3", ["DMABMS"]),
+    ("bank_bill_rate", "f1", ["FIRMMBAB90D"]),
+]
+
 
 @pytest.mark.parametrize(("concept", "dataflow_id", "abs_key"), TRANCHE_B_ABS_SERVICE)
 @pytest.mark.asyncio
@@ -921,6 +934,36 @@ async def test_service_forwards_tranche_b_abs_concepts(
 @pytest.mark.parametrize(("concept", "table_id", "series_ids"), TRANCHE_B_RBA_SERVICE)
 @pytest.mark.asyncio
 async def test_service_forwards_tranche_b_rba_concepts(
+    concept: str, table_id: str, series_ids: list[str]
+) -> None:
+    rba = StubRBAProvider()
+    service = AuseconService(abs_provider=StubABSProvider(), rba_provider=rba)
+
+    await service.get_economic_series(concept)
+
+    assert rba.last_get_table_kwargs is not None
+    assert rba.last_get_table_kwargs["table_id"] == table_id
+    assert rba.last_get_table_kwargs["series_ids"] == series_ids
+
+
+@pytest.mark.parametrize(("concept", "dataflow_id", "abs_key"), TRANCHE_C_ABS_SERVICE)
+@pytest.mark.asyncio
+async def test_service_forwards_tranche_c_abs_concepts(
+    concept: str, dataflow_id: str, abs_key: str
+) -> None:
+    abs_provider = StubABSProvider()
+    service = AuseconService(abs_provider=abs_provider, rba_provider=StubRBAProvider())
+
+    await service.get_economic_series(concept)
+
+    assert abs_provider.last_get_data_kwargs is not None
+    assert abs_provider.last_get_data_kwargs["dataflow_id"] == dataflow_id
+    assert abs_provider.last_get_data_kwargs["key"] == abs_key
+
+
+@pytest.mark.parametrize(("concept", "table_id", "series_ids"), TRANCHE_C_RBA_SERVICE)
+@pytest.mark.asyncio
+async def test_service_forwards_tranche_c_rba_concepts(
     concept: str, table_id: str, series_ids: list[str]
 ) -> None:
     rba = StubRBAProvider()

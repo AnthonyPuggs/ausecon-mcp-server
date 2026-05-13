@@ -109,3 +109,48 @@ async def test_live_semantic_dwelling_approvals() -> None:
     assert result["metadata"]["source"] == "abs"
     assert result["metadata"]["dataset_id"] == "BA_GCCSA"
     assert result["observations"]
+
+
+# Tranche C live coverage
+
+
+@pytest.mark.parametrize(
+    ("concept", "source", "dataset_id"),
+    [
+        ("real_gdp", "abs", "ANA_AGG"),
+        ("nominal_gdp", "abs", "ANA_AGG"),
+        ("household_consumption", "abs", "ANA_EXP"),
+        ("private_investment", "abs", "ANA_EXP"),
+        ("retail_turnover", "abs", "RT"),
+    ],
+)
+async def test_live_semantic_tranche_c_abs_concepts(
+    concept: str,
+    source: str,
+    dataset_id: str,
+) -> None:
+    result = await _call(concept)
+
+    assert result["metadata"]["source"] == source
+    assert result["metadata"]["dataset_id"] == dataset_id
+    assert result["observations"]
+
+
+@pytest.mark.parametrize(
+    ("concept", "table_id", "series_id"),
+    [
+        ("broad_money", "d3", "DMABMS"),
+        ("bank_bill_rate", "f1", "FIRMMBAB90D"),
+    ],
+)
+async def test_live_semantic_tranche_c_rba_concepts(
+    concept: str,
+    table_id: str,
+    series_id: str,
+) -> None:
+    result = await _call(concept)
+
+    assert result["metadata"]["source"] == "rba"
+    assert result["metadata"]["dataset_id"] == table_id
+    series_ids = {s["series_id"] for s in result["series"]}
+    assert series_id in series_ids

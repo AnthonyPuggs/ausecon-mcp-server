@@ -84,6 +84,25 @@ registries:
 Keep the listing private or unlisted until these checks pass, then switch to
 public discovery.
 
+## Lightweight Hosted Checklist
+
+Use this checklist after Render redeploys, Smithery listing changes, or release
+metadata updates. It is intentionally lighter than a full MCP tool-call smoke:
+automated hosted tool-call checks should only be reintroduced if the deployed
+transport and client naming are stable.
+
+- Confirm Render uptime for the hosted service and inspect recent deploy logs.
+- `GET /` returns the JSON status document and advertises `/mcp`.
+- `GET /healthz` returns `200` with `{"status": "ok"}`.
+- `GET /.well-known/mcp/server-card.json` returns the current server name,
+  version, homepage, icon, read-only tool annotations, and output schemas.
+- Confirm the Smithery listing points to the intended repository, branch,
+  container build, and MCP endpoint.
+- Use manual MCP tool-call smoke in the Smithery Playground after release
+  changes: `list_economic_concepts(query="cash rate")`,
+  `get_economic_series(concept="cash_rate_target", last_n=5)`, and
+  `search_datasets(query="unemployment rate", source="abs")`.
+
 ## Quality Score
 
 Smithery's quality score is metadata-driven. Before refreshing the listing,

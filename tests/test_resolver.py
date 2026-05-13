@@ -279,7 +279,7 @@ def test_resolve_rba_csv_path_uses_explicit_csv_path_when_declared() -> None:
         del RBA_CATALOGUE["__test__"]
 
 
-def test_curated_shortcuts_cover_v0110_tranches_ab_concepts() -> None:
+def test_curated_shortcuts_cover_current_semantic_concepts() -> None:
     assert set(CURATED_SHORTCUTS) == {
         "cash_rate_target",
         "headline_cpi",
@@ -312,6 +312,14 @@ def test_curated_shortcuts_cover_v0110_tranches_ab_concepts() -> None:
         "producer_price_inflation",
         "household_spending",
         "commodity_prices",
+        # Tranche C
+        "real_gdp",
+        "nominal_gdp",
+        "household_consumption",
+        "private_investment",
+        "retail_turnover",
+        "broad_money",
+        "bank_bill_rate",
     }
 
 
@@ -343,6 +351,19 @@ TRANCHE_B_RBA = [
     ("commodity_prices", "i2", "rba_commodity_index", ["GRCPAISDR"]),
 ]
 
+TRANCHE_C_ABS = [
+    ("real_gdp", "ANA_AGG", "real_gdp", "M1.GPM.20.AUS.Q"),
+    ("nominal_gdp", "ANA_AGG", "nominal_gdp", "M3.GPM.20.AUS.Q"),
+    ("household_consumption", "ANA_EXP", "household_consumption", "VCH.FCE.PHS.20.AUS.Q"),
+    ("private_investment", "ANA_EXP", "private_investment", "VCH.GFC_PBI.PSS.20.AUS.Q"),
+    ("retail_turnover", "RT", "headline_turnover", "M1.20.20.AUS.M"),
+]
+
+TRANCHE_C_RBA = [
+    ("broad_money", "d3", "broad_money", ["DMABMS"]),
+    ("bank_bill_rate", "f1", "bank_bills_3m", ["FIRMMBAB90D"]),
+]
+
 
 @pytest.mark.parametrize(("concept", "dataset_id", "variant", "abs_key"), TRANCHE_B_ABS)
 @pytest.mark.asyncio
@@ -359,6 +380,30 @@ async def test_resolve_tranche_b_abs_concepts(
 @pytest.mark.parametrize(("concept", "dataset_id", "variant", "series_ids"), TRANCHE_B_RBA)
 @pytest.mark.asyncio
 async def test_resolve_tranche_b_rba_concepts(
+    concept: str, dataset_id: str, variant: str, series_ids: list[str]
+) -> None:
+    result = await resolve(concept)
+    assert result.source == "rba"
+    assert result.dataset_id == dataset_id
+    assert result.variant == variant
+    assert result.rba_series_ids == series_ids
+
+
+@pytest.mark.parametrize(("concept", "dataset_id", "variant", "abs_key"), TRANCHE_C_ABS)
+@pytest.mark.asyncio
+async def test_resolve_tranche_c_abs_concepts(
+    concept: str, dataset_id: str, variant: str, abs_key: str
+) -> None:
+    result = await resolve(concept)
+    assert result.source == "abs"
+    assert result.dataset_id == dataset_id
+    assert result.variant == variant
+    assert result.abs_key == abs_key
+
+
+@pytest.mark.parametrize(("concept", "dataset_id", "variant", "series_ids"), TRANCHE_C_RBA)
+@pytest.mark.asyncio
+async def test_resolve_tranche_c_rba_concepts(
     concept: str, dataset_id: str, variant: str, series_ids: list[str]
 ) -> None:
     result = await resolve(concept)
