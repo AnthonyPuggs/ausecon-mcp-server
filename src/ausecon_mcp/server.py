@@ -45,6 +45,7 @@ from ausecon_mcp.validation import (
 )
 
 ABS_PERIOD_PATTERN = r"^(\d{4}|\d{4}-Q[1-4]|\d{4}-(0[1-9]|1[0-2])|\d{4}-S[1-2])$"
+
 HOMEPAGE_URL = "https://auseconmcp.com/"
 SERVER_ICON_URL = f"{HOMEPAGE_URL}ausecon-icon.svg"
 SERVER_DISPLAY_NAME = "AusEcon MCP Server"
@@ -53,6 +54,7 @@ SERVER_DESCRIPTION = (
     "Australian Bureau of Statistics via MCP."
 )
 SERVER_LICENSE = "MIT"
+
 TOOL_TITLES = {
     "search_datasets": "Search Datasets",
     "list_catalogue": "List Catalogue",
@@ -63,6 +65,7 @@ TOOL_TITLES = {
     "get_rba_table": "Get RBA Table",
     "get_economic_series": "Get Economic Series",
 }
+
 SearchQuery = Annotated[str, Field(min_length=1, description="Discovery query text.")]
 Identifier = Annotated[str, Field(min_length=1, description="Non-empty dataset or table id.")]
 AbsKey = Annotated[
@@ -70,6 +73,7 @@ AbsKey = Annotated[
     Field(min_length=1, description='ABS SDMX key, or "all" for all series.'),
 ]
 SeriesId = Annotated[str, Field(min_length=1)]
+
 OptionalSourceFilter = Annotated[
     Literal["abs", "rba"] | None,
     Field(
@@ -79,6 +83,7 @@ OptionalSourceFilter = Annotated[
         ),
     ),
 ]
+
 OptionalRbaCategoryFilter = Annotated[
     Literal[
         "exchange_rates",
@@ -94,6 +99,7 @@ OptionalRbaCategoryFilter = Annotated[
     | None,
     Field(description="Optional RBA catalogue category filter."),
 ]
+
 OptionalConceptQuery = Annotated[
     str | None,
     Field(description="Optional query for filtering semantic economic concepts."),
@@ -262,6 +268,7 @@ class AuseconService:
         validated_query = None if query is None else validate_search_query(query)
         validated_source = validate_source(source)
         validated_category = None if category is None else require_non_empty("category", category)
+
         return _list_economic_concepts(
             query=validated_query,
             source=validated_source,
@@ -271,8 +278,10 @@ class AuseconService:
     async def get_abs_dataset_structure(self, dataflow_id: str) -> dict:
         validated_dataflow_id = validate_source_token("dataflow_id", dataflow_id)
         structure_id = resolve_abs_structure_id(validated_dataflow_id)
+
         if structure_id == validated_dataflow_id:
             structure_id = resolve_abs_dataflow_id(validated_dataflow_id)
+
         return await self.abs_provider.get_dataset_structure(structure_id)
 
     async def get_abs_data(
@@ -294,7 +303,9 @@ class AuseconService:
         )
         validated_last_n = validate_positive_int("last_n", last_n)
         validated_updated_after = validate_iso_datetime("updated_after", updated_after)
+
         upstream_id = resolve_abs_dataflow_id(validated_dataflow_id)
+
         return await self.abs_provider.get_data(
             dataflow_id=upstream_id,
             key=validated_key,
@@ -310,6 +321,7 @@ class AuseconService:
         include_discontinued: bool = False,
     ) -> list[dict]:
         validated_category = validate_rba_category(category)
+
         return self.rba_provider.list_tables(
             category=validated_category,
             include_discontinued=include_discontinued,
@@ -332,7 +344,9 @@ class AuseconService:
             end_name="end_date",
         )
         validated_last_n = validate_positive_int("last_n", last_n)
+
         csv_path = resolve_rba_csv_path(validated_table_id)
+
         return await self.rba_provider.get_table(
             table_id=validated_table_id,
             series_ids=validated_series_ids,
@@ -354,6 +368,7 @@ class AuseconService:
     ) -> dict:
         validated_concept = require_non_empty("concept", concept)
         validated_last_n = validate_positive_int("last_n", last_n)
+
         resolved = await resolve(
             validated_concept,
             variant=variant,
@@ -361,6 +376,7 @@ class AuseconService:
             frequency=frequency,
             abs_structure_fetcher=self.abs_provider.get_dataset_structure,
         )
+
         bounds = normalise_semantic_bounds(resolved, start=start, end=end)
 
         if resolved.source == "rba":
@@ -405,6 +421,7 @@ class AuseconService:
 
 def build_server(service: AuseconService | None = None) -> FastMCP:
     app_service = service or AuseconService()
+
     mcp = FastMCP(
         "ausecon-mcp-server",
         version=resolve_version(),
@@ -412,14 +429,16 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
         icons=[Icon(src=SERVER_ICON_URL, mimeType="image/svg+xml", sizes=["64x64"])],
         instructions=(
             "Australian economic data tools for official ABS and RBA datasets. "
-            "Use list_economic_concepts before get_economic_series for ordinary analyst "
+            "Use economy.concepts.list before economy.series.get for ordinary analyst "
             "requests such as GDP, CPI, unemployment, cash rate, credit, or yields. "
-            "Use search_datasets and list_catalogue for source-native ABS/RBA discovery, "
-            "then get_abs_data or get_rba_table when exact dataset/table control is needed."
+            "Use catalogue.datasets.search and catalogue.entries.list for source-native "
+            "ABS/RBA discovery, then abs.data.get or rba.table.get when exact dataset/table "
+            "control is needed."
         ),
     )
 
     @mcp.tool(
+        name="catalogue.datasets.search",
         title=TOOL_TITLES["search_datasets"],
         annotations=_tool_annotations("Search Datasets"),
         output_schema=_list_output_schema("Ranked ABS and RBA catalogue search results."),
@@ -432,6 +451,7 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
         return await app_service.search_datasets(query=query, source=source)
 
     @mcp.tool(
+        name="catalogue.entries.list",
         title=TOOL_TITLES["list_catalogue"],
         annotations=_tool_annotations("List Catalogue"),
         output_schema=_list_output_schema("Curated ABS and RBA catalogue entries."),
@@ -443,8 +463,10 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
         include_ceased: IncludeCeased = False,
         include_discontinued: IncludeDiscontinued = False,
     ) -> list[dict]:
-        """List curated ABS and RBA catalogue entries, optionally filtered by source,
-        category, or tag. Unranked complement to ``search_datasets``."""
+        """List curated ABS and RBA catalogue entries, optionally filtered by source, category, or tag.
+
+        Unranked complement to ``catalogue.datasets.search``.
+        """
         return await app_service.list_catalogue(
             source=source,
             category=category,
@@ -454,6 +476,7 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
         )
 
     @mcp.tool(
+        name="economy.concepts.list",
         title=TOOL_TITLES["list_economic_concepts"],
         annotations=_tool_annotations("List Economic Concepts"),
         output_schema=_list_output_schema("Curated semantic economic concepts."),
@@ -463,7 +486,7 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
         source: OptionalSourceFilter = None,
         category: OptionalCategory = None,
     ) -> list[dict]:
-        """List analyst-friendly semantic economic concepts accepted by get_economic_series."""
+        """List analyst-friendly semantic economic concepts accepted by economy.series.get."""
         return await app_service.list_economic_concepts(
             query=query,
             source=source,
@@ -471,6 +494,7 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
         )
 
     @mcp.tool(
+        name="abs.dataset.structure.get",
         title=TOOL_TITLES["get_abs_dataset_structure"],
         annotations=_tool_annotations("Get ABS Dataset Structure"),
         output_schema=_abs_structure_output_schema(),
@@ -480,6 +504,7 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
         return await app_service.get_abs_dataset_structure(dataflow_id=dataflow_id)
 
     @mcp.tool(
+        name="abs.data.get",
         title=TOOL_TITLES["get_abs_data"],
         annotations=_tool_annotations("Get ABS Data"),
         output_schema=response_output_schema(),
@@ -503,6 +528,7 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
         )
 
     @mcp.tool(
+        name="rba.tables.list",
         title=TOOL_TITLES["list_rba_tables"],
         annotations=_tool_annotations("List RBA Tables"),
         output_schema=_list_output_schema("Curated RBA table catalogue entries."),
@@ -511,13 +537,17 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
         category: OptionalRbaCategoryFilter = None,
         include_discontinued: IncludeDiscontinued = False,
     ) -> list[dict]:
-        """Deprecated compatibility alias. Prefer list_catalogue(source="rba")."""
+        """Deprecated compatibility alias.
+
+        Prefer catalogue.entries.list(source="rba").
+        """
         return await app_service.list_rba_tables(
             category=category,
             include_discontinued=include_discontinued,
         )
 
     @mcp.tool(
+        name="rba.table.get",
         title=TOOL_TITLES["get_rba_table"],
         annotations=_tool_annotations("Get RBA Table"),
         output_schema=response_output_schema(),
@@ -539,6 +569,7 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
         )
 
     @mcp.tool(
+        name="economy.series.get",
         title=TOOL_TITLES["get_economic_series"],
         annotations=_tool_annotations("Get Economic Series"),
         output_schema=response_output_schema(),
@@ -554,8 +585,8 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
     ) -> dict:
         """Preferred analyst-facing retrieval tool for curated ABS/RBA economic concepts.
 
-        Use list_economic_concepts for discovery. Date bounds accept YYYY, YYYY-QN,
-        YYYY-SN, YYYY-MM, or YYYY-MM-DD and are normalised to the resolved source.
+        Use economy.concepts.list for discovery. Date bounds accept YYYY, YYYY-QN, YYYY-SN,
+        YYYY-MM, or YYYY-MM-DD and are normalised to the resolved source.
         """
         return await app_service.get_economic_series(
             concept=concept,
@@ -569,7 +600,6 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
 
     register_resources(mcp)
     register_prompts(mcp)
-
     return mcp
 
 
@@ -590,6 +620,7 @@ def _stamp_semantic_metadata(
         "abs_key": resolved.abs_key,
         "rba_series_ids": resolved.rba_series_ids,
     }
+
     payload.setdefault("metadata", {})["semantic"] = {
         "concept": concept,
         "variant": resolved.variant,
@@ -612,12 +643,15 @@ mcp = build_server()
 
 def resolve_http_port() -> int:
     raw_port = os.environ.get("PORT", "8081")
+
     try:
         port = int(raw_port)
     except ValueError as exc:
         raise ValueError("PORT must be an integer between 1 and 65535.") from exc
+
     if not 1 <= port <= 65535:
         raise ValueError("PORT must be an integer between 1 and 65535.")
+
     return port
 
 
@@ -665,6 +699,7 @@ def _json_metadata(value: Any) -> Any:
 
 async def build_server_card_response(server: FastMCP) -> JSONResponse:
     tools = await server.list_tools(run_middleware=False)
+
     return JSONResponse(
         {
             "serverInfo": {
@@ -690,7 +725,10 @@ async def build_server_card_response(server: FastMCP) -> JSONResponse:
                 {
                     "name": tool.name,
                     "title": tool.title
-                    or TOOL_TITLES.get(tool.name, tool.name.replace("_", " ").title()),
+                    or TOOL_TITLES.get(
+                        tool.name,
+                        tool.name.replace(".", " ").replace("_", " ").title(),
+                    ),
                     "description": tool.description or "",
                     "inputSchema": tool.parameters,
                     "outputSchema": tool.output_schema,
@@ -710,11 +748,13 @@ async def http_server_card(_request: Request) -> JSONResponse:
 
 def build_http_app(server: FastMCP | None = None):
     active_server = server or mcp
+
     app = active_server.http_app(
         path="/mcp",
         transport="streamable-http",
         middleware=build_http_middleware(),
     )
+
     app.add_route("/", http_root, methods=["GET", "HEAD"])
     app.add_route("/healthz", http_healthz, methods=["GET", "HEAD"])
 
@@ -726,6 +766,7 @@ def build_http_app(server: FastMCP | None = None):
         server_card,
         methods=["GET", "HEAD"],
     )
+
     return app
 
 
@@ -738,6 +779,7 @@ def main() -> None:
 def main_http() -> None:
     configure_logging()
     get_logger("server").info("server.start", extra={"transport": "streamable-http"})
+
     uvicorn.run(
         build_http_app(),
         host="0.0.0.0",
