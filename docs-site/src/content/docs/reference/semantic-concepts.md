@@ -9,7 +9,7 @@ description: Curated concepts accepted by get_economic_series.
 source-native ABS or RBA target and can be discovered at runtime with
 `list_economic_concepts` or the `ausecon://concepts` resource.
 
-Total concepts: `36`.
+Total concepts: `48`.
 
 ## Activity
 
@@ -28,8 +28,13 @@ Total concepts: `36`.
 
 | Concept | Source | Dataset | Variant | Frequency | Recommended call |
 | --- | --- | --- | --- | --- | --- |
-| `aud_usd` | RBA | `f11` | `aud_usd` | Daily | `get_economic_series(concept="aud_usd")` |
-| `trade_weighted_index` | RBA | `f11` | `twi` | Daily | `get_economic_series(concept="trade_weighted_index")` |
+| `aud_cny` | RBA | `f11` | `aud_cny` | Monthly | `get_economic_series(concept="aud_cny")` |
+| `aud_eur` | RBA | `f11` | `aud_eur` | Monthly | `get_economic_series(concept="aud_eur")` |
+| `aud_gbp` | RBA | `f11` | `aud_gbp` | Monthly | `get_economic_series(concept="aud_gbp")` |
+| `aud_jpy` | RBA | `f11` | `aud_jpy` | Monthly | `get_economic_series(concept="aud_jpy")` |
+| `aud_nzd` | RBA | `f11` | `aud_nzd` | Monthly | `get_economic_series(concept="aud_nzd")` |
+| `aud_usd` | RBA | `f11` | `aud_usd` | Monthly | `get_economic_series(concept="aud_usd")` |
+| `trade_weighted_index` | RBA | `f11` | `twi` | Monthly | `get_economic_series(concept="trade_weighted_index")` |
 
 ## External Sector
 
@@ -87,7 +92,14 @@ Total concepts: `36`.
 | --- | --- | --- | --- | --- | --- |
 | `broad_money` | RBA | `d3` | `broad_money` | Monthly | `get_economic_series(concept="broad_money")` |
 | `business_credit` | RBA | `d2` | `business` | Monthly | `get_economic_series(concept="business_credit")` |
+| `business_credit_growth` | RBA | `d1` | `business_credit_yoy` | Monthly | `get_economic_series(concept="business_credit_growth")` |
+| `currency_in_circulation` | RBA | `d3` | `currency` | Monthly | `get_economic_series(concept="currency_in_circulation")` |
 | `housing_credit` | RBA | `d2` | `housing` | Monthly | `get_economic_series(concept="housing_credit")` |
+| `housing_credit_growth` | RBA | `d1` | `housing_credit_yoy` | Monthly | `get_economic_series(concept="housing_credit_growth")` |
+| `m3` | RBA | `d3` | `m3` | Monthly | `get_economic_series(concept="m3")` |
+| `money_base` | RBA | `d3` | `money_base` | Monthly | `get_economic_series(concept="money_base")` |
+| `total_credit` | RBA | `d2` | `total_credit` | Monthly | `get_economic_series(concept="total_credit")` |
+| `total_credit_growth` | RBA | `d1` | `total_credit_yoy` | Monthly | `get_economic_series(concept="total_credit_growth")` |
 
 ## National Accounts
 

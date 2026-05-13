@@ -535,6 +535,21 @@ _RAW_RBA_CATALOGUE = {
         "variants": [
             {"name": "credit", "aliases": ["credit growth"], "rba_series_ids": None},
             {"name": "money", "aliases": ["money growth", "broad money"], "rba_series_ids": None},
+            {
+                "name": "total_credit_yoy",
+                "aliases": ["total credit growth", "credit growth"],
+                "rba_series_ids": ["DGFAC12"],
+            },
+            {
+                "name": "housing_credit_yoy",
+                "aliases": ["housing credit growth"],
+                "rba_series_ids": ["DGFACH12"],
+            },
+            {
+                "name": "business_credit_yoy",
+                "aliases": ["business credit growth"],
+                "rba_series_ids": ["DGFACB12"],
+            },
         ],
         "audit": {
             "last_audited": "2026-04-18",
@@ -572,6 +587,11 @@ _RAW_RBA_CATALOGUE = {
                 "aliases": ["business credit"],
                 "rba_series_ids": ["DLCACBS"],
             },
+            {
+                "name": "total_credit",
+                "aliases": ["total credit", "credit total"],
+                "rba_series_ids": ["DLCACS"],
+            },
             {"name": "household", "aliases": ["household credit"], "rba_series_ids": None},
         ],
         "audit": {
@@ -600,12 +620,22 @@ _RAW_RBA_CATALOGUE = {
         "frequencies": ["M"],
         "geographies": ["national"],
         "variants": [
-            {"name": "currency", "aliases": [], "rba_series_ids": None},
+            {
+                "name": "currency",
+                "aliases": ["currency in circulation", "currency"],
+                "rba_series_ids": ["DMACS"],
+            },
             {"name": "deposits", "aliases": [], "rba_series_ids": None},
+            {"name": "m3", "aliases": ["m3"], "rba_series_ids": ["DMAM3S"]},
             {
                 "name": "broad_money",
                 "aliases": ["broad money", "money supply", "m3"],
                 "rba_series_ids": ["DMABMS"],
+            },
+            {
+                "name": "money_base",
+                "aliases": ["money base", "monetary base"],
+                "rba_series_ids": ["DMAMMB"],
             },
         ],
         "audit": {
@@ -1152,7 +1182,7 @@ _RAW_RBA_CATALOGUE = {
             "Long historical run of Australian dollar exchange rates against major "
             "trading partner currencies, daily and monthly observations."
         ),
-        "frequency": "Daily",
+        "frequency": "Monthly",
         "category": "exchange_rates",
         "aliases": [
             "exchange rates",
@@ -1164,7 +1194,7 @@ _RAW_RBA_CATALOGUE = {
             "fx",
             "trade weighted index",
         ],
-        "frequencies": ["D"],
+        "frequencies": ["M"],
         "geographies": ["national"],
         "variants": [
             {
@@ -1176,6 +1206,31 @@ _RAW_RBA_CATALOGUE = {
                 "name": "twi",
                 "aliases": ["trade weighted index", "trade-weighted index"],
                 "rba_series_ids": ["FXRTWI"],
+            },
+            {
+                "name": "aud_cny",
+                "aliases": ["aud cny", "cny", "aud-cny"],
+                "rba_series_ids": ["FXRCR"],
+            },
+            {
+                "name": "aud_jpy",
+                "aliases": ["aud jpy", "jpy", "aud-jpy"],
+                "rba_series_ids": ["FXRJY"],
+            },
+            {
+                "name": "aud_eur",
+                "aliases": ["aud eur", "eur", "aud-eur"],
+                "rba_series_ids": ["FXREUR"],
+            },
+            {
+                "name": "aud_gbp",
+                "aliases": ["aud gbp", "gbp", "aud-gbp"],
+                "rba_series_ids": ["FXRUKPS"],
+            },
+            {
+                "name": "aud_nzd",
+                "aliases": ["aud nzd", "nzd", "aud-nzd"],
+                "rba_series_ids": ["FXRNZD"],
             },
         ],
         "audit": {

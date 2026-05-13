@@ -154,3 +154,36 @@ async def test_live_semantic_tranche_c_rba_concepts(
     assert result["metadata"]["dataset_id"] == table_id
     series_ids = {s["series_id"] for s in result["series"]}
     assert series_id in series_ids
+
+
+# Tranche D live coverage
+
+
+@pytest.mark.parametrize(
+    ("concept", "table_id", "series_id"),
+    [
+        ("total_credit", "d2", "DLCACS"),
+        ("total_credit_growth", "d1", "DGFAC12"),
+        ("housing_credit_growth", "d1", "DGFACH12"),
+        ("business_credit_growth", "d1", "DGFACB12"),
+        ("m3", "d3", "DMAM3S"),
+        ("money_base", "d3", "DMAMMB"),
+        ("currency_in_circulation", "d3", "DMACS"),
+        ("aud_cny", "f11", "FXRCR"),
+        ("aud_jpy", "f11", "FXRJY"),
+        ("aud_eur", "f11", "FXREUR"),
+        ("aud_gbp", "f11", "FXRUKPS"),
+        ("aud_nzd", "f11", "FXRNZD"),
+    ],
+)
+async def test_live_semantic_tranche_d_rba_concepts(
+    concept: str,
+    table_id: str,
+    series_id: str,
+) -> None:
+    result = await _call(concept)
+
+    assert result["metadata"]["source"] == "rba"
+    assert result["metadata"]["dataset_id"] == table_id
+    series_ids = {s["series_id"] for s in result["series"]}
+    assert series_id in series_ids

@@ -16,7 +16,7 @@ Bank of Australia (RBA).
 
 Version `1.1.0` is the current hosted release baseline. Transport support is stdio plus
 Streamable HTTP. The server exposes eight read-only MCP tools, four read-only MCP resources, eight
-prompt templates, and 36 curated macroeconomic concepts for analyst-friendly retrieval through
+prompt templates, and 48 curated macroeconomic concepts for analyst-friendly retrieval through
 `get_economic_series`.
 
 ## Documentation

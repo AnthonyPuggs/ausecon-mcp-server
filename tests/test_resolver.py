@@ -320,6 +320,19 @@ def test_curated_shortcuts_cover_current_semantic_concepts() -> None:
         "retail_turnover",
         "broad_money",
         "bank_bill_rate",
+        # Tranche D
+        "total_credit",
+        "total_credit_growth",
+        "housing_credit_growth",
+        "business_credit_growth",
+        "m3",
+        "money_base",
+        "currency_in_circulation",
+        "aud_cny",
+        "aud_jpy",
+        "aud_eur",
+        "aud_gbp",
+        "aud_nzd",
     }
 
 
@@ -364,6 +377,21 @@ TRANCHE_C_RBA = [
     ("bank_bill_rate", "f1", "bank_bills_3m", ["FIRMMBAB90D"]),
 ]
 
+TRANCHE_D_RBA = [
+    ("total_credit", "d2", "total_credit", ["DLCACS"]),
+    ("total_credit_growth", "d1", "total_credit_yoy", ["DGFAC12"]),
+    ("housing_credit_growth", "d1", "housing_credit_yoy", ["DGFACH12"]),
+    ("business_credit_growth", "d1", "business_credit_yoy", ["DGFACB12"]),
+    ("m3", "d3", "m3", ["DMAM3S"]),
+    ("money_base", "d3", "money_base", ["DMAMMB"]),
+    ("currency_in_circulation", "d3", "currency", ["DMACS"]),
+    ("aud_cny", "f11", "aud_cny", ["FXRCR"]),
+    ("aud_jpy", "f11", "aud_jpy", ["FXRJY"]),
+    ("aud_eur", "f11", "aud_eur", ["FXREUR"]),
+    ("aud_gbp", "f11", "aud_gbp", ["FXRUKPS"]),
+    ("aud_nzd", "f11", "aud_nzd", ["FXRNZD"]),
+]
+
 
 @pytest.mark.parametrize(("concept", "dataset_id", "variant", "abs_key"), TRANCHE_B_ABS)
 @pytest.mark.asyncio
@@ -404,6 +432,18 @@ async def test_resolve_tranche_c_abs_concepts(
 @pytest.mark.parametrize(("concept", "dataset_id", "variant", "series_ids"), TRANCHE_C_RBA)
 @pytest.mark.asyncio
 async def test_resolve_tranche_c_rba_concepts(
+    concept: str, dataset_id: str, variant: str, series_ids: list[str]
+) -> None:
+    result = await resolve(concept)
+    assert result.source == "rba"
+    assert result.dataset_id == dataset_id
+    assert result.variant == variant
+    assert result.rba_series_ids == series_ids
+
+
+@pytest.mark.parametrize(("concept", "dataset_id", "variant", "series_ids"), TRANCHE_D_RBA)
+@pytest.mark.asyncio
+async def test_resolve_tranche_d_rba_concepts(
     concept: str, dataset_id: str, variant: str, series_ids: list[str]
 ) -> None:
     result = await resolve(concept)

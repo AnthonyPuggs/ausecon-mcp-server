@@ -34,12 +34,17 @@ First tranche now landed:
 - broad money
 - 3-month bank bill rate
 
+Second tranche now landed:
+
+- total credit and year-ended credit growth
+- housing and business credit growth
+- M3, money base, and currency in circulation
+- monthly AUD/CNY, AUD/JPY, AUD/EUR, AUD/GBP, and AUD/NZD exchange rates
+
 Priority concepts:
 
 - verified monthly CPI 2.0 replacement if the ABS dataflow and default key are stable
-- selected financial aggregates
-- exchange-rate monthly averages
-- selected housing-price or construction concepts where the upstream series is stable
+- ABS housing-price or construction concepts where source-native data retrieval is stable
 
 Only add long-tail catalogue entries when they unlock an analyst-facing concept. Each new concept
 needs verified catalogue variants, resolver tests, service forwarding tests, generated docs checks,

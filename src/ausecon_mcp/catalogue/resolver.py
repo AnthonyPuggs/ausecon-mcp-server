@@ -150,6 +150,27 @@ CURATED_SHORTCUTS: dict[str, dict[str, Any]] = {
     "retail_turnover": {"source": "abs", "dataset_id": "RT", "variant": "headline_turnover"},
     "broad_money": {"source": "rba", "dataset_id": "d3", "variant": "broad_money"},
     "bank_bill_rate": {"source": "rba", "dataset_id": "f1", "variant": "bank_bills_3m"},
+    # Tranche D
+    "total_credit": {"source": "rba", "dataset_id": "d2", "variant": "total_credit"},
+    "total_credit_growth": {"source": "rba", "dataset_id": "d1", "variant": "total_credit_yoy"},
+    "housing_credit_growth": {
+        "source": "rba",
+        "dataset_id": "d1",
+        "variant": "housing_credit_yoy",
+    },
+    "business_credit_growth": {
+        "source": "rba",
+        "dataset_id": "d1",
+        "variant": "business_credit_yoy",
+    },
+    "m3": {"source": "rba", "dataset_id": "d3", "variant": "m3"},
+    "money_base": {"source": "rba", "dataset_id": "d3", "variant": "money_base"},
+    "currency_in_circulation": {"source": "rba", "dataset_id": "d3", "variant": "currency"},
+    "aud_cny": {"source": "rba", "dataset_id": "f11", "variant": "aud_cny"},
+    "aud_jpy": {"source": "rba", "dataset_id": "f11", "variant": "aud_jpy"},
+    "aud_eur": {"source": "rba", "dataset_id": "f11", "variant": "aud_eur"},
+    "aud_gbp": {"source": "rba", "dataset_id": "f11", "variant": "aud_gbp"},
+    "aud_nzd": {"source": "rba", "dataset_id": "f11", "variant": "aud_nzd"},
 }
 
 

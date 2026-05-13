@@ -27,8 +27,11 @@ Deepen ABS/RBA semantic coverage before adding new providers. The first v1.2 tra
 nominal GDP levels, household consumption, private investment, retail turnover, broad money, and a
 3-month bank bill rate.
 
-Remaining priority areas are a verified monthly CPI 2.0 replacement, selected financial
-aggregates, exchange-rate monthly averages, and selected housing concepts.
+The second v1.2 tranche adds total credit, credit-growth concepts, M3, money base, currency in
+circulation, and selected monthly AUD exchange rates.
+
+Remaining priority areas are a verified monthly CPI 2.0 replacement and ABS housing concepts once
+source-native data retrieval is stable.
 
 Add concepts only when the upstream mapping is verified and the result fits the existing response
 shape.
