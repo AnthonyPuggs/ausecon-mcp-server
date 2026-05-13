@@ -3,7 +3,8 @@
 <!-- mcp-name: io.github.AnthonyPuggs/ausecon-mcp-server -->
 
 [![CI](https://github.com/AnthonyPuggs/ausecon-mcp-server/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/AnthonyPuggs/ausecon-mcp-server/actions/workflows/ci.yml)
-[![Release](https://img.shields.io/github/v/tag/AnthonyPuggs/ausecon-mcp-server?sort=semver&label=release)](https://github.com/AnthonyPuggs/ausecon-mcp-server/tags)
+[![Release](https://img.shields.io/github/v/tag/AnthonyPuggs/ausecon-mcp-server?sort=semver&label=release)](https://github.com/AnthonyPuggs/ausecon-mcp-server/tags)\
+[![Smithery](https://smithery.ai/badge/anthonypuggs/ausecon-mcp)](https://smithery.ai/servers/anthonypuggs/ausecon-mcp)
 [![Docs](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://anthonypuggs.github.io/ausecon-mcp-server/)
 [![PyPI](https://img.shields.io/pypi/v/ausecon-mcp-server?label=PyPI)](https://pypi.org/project/ausecon-mcp-server/)
 [![Transport](https://img.shields.io/badge/Transport-stdio%20%2B%20HTTP-blue)]()
