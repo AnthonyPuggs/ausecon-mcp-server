@@ -1,0 +1,48 @@
+---
+import Analytics from '@vercel/analytics/astro'
+import SpeedInsights from "@vercel/speed-insights/astro";
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const { title = 'ausecon MCP', description = 'Australian Economic Data MCP Server' } = Astro.props;
+
+function speedInsightsBeforeSend(payload: any) {
+  try {
+    if (payload?.url) {
+      const u = new URL(payload.url);
+      // remove query params and fragments to avoid sending sensitive data
+      u.search = '';
+      u.hash = '';
+      payload.url = u.toString();
+    }
+  } catch (e) {
+    // ignore malformed URLs
+  }
+  return payload;
+}
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="description" content={description} />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>{title}</title>
+    <SpeedInsights speedInsightsBeforeSend={speedInsightsBeforeSend} />
+  </head>
+  <body>
+    <slot />
+    <Analytics />
+  </body>
+</html>
+
+<style>
+  :global(html) {
+    font-family: system-ui, sans-serif;
+  }
+</style>
