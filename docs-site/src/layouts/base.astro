@@ -1,5 +1,6 @@
 ---
 import Analytics from '@vercel/analytics/astro';
+import SpeedInsights from '@vercel/speed-insights/astro';
 
 interface Props {
   title?: string;
@@ -21,6 +22,7 @@ const { title = 'ausecon MCP', description = 'Australian Economic Data MCP Serve
   <body>
     <slot />
     <Analytics />
+    <SpeedInsights />
   </body>
 </html>
 
