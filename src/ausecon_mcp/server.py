@@ -180,6 +180,53 @@ def _tool_annotations(title: str) -> dict[str, bool | str]:
     }
 
 
+def _nested_schema_description(schema: dict[str, Any]) -> str | None:
+    description = schema.get("description")
+    if isinstance(description, str) and description:
+        return description
+
+    for branch_key in ("anyOf", "oneOf", "allOf"):
+        branches = schema.get(branch_key)
+        if not isinstance(branches, list):
+            continue
+        for branch in branches:
+            if not isinstance(branch, dict):
+                continue
+            nested_description = _nested_schema_description(branch)
+            if nested_description:
+                return nested_description
+    return None
+
+
+def _promote_nested_parameter_descriptions(input_schema: dict[str, Any]) -> dict[str, Any]:
+    """Keep FastMCP parameter descriptions top-level across supported Python versions."""
+    properties = input_schema.get("properties", {})
+    if not isinstance(properties, dict):
+        return input_schema
+
+    for schema in properties.values():
+        if not isinstance(schema, dict) or schema.get("description"):
+            continue
+        description = _nested_schema_description(schema)
+        if description:
+            schema["description"] = description
+    return input_schema
+
+
+def _normalise_registered_tool_parameter_descriptions(mcp: FastMCP) -> None:
+    provider = getattr(mcp, "_local_provider", None)
+    components = getattr(provider, "_components", {})
+    if not isinstance(components, dict):
+        return
+
+    for component_key, component in components.items():
+        if not str(component_key).startswith("tool:"):
+            continue
+        parameters = getattr(component, "parameters", None)
+        if isinstance(parameters, dict):
+            _promote_nested_parameter_descriptions(parameters)
+
+
 def _list_output_schema(description: str) -> dict[str, Any]:
     return {
         "type": "object",
@@ -569,6 +616,7 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
 
     register_resources(mcp)
     register_prompts(mcp)
+    _normalise_registered_tool_parameter_descriptions(mcp)
 
     return mcp
 
@@ -692,7 +740,7 @@ async def build_server_card_response(server: FastMCP) -> JSONResponse:
                     "title": tool.title
                     or TOOL_TITLES.get(tool.name, tool.name.replace("_", " ").title()),
                     "description": tool.description or "",
-                    "inputSchema": tool.parameters,
+                    "inputSchema": _promote_nested_parameter_descriptions(tool.parameters),
                     "outputSchema": tool.output_schema,
                     "annotations": _json_metadata(tool.annotations) or {},
                 }

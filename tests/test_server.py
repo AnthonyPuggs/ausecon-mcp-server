@@ -55,6 +55,31 @@ def _has_schema_property(schema: dict, key: str, value: object | None = None) ->
     return False
 
 
+def test_schema_description_normaliser_promotes_python310_optional_union_shape() -> None:
+    schema = {
+        "type": "object",
+        "properties": {
+            "source": {
+                "anyOf": [
+                    {
+                        "anyOf": [
+                            {"enum": ["abs", "rba"], "type": "string"},
+                            {"type": "null"},
+                        ],
+                        "description": "Optional source filter.",
+                    },
+                    {"type": "null"},
+                ],
+                "default": None,
+            },
+        },
+    }
+
+    server_module._promote_nested_parameter_descriptions(schema)
+
+    assert schema["properties"]["source"]["description"] == "Optional source filter."
+
+
 class FakeMCP:
     def __init__(self) -> None:
         self.run_kwargs: dict | None = None
