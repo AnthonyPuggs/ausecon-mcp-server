@@ -2,8 +2,7 @@ import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
 
 export default defineConfig({
-  site: 'https://anthonypuggs.github.io',
-  base: '/ausecon-mcp-server',
+  site: 'https://auseconmcp.com',
   integrations: [
     starlight({
       title: 'AusEcon MCP Server',
