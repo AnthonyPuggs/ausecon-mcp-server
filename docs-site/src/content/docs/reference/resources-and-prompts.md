@@ -10,7 +10,7 @@ The server exposes the curated catalogue as MCP resources. These are read-only, 
 
 | URI | Returns |
 | --- | --- |
-| `ausecon://catalogue` | Flat index of every curated ABS and RBA entry. |
+| `ausecon://catalogue` | Flat index of every curated ABS, RBA, and APRA entry. |
 | `ausecon://abs/{dataflow_id}` | Full curated catalogue entry for one ABS dataflow. |
 | `ausecon://rba/{table_id}` | Full curated catalogue entry for one RBA statistical table. |
 | `ausecon://concepts` | Every curated semantic shortcut with its resolved target and recommended call. |

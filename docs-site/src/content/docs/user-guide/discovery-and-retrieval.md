@@ -1,6 +1,6 @@
 ---
 title: Discovery and Retrieval
-description: Choose between semantic retrieval and source-native ABS/RBA retrieval.
+description: Choose between semantic retrieval and source-native ABS/RBA/APRA retrieval.
 ---
 
 ## Choosing the right surface
@@ -14,14 +14,15 @@ such as real rates, year-ended transformations, and yield-curve slope. Derived r
 returns the normal `metadata`, `series`, and `observations` shape, with formula provenance in
 `metadata.derived`.
 
-Use source-native tools when you know the ABS dataflow, SDMX key, RBA table, or RBA series IDs you
-want:
+Use source-native tools when you know the ABS dataflow, SDMX key, RBA table, RBA series IDs, APRA
+publication, APRA table, or APRA series IDs you want:
 
-- `search_datasets` ranks matching curated ABS and RBA entries.
+- `search_datasets` ranks matching curated ABS, RBA, and APRA entries.
 - `list_catalogue` lists entries unranked and supports source, category, and tag filters.
 - `get_abs_dataset_structure` retrieves ABS SDMX dimensions and code lists.
 - `get_abs_data` retrieves ABS data in the normalised response shape.
 - `get_rba_table` retrieves RBA statistical tables in the normalised response shape.
+- `get_apra_data` retrieves curated official APRA XLSX publications in the normalised response shape.
 
 `list_rba_tables` remains available as a deprecated compatibility alias. New integrations should
 use `list_catalogue(source="rba")`.
@@ -51,10 +52,11 @@ curated semantic layer and then combined by fixed, documented formulas.
 
 The server normalises these to ABS periods or RBA ISO dates after resolving the concept.
 
-Raw ABS and RBA tools keep source-native conventions:
+Raw ABS, RBA, and APRA tools keep source-native conventions:
 
 - ABS retrieval uses `start_period` and `end_period`.
 - RBA retrieval uses `start_date` and `end_date`.
+- APRA retrieval uses `start_date` and `end_date`.
 
 ## Validation behaviour
 
@@ -62,6 +64,7 @@ Raw ABS and RBA tools keep source-native conventions:
 - `last_n` must be positive when provided.
 - ABS period strings are validated for annual, half-yearly, quarterly, and monthly formats.
 - RBA date bounds are validated as ISO dates.
+- APRA date bounds are validated as ISO dates.
 - Unknown semantic concepts and unsupported variants raise explicit validation errors.
 - Unknown derived concepts raise explicit validation errors.
 

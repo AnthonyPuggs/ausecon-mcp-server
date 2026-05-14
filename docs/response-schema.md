@@ -1,7 +1,7 @@
 # Response Schema
 
-The retrieval contract for `get_abs_data`, `get_rba_table`, `get_economic_series`, and
-`get_derived_series` is checked in at
+The retrieval contract for `get_abs_data`, `get_rba_table`, `get_apra_data`,
+`get_economic_series`, and `get_derived_series` is checked in at
 [`schemas/response.schema.json`](../schemas/response.schema.json).
 
 ## Top-Level Shape
@@ -27,7 +27,7 @@ Optional fields appear when relevant:
 
 - `frequency`
 - `updated_after` for ABS requests that use the upstream SDMX filter
-- `title` and `publication_date` for RBA tables
+- `title` and `publication_date` for source-native table or publication metadata
 - `semantic` for responses returned by `get_economic_series`
 - `derived` for responses returned by `get_derived_series`
 - `stale`, `cached_at`, and `expires_at` when a stale cached payload is returned after an upstream failure
@@ -35,8 +35,8 @@ Optional fields appear when relevant:
 `cached_at` and `expires_at` are Unix timestamps from the cache layer rather than ISO datetimes.
 
 `semantic` records the analyst-facing concept, resolved variant, requested `start`/`end` bounds,
-source-native resolved bounds, and the ABS/RBA target used for retrieval. Raw `get_abs_data` and
-`get_rba_table` responses do not include this field.
+source-native resolved bounds, and the ABS/RBA target used for retrieval. Raw `get_abs_data`,
+`get_rba_table`, and `get_apra_data` responses do not include this field.
 
 `derived` records the formula, operands, source concepts, alignment frequency, output units,
 requested and resolved bounds, and dropped-observation counts for transparent derived indicators.
@@ -49,8 +49,8 @@ requested and resolved bounds, and dropped-observation counts for transparent de
 - `observations` entries carry `date`, `series_id`, nullable `value`, optional `raw_value`,
   a `dimensions` map, optional `status`, and optional ABS `comment`.
 
-The `dimensions` map is intentionally shared across ABS and RBA payloads so downstream consumers can
-parse one stable shape.
+The `dimensions` map is intentionally shared across ABS, RBA, and APRA payloads so downstream
+consumers can parse one stable shape.
 
 ## Checked-In Examples
 

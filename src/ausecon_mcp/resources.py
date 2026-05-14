@@ -4,6 +4,7 @@ from fastmcp import FastMCP
 from fastmcp.exceptions import ResourceError
 
 from ausecon_mcp.catalogue.abs import ABS_CATALOGUE
+from ausecon_mcp.catalogue.apra import APRA_CATALOGUE
 from ausecon_mcp.catalogue.rba import RBA_CATALOGUE
 from ausecon_mcp.catalogue.resolver import list_economic_concepts
 
@@ -27,7 +28,7 @@ def register_resources(mcp: FastMCP) -> None:
         "ausecon://catalogue",
         name="Ausecon catalogue index",
         description=(
-            "Flat index of every curated ABS and RBA dataset the server exposes. "
+            "Flat index of every curated ABS, RBA, and APRA dataset the server exposes. "
             "Use this to browse what is available before calling search_datasets."
         ),
         mime_type="application/json",
@@ -36,7 +37,9 @@ def register_resources(mcp: FastMCP) -> None:
     def catalogue_index() -> list[dict]:
         return [
             _summarise(entry)
-            for entry in list(ABS_CATALOGUE.values()) + list(RBA_CATALOGUE.values())
+            for entry in list(ABS_CATALOGUE.values())
+            + list(RBA_CATALOGUE.values())
+            + list(APRA_CATALOGUE.values())
         ]
 
     @mcp.resource(

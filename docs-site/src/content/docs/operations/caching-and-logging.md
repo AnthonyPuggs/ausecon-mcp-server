@@ -22,7 +22,7 @@ to stderr and should not contain request bodies or session configuration.
 
 Server observability is about data reliability: upstream request logs, integration-test failures,
 catalogue drift, cache fallback, and hosted MCP health. It is separate from documentation-site
-analytics. Documentation-site observability does not measure MCP data reliability, ABS/RBA upstream
+analytics. Documentation-site observability does not measure MCP data reliability, ABS/RBA/APRA upstream
 health, cache state, or hosted MCP tool-call success.
 
 ## Documentation-site observability
@@ -47,7 +47,7 @@ server logs, `/healthz`, Smithery metadata, live integration tests, and catalogu
 ## HTTP safety
 
 The Smithery container exposes MCP Streamable HTTP at `/mcp`. It is suitable for public deployment
-only because all tools are read-only and retrieve public ABS/RBA data from fixed upstream hosts.
+only because all tools are read-only and retrieve public ABS, RBA, and APRA data from fixed upstream hosts.
 
 Key safety constraints:
 

@@ -139,4 +139,4 @@ Total concepts: `55`.
   support for those selectors.
 - Source-native retrieval details remain available through `search_datasets`,
   `list_catalogue`, `get_abs_dataset_structure`, `get_abs_data`, and
-  `get_rba_table`.
+  `get_rba_table` or `get_apra_data`.

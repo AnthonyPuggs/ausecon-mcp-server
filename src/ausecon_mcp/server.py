@@ -35,11 +35,13 @@ from ausecon_mcp.logging import configure_logging, get_logger
 from ausecon_mcp.prompts import register_prompts
 from ausecon_mcp.providers._http import resolve_version
 from ausecon_mcp.providers.abs import ABSProvider
+from ausecon_mcp.providers.apra import APRAProvider
 from ausecon_mcp.providers.rba import RBAProvider
 from ausecon_mcp.resources import register_resources
 from ausecon_mcp.validation import (
     require_non_empty,
     validate_abs_period_range,
+    validate_apra_series_ids,
     validate_iso_date_range,
     validate_iso_datetime,
     validate_positive_int,
@@ -55,8 +57,8 @@ HOMEPAGE_URL = "https://auseconmcp.com/"
 SERVER_ICON_URL = f"{HOMEPAGE_URL}ausecon-icon.svg"
 SERVER_DISPLAY_NAME = "AusEcon MCP Server"
 SERVER_DESCRIPTION = (
-    "Australian economic data from the Reserve Bank of Australia and "
-    "Australian Bureau of Statistics via MCP."
+    "Australian economic data from the Reserve Bank of Australia, Australian Bureau "
+    "of Statistics, and Australian Prudential Regulation Authority via MCP."
 )
 SERVER_LICENSE = "MIT"
 TOOL_TITLES = {
@@ -67,6 +69,7 @@ TOOL_TITLES = {
     "get_abs_data": "Get ABS Data",
     "list_rba_tables": "List RBA Tables",
     "get_rba_table": "Get RBA Table",
+    "get_apra_data": "Get APRA Data",
     "get_economic_series": "Get Economic Series",
     "get_derived_series": "Get Derived Series",
 }
@@ -78,11 +81,12 @@ AbsKey = Annotated[
 ]
 SeriesId = Annotated[str, Field(min_length=1)]
 OptionalSourceFilter = Annotated[
-    Literal["abs", "rba"] | None,
+    Literal["abs", "rba", "apra"] | None,
     Field(
         description=(
-            "Optional source filter. Use abs for Australian Bureau of Statistics or rba "
-            "for Reserve Bank of Australia."
+            "Optional source filter. Use abs for Australian Bureau of Statistics, rba "
+            "for Reserve Bank of Australia, or apra for Australian Prudential "
+            "Regulation Authority."
         ),
     ),
 ]
@@ -145,7 +149,9 @@ OptionalPositiveInt = Annotated[
 ]
 OptionalSeriesIdList = Annotated[
     list[SeriesId] | None,
-    Field(description="Optional list of non-empty RBA series IDs to keep after download."),
+    Field(
+        description="Optional list of non-empty source-native series IDs to keep after download.",
+    ),
 ]
 OptionalVariant = Annotated[
     str | None,
@@ -291,9 +297,11 @@ class AuseconService:
         self,
         abs_provider: ABSProvider | Any | None = None,
         rba_provider: RBAProvider | Any | None = None,
+        apra_provider: APRAProvider | Any | None = None,
     ) -> None:
         self.abs_provider = abs_provider or ABSProvider()
         self.rba_provider = rba_provider or RBAProvider()
+        self.apra_provider = apra_provider or APRAProvider()
 
     async def search_datasets(self, query: str, source: str | None = None) -> list[dict]:
         validated_query = validate_search_query(query)
@@ -406,6 +414,36 @@ class AuseconService:
             csv_path=csv_path,
         )
 
+    async def get_apra_data(
+        self,
+        publication_id: str,
+        table_id: str | None = None,
+        series_ids: list[str] | None = None,
+        start_date: str | None = None,
+        end_date: str | None = None,
+        last_n: int | None = None,
+    ) -> dict:
+        validated_publication_id = validate_source_token("publication_id", publication_id)
+        validated_table_id = (
+            None if table_id is None else validate_source_token("table_id", table_id)
+        )
+        validated_series_ids = validate_apra_series_ids(series_ids)
+        validated_start_date, validated_end_date = validate_iso_date_range(
+            start_date,
+            end_date,
+            start_name="start_date",
+            end_name="end_date",
+        )
+        validated_last_n = validate_positive_int("last_n", last_n)
+        return await self.apra_provider.get_data(
+            publication_id=validated_publication_id,
+            table_id=validated_table_id,
+            series_ids=validated_series_ids,
+            start_date=validated_start_date,
+            end_date=validated_end_date,
+            last_n=validated_last_n,
+        )
+
     async def get_economic_series(
         self,
         concept: str,
@@ -493,7 +531,7 @@ class AuseconService:
         )
 
     async def aclose(self) -> None:
-        for provider in (self.abs_provider, self.rba_provider):
+        for provider in (self.abs_provider, self.rba_provider, self.apra_provider):
             close = getattr(provider, "aclose", None)
             if close is not None:
                 await close()
@@ -507,32 +545,33 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
         website_url=HOMEPAGE_URL,
         icons=[Icon(src=SERVER_ICON_URL, mimeType="image/svg+xml", sizes=["64x64"])],
         instructions=(
-            "Australian economic data tools for official ABS and RBA datasets. "
+            "Australian economic data tools for official ABS, RBA, and APRA datasets. "
             "Use list_economic_concepts before get_economic_series for ordinary analyst "
             "requests such as GDP, CPI, unemployment, cash rate, credit, or yields. "
             "Use get_derived_series for the small transparent set of derived indicators "
             "such as real rates, growth transformations, and yield-curve slope. "
-            "Use search_datasets and list_catalogue for source-native ABS/RBA discovery, "
-            "then get_abs_data or get_rba_table when exact dataset/table control is needed."
+            "Use search_datasets and list_catalogue for source-native ABS/RBA/APRA "
+            "discovery, then get_abs_data, get_rba_table, or get_apra_data when exact "
+            "dataset/table control is needed."
         ),
     )
 
     @mcp.tool(
         title=TOOL_TITLES["search_datasets"],
         annotations=_tool_annotations("Search Datasets"),
-        output_schema=_list_output_schema("Ranked ABS and RBA catalogue search results."),
+        output_schema=_list_output_schema("Ranked ABS, RBA, and APRA catalogue search results."),
     )
     async def search_datasets(
         query: SearchQuery,
         source: OptionalSourceFilter = None,
     ) -> list[dict]:
-        """Search curated ABS and RBA economic datasets."""
+        """Search curated ABS, RBA, and APRA economic datasets."""
         return await app_service.search_datasets(query=query, source=source)
 
     @mcp.tool(
         title=TOOL_TITLES["list_catalogue"],
         annotations=_tool_annotations("List Catalogue"),
-        output_schema=_list_output_schema("Curated ABS and RBA catalogue entries."),
+        output_schema=_list_output_schema("Curated ABS, RBA, and APRA catalogue entries."),
     )
     async def list_catalogue(
         source: OptionalSourceFilter = None,
@@ -541,7 +580,7 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
         include_ceased: IncludeCeased = False,
         include_discontinued: IncludeDiscontinued = False,
     ) -> list[dict]:
-        """List curated ABS and RBA catalogue entries, optionally filtered by source,
+        """List curated ABS, RBA, and APRA catalogue entries, optionally filtered by source,
         category, or tag. Unranked complement to ``search_datasets``."""
         return await app_service.list_catalogue(
             source=source,
@@ -629,6 +668,32 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
     ) -> dict:
         """Expert/source-native RBA statistical table retrieval in a normalised response shape."""
         return await app_service.get_rba_table(
+            table_id=table_id,
+            series_ids=series_ids,
+            start_date=start_date,
+            end_date=end_date,
+            last_n=last_n,
+        )
+
+    @mcp.tool(
+        title=TOOL_TITLES["get_apra_data"],
+        annotations=_tool_annotations("Get APRA Data"),
+        output_schema=response_output_schema(),
+    )
+    async def get_apra_data(
+        publication_id: Identifier,
+        table_id: Identifier | None = None,
+        series_ids: OptionalSeriesIdList = None,
+        start_date: OptionalIsoDate = None,
+        end_date: OptionalIsoDate = None,
+        last_n: OptionalPositiveInt = None,
+    ) -> dict:
+        """Expert/source-native APRA public XLSX publication retrieval.
+
+        Only curated official APRA publication IDs are accepted; arbitrary URLs are not.
+        """
+        return await app_service.get_apra_data(
+            publication_id=publication_id,
             table_id=table_id,
             series_ids=series_ids,
             start_date=start_date,

@@ -14,6 +14,7 @@ EXPECTED_TOOL_TITLES = {
     "get_abs_data": "Get ABS Data",
     "list_rba_tables": "List RBA Tables",
     "get_rba_table": "Get RBA Table",
+    "get_apra_data": "Get APRA Data",
     "get_economic_series": "Get Economic Series",
     "get_derived_series": "Get Derived Series",
 }
@@ -64,7 +65,7 @@ def test_schema_description_normaliser_promotes_python310_optional_union_shape()
                 "anyOf": [
                     {
                         "anyOf": [
-                            {"enum": ["abs", "rba"], "type": "string"},
+                            {"enum": ["abs", "rba", "apra"], "type": "string"},
                             {"type": "null"},
                         ],
                         "description": "Optional source filter.",
@@ -188,6 +189,34 @@ class StubRBAProvider:
             "metadata": {"source": "rba", "dataset_id": table_id},
             "series": [{"series_id": "rba-series"}],
             "observations": [{"date": "2024-01-01", "series_id": "rba-series", "value": 4.35}],
+        }
+
+
+class StubAPRAProvider:
+    def __init__(self) -> None:
+        self.last_get_data_kwargs: dict | None = None
+
+    async def get_data(
+        self,
+        publication_id: str,
+        table_id: str | None = None,
+        series_ids: list[str] | None = None,
+        start_date: str | None = None,
+        end_date: str | None = None,
+        last_n: int | None = None,
+    ) -> dict:
+        self.last_get_data_kwargs = {
+            "publication_id": publication_id,
+            "table_id": table_id,
+            "series_ids": series_ids,
+            "start_date": start_date,
+            "end_date": end_date,
+            "last_n": last_n,
+        }
+        return {
+            "metadata": {"source": "apra", "dataset_id": publication_id},
+            "series": [{"series_id": "apra-series"}],
+            "observations": [{"date": "2024-03-31", "series_id": "apra-series", "value": 1.0}],
         }
 
 
@@ -462,6 +491,70 @@ async def test_service_fetches_abs_data() -> None:
     result = await service.get_abs_data("CPI", start_period="2024-Q1")
 
     assert result["metadata"]["dataset_id"] == "CPI"
+
+
+@pytest.mark.asyncio
+async def test_service_fetches_apra_data() -> None:
+    apra = StubAPRAProvider()
+    service = AuseconService(
+        abs_provider=StubABSProvider(),
+        rba_provider=StubRBAProvider(),
+        apra_provider=apra,
+    )
+
+    result = await service.get_apra_data(
+        "ADI_PROPERTY_EXPOSURES",
+        table_id="tab_1b",
+        series_ids=["ADI_PROPERTY_EXPOSURES:tab_1b:credit_outstanding:total_credit_outstanding"],
+        start_date="2024-01-01",
+        end_date="2024-12-31",
+        last_n=1,
+    )
+
+    assert result["metadata"]["source"] == "apra"
+    assert apra.last_get_data_kwargs == {
+        "publication_id": "ADI_PROPERTY_EXPOSURES",
+        "table_id": "tab_1b",
+        "series_ids": [
+            "ADI_PROPERTY_EXPOSURES:tab_1b:credit_outstanding:total_credit_outstanding"
+        ],
+        "start_date": "2024-01-01",
+        "end_date": "2024-12-31",
+        "last_n": 1,
+    }
+
+
+@pytest.mark.asyncio
+async def test_service_rejects_unsafe_apra_publication_ids_before_provider_call() -> None:
+    apra = StubAPRAProvider()
+    service = AuseconService(
+        abs_provider=StubABSProvider(),
+        rba_provider=StubRBAProvider(),
+        apra_provider=apra,
+    )
+
+    with pytest.raises(ValueError, match="publication_id"):
+        await service.get_apra_data("https://example.com")
+
+    assert apra.last_get_data_kwargs is None
+
+
+@pytest.mark.asyncio
+async def test_service_allows_apra_source_filter_without_semantic_concepts() -> None:
+    service = AuseconService(
+        abs_provider=StubABSProvider(),
+        rba_provider=StubRBAProvider(),
+        apra_provider=StubAPRAProvider(),
+    )
+
+    assert await service.list_economic_concepts(source="apra") == []
+    catalogue = await service.list_catalogue(source="apra")
+    assert {item["id"] for item in catalogue} == {
+        "ADI_MONTHLY",
+        "ADI_QUARTERLY_PERFORMANCE",
+        "ADI_QUARTERLY_CENTRALISED",
+        "ADI_PROPERTY_EXPOSURES",
+    }
 
 
 @pytest.mark.parametrize(
@@ -980,13 +1073,13 @@ async def test_service_forwards_tranche_a_rba_concepts(
 
 
 @pytest.mark.asyncio
-async def test_list_catalogue_unfiltered_returns_abs_and_rba_entries() -> None:
+async def test_list_catalogue_unfiltered_returns_abs_rba_and_apra_entries() -> None:
     service = AuseconService(abs_provider=StubABSProvider(), rba_provider=StubRBAProvider())
 
     rows = await service.list_catalogue()
 
     sources = {row["source"] for row in rows}
-    assert sources == {"abs", "rba"}
+    assert sources == {"abs", "rba", "apra"}
     expected_keys = {"id", "source", "name", "category", "frequency", "tags"}
     assert all(row.keys() == expected_keys for row in rows)
 
@@ -1340,11 +1433,11 @@ async def test_registered_tools_expose_input_schema_constraints_and_descriptions
         tools = {tool.name: tool for tool in await client.list_tools()}
 
     source_schema = tools["search_datasets"].inputSchema["properties"]["source"]
-    assert _has_string_enum(source_schema, ["abs", "rba"])
+    assert _has_string_enum(source_schema, ["abs", "rba", "apra"])
     assert _has_schema_description(source_schema)
 
     concepts_source_schema = tools["list_economic_concepts"].inputSchema["properties"]["source"]
-    assert _has_string_enum(concepts_source_schema, ["abs", "rba"])
+    assert _has_string_enum(concepts_source_schema, ["abs", "rba", "apra"])
     assert "economic concepts" in tools["list_economic_concepts"].description
 
     last_n_schema = tools["get_abs_data"].inputSchema["properties"]["last_n"]
@@ -1358,6 +1451,10 @@ async def test_registered_tools_expose_input_schema_constraints_and_descriptions
     start_date_schema = tools["get_rba_table"].inputSchema["properties"]["start_date"]
     assert _has_schema_property(start_date_schema, "format", "date")
     assert "ISO date" in str(start_date_schema)
+
+    apra_start_date_schema = tools["get_apra_data"].inputSchema["properties"]["start_date"]
+    assert _has_schema_property(apra_start_date_schema, "format", "date")
+    assert "ISO date" in str(apra_start_date_schema)
 
     category_schema = tools["list_rba_tables"].inputSchema["properties"]["category"]
     expected_categories = [
@@ -1401,7 +1498,13 @@ async def test_retrieval_tools_expose_response_output_schema() -> None:
     async with Client(mcp) as client:
         tools = {tool.name: tool for tool in await client.list_tools()}
 
-    for name in ("get_abs_data", "get_rba_table", "get_economic_series", "get_derived_series"):
+    for name in (
+        "get_abs_data",
+        "get_rba_table",
+        "get_apra_data",
+        "get_economic_series",
+        "get_derived_series",
+    ):
         output_schema = tools[name].outputSchema
         assert output_schema["type"] == "object"
         assert output_schema["additionalProperties"] is False

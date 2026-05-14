@@ -14,11 +14,12 @@ _ABS_PERIOD_PATTERNS = {
 }
 
 _RBA_CATEGORIES = {entry["category"] for entry in RBA_CATALOGUE.values()}
-_ALLOWED_SOURCES = {"abs", "rba"}
+_ALLOWED_SOURCES = {"abs", "rba", "apra"}
 _MAX_QUERY_LENGTH = 200
 _MAX_SOURCE_TOKEN_LENGTH = 128
 _QUERY_UNSAFE = re.compile(r"[\x00-\x1f\x7f/\\?#]")
 _SOURCE_TOKEN_UNSAFE = re.compile(r"[\x00-\x1f\x7f:/\\?#]")
+_APRA_SERIES_ID_UNSAFE = re.compile(r"[\x00-\x1f\x7f/\\?#]")
 _URI_SCHEME = re.compile(r"^[A-Za-z][A-Za-z0-9+.-]*:")
 
 
@@ -107,6 +108,24 @@ def validate_series_ids(series_ids: list[str] | None) -> list[str] | None:
         raise AuseconValidationError(
             "series_ids must contain only non-empty source-native identifiers."
         ) from exc
+
+
+def validate_apra_series_ids(series_ids: list[str] | None) -> list[str] | None:
+    if series_ids is None:
+        return None
+
+    validated = []
+    for series_id in series_ids:
+        raw = series_id or ""
+        if _APRA_SERIES_ID_UNSAFE.search(raw):
+            raise AuseconValidationError(
+                "series_ids must contain only non-empty APRA series identifiers."
+            )
+        normalised = require_non_empty("series_ids", series_id)
+        if len(normalised) > 256:
+            raise AuseconValidationError("series_ids must be no more than 256 characters.")
+        validated.append(normalised)
+    return validated
 
 
 def validate_iso_date(field_name: str, value: str | None) -> str | None:

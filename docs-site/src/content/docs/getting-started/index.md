@@ -28,8 +28,8 @@ waits for an MCP client to connect over standard input/output.
 2. Use `get_economic_series` with the selected concept.
 3. Use `get_derived_series` for transparent formula-based indicators such as real cash rate,
    yield-curve slope, real wage growth, credit growth, or real GDP per capita.
-4. Use `search_datasets`, `list_catalogue`, `get_abs_dataset_structure`, `get_abs_data`, and
-   `get_rba_table` when you need source-native ABS/RBA control.
+4. Use `search_datasets`, `list_catalogue`, `get_abs_dataset_structure`, `get_abs_data`,
+   `get_rba_table`, and `get_apra_data` when you need source-native ABS/RBA/APRA control.
 
 ## First retrieval pattern
 

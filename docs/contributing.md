@@ -1,7 +1,7 @@
 # Contributing
 
-`ausecon-mcp-server` is intentionally narrow: ABS + RBA only, stdio plus hosted HTTP transport,
-and small curated semantic and derived layers over source-native retrievals.
+`ausecon-mcp-server` is intentionally narrow: official ABS, RBA, and APRA sources, stdio plus
+hosted HTTP transport, and small curated semantic and derived layers over source-native retrievals.
 
 ## Local Setup
 
@@ -36,6 +36,7 @@ This uses a real FastMCP stdio client transport and verifies:
 - `list_economic_concepts`
 - `list_catalogue`
 - `get_abs_data`
+- `get_apra_data`
 - `get_economic_series`
 - `get_derived_series`
 
@@ -49,5 +50,5 @@ The smoke path currently exercises the `BUILDING_APPROVALS` catalogue entry and 
 - Prefer audited upstream fixes over broad catalogue growth.
 - Keep `get_derived_series` read-only, transparent, and formula-based; do not add modelling,
   forecasting, seasonal adjustment, or arbitrary user formulas without a separate design.
-- If an ABS or RBA replacement series is not cleanly source-native, defer it rather than shipping an
-  approximate semantic shortcut.
+- If an ABS, RBA, or APRA replacement series is not cleanly source-native, defer it rather than
+  shipping an approximate semantic shortcut.

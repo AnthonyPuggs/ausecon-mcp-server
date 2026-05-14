@@ -56,6 +56,64 @@ async def test_response_schema_validates_rba_provider_payload() -> None:
     _assert_valid(payload)
 
 
+def test_response_schema_validates_apra_provider_payload() -> None:
+    payload = {
+        "metadata": {
+            "source": "apra",
+            "dataset_id": "ADI_PROPERTY_EXPOSURES",
+            "frequency": "Quarterly",
+            "title": "Quarterly authorised deposit-taking institution property exposures",
+            "retrieval_url": (
+                "https://www.apra.gov.au/sites/default/files/example-property-exposures.xlsx"
+            ),
+            "retrieved_at": "2026-05-14T00:00:00Z",
+            "server_version": "test",
+            "truncated": False,
+        },
+        "series": [
+            {
+                "series_id": (
+                    "ADI_PROPERTY_EXPOSURES:tab_1b:credit_outstanding:"
+                    "total_credit_outstanding"
+                ),
+                "label": "Credit outstanding: Total credit outstanding",
+                "unit": "$ million",
+                "frequency": "Quarterly",
+                "dimensions": {
+                    "table": {
+                        "code": "tab_1b",
+                        "label": "Residential property exposures",
+                    }
+                },
+                "source_key": "Total credit outstanding",
+                "unit_multiplier": None,
+                "decimals": None,
+                "base_period": None,
+            }
+        ],
+        "observations": [
+            {
+                "date": "2024-03-31",
+                "series_id": (
+                    "ADI_PROPERTY_EXPOSURES:tab_1b:credit_outstanding:"
+                    "total_credit_outstanding"
+                ),
+                "value": 1000.0,
+                "dimensions": {
+                    "table": {
+                        "code": "tab_1b",
+                        "label": "Residential property exposures",
+                    }
+                },
+                "status": None,
+                "comment": None,
+            }
+        ],
+    }
+
+    _assert_valid(payload)
+
+
 @pytest.mark.asyncio
 async def test_response_schema_validates_semantic_payload() -> None:
     service = AuseconService(abs_provider=ABSProvider(), rba_provider=RBAProvider())
@@ -195,3 +253,4 @@ def test_response_schema_documents_contract_and_abs_metadata_fields() -> None:
     assert "semantic" in schema["$defs"]["metadata"]["properties"]
     assert "derived" in schema["$defs"]["metadata"]["properties"]
     assert "derived" in schema["$defs"]["metadata"]["properties"]["source"]["enum"]
+    assert "apra" in schema["$defs"]["metadata"]["properties"]["source"]["enum"]

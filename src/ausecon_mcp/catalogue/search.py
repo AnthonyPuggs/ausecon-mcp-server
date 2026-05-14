@@ -4,6 +4,7 @@ import re
 from collections.abc import Iterable
 
 from ausecon_mcp.catalogue.abs import ABS_CATALOGUE
+from ausecon_mcp.catalogue.apra import APRA_CATALOGUE
 from ausecon_mcp.catalogue.rba import RBA_CATALOGUE
 
 _TOKEN_RE = re.compile(r"[a-z0-9]+")
@@ -98,6 +99,8 @@ def _iter_collections(source: str | None) -> Iterable[tuple[str, dict]]:
         yield "abs", ABS_CATALOGUE
     if source in (None, "rba"):
         yield "rba", RBA_CATALOGUE
+    if source in (None, "apra"):
+        yield "apra", APRA_CATALOGUE
 
 
 def _score_entry(query_text: str, query_terms: set[str], entry: dict) -> int:

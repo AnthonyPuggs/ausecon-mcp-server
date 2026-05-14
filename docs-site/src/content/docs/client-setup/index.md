@@ -43,7 +43,7 @@ runs `ausecon-mcp-http`, listens on the `PORT` environment variable supplied by 
 the MCP endpoint at `/mcp`.
 
 The HTTP entrypoint is intentionally separate from the stdio command. It is unauthenticated because
-the server exposes only read-only tools over public ABS and RBA data. Do not reuse this pattern for
+the server exposes only read-only tools over public ABS, RBA, and APRA data. Do not reuse this pattern for
 private data sources or write-capable tools without adding authentication and origin controls.
 
 ## Cursor

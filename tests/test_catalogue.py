@@ -1,8 +1,9 @@
 import re
 
 from ausecon_mcp.catalogue.abs import ABS_CATALOGUE
+from ausecon_mcp.catalogue.apra import APRA_CATALOGUE
 from ausecon_mcp.catalogue.rba import RBA_CATALOGUE
-from ausecon_mcp.catalogue.search import search_catalogue
+from ausecon_mcp.catalogue.search import list_catalogue, search_catalogue
 
 VALID_FREQUENCY_CODES = {"D", "M", "Q", "A", "E"}
 SDMX_LITERAL_KEY_PATTERN = re.compile(r"^[0-9A-Z_+]+(\.[0-9A-Z_+]+)*$")
@@ -49,6 +50,21 @@ def test_rba_catalogue_covers_active_tables_and_tracks_discontinued_state() -> N
     assert all(entry["tags"] for entry in RBA_CATALOGUE.values())
 
 
+def test_apra_catalogue_covers_v14_source_native_publications() -> None:
+    assert set(APRA_CATALOGUE) == {
+        "ADI_MONTHLY",
+        "ADI_QUARTERLY_PERFORMANCE",
+        "ADI_QUARTERLY_CENTRALISED",
+        "ADI_PROPERTY_EXPOSURES",
+    }
+    assert all(
+        entry["landing_url"].startswith("https://www.apra.gov.au/")
+        for entry in APRA_CATALOGUE.values()
+    )
+    assert all(entry["link_patterns"] for entry in APRA_CATALOGUE.values())
+    assert all(entry["tables"] for entry in APRA_CATALOGUE.values())
+
+
 def test_search_catalogue_prefers_high_value_alias_matches() -> None:
     results = search_catalogue("trimmed mean inflation")
 
@@ -61,6 +77,21 @@ def test_search_catalogue_respects_source_filter() -> None:
     results = search_catalogue("cash rate", source="abs")
 
     assert results == []
+
+
+def test_search_catalogue_returns_apra_entries_when_source_filtered() -> None:
+    results = search_catalogue("property exposures", source="apra")
+
+    assert results
+    assert results[0]["source"] == "apra"
+    assert results[0]["id"] == "ADI_PROPERTY_EXPOSURES"
+
+
+def test_list_catalogue_returns_apra_entries_when_source_filtered() -> None:
+    results = list_catalogue(source="apra")
+
+    assert [item["source"] for item in results] == ["apra"] * len(APRA_CATALOGUE)
+    assert {item["id"] for item in results} == set(APRA_CATALOGUE)
 
 
 def test_search_catalogue_prioritises_exact_table_id_matches() -> None:
@@ -111,7 +142,7 @@ def test_slci_resolves_to_selected_living_cost_indexes() -> None:
 
 
 def test_every_catalogue_entry_declares_resolver_schema_fields() -> None:
-    for entry in (*ABS_CATALOGUE.values(), *RBA_CATALOGUE.values()):
+    for entry in (*ABS_CATALOGUE.values(), *RBA_CATALOGUE.values(), *APRA_CATALOGUE.values()):
         assert isinstance(entry.get("frequencies"), list), entry["id"]
         assert entry["frequencies"], f"{entry['id']}: frequencies must not be empty"
         assert set(entry["frequencies"]) <= VALID_FREQUENCY_CODES, entry["id"]

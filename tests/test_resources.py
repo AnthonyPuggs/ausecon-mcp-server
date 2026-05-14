@@ -4,6 +4,7 @@ import pytest
 from fastmcp import Client
 
 from ausecon_mcp.catalogue.abs import ABS_CATALOGUE
+from ausecon_mcp.catalogue.apra import APRA_CATALOGUE
 from ausecon_mcp.catalogue.rba import RBA_CATALOGUE
 from ausecon_mcp.catalogue.resolver import CURATED_SHORTCUTS
 from ausecon_mcp.server import build_server
@@ -26,7 +27,7 @@ async def test_catalogue_index_lists_every_curated_entry() -> None:
         payload = await _read_json(client, "ausecon://catalogue")
 
     ids = {entry["id"] for entry in payload}
-    expected = set(ABS_CATALOGUE.keys()) | set(RBA_CATALOGUE.keys())
+    expected = set(ABS_CATALOGUE.keys()) | set(RBA_CATALOGUE.keys()) | set(APRA_CATALOGUE.keys())
     assert ids == expected
     assert all({"id", "source", "name"} <= entry.keys() for entry in payload)
 

@@ -50,7 +50,7 @@ startCommand:
 
 Do not add `configSchema` or `exampleConfig` for v1.1.0. The server does not
 need user secrets or per-session configuration because every exposed tool reads
-public ABS/RBA data.
+public ABS, RBA, and APRA data.
 
 ## Deployment Checks
 
@@ -122,7 +122,7 @@ the Smithery scan after the new `/mcp` metadata is live.
 ## Security And Safety
 
 The public HTTP deployment is acceptable only because the tools are read-only,
-use public ABS/RBA data, and require no secrets. Do not copy this unauthenticated
+use public ABS, RBA, and APRA data, and require no secrets. Do not copy this unauthenticated
 pattern for private APIs, paid APIs, account data, or write-capable tools.
 
 Operational rules:
@@ -131,7 +131,7 @@ Operational rules:
 - Keep CORS non-credentialed unless future authentication is deliberately added.
 - Keep local HTTP testing bound to `127.0.0.1`; binding `0.0.0.0` is only for
   the hosted container entrypoint.
-- Keep outbound network access restricted to the existing ABS and RBA HTTPS
+- Keep outbound network access restricted to the existing ABS, RBA, and APRA HTTPS
   endpoints.
 - Do not add arbitrary URLs, callback URLs, proxy URLs, or user-supplied
   hostnames.

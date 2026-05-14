@@ -1,4 +1,4 @@
-# Australian Economic Data (RBA & ABS) MCP Server
+# Australian Economic Data (ABS, RBA & APRA) MCP Server
 
 <!-- mcp-name: io.github.AnthonyPuggs/ausecon-mcp-server -->
 
@@ -11,11 +11,11 @@
 [![License-MIT](https://img.shields.io/badge/License-MIT-lightgrey)]()
 
 `ausecon-mcp-server` is a Python Model Context Protocol (MCP) server for structured Australian
-macroeconomic and financial data from the Australian Bureau of Statistics (ABS) and the Reserve
-Bank of Australia (RBA).
+macroeconomic and financial data from the Australian Bureau of Statistics (ABS), the Reserve Bank
+of Australia (RBA), and the Australian Prudential Regulation Authority (APRA).
 
 Version `1.1.0` is the current hosted release baseline. Transport support is stdio plus
-Streamable HTTP. The server exposes nine read-only MCP tools, four read-only MCP resources, eight
+Streamable HTTP. The server exposes ten read-only MCP tools, four read-only MCP resources, eight
 prompt templates, 55 curated macroeconomic concepts through `get_economic_series`, and five
 transparent derived indicators through `get_derived_series`.
 
@@ -104,8 +104,8 @@ For transparent formula-based indicators, call the derived retrieval surface dir
 get_derived_series(concept="real_cash_rate", last_n=12)
 ```
 
-For exact ABS/RBA control, use `search_datasets`, `list_catalogue`,
-`get_abs_dataset_structure`, `get_abs_data`, and `get_rba_table`.
+For exact source-native control, use `search_datasets`, `list_catalogue`,
+`get_abs_dataset_structure`, `get_abs_data`, `get_rba_table`, and `get_apra_data`.
 
 ## Development
 

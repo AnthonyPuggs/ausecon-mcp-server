@@ -43,6 +43,7 @@ async def main() -> None:
             "search_datasets",
             "list_catalogue",
             "get_abs_data",
+            "get_apra_data",
             "get_economic_series",
             "get_derived_series",
         } <= tool_names

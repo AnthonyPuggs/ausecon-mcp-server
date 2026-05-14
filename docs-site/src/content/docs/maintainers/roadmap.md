@@ -51,9 +51,13 @@ They should not introduce modelling, forecasting, seasonal adjustment, or arbitr
 
 ## v1.4
 
-Add APRA after ABS/RBA depth is materially stronger. Scope APRA to public macro-financial time
-series such as ADI credit, deposits, lending composition, capital or liquidity aggregates, and
-arrears where stable public series are available.
+The APRA source-native foundation adds curated official APRA XLSX retrieval through
+`get_apra_data` while preserving `{metadata, series, observations}`. Initial coverage is limited to
+Monthly ADI Statistics, Quarterly ADI Performance, the ADI Centralised Publication, and Quarterly
+ADI Property Exposures.
+
+APRA-backed semantic concepts remain deferred until exact series definitions are fixture-backed and
+live-validated.
 
 Treasury and ASX remain deferred. Treasury is not the main statistical system of record for most
 target series, and ASX would shift the product toward market data.

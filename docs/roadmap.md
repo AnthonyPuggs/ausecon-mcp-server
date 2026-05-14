@@ -77,18 +77,20 @@ execution.
 
 ## v1.4: APRA as the first third source
 
-APRA should come after ABS/RBA depth is materially stronger. Scope it to official public
-macro-financial time series that fit `{metadata, series, observations}`.
+The APRA source-native foundation is now the next landed provider milestone. It adds curated
+official APRA XLSX retrieval through `get_apra_data` while preserving
+`{metadata, series, observations}` and deferring APRA semantic shortcuts until exact series
+definitions are fixture-backed and live-validated.
 
-Candidate APRA areas:
+Initial APRA publication coverage:
 
-- ADI credit and deposits
-- lending composition
-- capital and liquidity aggregates
-- arrears, if stable public series are available
+- Monthly Authorised Deposit-taking Institution Statistics
+- Quarterly Authorised Deposit-taking Institution Performance Statistics
+- Authorised Deposit-taking Institution Centralised Publication
+- Quarterly Authorised Deposit-taking Institution Property Exposures Statistics
 
-Expected public API changes are additive: extend source filters to include `apra`, add a
-source-native APRA retrieval tool if needed, and expose APRA-backed semantic concepts only after
+Expected public API changes are additive: source filters include `apra`, `get_apra_data` is the
+source-native APRA retrieval tool, and APRA-backed semantic concepts are exposed only after
 fixture and live validation.
 
 Treasury and ASX remain deferred. Treasury is not the main statistical system of record for most
