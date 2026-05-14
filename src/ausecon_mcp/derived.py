@@ -4,7 +4,7 @@ import calendar
 import re
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import UTC, date, datetime
+from datetime import date, datetime, timezone
 from typing import Any, Literal
 
 from ausecon_mcp.errors import AuseconValidationError
@@ -291,7 +291,7 @@ def derive_series(
             "title": spec.label,
             "publication_date": None,
             "retrieval_url": f"derived:{spec.concept}",
-            "retrieved_at": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
+            "retrieved_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
             "server_version": server_version,
             "truncated": truncated,
             "derived": {
