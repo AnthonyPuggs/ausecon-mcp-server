@@ -9,7 +9,7 @@ description: Curated concepts accepted by get_economic_series.
 source-native ABS or RBA target and can be discovered at runtime with
 `list_economic_concepts` or the `ausecon://concepts` resource.
 
-Total concepts: `48`.
+Total concepts: `55`.
 
 ## Activity
 
@@ -17,6 +17,14 @@ Total concepts: `48`.
 | --- | --- | --- | --- | --- | --- |
 | `household_spending` | ABS | `HSI_M` | `headline_spending` | Monthly | `get_economic_series(concept="household_spending")` |
 | `retail_turnover` | ABS | `RT` | `headline_turnover` | Monthly | `get_economic_series(concept="retail_turnover")` |
+
+## Credit Finance
+
+| Concept | Source | Dataset | Variant | Frequency | Recommended call |
+| --- | --- | --- | --- | --- | --- |
+| `investor_housing_lending` | ABS | `LEND_HOUSING` | `investor` | Quarterly | `get_economic_series(concept="investor_housing_lending")` |
+| `new_housing_lending` | ABS | `LEND_HOUSING` | `total_housing_lending` | Quarterly | `get_economic_series(concept="new_housing_lending")` |
+| `owner_occupier_housing_lending` | ABS | `LEND_HOUSING` | `owner_occupier` | Quarterly | `get_economic_series(concept="owner_occupier_housing_lending")` |
 
 ## Demographics
 
@@ -55,7 +63,6 @@ Total concepts: `48`.
 | Concept | Source | Dataset | Variant | Frequency | Recommended call |
 | --- | --- | --- | --- | --- | --- |
 | `inflation_expectations` | RBA | `g3` | `consumer` | Monthly | `get_economic_series(concept="inflation_expectations")` |
-| `monthly_inflation` | RBA | `g4` | `headline_monthly` | Monthly | `get_economic_series(concept="monthly_inflation")` |
 | `trimmed_mean_inflation` | RBA | `g1` | `trimmed_mean` | Quarterly | `get_economic_series(concept="trimmed_mean_inflation")` |
 | `weighted_median_inflation` | RBA | `g1` | `weighted_median` | Quarterly | `get_economic_series(concept="weighted_median_inflation")` |
 
@@ -116,6 +123,11 @@ Total concepts: `48`.
 | Concept | Source | Dataset | Variant | Frequency | Recommended call |
 | --- | --- | --- | --- | --- | --- |
 | `headline_cpi` | ABS | `CPI` | `headline` | Quarterly | `get_economic_series(concept="headline_cpi")` |
+| `monthly_cpi_change` | ABS | `CPI` | `monthly_change` | Monthly | `get_economic_series(concept="monthly_cpi_change")` |
+| `monthly_cpi_index` | ABS | `CPI` | `monthly_index` | Monthly | `get_economic_series(concept="monthly_cpi_index")` |
+| `monthly_inflation` | ABS | `CPI` | `monthly_annual_change` | Monthly | `get_economic_series(concept="monthly_inflation")` |
+| `monthly_trimmed_mean_inflation` | ABS | `CPI` | `monthly_trimmed_mean` | Monthly | `get_economic_series(concept="monthly_trimmed_mean_inflation")` |
+| `monthly_weighted_median_inflation` | ABS | `CPI` | `monthly_weighted_median` | Monthly | `get_economic_series(concept="monthly_weighted_median_inflation")` |
 | `producer_price_inflation` | ABS | `PPI_FD` | `producer` | Quarterly | `get_economic_series(concept="producer_price_inflation")` |
 | `wage_growth` | ABS | `WPI` | `headline_wpi` | Quarterly | `get_economic_series(concept="wage_growth")` |
 

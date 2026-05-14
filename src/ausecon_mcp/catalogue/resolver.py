@@ -99,7 +99,23 @@ CURATED_SHORTCUTS: dict[str, dict[str, Any]] = {
         "dataset_id": "g1",
         "variant": "weighted_median",
     },
-    "monthly_inflation": {"source": "rba", "dataset_id": "g4", "variant": "headline_monthly"},
+    "monthly_inflation": {
+        "source": "abs",
+        "dataset_id": "CPI",
+        "variant": "monthly_annual_change",
+    },
+    "monthly_cpi_index": {"source": "abs", "dataset_id": "CPI", "variant": "monthly_index"},
+    "monthly_cpi_change": {"source": "abs", "dataset_id": "CPI", "variant": "monthly_change"},
+    "monthly_trimmed_mean_inflation": {
+        "source": "abs",
+        "dataset_id": "CPI",
+        "variant": "monthly_trimmed_mean",
+    },
+    "monthly_weighted_median_inflation": {
+        "source": "abs",
+        "dataset_id": "CPI",
+        "variant": "monthly_weighted_median",
+    },
     "aud_usd": {"source": "rba", "dataset_id": "f11", "variant": "aud_usd"},
     "trade_weighted_index": {"source": "rba", "dataset_id": "f11", "variant": "twi"},
     "government_bond_yield_3y": {"source": "rba", "dataset_id": "f17", "variant": "ags_3y"},
@@ -171,6 +187,22 @@ CURATED_SHORTCUTS: dict[str, dict[str, Any]] = {
     "aud_eur": {"source": "rba", "dataset_id": "f11", "variant": "aud_eur"},
     "aud_gbp": {"source": "rba", "dataset_id": "f11", "variant": "aud_gbp"},
     "aud_nzd": {"source": "rba", "dataset_id": "f11", "variant": "aud_nzd"},
+    # Tranche E
+    "new_housing_lending": {
+        "source": "abs",
+        "dataset_id": "LEND_HOUSING",
+        "variant": "total_housing_lending",
+    },
+    "owner_occupier_housing_lending": {
+        "source": "abs",
+        "dataset_id": "LEND_HOUSING",
+        "variant": "owner_occupier",
+    },
+    "investor_housing_lending": {
+        "source": "abs",
+        "dataset_id": "LEND_HOUSING",
+        "variant": "investor",
+    },
 }
 
 
@@ -218,8 +250,10 @@ def list_economic_concepts(
                 "dataset_id": dataset_id,
                 "variant": variant_name,
                 "category": entry.get("category"),
-                "frequency": entry.get("frequency"),
-                "frequencies": list(entry.get("frequencies", [])),
+                "frequency": (variant or {}).get("frequency", entry.get("frequency")),
+                "frequencies": list(
+                    (variant or {}).get("frequencies", entry.get("frequencies", []))
+                ),
                 "geographies": list(entry.get("geographies", [])),
                 "description": entry.get("description"),
                 "aliases": aliases,

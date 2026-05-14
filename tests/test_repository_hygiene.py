@@ -131,7 +131,8 @@ def test_readme_is_slim_landing_page_for_current_release_state() -> None:
     assert "Version `1.1.0` is the current hosted release baseline." in readme_text
     assert re.search(r"stdio plus\s+Streamable HTTP", readme_text)
     assert "eight read-only MCP tools" in readme_text
-    assert "48 curated macroeconomic concepts" in readme_text
+    assert "55 curated macroeconomic concepts" in readme_text
+    assert "48 curated macroeconomic concepts" not in readme_text
     assert "36 curated macroeconomic concepts" not in readme_text
     assert "29 curated macroeconomic concepts" not in readme_text
     assert "28 curated macroeconomic concepts" not in readme_text

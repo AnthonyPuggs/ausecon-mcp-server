@@ -7,6 +7,7 @@ from ausecon_mcp.catalogue.rba import RBA_CATALOGUE
 from ausecon_mcp.catalogue.resolver import (
     CURATED_SHORTCUTS,
     build_abs_key,
+    list_economic_concepts,
     resolve,
     resolve_abs_dataflow_id,
     resolve_abs_structure_id,
@@ -294,6 +295,10 @@ def test_curated_shortcuts_cover_current_semantic_concepts() -> None:
         "trade_balance",
         "weighted_median_inflation",
         "monthly_inflation",
+        "monthly_cpi_index",
+        "monthly_cpi_change",
+        "monthly_trimmed_mean_inflation",
+        "monthly_weighted_median_inflation",
         "aud_usd",
         "trade_weighted_index",
         "government_bond_yield_3y",
@@ -333,6 +338,10 @@ def test_curated_shortcuts_cover_current_semantic_concepts() -> None:
         "aud_eur",
         "aud_gbp",
         "aud_nzd",
+        # Tranche E
+        "new_housing_lending",
+        "owner_occupier_housing_lending",
+        "investor_housing_lending",
     }
 
 
@@ -390,6 +399,37 @@ TRANCHE_D_RBA = [
     ("aud_eur", "f11", "aud_eur", ["FXREUR"]),
     ("aud_gbp", "f11", "aud_gbp", ["FXRUKPS"]),
     ("aud_nzd", "f11", "aud_nzd", ["FXRNZD"]),
+]
+
+TRANCHE_E_ABS = [
+    ("monthly_inflation", "CPI", "monthly_annual_change", "3.10001.10.50.M"),
+    ("monthly_cpi_index", "CPI", "monthly_index", "1.10001.10.50.M"),
+    ("monthly_cpi_change", "CPI", "monthly_change", "2.10001.10.50.M"),
+    ("monthly_trimmed_mean_inflation", "CPI", "monthly_trimmed_mean", "3.999902.20.50.M"),
+    (
+        "monthly_weighted_median_inflation",
+        "CPI",
+        "monthly_weighted_median",
+        "3.999903.20.50.M",
+    ),
+    (
+        "new_housing_lending",
+        "LEND_HOUSING",
+        "total_housing_lending",
+        "FIN_VAL.NEWCOMMITS.DV8368.TOTDWELL.TOT.TOT.20.AUS.Q",
+    ),
+    (
+        "owner_occupier_housing_lending",
+        "LEND_HOUSING",
+        "owner_occupier",
+        "FIN_VAL.NEWCOMMITS.DV8368.TOTDWELL.TOT.DV5167.20.AUS.Q",
+    ),
+    (
+        "investor_housing_lending",
+        "LEND_HOUSING",
+        "investor",
+        "FIN_VAL.NEWCOMMITS.DV8368.TOTDWELL.TOT.DV5168.20.AUS.Q",
+    ),
 ]
 
 
@@ -453,6 +493,29 @@ async def test_resolve_tranche_d_rba_concepts(
     assert result.rba_series_ids == series_ids
 
 
+@pytest.mark.parametrize(("concept", "dataset_id", "variant", "abs_key"), TRANCHE_E_ABS)
+@pytest.mark.asyncio
+async def test_resolve_tranche_e_abs_concepts(
+    concept: str, dataset_id: str, variant: str, abs_key: str
+) -> None:
+    result = await resolve(concept)
+    assert result.source == "abs"
+    assert result.dataset_id == dataset_id
+    assert result.variant == variant
+    assert result.abs_key == abs_key
+
+
+def test_list_economic_concepts_uses_variant_frequency_metadata() -> None:
+    rows = {row["concept"]: row for row in list_economic_concepts()}
+
+    assert rows["headline_cpi"]["frequency"] == "Quarterly"
+    assert rows["headline_cpi"]["frequencies"] == ["Q"]
+    assert rows["monthly_inflation"]["frequency"] == "Monthly"
+    assert rows["monthly_inflation"]["frequencies"] == ["M"]
+    assert rows["new_housing_lending"]["frequency"] == "Quarterly"
+    assert rows["new_housing_lending"]["frequencies"] == ["Q"]
+
+
 TRANCHE_A_ABS = [
     ("employment", "LF", "employment", "M3.3.1599.20.AUS.M"),
     ("unemployment_rate", "LF", "unemployment_rate", "M13.3.1599.20.AUS.M"),
@@ -463,7 +526,6 @@ TRANCHE_A_ABS = [
 
 TRANCHE_A_RBA = [
     ("weighted_median_inflation", "g1", "weighted_median", ["GCPIOCPMWMYP"]),
-    ("monthly_inflation", "g4", "headline_monthly", ["GCPIAGSAMP"]),
     ("aud_usd", "f11", "aud_usd", ["FXRUSD"]),
     ("trade_weighted_index", "f11", "twi", ["FXRTWI"]),
     ("government_bond_yield_3y", "f17", "ags_3y", ["FZCY300D"]),

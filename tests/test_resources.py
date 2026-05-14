@@ -38,13 +38,13 @@ async def test_abs_resource_returns_full_catalogue_entry() -> None:
         payload = await _read_json(client, "ausecon://abs/CPI")
 
     assert payload == ABS_CATALOGUE["CPI"]
-    assert payload["variants"] == [
-        {
-            "name": "headline",
-            "aliases": ["headline cpi", "all groups"],
-            "abs_key": "1.10001.10.50.Q",
-        }
-    ]
+    variants = {variant["name"]: variant for variant in payload["variants"]}
+    assert variants["headline"]["abs_key"] == "1.10001.10.50.Q"
+    assert variants["headline"]["frequencies"] == ["Q"]
+    assert variants["monthly_annual_change"]["abs_key"] == "3.10001.10.50.M"
+    assert variants["monthly_annual_change"]["frequencies"] == ["M"]
+    assert variants["monthly_trimmed_mean"]["abs_key"] == "3.999902.20.50.M"
+    assert variants["monthly_weighted_median"]["abs_key"] == "3.999903.20.50.M"
 
 
 async def test_rba_resource_returns_full_catalogue_entry() -> None:

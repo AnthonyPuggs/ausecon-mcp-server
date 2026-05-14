@@ -30,8 +30,12 @@ nominal GDP levels, household consumption, private investment, retail turnover, 
 The second v1.2 tranche adds total credit, credit-growth concepts, M3, money base, currency in
 circulation, and selected monthly AUD exchange rates.
 
-Remaining priority areas are a verified monthly CPI 2.0 replacement and ABS housing concepts once
-source-native data retrieval is stable.
+The third v1.2 tranche adds complete ABS Monthly CPI 2.0 headline, monthly-change, trimmed mean,
+and weighted median concepts, plus national quarterly ABS housing-lending commitments for total,
+owner-occupier, and investor lending.
+
+Remaining priority areas are ABS housing-price concepts where a clean national or default
+aggregate key is verified.
 
 Add concepts only when the upstream mapping is verified and the result fits the existing response
 shape.

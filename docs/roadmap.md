@@ -41,10 +41,16 @@ Second tranche now landed:
 - M3, money base, and currency in circulation
 - monthly AUD/CNY, AUD/JPY, AUD/EUR, AUD/GBP, and AUD/NZD exchange rates
 
+Third tranche now landed:
+
+- complete ABS Monthly CPI 2.0 headline index, monthly change, and year-ended inflation
+- complete ABS Monthly CPI 2.0 trimmed mean and weighted median inflation
+- ABS national quarterly housing-lending commitments for total, owner-occupier, and investor
+  housing lending
+
 Priority concepts:
 
-- verified monthly CPI 2.0 replacement if the ABS dataflow and default key are stable
-- ABS housing-price or construction concepts where source-native data retrieval is stable
+- ABS housing-price concepts where a clean national or default aggregate key is verified
 
 Only add long-tail catalogue entries when they unlock an analyst-facing concept. Each new concept
 needs verified catalogue variants, resolver tests, service forwarding tests, generated docs checks,

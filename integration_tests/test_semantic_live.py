@@ -34,10 +34,10 @@ async def test_live_semantic_wage_growth() -> None:
 async def test_live_semantic_monthly_inflation() -> None:
     result = await _call("monthly_inflation")
 
-    assert result["metadata"]["source"] == "rba"
-    assert result["metadata"]["dataset_id"] == "g4"
+    assert result["metadata"]["source"] == "abs"
+    assert result["metadata"]["dataset_id"] == "CPI"
     series_ids = {s["series_id"] for s in result["series"]}
-    assert "GCPIAGSAMP" in series_ids
+    assert "MEASURE=3|INDEX=10001|TSEST=10|REGION=50|FREQ=M" in series_ids
 
 
 async def test_live_semantic_government_bond_yield_10y() -> None:
@@ -185,5 +185,70 @@ async def test_live_semantic_tranche_d_rba_concepts(
 
     assert result["metadata"]["source"] == "rba"
     assert result["metadata"]["dataset_id"] == table_id
+    series_ids = {s["series_id"] for s in result["series"]}
+    assert series_id in series_ids
+
+
+# Tranche E live coverage
+
+
+@pytest.mark.parametrize(
+    ("concept", "series_id"),
+    [
+        ("monthly_cpi_index", "MEASURE=1|INDEX=10001|TSEST=10|REGION=50|FREQ=M"),
+        ("monthly_cpi_change", "MEASURE=2|INDEX=10001|TSEST=10|REGION=50|FREQ=M"),
+        (
+            "monthly_trimmed_mean_inflation",
+            "MEASURE=3|INDEX=999902|TSEST=20|REGION=50|FREQ=M",
+        ),
+        (
+            "monthly_weighted_median_inflation",
+            "MEASURE=3|INDEX=999903|TSEST=20|REGION=50|FREQ=M",
+        ),
+    ],
+)
+async def test_live_semantic_tranche_e_monthly_cpi_concepts(
+    concept: str,
+    series_id: str,
+) -> None:
+    result = await _call(concept)
+
+    assert result["metadata"]["source"] == "abs"
+    assert result["metadata"]["dataset_id"] == "CPI"
+    series_ids = {s["series_id"] for s in result["series"]}
+    assert series_id in series_ids
+
+
+@pytest.mark.parametrize(
+    ("concept", "series_id"),
+    [
+        (
+            "new_housing_lending",
+            "MEASURE=FIN_VAL|DATA_ITEM=NEWCOMMITS|LOAN_TYPE=DV8368|"
+            "LOAN_PURPOSE=TOTDWELL|LENDER_TYPE=TOT|HOUSING_PURPOSE=TOT|"
+            "TSEST=20|REGION=AUS|FREQ=Q",
+        ),
+        (
+            "owner_occupier_housing_lending",
+            "MEASURE=FIN_VAL|DATA_ITEM=NEWCOMMITS|LOAN_TYPE=DV8368|"
+            "LOAN_PURPOSE=TOTDWELL|LENDER_TYPE=TOT|HOUSING_PURPOSE=DV5167|"
+            "TSEST=20|REGION=AUS|FREQ=Q",
+        ),
+        (
+            "investor_housing_lending",
+            "MEASURE=FIN_VAL|DATA_ITEM=NEWCOMMITS|LOAN_TYPE=DV8368|"
+            "LOAN_PURPOSE=TOTDWELL|LENDER_TYPE=TOT|HOUSING_PURPOSE=DV5168|"
+            "TSEST=20|REGION=AUS|FREQ=Q",
+        ),
+    ],
+)
+async def test_live_semantic_tranche_e_housing_lending_concepts(
+    concept: str,
+    series_id: str,
+) -> None:
+    result = await _call(concept)
+
+    assert result["metadata"]["source"] == "abs"
+    assert result["metadata"]["dataset_id"] == "LEND_HOUSING"
     series_ids = {s["series_id"] for s in result["series"]}
     assert series_id in series_ids

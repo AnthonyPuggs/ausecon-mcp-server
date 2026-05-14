@@ -743,7 +743,6 @@ TRANCHE_A_ABS_SERVICE = [
 
 TRANCHE_A_RBA_SERVICE = [
     ("weighted_median_inflation", "g1", ["GCPIOCPMWMYP"]),
-    ("monthly_inflation", "g4", ["GCPIAGSAMP"]),
     ("aud_usd", "f11", ["FXRUSD"]),
     ("trade_weighted_index", "f11", ["FXRTWI"]),
     ("government_bond_yield_3y", "f17", ["FZCY300D"]),
@@ -955,6 +954,29 @@ TRANCHE_D_RBA_SERVICE = [
     ("aud_nzd", "f11", ["FXRNZD"]),
 ]
 
+TRANCHE_E_ABS_SERVICE = [
+    ("monthly_inflation", "CPI", "3.10001.10.50.M"),
+    ("monthly_cpi_index", "CPI", "1.10001.10.50.M"),
+    ("monthly_cpi_change", "CPI", "2.10001.10.50.M"),
+    ("monthly_trimmed_mean_inflation", "CPI", "3.999902.20.50.M"),
+    ("monthly_weighted_median_inflation", "CPI", "3.999903.20.50.M"),
+    (
+        "new_housing_lending",
+        "LEND_HOUSING",
+        "FIN_VAL.NEWCOMMITS.DV8368.TOTDWELL.TOT.TOT.20.AUS.Q",
+    ),
+    (
+        "owner_occupier_housing_lending",
+        "LEND_HOUSING",
+        "FIN_VAL.NEWCOMMITS.DV8368.TOTDWELL.TOT.DV5167.20.AUS.Q",
+    ),
+    (
+        "investor_housing_lending",
+        "LEND_HOUSING",
+        "FIN_VAL.NEWCOMMITS.DV8368.TOTDWELL.TOT.DV5168.20.AUS.Q",
+    ),
+]
+
 
 @pytest.mark.parametrize(("concept", "dataflow_id", "abs_key"), TRANCHE_B_ABS_SERVICE)
 @pytest.mark.asyncio
@@ -1029,6 +1051,21 @@ async def test_service_forwards_tranche_d_rba_concepts(
     assert rba.last_get_table_kwargs is not None
     assert rba.last_get_table_kwargs["table_id"] == table_id
     assert rba.last_get_table_kwargs["series_ids"] == series_ids
+
+
+@pytest.mark.parametrize(("concept", "dataflow_id", "abs_key"), TRANCHE_E_ABS_SERVICE)
+@pytest.mark.asyncio
+async def test_service_forwards_tranche_e_abs_concepts(
+    concept: str, dataflow_id: str, abs_key: str
+) -> None:
+    abs_provider = StubABSProvider()
+    service = AuseconService(abs_provider=abs_provider, rba_provider=StubRBAProvider())
+
+    await service.get_economic_series(concept)
+
+    assert abs_provider.last_get_data_kwargs is not None
+    assert abs_provider.last_get_data_kwargs["dataflow_id"] == dataflow_id
+    assert abs_provider.last_get_data_kwargs["key"] == abs_key
 
 
 async def test_service_resolves_abs_upstream_id_before_calling_provider() -> None:
