@@ -26,7 +26,9 @@ waits for an MCP client to connect over standard input/output.
 1. Use `list_economic_concepts` for ordinary economic requests such as GDP, CPI, unemployment,
    wages, cash rate, credit, exchange rates, or yields.
 2. Use `get_economic_series` with the selected concept.
-3. Use `search_datasets`, `list_catalogue`, `get_abs_dataset_structure`, `get_abs_data`, and
+3. Use `get_derived_series` for transparent formula-based indicators such as real cash rate,
+   yield-curve slope, real wage growth, credit growth, or real GDP per capita.
+4. Use `search_datasets`, `list_catalogue`, `get_abs_dataset_structure`, `get_abs_data`, and
    `get_rba_table` when you need source-native ABS/RBA control.
 
 ## First retrieval pattern
@@ -44,3 +46,5 @@ get_economic_series(
 
 Retrieval responses include `metadata`, `series`, and `observations`. Semantic retrievals also
 include `metadata.semantic`, recording the resolved source target and normalised date bounds.
+Derived retrievals include `metadata.derived`, recording the formula, operands, units, and
+alignment frequency.

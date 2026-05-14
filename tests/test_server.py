@@ -15,6 +15,7 @@ EXPECTED_TOOL_TITLES = {
     "list_rba_tables": "List RBA Tables",
     "get_rba_table": "Get RBA Table",
     "get_economic_series": "Get Economic Series",
+    "get_derived_series": "Get Derived Series",
 }
 
 
@@ -188,6 +189,89 @@ class StubRBAProvider:
             "series": [{"series_id": "rba-series"}],
             "observations": [{"date": "2024-01-01", "series_id": "rba-series", "value": 4.35}],
         }
+
+
+class RecordingDerivedService(AuseconService):
+    def __init__(self, payloads: dict[str, dict]) -> None:
+        super().__init__(abs_provider=StubABSProvider(), rba_provider=StubRBAProvider())
+        self.payloads = payloads
+        self.economic_series_calls: list[dict] = []
+
+    async def get_economic_series(
+        self,
+        concept: str,
+        variant: str | None = None,
+        geography: str | None = None,
+        frequency: str | None = None,
+        start: str | None = None,
+        end: str | None = None,
+        last_n: int | None = None,
+    ) -> dict:
+        self.economic_series_calls.append(
+            {
+                "concept": concept,
+                "variant": variant,
+                "geography": geography,
+                "frequency": frequency,
+                "start": start,
+                "end": end,
+                "last_n": last_n,
+            }
+        )
+        return self.payloads[concept]
+
+
+def _semantic_payload(
+    *,
+    concept: str,
+    source: str,
+    dataset_id: str,
+    series_id: str,
+    observations: list[tuple[str, float | None]],
+    frequency: str,
+    abs_key: str | None = None,
+    rba_series_ids: list[str] | None = None,
+) -> dict:
+    return {
+        "metadata": {
+            "source": source,
+            "dataset_id": dataset_id,
+            "server_version": "test",
+            "truncated": False,
+            "semantic": {
+                "concept": concept,
+                "variant": None,
+                "geography": None,
+                "frequency": frequency,
+                "requested_bounds": {"start": None, "end": None},
+                "resolved_bounds": {"start": None, "end": None},
+                "target": {
+                    "source": source,
+                    "dataset_id": dataset_id,
+                    "upstream_id": dataset_id,
+                    "abs_key": abs_key,
+                    "rba_series_ids": rba_series_ids,
+                },
+            },
+        },
+        "series": [
+            {
+                "series_id": series_id,
+                "label": concept,
+                "unit": None,
+                "frequency": frequency,
+                "dimensions": {},
+                "source_key": series_id,
+                "unit_multiplier": None,
+                "decimals": None,
+                "base_period": None,
+            }
+        ],
+        "observations": [
+            {"date": date, "series_id": series_id, "value": value, "dimensions": {}}
+            for date, value in observations
+        ],
+    }
 
 
 def test_http_port_defaults_to_smithery_port(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -470,6 +554,120 @@ async def test_service_rejects_unknown_economic_series_concept() -> None:
 
     with pytest.raises(ValueError, match="Unknown concept"):
         await service.get_economic_series("unknown_series")
+
+
+@pytest.mark.asyncio
+async def test_service_rejects_unknown_derived_series_concept() -> None:
+    service = AuseconService(abs_provider=StubABSProvider(), rba_provider=StubRBAProvider())
+
+    with pytest.raises(ValueError, match="Unknown derived concept"):
+        await service.get_derived_series("unknown_series")
+
+
+@pytest.mark.asyncio
+async def test_service_rejects_invalid_derived_date_range_before_fetching_operands() -> None:
+    service = RecordingDerivedService({})
+
+    with pytest.raises(ValueError, match="start must be before or equal to end"):
+        await service.get_derived_series("credit_growth", start="2024-02", end="2024-01")
+
+    assert service.economic_series_calls == []
+
+
+@pytest.mark.asyncio
+async def test_service_get_derived_series_fetches_operands_and_applies_final_last_n() -> None:
+    service = RecordingDerivedService(
+        {
+            "total_credit": _semantic_payload(
+                concept="total_credit",
+                source="rba",
+                dataset_id="d2",
+                series_id="DLCACS",
+                observations=[
+                    ("2023-01", 100.0),
+                    ("2023-02", 110.0),
+                    ("2024-01", 115.0),
+                    ("2024-02", 121.0),
+                ],
+                frequency="Monthly",
+                rba_series_ids=["DLCACS"],
+            )
+        }
+    )
+
+    result = await service.get_derived_series(
+        "credit_growth",
+        start="2024-01",
+        end="2024-02",
+        last_n=1,
+    )
+
+    assert service.economic_series_calls == [
+        {
+            "concept": "total_credit",
+            "variant": None,
+            "geography": None,
+            "frequency": None,
+            "start": "2023-01",
+            "end": "2024-02",
+            "last_n": None,
+        }
+    ]
+    assert [(obs["date"], obs["value"]) for obs in result["observations"]] == [
+        ("2024-02", pytest.approx(10.0))
+    ]
+    assert result["metadata"]["source"] == "derived"
+    assert result["metadata"]["dataset_id"] == "credit_growth"
+    assert result["metadata"]["derived"]["operands"][0]["concept"] == "total_credit"
+
+
+@pytest.mark.asyncio
+async def test_service_expands_quarterly_cpi_operand_for_real_wage_growth() -> None:
+    service = RecordingDerivedService(
+        {
+            "wage_growth": _semantic_payload(
+                concept="wage_growth",
+                source="abs",
+                dataset_id="WPI",
+                series_id="wpi",
+                observations=[("2024-Q1", 4.2)],
+                frequency="Quarterly",
+                abs_key="3.THRPEB.7.TOT.20.AUS.Q",
+            ),
+            "headline_cpi": _semantic_payload(
+                concept="headline_cpi",
+                source="abs",
+                dataset_id="CPI",
+                series_id="cpi",
+                observations=[("2023-Q1", 100.0), ("2024-Q1", 104.0)],
+                frequency="Quarterly",
+                abs_key="1.10001.10.50.Q",
+            ),
+        }
+    )
+
+    await service.get_derived_series("real_wage_growth", start="2024-Q1", end="2024-Q1")
+
+    assert service.economic_series_calls == [
+        {
+            "concept": "wage_growth",
+            "variant": None,
+            "geography": None,
+            "frequency": None,
+            "start": "2024-Q1",
+            "end": "2024-Q1",
+            "last_n": None,
+        },
+        {
+            "concept": "headline_cpi",
+            "variant": None,
+            "geography": None,
+            "frequency": None,
+            "start": "2023-Q1",
+            "end": "2024-Q1",
+            "last_n": None,
+        },
+    ]
 
 
 @pytest.mark.asyncio
@@ -1179,6 +1377,11 @@ async def test_registered_tools_expose_input_schema_constraints_and_descriptions
     assert "YYYY-QN" in str(semantic_start_schema)
     assert "YYYY-MM-DD" in str(semantic_start_schema)
 
+    derived_start_schema = tools["get_derived_series"].inputSchema["properties"]["start"]
+    assert "derived series" in tools["get_derived_series"].description
+    assert "YYYY-QN" in str(derived_start_schema)
+    assert _has_integer_minimum(tools["get_derived_series"].inputSchema["properties"]["last_n"], 1)
+
 
 async def test_all_registered_tool_parameters_have_top_level_descriptions() -> None:
     mcp = build_server()
@@ -1198,7 +1401,7 @@ async def test_retrieval_tools_expose_response_output_schema() -> None:
     async with Client(mcp) as client:
         tools = {tool.name: tool for tool in await client.list_tools()}
 
-    for name in ("get_abs_data", "get_rba_table", "get_economic_series"):
+    for name in ("get_abs_data", "get_rba_table", "get_economic_series", "get_derived_series"):
         output_schema = tools[name].outputSchema
         assert output_schema["type"] == "object"
         assert output_schema["additionalProperties"] is False

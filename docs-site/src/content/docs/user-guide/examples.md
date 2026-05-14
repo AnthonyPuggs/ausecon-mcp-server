@@ -91,3 +91,22 @@ get_economic_series(
   start="2020-01-01"
 )
 ```
+
+## Derived retrieval
+
+Fetch transparent formula-based indicators:
+
+```text
+get_derived_series(
+  concept="real_cash_rate",
+  last_n=12
+)
+```
+
+```text
+get_derived_series(
+  concept="yield_curve_slope",
+  start="2024-01-01",
+  last_n=5
+)
+```

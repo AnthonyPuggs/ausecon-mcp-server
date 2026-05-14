@@ -25,6 +25,12 @@ from ausecon_mcp.catalogue.resolver import (
 from ausecon_mcp.catalogue.search import list_catalogue as _list_catalogue
 from ausecon_mcp.catalogue.search import search_catalogue
 from ausecon_mcp.contracts import response_output_schema
+from ausecon_mcp.derived import (
+    derive_series,
+    get_operand_specs,
+    operand_request_bounds,
+    validate_derived_bounds,
+)
 from ausecon_mcp.logging import configure_logging, get_logger
 from ausecon_mcp.prompts import register_prompts
 from ausecon_mcp.providers._http import resolve_version
@@ -62,6 +68,7 @@ TOOL_TITLES = {
     "list_rba_tables": "List RBA Tables",
     "get_rba_table": "Get RBA Table",
     "get_economic_series": "Get Economic Series",
+    "get_derived_series": "Get Derived Series",
 }
 SearchQuery = Annotated[str, Field(min_length=1, description="Discovery query text.")]
 Identifier = Annotated[str, Field(min_length=1, description="Non-empty dataset or table id.")]
@@ -165,6 +172,16 @@ OptionalSemanticStartEnd = Annotated[
         description=(
             "Optional analyst-friendly date bound: YYYY, YYYY-QN, YYYY-SN, YYYY-MM, or YYYY-MM-DD. "
             "Semantic retrieval normalises this to the resolved source frequency."
+        ),
+    ),
+]
+OptionalDerivedStartEnd = Annotated[
+    str | None,
+    Field(
+        description=(
+            "Optional analyst-friendly bound for a derived series: YYYY, YYYY-QN, "
+            "YYYY-SN, YYYY-MM, or YYYY-MM-DD. Bounds are normalised to the derived "
+            "series frequency."
         ),
     ),
 ]
@@ -443,6 +460,38 @@ class AuseconService:
         _stamp_semantic_metadata(payload, validated_concept, resolved, bounds)
         return payload
 
+    async def get_derived_series(
+        self,
+        concept: str,
+        start: str | None = None,
+        end: str | None = None,
+        last_n: int | None = None,
+    ) -> dict:
+        validated_concept = require_non_empty("concept", concept)
+        validated_last_n = validate_positive_int("last_n", last_n)
+        validate_derived_bounds(validated_concept, start=start, end=end)
+        operands: dict[str, dict] = {}
+        for operand in get_operand_specs(validated_concept):
+            operand_start, operand_end = operand_request_bounds(
+                validated_concept,
+                operand.name,
+                start=start,
+                end=end,
+            )
+            operands[operand.name] = await self.get_economic_series(
+                operand.concept,
+                start=operand_start,
+                end=operand_end,
+            )
+        return derive_series(
+            validated_concept,
+            operands,
+            requested_start=start,
+            requested_end=end,
+            last_n=validated_last_n,
+            server_version=resolve_version(),
+        )
+
     async def aclose(self) -> None:
         for provider in (self.abs_provider, self.rba_provider):
             close = getattr(provider, "aclose", None)
@@ -461,6 +510,8 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
             "Australian economic data tools for official ABS and RBA datasets. "
             "Use list_economic_concepts before get_economic_series for ordinary analyst "
             "requests such as GDP, CPI, unemployment, cash rate, credit, or yields. "
+            "Use get_derived_series for the small transparent set of derived indicators "
+            "such as real rates, growth transformations, and yield-curve slope. "
             "Use search_datasets and list_catalogue for source-native ABS/RBA discovery, "
             "then get_abs_data or get_rba_table when exact dataset/table control is needed."
         ),
@@ -609,6 +660,29 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
             variant=variant,
             geography=geography,
             frequency=frequency,
+            start=start,
+            end=end,
+            last_n=last_n,
+        )
+
+    @mcp.tool(
+        title=TOOL_TITLES["get_derived_series"],
+        annotations=_tool_annotations("Get Derived Series"),
+        output_schema=response_output_schema(),
+    )
+    async def get_derived_series(
+        concept: Annotated[str, Field(min_length=1, description="Derived concept name.")],
+        start: OptionalDerivedStartEnd = None,
+        end: OptionalDerivedStartEnd = None,
+        last_n: OptionalPositiveInt = None,
+    ) -> dict:
+        """Read-only retrieval for the narrow transparent derived series layer.
+
+        Date bounds accept YYYY, YYYY-QN, YYYY-SN, YYYY-MM, or YYYY-MM-DD and
+        are normalised to the derived series frequency.
+        """
+        return await app_service.get_derived_series(
+            concept=concept,
             start=start,
             end=end,
             last_n=last_n,

@@ -60,7 +60,7 @@ After the first Smithery build:
 - Confirm Smithery routes MCP traffic to `/mcp`.
 - Confirm the server listens on the platform-provided `PORT`.
 - Confirm Smithery detects the expected tools: `list_economic_concepts`,
-  `get_economic_series`, `search_datasets`, `get_abs_data`, and
+  `get_economic_series`, `get_derived_series`, `search_datasets`, `get_abs_data`, and
   `get_rba_table`.
 - Check response metadata from a live retrieval. `metadata.server_version`
   should report `1.1.0`; if it reports a fallback value, configure Smithery to
@@ -71,6 +71,7 @@ Use the Smithery Playground for smoke tests:
 
 - `list_economic_concepts(query="cash rate")`
 - `get_economic_series(concept="cash_rate_target", last_n=5)`
+- `get_derived_series(concept="real_cash_rate", last_n=5)`
 - `search_datasets(query="unemployment rate", source="abs")`
 
 The hosted service also exposes operational endpoints for platforms and
@@ -100,7 +101,8 @@ transport and client naming are stable.
   container build, and MCP endpoint.
 - Use manual MCP tool-call smoke in the Smithery Playground after release
   changes: `list_economic_concepts(query="cash rate")`,
-  `get_economic_series(concept="cash_rate_target", last_n=5)`, and
+  `get_economic_series(concept="cash_rate_target", last_n=5)`,
+  `get_derived_series(concept="real_cash_rate", last_n=5)`, and
   `search_datasets(query="unemployment rate", source="abs")`.
 
 ## Quality Score

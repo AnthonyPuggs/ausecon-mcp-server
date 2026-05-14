@@ -6,6 +6,7 @@ import respx
 from httpx import Response
 from jsonschema import Draft202012Validator
 
+from ausecon_mcp.derived import derive_series
 from ausecon_mcp.providers.abs import ABSProvider
 from ausecon_mcp.providers.rba import RBAProvider
 from ausecon_mcp.server import AuseconService
@@ -72,6 +73,102 @@ async def test_response_schema_validates_semantic_payload() -> None:
     _assert_valid(payload)
 
 
+@pytest.mark.asyncio
+async def test_response_schema_validates_derived_payload() -> None:
+    payload = derive_series(
+        "yield_curve_slope",
+        {
+            "long_yield": {
+                "metadata": {
+                    "source": "rba",
+                    "dataset_id": "f17",
+                    "server_version": "test",
+                    "truncated": False,
+                    "semantic": {
+                        "concept": "government_bond_yield_10y",
+                        "variant": "ags_10y",
+                        "geography": None,
+                        "frequency": "Daily",
+                        "requested_bounds": {"start": None, "end": None},
+                        "resolved_bounds": {"start": None, "end": None},
+                        "target": {
+                            "source": "rba",
+                            "dataset_id": "f17",
+                            "upstream_id": "f17",
+                            "abs_key": None,
+                            "rba_series_ids": ["FZCY1000D"],
+                        },
+                    },
+                },
+                "series": [
+                    {
+                        "series_id": "FZCY1000D",
+                        "label": "10-year yield",
+                        "unit": "Percent per annum",
+                        "frequency": "Daily",
+                        "dimensions": {},
+                        "source_key": "FZCY1000D",
+                        "unit_multiplier": None,
+                        "decimals": None,
+                        "base_period": None,
+                    }
+                ],
+                "observations": [
+                    {"date": "2024-01-01", "series_id": "FZCY1000D", "value": 4.2, "dimensions": {}}
+                ],
+            },
+            "short_yield": {
+                "metadata": {
+                    "source": "rba",
+                    "dataset_id": "f17",
+                    "server_version": "test",
+                    "truncated": False,
+                    "semantic": {
+                        "concept": "government_bond_yield_3y",
+                        "variant": "ags_3y",
+                        "geography": None,
+                        "frequency": "Daily",
+                        "requested_bounds": {"start": None, "end": None},
+                        "resolved_bounds": {"start": None, "end": None},
+                        "target": {
+                            "source": "rba",
+                            "dataset_id": "f17",
+                            "upstream_id": "f17",
+                            "abs_key": None,
+                            "rba_series_ids": ["FZCY3D"],
+                        },
+                    },
+                },
+                "series": [
+                    {
+                        "series_id": "FZCY3D",
+                        "label": "3-year yield",
+                        "unit": "Percent per annum",
+                        "frequency": "Daily",
+                        "dimensions": {},
+                        "source_key": "FZCY3D",
+                        "unit_multiplier": None,
+                        "decimals": None,
+                        "base_period": None,
+                    }
+                ],
+                "observations": [
+                    {"date": "2024-01-01", "series_id": "FZCY3D", "value": 3.7, "dimensions": {}}
+                ],
+            },
+        },
+        requested_start=None,
+        requested_end=None,
+        last_n=1,
+        server_version="test",
+    )
+
+    assert payload["metadata"]["source"] == "derived"
+    assert payload["metadata"]["dataset_id"] == "yield_curve_slope"
+    assert payload["metadata"]["derived"]["concept"] == "yield_curve_slope"
+    _assert_valid(payload)
+
+
 def test_checked_in_payload_examples_validate_against_schema() -> None:
     validator = _validator()
     paths = sorted(PAYLOAD_EXAMPLES.glob("*.json"))
@@ -96,3 +193,5 @@ def test_response_schema_documents_contract_and_abs_metadata_fields() -> None:
     assert observation_properties["date"]["oneOf"]
     assert observation_properties["comment"]["type"] == ["string", "null"]
     assert "semantic" in schema["$defs"]["metadata"]["properties"]
+    assert "derived" in schema["$defs"]["metadata"]["properties"]
+    assert "derived" in schema["$defs"]["metadata"]["properties"]["source"]["enum"]

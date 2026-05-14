@@ -9,6 +9,11 @@ Use `list_economic_concepts` and `get_economic_series` for ordinary analyst requ
 the safest LLM-facing path because the server controls the mapping from economic concepts to
 audited source datasets and series.
 
+Use `get_derived_series` for the deliberately small set of transparent formula-based indicators
+such as real rates, year-ended transformations, and yield-curve slope. Derived retrieval still
+returns the normal `metadata`, `series`, and `observations` shape, with formula provenance in
+`metadata.derived`.
+
 Use source-native tools when you know the ABS dataflow, SDMX key, RBA table, or RBA series IDs you
 want:
 
@@ -21,9 +26,22 @@ want:
 `list_rba_tables` remains available as a deprecated compatibility alias. New integrations should
 use `list_catalogue(source="rba")`.
 
+## Derived retrieval
+
+`get_derived_series` currently supports:
+
+- `real_cash_rate`
+- `yield_curve_slope`
+- `real_wage_growth`
+- `credit_growth`
+- `gdp_per_capita`
+
+It does not accept arbitrary formulas or user-supplied code. Operands are fetched through the
+curated semantic layer and then combined by fixed, documented formulas.
+
 ## Date bounds
 
-`get_economic_series` accepts analyst-friendly bounds:
+`get_economic_series` and `get_derived_series` accept analyst-friendly bounds:
 
 - `YYYY`
 - `YYYY-QN`
@@ -45,5 +63,6 @@ Raw ABS and RBA tools keep source-native conventions:
 - ABS period strings are validated for annual, half-yearly, quarterly, and monthly formats.
 - RBA date bounds are validated as ISO dates.
 - Unknown semantic concepts and unsupported variants raise explicit validation errors.
+- Unknown derived concepts raise explicit validation errors.
 
 Search scores are ranking metadata, not a stable public contract.

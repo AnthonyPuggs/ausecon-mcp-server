@@ -15,9 +15,9 @@ macroeconomic and financial data from the Australian Bureau of Statistics (ABS) 
 Bank of Australia (RBA).
 
 Version `1.1.0` is the current hosted release baseline. Transport support is stdio plus
-Streamable HTTP. The server exposes eight read-only MCP tools, four read-only MCP resources, eight
-prompt templates, and 55 curated macroeconomic concepts for analyst-friendly retrieval through
-`get_economic_series`.
+Streamable HTTP. The server exposes nine read-only MCP tools, four read-only MCP resources, eight
+prompt templates, 55 curated macroeconomic concepts through `get_economic_series`, and five
+transparent derived indicators through `get_derived_series`.
 
 ## Documentation
 
@@ -96,6 +96,12 @@ get_economic_series(
   concept="cash_rate_target",
   start="2020-01-01"
 )
+```
+
+For transparent formula-based indicators, call the derived retrieval surface directly:
+
+```text
+get_derived_series(concept="real_cash_rate", last_n=12)
 ```
 
 For exact ABS/RBA control, use `search_datasets`, `list_catalogue`,

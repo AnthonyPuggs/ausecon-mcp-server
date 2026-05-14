@@ -42,9 +42,9 @@ shape.
 
 ## v1.3
 
-Add a narrow `get_derived_series` tool with transparent formulas and explicit provenance. Initial
-derived concepts should be `real_cash_rate`, `yield_curve_slope`, `real_wage_growth`,
-`credit_growth`, and possibly `gdp_per_capita`.
+The foundation tranche adds a narrow `get_derived_series` tool with transparent formulas and
+explicit provenance. Initial derived concepts are `real_cash_rate`, `yield_curve_slope`,
+`real_wage_growth`, `credit_growth`, and `gdp_per_capita`.
 
 Derived responses should preserve `{metadata, series, observations}` and add `metadata.derived`.
 They should not introduce modelling, forecasting, seasonal adjustment, or arbitrary user formulas.

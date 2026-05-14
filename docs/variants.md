@@ -26,4 +26,5 @@ RBA catalogue variants declare one or more `rba_series_ids`. The resolver passes
 - Unknown concepts and unsupported variants raise explicit validation errors.
 - The runtime catalogue exposes only fully wired variants. Placeholder candidates stay in
   `docs/variant_candidates.md` until they have a concrete ABS key or `rba_series_ids`.
-- The semantic layer only exposes curated source-native concepts. Derived concepts remain deferred until after the retrieval contract is stable.
+- The semantic layer only exposes curated source-native concepts. Formula-based indicators belong
+  in `get_derived_series`, where provenance is recorded in `metadata.derived`.

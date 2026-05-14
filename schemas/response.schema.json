@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/AnthonyPuggs/ausecon-mcp-server/schemas/response.schema.json",
   "title": "Ausecon Retrieval Response",
-  "description": "Normalised retrieval response returned by ABS and RBA data tools.",
+  "description": "Normalised retrieval response returned by ABS, RBA, semantic, and derived data tools.",
   "type": "object",
   "required": ["metadata", "series", "observations"],
   "additionalProperties": false,
@@ -34,7 +34,7 @@
       "properties": {
         "source": {
           "type": "string",
-          "enum": ["abs", "rba"]
+          "enum": ["abs", "rba", "derived"]
         },
         "dataset_id": {
           "type": "string"
@@ -79,6 +79,10 @@
         "semantic": {
           "description": "Semantic concept provenance when returned by get_economic_series.",
           "$ref": "#/$defs/semantic_metadata"
+        },
+        "derived": {
+          "description": "Derived-series provenance when returned by get_derived_series.",
+          "$ref": "#/$defs/derived_metadata"
         }
       }
     },
@@ -154,6 +158,126 @@
         },
         "target": {
           "$ref": "#/$defs/semantic_target"
+        }
+      }
+    },
+    "derived_operand": {
+      "type": "object",
+      "required": [
+        "name",
+        "concept",
+        "source",
+        "dataset_id",
+        "upstream_id",
+        "abs_key",
+        "rba_series_ids",
+        "series_ids"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "concept": {
+          "type": "string"
+        },
+        "source": {
+          "type": ["string", "null"],
+          "enum": ["abs", "rba", null]
+        },
+        "dataset_id": {
+          "type": ["string", "null"]
+        },
+        "upstream_id": {
+          "type": ["string", "null"]
+        },
+        "abs_key": {
+          "type": ["string", "null"]
+        },
+        "rba_series_ids": {
+          "type": ["array", "null"],
+          "items": {
+            "type": "string"
+          }
+        },
+        "series_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "derived_dropped_observations": {
+      "type": "object",
+      "required": ["input", "derived", "returned", "dropped"],
+      "additionalProperties": false,
+      "properties": {
+        "input": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "derived": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "returned": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "dropped": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "derived_metadata": {
+      "type": "object",
+      "required": [
+        "concept",
+        "formula",
+        "operands",
+        "source_concepts",
+        "alignment_frequency",
+        "units",
+        "requested_bounds",
+        "resolved_bounds",
+        "dropped_observations"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "concept": {
+          "type": "string"
+        },
+        "formula": {
+          "type": "string"
+        },
+        "operands": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/derived_operand"
+          }
+        },
+        "source_concepts": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "alignment_frequency": {
+          "type": "string"
+        },
+        "units": {
+          "type": "string"
+        },
+        "requested_bounds": {
+          "$ref": "#/$defs/semantic_bounds"
+        },
+        "resolved_bounds": {
+          "$ref": "#/$defs/semantic_bounds"
+        },
+        "dropped_observations": {
+          "$ref": "#/$defs/derived_dropped_observations"
         }
       }
     },

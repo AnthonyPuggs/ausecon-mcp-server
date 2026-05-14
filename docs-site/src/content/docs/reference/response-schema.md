@@ -1,10 +1,10 @@
 ---
 title: Response Schema
-description: The normalised retrieval contract for ABS, RBA, and semantic responses.
+description: The normalised retrieval contract for ABS, RBA, semantic, and derived responses.
 ---
 
-The retrieval contract for `get_abs_data`, `get_rba_table`, and `get_economic_series` is checked in
-at
+The retrieval contract for `get_abs_data`, `get_rba_table`, `get_economic_series`, and
+`get_derived_series` is checked in at
 [`schemas/response.schema.json`](https://github.com/AnthonyPuggs/ausecon-mcp-server/blob/main/schemas/response.schema.json).
 
 ## Top-level shape
@@ -32,10 +32,15 @@ Optional fields appear when relevant:
 - `updated_after`
 - `title` and `publication_date`
 - `semantic`
+- `derived`
 - `stale`, `cached_at`, and `expires_at`
 
 `semantic` appears on responses returned by `get_economic_series`. It records the requested
 concept, resolved variant, requested bounds, resolved source-native bounds, and ABS/RBA target.
+
+`derived` appears on responses returned by `get_derived_series`. It records the formula, operands,
+source concepts, alignment frequency, output units, requested and resolved bounds, and
+dropped-observation counts.
 
 ## Series and observations
 

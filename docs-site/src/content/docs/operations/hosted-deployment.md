@@ -27,6 +27,7 @@ Manual MCP tool-call smoke should stay bounded:
 ```text
 list_economic_concepts(query="cash rate")
 get_economic_series(concept="cash_rate_target", last_n=5)
+get_derived_series(concept="real_cash_rate", last_n=5)
 search_datasets(query="unemployment rate", source="abs")
 ```
 

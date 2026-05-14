@@ -130,7 +130,7 @@ def test_readme_is_slim_landing_page_for_current_release_state() -> None:
     assert len(readme_text.splitlines()) < 140
     assert "Version `1.1.0` is the current hosted release baseline." in readme_text
     assert re.search(r"stdio plus\s+Streamable HTTP", readme_text)
-    assert "eight read-only MCP tools" in readme_text
+    assert "nine read-only MCP tools" in readme_text
     assert "55 curated macroeconomic concepts" in readme_text
     assert "48 curated macroeconomic concepts" not in readme_text
     assert "36 curated macroeconomic concepts" not in readme_text
@@ -279,6 +279,7 @@ def test_contributing_doc_mentions_client_smoke_path() -> None:
     assert "list_catalogue" in text
     assert "get_abs_data" in text
     assert "get_economic_series" in text
+    assert "get_derived_series" in text
 
 
 def test_client_smoke_script_exists() -> None:

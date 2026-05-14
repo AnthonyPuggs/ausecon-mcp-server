@@ -58,19 +58,22 @@ and bounded live integration coverage.
 
 ## v1.3: narrow derived-series layer
 
-Add a new read-only `get_derived_series` tool rather than overloading `get_economic_series`.
+The foundation tranche is now landed: a new read-only `get_derived_series` tool exists rather than
+overloading `get_economic_series`.
 
-Initial derived concepts should stay transparent:
+Initial derived concepts are intentionally transparent:
 
 - `real_cash_rate`
 - `yield_curve_slope`
 - `real_wage_growth`
 - `credit_growth`
-- `gdp_per_capita`, if population and GDP-level defaults are stable
+- `gdp_per_capita`
 
-Preserve the normal retrieval shape and add `metadata.derived` with the formula, operands, source
-concepts, alignment frequency, units, and dropped-observation counts. Do not add modelling,
-forecasting, seasonal adjustment, arbitrary user formulas, or user-supplied Python/R execution.
+The normal retrieval shape is preserved with `metadata.derived` carrying the formula, operands,
+source concepts, alignment frequency, units, and dropped-observation counts. Further v1.3 work
+should focus on documentation, live reliability, and small formula refinements only. Do not add
+modelling, forecasting, seasonal adjustment, arbitrary user formulas, or user-supplied Python/R
+execution.
 
 ## v1.4: APRA as the first third source
 

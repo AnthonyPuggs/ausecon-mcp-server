@@ -6,6 +6,21 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- Added `get_derived_series`, a read-only derived-series tool for transparent
+  formulas over curated ABS/RBA semantic operands.
+- Added initial derived concepts for `real_cash_rate`, `yield_curve_slope`,
+  `real_wage_growth`, `credit_growth`, and `gdp_per_capita`, with formula,
+  operand, units, alignment-frequency, and dropped-observation provenance in
+  `metadata.derived`.
+
+### Changed
+- Extended the checked-in response schema to allow `metadata.source =
+  "derived"` and validate derived-series provenance without changing the
+  top-level `{metadata, series, observations}` contract.
+- Updated README, maintainer docs, docs-site references, roadmap wording, and
+  the stdio client smoke path for the new derived retrieval surface.
+
 ## [1.1.0] - 2026-05-12
 
 ### Added

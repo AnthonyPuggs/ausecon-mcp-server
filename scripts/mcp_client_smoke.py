@@ -44,6 +44,7 @@ async def main() -> None:
             "list_catalogue",
             "get_abs_data",
             "get_economic_series",
+            "get_derived_series",
         } <= tool_names
 
         concepts = await client.call_tool("list_economic_concepts", {"query": "dwelling approvals"})
@@ -78,6 +79,15 @@ async def main() -> None:
         semantic_payload = _as_dict(semantic.data)
         assert semantic_payload["metadata"]["source"] == "abs"
         assert semantic_payload["observations"]
+
+        derived = await client.call_tool(
+            "get_derived_series",
+            {"concept": "yield_curve_slope", "last_n": 1},
+        )
+        derived_payload = _as_dict(derived.data)
+        assert derived_payload["metadata"]["source"] == "derived"
+        assert derived_payload["metadata"]["derived"]["concept"] == "yield_curve_slope"
+        assert derived_payload["observations"]
 
     print("mcp-smoke-ok")
 

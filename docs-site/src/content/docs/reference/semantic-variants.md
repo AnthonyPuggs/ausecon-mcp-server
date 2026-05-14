@@ -26,4 +26,5 @@ RBA catalogue variants declare one or more `rba_series_ids`. The resolver passes
 - The runtime catalogue exposes only fully wired variants.
 - Placeholder candidates stay out of the runtime catalogue until they have a real ABS key or RBA
   series binding.
-- Derived concepts remain deferred until the retrieval contract can support them explicitly.
+- Formula-based indicators belong in `get_derived_series`, where provenance is recorded in
+  `metadata.derived`.
