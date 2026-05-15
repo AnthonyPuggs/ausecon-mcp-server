@@ -40,20 +40,35 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Updated README, maintainer docs, docs-site references, roadmap wording, and
   the stdio client smoke path for the new derived retrieval surface.
 
+## [1.2.1] - 2026-05-14
+
+### Added
+- Added another 12 new semantic concepts:
+  - `bank_bill_rate`
+  - `total_credit`
+  - `total_credit_growth`
+  - `housing_credit_growth`
+  - `business_credit_growth`
+  - `m3`
+  - `money_base`
+  - `currency_in_circulation`
+  - `aud_cny`
+  - `aud_jpy`
+  - `aud_eur`
+  - `aud_gbp`
+  - `aud_nzd`
+
 ## [1.2.0] - 2026-05-14
 
 ### Added
-- Added 19 new curated semantic concepts across ABS and RBA sources, a few being:
+- Added 7 new analyst-friendly semantic concepts:
   - `real_gdp`
   - `nominal_gdp`
   - `household_consumption`
   - `private_investment`
   - `retail_turnover`
-  - `total_credit_growth`
-  - `housing_credit_growth`
-  - `business_credit_growth`
-  - `money_base`
-  - `currency_in_circulation`
+  - `broad_money`
+  - `bank_bill_rate``
 - Added resolver, service-forwarding, generated-docs, and bounded live integration coverage for the new concepts.
 - Added post-v1.1 roadmap documentation for v1.2, v1.3, v1.4, and v2.0.
 - Added hosted deployment checklist documentation for `/`, `/healthz`, server-card metadata, Smithery listing state, and Render uptime.
