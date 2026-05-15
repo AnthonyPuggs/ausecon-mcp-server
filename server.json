@@ -9,7 +9,7 @@
       "identifier": "ausecon-mcp-server",
       "registryType": "pypi",
       "runtimeHint": "uvx",
-      "version": "1.1.0",
+      "version": "1.4.0",
       "transport": {
         "type": "stdio"
       }
