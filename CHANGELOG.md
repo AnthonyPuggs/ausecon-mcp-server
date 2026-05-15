@@ -7,7 +7,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [1.4.0] - 2026-05-15
 
 ### Added
- Added `get_apra_data(...)`, a new source-native read-only MCP tool for curated APRA public XLSX publications.
+- Added `get_apra_data(...)`, a new source-native read-only MCP tool for curated APRA public XLSX publications.
 - Added APRA catalogue coverage for:
   - Monthly ADI Statistics
   - Quarterly ADI Performance Statistics
@@ -15,6 +15,13 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   - ADI Property Exposures Statistics
 - Extended source filters to support `abs | rba | apra` across catalogue and discovery tools.
 - Updated README, generated references, docs site, response schema, Smithery/hosted docs, and roadmap wording for ten read-only MCP tools.
+
+### Security
+
+- APRA workbook downloads are restricted to trusted APRA HTTPS hosts.
+- Added workbook parsing limits for compressed size, uncompressed XLSX size, member count, rows, and columns.
+- Added hosted HTTP request-size protection for oversized MCP requests.
+- Updated docs-site dependencies to resolve npm audit findings.
 
 ## [1.3.0] - 2026-05-14
 
@@ -25,13 +32,6 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   `real_wage_growth`, `credit_growth`, and `gdp_per_capita`, with formula,
   operand, units, alignment-frequency, and dropped-observation provenance in
   `metadata.derived`.
-
-### Security
-
-- APRA workbook downloads are restricted to trusted APRA HTTPS hosts.
-- Added workbook parsing limits for compressed size, uncompressed XLSX size, member count, rows, and columns.
-- Added hosted HTTP request-size protection for oversized MCP requests.
-- Updated docs-site dependencies to resolve npm audit findings.
 
 ### Changed
 - Extended the checked-in response schema to allow `metadata.source =
@@ -510,7 +510,11 @@ Initial public release.
 - Initial curated catalogues for ABS and RBA, plus a four-concept
   `CURATED_SERIES` semantic shortcut map.
 
-[Unreleased]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.4.0...HEAD
+[1.4.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.3.0...v1.4.0
+[1.3.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.2.1...v1.3.0
+[1.2.1]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v.1.2.0...v1.2.1
+[1.2.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.1.0...v.1.2.0
 [1.1.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v0.13.1...v1.0.0
 [0.13.1]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v0.13.0...v0.13.1
