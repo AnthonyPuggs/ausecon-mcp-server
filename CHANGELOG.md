@@ -4,7 +4,19 @@ All notable changes to `ausecon-mcp-server` are recorded here. The format follow
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres
 to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [v1.4.0] - 2026-05-15
+
+### Added
+ Added `get_apra_data(...)`, a new source-native read-only MCP tool for curated APRA public XLSX publications.
+- Added APRA catalogue coverage for:
+  - Monthly ADI Statistics
+  - Quarterly ADI Performance Statistics
+  - ADI Centralised Publication
+  - ADI Property Exposures Statistics
+- Extended source filters to support `abs | rba | apra` across catalogue and discovery tools.
+- Updated README, generated references, docs site, response schema, Smithery/hosted docs, and roadmap wording for ten read-only MCP tools.
+
+## [v1.3.0] - 2026-05-14
 
 ### Added
 - Added `get_derived_series`, a read-only derived-series tool for transparent
@@ -14,12 +26,51 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   operand, units, alignment-frequency, and dropped-observation provenance in
   `metadata.derived`.
 
+### Security
+
+- APRA workbook downloads are restricted to trusted APRA HTTPS hosts.
+- Added workbook parsing limits for compressed size, uncompressed XLSX size, member count, rows, and columns.
+- Added hosted HTTP request-size protection for oversized MCP requests.
+- Updated docs-site dependencies to resolve npm audit findings.
+
 ### Changed
 - Extended the checked-in response schema to allow `metadata.source =
   "derived"` and validate derived-series provenance without changing the
   top-level `{metadata, series, observations}` contract.
 - Updated README, maintainer docs, docs-site references, roadmap wording, and
   the stdio client smoke path for the new derived retrieval surface.
+
+## [1.2.0] - 2026-05-14
+
+### Added
+- Added 19 new curated semantic concepts across ABS and RBA sources, a few being:
+  - `real_gdp`
+  - `nominal_gdp`
+  - `household_consumption`
+  - `private_investment`
+  - `retail_turnover`
+  - `total_credit_growth`
+  - `housing_credit_growth`
+  - `business_credit_growth`
+  - `money_base`
+  - `currency_in_circulation`
+- Added resolver, service-forwarding, generated-docs, and bounded live integration coverage for the new concepts.
+- Added post-v1.1 roadmap documentation for v1.2, v1.3, v1.4, and v2.0.
+- Added hosted deployment checklist documentation for `/`, `/healthz`, server-card metadata, Smithery listing state, and Render uptime.
+- Added docs-site hygiene checks for Vercel Analytics and Speed Insights.
+
+### Changed
+
+- Updated README and generated semantic reference from 29 to 48 curated macroeconomic concepts.
+- Corrected `f11` exchange-rate semantic metadata to monthly, matching the RBA series returned by `f11-data.csv`.
+- Expanded operations documentation to distinguish MCP server observability from docs-site observability.
+- Updated roadmap documentation to mark the first two v1.2 semantic tranches as landed.
+- Kept ABS housing and monthly CPI replacement work deferred until source-native retrieval is stable.
+
+### Fixed
+
+- Fixed Python 3.10 CI failures by normalising nested optional-union parameter descriptions to top-level tool schema descriptions.
+- Preserved Smithery/server-card compatibility across supported Python versions.
 
 ## [1.1.0] - 2026-05-12
 
