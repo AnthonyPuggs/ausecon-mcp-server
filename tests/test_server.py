@@ -397,6 +397,42 @@ def test_http_app_rejects_oversized_mcp_requests_before_tool_handling() -> None:
     }
 
 
+async def test_request_size_middleware_does_not_preconsume_allowed_post_body() -> None:
+    receive_calls = 0
+    calls_before_app_reads: list[int] = []
+    sent_messages: list[dict] = []
+
+    async def app(scope, receive, send):
+        calls_before_app_reads.append(receive_calls)
+        message = await receive()
+        assert message == {"type": "http.request", "body": b"{}", "more_body": False}
+        await send({"type": "http.response.start", "status": 200, "headers": []})
+        await send({"type": "http.response.body", "body": b"ok"})
+
+    async def receive():
+        nonlocal receive_calls
+        receive_calls += 1
+        return {"type": "http.request", "body": b"{}", "more_body": False}
+
+    async def send(message):
+        sent_messages.append(message)
+
+    middleware = server_module.RequestSizeLimitMiddleware(app)
+    await middleware(
+        {
+            "type": "http",
+            "method": "POST",
+            "headers": [(b"content-length", b"2")],
+        },
+        receive,
+        send,
+    )
+
+    assert calls_before_app_reads == [0]
+    assert receive_calls == 1
+    assert sent_messages[-1] == {"type": "http.response.body", "body": b"ok"}
+
+
 def test_http_app_exposes_smithery_static_server_card() -> None:
     app = server_module.build_http_app(build_server())
 

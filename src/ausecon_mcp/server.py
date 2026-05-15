@@ -220,30 +220,7 @@ class RequestSizeLimitMiddleware:
             await self._reject(scope, receive, send)
             return
 
-        messages: list[dict[str, Any]] = []
-        body_bytes = 0
-        more_body = True
-        while more_body:
-            message = await receive()
-            messages.append(message)
-            if message["type"] != "http.request":
-                more_body = False
-                continue
-            body_bytes += len(message.get("body", b""))
-            if body_bytes > self.max_bytes:
-                await self._reject(scope, receive, send)
-                return
-            more_body = bool(message.get("more_body", False))
-
-        replay = iter(messages)
-
-        async def replay_receive() -> dict[str, Any]:
-            try:
-                return next(replay)
-            except StopIteration:
-                return {"type": "http.request", "body": b"", "more_body": False}
-
-        await self.app(scope, replay_receive, send)
+        await self.app(scope, receive, send)
 
     async def _reject(self, scope: Scope, receive: Receive, send: Send) -> None:
         response = JSONResponse(
