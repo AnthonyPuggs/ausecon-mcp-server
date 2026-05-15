@@ -380,6 +380,23 @@ def test_http_app_exposes_status_endpoints_for_hosted_publish_flow() -> None:
     assert health.json() == {"status": "ok"}
 
 
+def test_http_app_rejects_oversized_mcp_requests_before_tool_handling() -> None:
+    app = server_module.build_http_app(build_server())
+
+    with TestClient(app) as client:
+        response = client.post(
+            "/mcp",
+            content=b"x" * (1024 * 1024 + 1),
+            headers={"content-type": "application/json"},
+        )
+
+    assert response.status_code == 413
+    assert response.json() == {
+        "error": "request_too_large",
+        "max_bytes": 1024 * 1024,
+    }
+
+
 def test_http_app_exposes_smithery_static_server_card() -> None:
     app = server_module.build_http_app(build_server())
 

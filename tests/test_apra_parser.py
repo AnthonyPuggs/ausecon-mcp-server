@@ -1,10 +1,13 @@
 from __future__ import annotations
 
+import zipfile
 from datetime import datetime
 from io import BytesIO
 
+import pytest
 from openpyxl import Workbook
 
+import ausecon_mcp.parsers.apra_xlsx as apra_parser
 from ausecon_mcp.parsers.apra_xlsx import parse_apra_xlsx
 
 
@@ -20,6 +23,82 @@ def _xlsx_bytes(rows_by_sheet: dict[str, list[list[object]]]) -> bytes:
     buffer = BytesIO()
     workbook.save(buffer)
     return buffer.getvalue()
+
+
+def _row_record_table_map() -> dict:
+    return {
+        "table_1": {
+            "sheet": "Table 1",
+            "layout": "row_records",
+            "title": "Table 1",
+            "unit": "$ million",
+            "frequency": "Monthly",
+            "header_row": 2,
+            "data_start_row": 3,
+            "date_column": 1,
+            "dimension_columns": {"abn": 2, "institution": 3},
+            "series_start_column": 4,
+            "identity_columns": ["abn"],
+        }
+    }
+
+
+def test_parse_apra_xlsx_rejects_oversized_compressed_payload(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(apra_parser, "MAX_APRA_XLSX_BYTES", 8, raising=False)
+
+    with pytest.raises(ValueError, match="exceeds maximum APRA XLSX size"):
+        parse_apra_xlsx(
+            b"not-an-xlsx",
+            publication_id="TEST_PUBLICATION",
+            title="Test APRA publication",
+            frequency="Monthly",
+            table_maps=_row_record_table_map(),
+        )
+
+
+def test_parse_apra_xlsx_rejects_excessive_uncompressed_zip_payload(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    buffer = BytesIO()
+    with zipfile.ZipFile(buffer, "w") as archive:
+        archive.writestr("xl/worksheets/sheet1.xml", "x" * 32)
+    monkeypatch.setattr(apra_parser, "MAX_APRA_XLSX_UNCOMPRESSED_BYTES", 16, raising=False)
+
+    with pytest.raises(ValueError, match="uncompressed APRA XLSX payload"):
+        parse_apra_xlsx(
+            buffer.getvalue(),
+            publication_id="TEST_PUBLICATION",
+            title="Test APRA publication",
+            frequency="Monthly",
+            table_maps=_row_record_table_map(),
+        )
+
+
+def test_parse_apra_xlsx_rejects_excessive_table_dimensions(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workbook = _xlsx_bytes(
+        {
+            "Table 1": [
+                ["($million)"],
+                ["Period", "ABN", "Institution Name", "Total residents assets"],
+                [datetime(2024, 1, 31), 11111111111, "Example Bank", 100.5],
+                [datetime(2024, 2, 29), 11111111111, "Example Bank", 110.0],
+            ]
+        }
+    )
+    monkeypatch.setattr(apra_parser, "MAX_APRA_TABLE_ROWS", 3, raising=False)
+
+    with pytest.raises(ValueError, match="exceeds maximum APRA table rows"):
+        parse_apra_xlsx(
+            workbook,
+            publication_id="TEST_PUBLICATION",
+            title="Test APRA publication",
+            frequency="Monthly",
+            table_maps=_row_record_table_map(),
+        )
 
 
 def test_parse_apra_xlsx_normalises_row_record_tables() -> None:

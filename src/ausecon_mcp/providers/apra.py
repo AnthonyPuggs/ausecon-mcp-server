@@ -5,7 +5,7 @@ from copy import deepcopy
 from html.parser import HTMLParser
 from time import perf_counter
 from typing import Any
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlparse
 
 import httpx
 
@@ -19,6 +19,7 @@ from ausecon_mcp.providers._http import build_client, resolve_version, utc_now_i
 from ausecon_mcp.providers._retry import get_with_retries
 
 _logger = get_logger("providers.apra")
+_TRUSTED_APRA_DOWNLOAD_HOSTS = {"apra.gov.au", "www.apra.gov.au"}
 
 
 class APRAProvider:
@@ -171,11 +172,18 @@ def resolve_apra_download_url(html: str, *, base_url: str, patterns: list[str]) 
     compiled = [re.compile(pattern, re.IGNORECASE) for pattern in patterns]
     for href, label in links.links:
         normalised_label = re.sub(r"\s+", " ", label).strip()
-        if href and href.lower().endswith(".xlsx") and all(
-            pattern.search(normalised_label) for pattern in compiled
-        ):
-            return urljoin(base_url, href)
-    raise AuseconParseError("APRA landing page did not contain the expected XLSX link.")
+        if not href or not all(pattern.search(normalised_label) for pattern in compiled):
+            continue
+        candidate_url = urljoin(base_url, href)
+        parsed = urlparse(candidate_url)
+        if not parsed.path.lower().endswith(".xlsx"):
+            continue
+        hostname = (parsed.hostname or "").lower()
+        if parsed.scheme == "https" and hostname in _TRUSTED_APRA_DOWNLOAD_HOSTS:
+            return candidate_url
+    raise AuseconParseError(
+        "APRA landing page did not contain the expected trusted APRA HTTPS XLSX link."
+    )
 
 
 class _LinkExtractor(HTMLParser):

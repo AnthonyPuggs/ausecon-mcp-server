@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import calendar
 import re
+import zipfile
 from datetime import date, datetime
 from io import BytesIO
 from typing import Any
@@ -12,6 +13,11 @@ from ausecon_mcp.errors import AuseconValidationError
 from ausecon_mcp.models import Observation, SeriesDescriptor, parse_float
 
 _SLUG_RE = re.compile(r"[^a-z0-9]+")
+MAX_APRA_XLSX_BYTES = 50 * 1024 * 1024
+MAX_APRA_XLSX_UNCOMPRESSED_BYTES = 250 * 1024 * 1024
+MAX_APRA_XLSX_MEMBERS = 5000
+MAX_APRA_TABLE_ROWS = 250_000
+MAX_APRA_TABLE_COLUMNS = 512
 
 
 def parse_apra_xlsx(
@@ -25,6 +31,7 @@ def parse_apra_xlsx(
 ) -> dict[str, Any]:
     """Parse a curated APRA XLSX workbook into the normal retrieval response shape."""
     selected_maps = _select_table_maps(table_maps, table_id)
+    _validate_xlsx_container(content)
     workbook = load_workbook(BytesIO(content), read_only=True, data_only=True)
     series_by_id: dict[str, dict[str, Any]] = {}
     observations: list[dict[str, Any]] = []
@@ -34,6 +41,7 @@ def parse_apra_xlsx(
         if sheet_name not in workbook.sheetnames:
             raise ValueError(f"APRA workbook did not contain sheet {sheet_name!r}.")
         sheet = workbook[sheet_name]
+        _validate_sheet_bounds(sheet, selected_table_id)
         layout = table_map["layout"]
         if layout == "row_records":
             table_series, table_observations = _parse_row_records(
@@ -88,6 +96,45 @@ def _select_table_maps(
             f"Unknown APRA table {table_id!r}. Known tables: {known or '(none)'}."
         )
     return {table_id: table_maps[table_id]}
+
+
+def _validate_xlsx_container(content: bytes) -> None:
+    if len(content) > MAX_APRA_XLSX_BYTES:
+        raise ValueError(
+            "APRA workbook exceeds maximum APRA XLSX size "
+            f"({len(content)} > {MAX_APRA_XLSX_BYTES} bytes)."
+        )
+    try:
+        with zipfile.ZipFile(BytesIO(content)) as archive:
+            members = archive.infolist()
+            if len(members) > MAX_APRA_XLSX_MEMBERS:
+                raise ValueError(
+                    "APRA workbook exceeds maximum XLSX member count "
+                    f"({len(members)} > {MAX_APRA_XLSX_MEMBERS})."
+                )
+            uncompressed_bytes = sum(member.file_size for member in members)
+    except zipfile.BadZipFile as exc:
+        raise ValueError("APRA workbook is not a valid XLSX zip container.") from exc
+    if uncompressed_bytes > MAX_APRA_XLSX_UNCOMPRESSED_BYTES:
+        raise ValueError(
+            "APRA workbook exceeds maximum uncompressed APRA XLSX payload "
+            f"({uncompressed_bytes} > {MAX_APRA_XLSX_UNCOMPRESSED_BYTES} bytes)."
+        )
+
+
+def _validate_sheet_bounds(sheet: Any, table_id: str) -> None:
+    max_row = int(sheet.max_row or 0)
+    max_column = int(sheet.max_column or 0)
+    if max_row > MAX_APRA_TABLE_ROWS:
+        raise ValueError(
+            f"APRA table {table_id!r} exceeds maximum APRA table rows "
+            f"({max_row} > {MAX_APRA_TABLE_ROWS})."
+        )
+    if max_column > MAX_APRA_TABLE_COLUMNS:
+        raise ValueError(
+            f"APRA table {table_id!r} exceeds maximum APRA table columns "
+            f"({max_column} > {MAX_APRA_TABLE_COLUMNS})."
+        )
 
 
 def _parse_row_records(

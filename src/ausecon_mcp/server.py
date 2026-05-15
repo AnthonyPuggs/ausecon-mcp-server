@@ -11,6 +11,7 @@ from starlette.middleware import Middleware
 from starlette.middleware.cors import CORSMiddleware
 from starlette.requests import Request
 from starlette.responses import JSONResponse
+from starlette.types import ASGIApp, Receive, Scope, Send
 
 from ausecon_mcp.bounds import NormalisedSemanticBounds, normalise_semantic_bounds
 from ausecon_mcp.catalogue.resolver import (
@@ -61,6 +62,7 @@ SERVER_DESCRIPTION = (
     "of Statistics, and Australian Prudential Regulation Authority via MCP."
 )
 SERVER_LICENSE = "MIT"
+MAX_HTTP_REQUEST_BYTES = 1024 * 1024
 TOOL_TITLES = {
     "search_datasets": "Search Datasets",
     "list_catalogue": "List Catalogue",
@@ -201,6 +203,65 @@ def _tool_annotations(title: str) -> dict[str, bool | str]:
         "idempotentHint": True,
         "openWorldHint": True,
     }
+
+
+class RequestSizeLimitMiddleware:
+    def __init__(self, app: ASGIApp, max_bytes: int = MAX_HTTP_REQUEST_BYTES) -> None:
+        self.app = app
+        self.max_bytes = max_bytes
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if scope["type"] != "http" or scope.get("method") in {"GET", "HEAD", "OPTIONS"}:
+            await self.app(scope, receive, send)
+            return
+
+        content_length = _content_length(scope)
+        if content_length is not None and content_length > self.max_bytes:
+            await self._reject(scope, receive, send)
+            return
+
+        messages: list[dict[str, Any]] = []
+        body_bytes = 0
+        more_body = True
+        while more_body:
+            message = await receive()
+            messages.append(message)
+            if message["type"] != "http.request":
+                more_body = False
+                continue
+            body_bytes += len(message.get("body", b""))
+            if body_bytes > self.max_bytes:
+                await self._reject(scope, receive, send)
+                return
+            more_body = bool(message.get("more_body", False))
+
+        replay = iter(messages)
+
+        async def replay_receive() -> dict[str, Any]:
+            try:
+                return next(replay)
+            except StopIteration:
+                return {"type": "http.request", "body": b"", "more_body": False}
+
+        await self.app(scope, replay_receive, send)
+
+    async def _reject(self, scope: Scope, receive: Receive, send: Send) -> None:
+        response = JSONResponse(
+            {"error": "request_too_large", "max_bytes": self.max_bytes},
+            status_code=413,
+        )
+        await response(scope, receive, send)
+
+
+def _content_length(scope: Scope) -> int | None:
+    for name, value in scope.get("headers", []):
+        if name.lower() != b"content-length":
+            continue
+        try:
+            return int(value.decode("ascii"))
+        except ValueError:
+            return None
+    return None
 
 
 def _nested_schema_description(schema: dict[str, Any]) -> str | None:
@@ -810,6 +871,7 @@ def resolve_http_port() -> int:
 
 def build_http_middleware() -> list[Middleware]:
     return [
+        Middleware(RequestSizeLimitMiddleware, max_bytes=MAX_HTTP_REQUEST_BYTES),
         Middleware(
             CORSMiddleware,
             allow_origins=["*"],

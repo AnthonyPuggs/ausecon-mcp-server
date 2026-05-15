@@ -10,7 +10,8 @@ from httpx import ConnectTimeout, Response
 from openpyxl import Workbook
 
 from ausecon_mcp.cache import TTLCache
-from ausecon_mcp.providers.apra import APRAProvider
+from ausecon_mcp.errors import AuseconParseError
+from ausecon_mcp.providers.apra import APRAProvider, resolve_apra_download_url
 
 
 def _xlsx_bytes() -> bytes:
@@ -56,6 +57,27 @@ def _catalogue() -> dict:
             },
         }
     }
+
+
+@pytest.mark.parametrize(
+    "href",
+    [
+        "https://evil.example/apra-back-series.xlsx",
+        "//evil.example/apra-back-series.xlsx",
+        "http://www.apra.gov.au/sites/default/files/apra-back-series.xlsx",
+    ],
+)
+def test_resolve_apra_download_url_rejects_non_apra_or_non_https_xlsx_links(
+    href: str,
+) -> None:
+    html = f'<a href="{href}">Test back-series March 2026 XLSX</a>'
+
+    with pytest.raises(AuseconParseError, match="trusted APRA HTTPS"):
+        resolve_apra_download_url(
+            html,
+            base_url="https://www.apra.gov.au/test-statistics",
+            patterns=[r"back-series.*xlsx"],
+        )
 
 
 @pytest.mark.asyncio
