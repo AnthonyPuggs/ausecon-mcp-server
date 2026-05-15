@@ -4,7 +4,7 @@ All notable changes to `ausecon-mcp-server` are recorded here. The format follow
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres
 to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [v1.4.0] - 2026-05-15
+## [1.4.0] - 2026-05-15
 
 ### Added
  Added `get_apra_data(...)`, a new source-native read-only MCP tool for curated APRA public XLSX publications.
@@ -16,7 +16,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Extended source filters to support `abs | rba | apra` across catalogue and discovery tools.
 - Updated README, generated references, docs site, response schema, Smithery/hosted docs, and roadmap wording for ten read-only MCP tools.
 
-## [v1.3.0] - 2026-05-14
+## [1.3.0] - 2026-05-14
 
 ### Added
 - Added `get_derived_series`, a read-only derived-series tool for transparent
