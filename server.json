@@ -1,15 +1,15 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.AnthonyPuggs/ausecon-mcp-server",
-  "title": "Australian Economic Data (RBA & ABS)",
-  "description": "Australian economic data from the RBA and ABS: CPI, GDP, cash rate, labour force, among others.",
-  "version": "1.4.0",
+  "title": "Australian Economic Data (ABS, RBA & APRA)",
+  "description": "Australian economic data from the ABS, RBA, and APRA: CPI, GDP, cash rate, labour force, banking statistics, among others.",
+  "version": "1.4.1",
   "packages": [
     {
       "identifier": "ausecon-mcp-server",
       "registryType": "pypi",
       "runtimeHint": "uvx",
-      "version": "1.4.0",
+      "version": "1.4.1",
       "transport": {
         "type": "stdio"
       }

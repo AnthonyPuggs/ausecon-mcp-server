@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import re
 from copy import deepcopy
 from html.parser import HTMLParser
@@ -59,13 +60,17 @@ class APRAProvider:
                 f"Known tables: {known or '(none)'}."
             )
 
-        cache_key = f"apra-publication:{publication_id}"
+        cache_key = _cache_key(publication_id, table_id)
         raw_payload = self._cache.get(cache_key)
         stale_meta: dict[str, Any] | None = None
 
         if raw_payload is None:
             try:
-                raw_payload = await self._fetch_and_parse(publication_id, entry)
+                raw_payload = await self._fetch_and_parse(
+                    publication_id,
+                    entry,
+                    table_id=table_id,
+                )
             except AuseconUpstreamError:
                 stale = self._cache.get_stale(cache_key)
                 if stale is None:
@@ -86,7 +91,6 @@ class APRAProvider:
 
         payload = deepcopy(raw_payload)
         if table_id is not None:
-            payload = _filter_table(payload, table_id)
             payload["metadata"]["frequency"] = entry["tables"][table_id].get(
                 "frequency",
                 entry.get("frequency"),
@@ -105,11 +109,22 @@ class APRAProvider:
             payload["metadata"]["expires_at"] = stale_meta["expires_at"]
         return payload
 
-    async def _fetch_and_parse(self, publication_id: str, entry: dict[str, Any]) -> dict[str, Any]:
+    async def _fetch_and_parse(
+        self,
+        publication_id: str,
+        entry: dict[str, Any],
+        *,
+        table_id: str | None,
+    ) -> dict[str, Any]:
         landing_url = entry["landing_url"]
         _logger.info(
             "request.start",
-            extra={"source": "apra", "identifier": publication_id, "url": landing_url},
+            extra={
+                "source": "apra",
+                "identifier": publication_id,
+                "table_id": table_id,
+                "url": landing_url,
+            },
         )
         start = perf_counter()
         landing_response = await get_with_retries(
@@ -131,23 +146,28 @@ class APRAProvider:
             source="apra",
             identifier=publication_id,
         )
+        download_ms = int((perf_counter() - start) * 1000)
+        parse_start = perf_counter()
         _logger.info(
-            "request.success",
+            "download.success",
             extra={
                 "source": "apra",
                 "identifier": publication_id,
+                "table_id": table_id,
                 "status_code": xlsx_response.status_code,
-                "duration_ms": int((perf_counter() - start) * 1000),
+                "download_ms": download_ms,
                 "bytes": len(xlsx_response.content),
             },
         )
         try:
-            payload = parse_apra_xlsx(
+            payload = await asyncio.to_thread(
+                parse_apra_xlsx,
                 xlsx_response.content,
                 publication_id=publication_id,
                 title=entry["name"],
                 frequency=entry["frequency"],
                 table_maps=entry["tables"],
+                table_id=table_id,
             )
         except (IndexError, KeyError, TypeError, ValueError) as exc:
             _logger.error(
@@ -155,12 +175,29 @@ class APRAProvider:
                 extra={
                     "source": "apra",
                     "identifier": publication_id,
+                    "table_id": table_id,
                     "url": download_url,
                 },
             )
             raise AuseconParseError(
                 f"Failed to parse APRA publication payload for '{publication_id}'."
             ) from exc
+        parse_ms = int((perf_counter() - parse_start) * 1000)
+        _logger.info(
+            "request.success",
+            extra={
+                "source": "apra",
+                "identifier": publication_id,
+                "table_id": table_id,
+                "status_code": xlsx_response.status_code,
+                "download_ms": download_ms,
+                "parse_ms": parse_ms,
+                "duration_ms": int((perf_counter() - start) * 1000),
+                "bytes": len(xlsx_response.content),
+                "series_count": len(payload["series"]),
+                "observation_count": len(payload["observations"]),
+            },
+        )
         payload["metadata"]["retrieval_url"] = str(xlsx_response.request.url)
         payload["metadata"]["retrieved_at"] = utc_now_iso()
         return payload
@@ -184,6 +221,12 @@ def resolve_apra_download_url(html: str, *, base_url: str, patterns: list[str]) 
     raise AuseconParseError(
         "APRA landing page did not contain the expected trusted APRA HTTPS XLSX link."
     )
+
+
+def _cache_key(publication_id: str, table_id: str | None) -> str:
+    if table_id is None:
+        return f"apra-publication:{publication_id}"
+    return f"apra-publication:{publication_id}:table:{table_id}"
 
 
 class _LinkExtractor(HTMLParser):
@@ -210,18 +253,3 @@ class _LinkExtractor(HTMLParser):
         self.links.append((self._current_href, "".join(self._current_text)))
         self._current_href = None
         self._current_text = []
-
-
-def _filter_table(payload: dict[str, Any], table_id: str) -> dict[str, Any]:
-    payload["series"] = [
-        series
-        for series in payload["series"]
-        if series.get("dimensions", {}).get("table", {}).get("code") == table_id
-    ]
-    series_ids = {series["series_id"] for series in payload["series"]}
-    payload["observations"] = [
-        observation
-        for observation in payload["observations"]
-        if observation["series_id"] in series_ids
-    ]
-    return payload

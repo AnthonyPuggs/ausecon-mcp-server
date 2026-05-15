@@ -290,3 +290,40 @@ def test_parse_apra_xlsx_can_limit_to_one_declared_table() -> None:
 
     assert {series["dimensions"]["table"]["code"] for series in payload["series"]} == {"b"}
     assert payload["observations"][0]["series_id"] == "TEST_PUBLICATION:b:entity_b:metric"
+
+
+def test_parse_apra_xlsx_selected_table_requires_matching_sheet() -> None:
+    workbook = _xlsx_bytes(
+        {
+            "A": [
+                [None],
+                ["Period", "Entity", "Metric"],
+                [datetime(2024, 1, 31), "Entity A", 1.0],
+            ],
+        }
+    )
+    table_maps = {
+        "missing": {
+            "sheet": "Missing",
+            "layout": "row_records",
+            "title": "Missing",
+            "unit": "count",
+            "frequency": "Monthly",
+            "header_row": 2,
+            "data_start_row": 3,
+            "date_column": 1,
+            "dimension_columns": {"entity": 2},
+            "series_start_column": 3,
+            "identity_columns": ["entity"],
+        }
+    }
+
+    with pytest.raises(ValueError, match="did not contain sheet 'Missing'"):
+        parse_apra_xlsx(
+            workbook,
+            publication_id="TEST_PUBLICATION",
+            title="Test APRA publication",
+            frequency="Monthly",
+            table_maps=table_maps,
+            table_id="missing",
+        )

@@ -40,4 +40,5 @@ false release failures.
 The public hosted server is acceptable because all tools are read-only and use public ABS, RBA, and
 APRA data.
 The main residual risk is large unauthenticated retrieval. Prefer examples with `last_n`, `start`,
-and `end`, and monitor request volume, CPU, memory, and upstream latency.
+and `end`, specify `table_id` for APRA XLSX workbooks, and monitor request volume, CPU, memory, and
+upstream latency.

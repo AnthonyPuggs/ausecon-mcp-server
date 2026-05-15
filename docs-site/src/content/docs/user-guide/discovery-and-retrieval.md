@@ -22,7 +22,8 @@ publication, APRA table, or APRA series IDs you want:
 - `get_abs_dataset_structure` retrieves ABS SDMX dimensions and code lists.
 - `get_abs_data` retrieves ABS data in the normalised response shape.
 - `get_rba_table` retrieves RBA statistical tables in the normalised response shape.
-- `get_apra_data` retrieves curated official APRA XLSX publications in the normalised response shape.
+- `get_apra_data` retrieves curated official APRA XLSX publications in the normalised response
+  shape. Specify `table_id` for APRA workbooks when you know the table you need.
 
 `list_rba_tables` remains available as a deprecated compatibility alias. New integrations should
 use `list_catalogue(source="rba")`.

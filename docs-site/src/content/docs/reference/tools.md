@@ -48,4 +48,6 @@ Supported derived concepts are `real_cash_rate`, `yield_curve_slope`, `real_wage
 
 For exact source-native control, use `search_datasets` or `list_catalogue`, inspect structures
 where needed, then call `get_abs_data`, `get_rba_table`, or `get_apra_data`. APRA retrieval is
-limited to curated official publication IDs and does not accept arbitrary workbook URLs.
+limited to curated official publication IDs and does not accept arbitrary workbook URLs. For APRA
+XLSX workbooks, provide `table_id` where possible so the hosted server can parse and cache only the
+requested table.

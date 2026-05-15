@@ -56,6 +56,9 @@ The APRA source-native foundation adds curated official APRA XLSX retrieval thro
 Monthly ADI Statistics, Quarterly ADI Performance, the ADI Centralised Publication, and Quarterly
 ADI Property Exposures.
 
+The v1.4.1 reliability patch keeps hosted health checks responsive during APRA workbook parsing by
+moving XLSX parsing off the event loop and caching requested APRA tables separately.
+
 APRA-backed semantic concepts remain deferred until exact series definitions are fixture-backed and
 live-validated.
 

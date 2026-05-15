@@ -93,6 +93,9 @@ Expected public API changes are additive: source filters include `apra`, `get_ap
 source-native APRA retrieval tool, and APRA-backed semantic concepts are exposed only after
 fixture and live validation.
 
+The v1.4.1 reliability patch keeps hosted health checks responsive during APRA workbook parsing by
+moving XLSX parsing off the event loop and caching requested APRA tables separately.
+
 Treasury and ASX remain deferred. Treasury is not the main statistical system of record for most
 target macro series, and ASX would shift the product toward market data.
 
