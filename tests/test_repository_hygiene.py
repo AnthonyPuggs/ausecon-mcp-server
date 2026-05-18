@@ -128,10 +128,12 @@ def test_readme_is_slim_landing_page_for_current_release_state() -> None:
     readme_text = README.read_text(encoding="utf-8")
 
     assert len(readme_text.splitlines()) < 140
-    assert "Version `1.1.0` is the current hosted release baseline." in readme_text
+    assert "Version `1.5.0` is the current release line." in readme_text
     assert re.search(r"stdio plus\s+Streamable HTTP", readme_text)
     assert "ten read-only MCP tools" in readme_text
-    assert "55 curated macroeconomic concepts" in readme_text
+    assert "70 curated analyst-facing economic and financial concepts" in readme_text
+    assert "nine\ntransparent derived indicators" in readme_text
+    assert "55 curated macroeconomic concepts" not in readme_text
     assert "48 curated macroeconomic concepts" not in readme_text
     assert "36 curated macroeconomic concepts" not in readme_text
     assert "29 curated macroeconomic concepts" not in readme_text
@@ -201,6 +203,7 @@ def test_post_v11_roadmap_is_documented_and_contract_preserving() -> None:
         assert "v1.2" in text
         assert "v1.3" in text
         assert "v1.4" in text
+        assert "v1.5" in text
         assert "v2.0" in text
         assert "APRA" in text
         assert "APRA source-native foundation" in text

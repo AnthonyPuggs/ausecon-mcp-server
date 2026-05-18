@@ -42,7 +42,8 @@ get_derived_series(concept="real_cash_rate")
 ```
 
 Supported derived concepts are `real_cash_rate`, `yield_curve_slope`, `real_wage_growth`,
-`credit_growth`, and `gdp_per_capita`.
+`credit_growth`, `gdp_per_capita`, `mortgage_rate_spread`, `real_mortgage_rate`,
+`credit_to_gdp`, and `household_spending_growth`.
 
 ## Expert source-native flow
 

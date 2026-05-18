@@ -37,6 +37,10 @@ use `list_catalogue(source="rba")`.
 - `real_wage_growth`
 - `credit_growth`
 - `gdp_per_capita`
+- `mortgage_rate_spread`
+- `real_mortgage_rate`
+- `credit_to_gdp`
+- `household_spending_growth`
 
 It does not accept arbitrary formulas or user-supplied code. Operands are fetched through the
 curated semantic layer and then combined by fixed, documented formulas.
@@ -51,7 +55,7 @@ curated semantic layer and then combined by fixed, documented formulas.
 - `YYYY-MM`
 - `YYYY-MM-DD`
 
-The server normalises these to ABS periods or RBA ISO dates after resolving the concept.
+The server normalises these to ABS periods or RBA/APRA ISO dates after resolving the concept.
 
 Raw ABS, RBA, and APRA tools keep source-native conventions:
 

@@ -10,15 +10,15 @@ Before connecting Smithery, confirm the release state is consistent:
 
 ```bash
 git status --short --branch
-git ls-remote origin refs/heads/main refs/tags/v1.1.0
+git ls-remote origin refs/heads/main refs/tags/v1.5.0
 python3 -m pip index versions ausecon-mcp-server
 ```
 
-Expected state for the v1.1.0 Smithery release:
+Expected state for the v1.5.0 Smithery release:
 
-- `main` and `v1.1.0` point at the same published release commit.
-- PyPI lists `ausecon-mcp-server (1.1.0)`.
-- `server.json` and `CHANGELOG.md` both refer to `1.1.0`.
+- `main` and `v1.5.0` point at the same published release commit.
+- PyPI lists `ausecon-mcp-server (1.5.0)`.
+- `server.json` and `CHANGELOG.md` both refer to `1.5.0`.
 - `smithery.yaml` declares `runtime: "container"` and `startCommand.type: "http"`.
 - `Dockerfile.smithery` builds the local wheel and runs `ausecon-mcp-http`.
 
@@ -48,7 +48,7 @@ startCommand:
   type: "http"
 ```
 
-Do not add `configSchema` or `exampleConfig` for v1.1.0. The server does not
+Do not add `configSchema` or `exampleConfig` for v1.5.0. The server does not
 need user secrets or per-session configuration because every exposed tool reads
 public ABS, RBA, and APRA data.
 
@@ -59,12 +59,12 @@ After the first Smithery build:
 - Confirm the container starts `ausecon-mcp-http`.
 - Confirm Smithery routes MCP traffic to `/mcp`.
 - Confirm the server listens on the platform-provided `PORT`.
-- Confirm Smithery detects the expected tools: `list_economic_concepts`,
-  `get_economic_series`, `get_derived_series`, `search_datasets`, `get_abs_data`, and
-  `get_rba_table`.
+- Confirm Smithery detects the expected ten tools: `search_datasets`, `list_catalogue`,
+  `list_economic_concepts`, `get_abs_dataset_structure`, `get_abs_data`, `list_rba_tables`,
+  `get_rba_table`, `get_apra_data`, `get_economic_series`, and `get_derived_series`.
 - Check response metadata from a live retrieval. `metadata.server_version`
-  should report `1.1.0`; if it reports a fallback value, configure Smithery to
-  pass `AUSECON_VERSION=1.1.0` as a Docker build argument if the platform
+  should report `1.5.0`; if it reports a fallback value, configure Smithery to
+  pass `AUSECON_VERSION=1.5.0` as a Docker build argument if the platform
   supports build args.
 
 Use the Smithery Playground for smoke tests:
@@ -72,6 +72,7 @@ Use the Smithery Playground for smoke tests:
 - `list_economic_concepts(query="cash rate")`
 - `get_economic_series(concept="cash_rate_target", last_n=5)`
 - `get_derived_series(concept="real_cash_rate", last_n=5)`
+- `get_economic_series(concept="adi_capital_ratio", last_n=2)`
 - `search_datasets(query="unemployment rate", source="abs")`
 
 The hosted service also exposes operational endpoints for platforms and
@@ -103,7 +104,7 @@ transport and client naming are stable.
   changes: `list_economic_concepts(query="cash rate")`,
   `get_economic_series(concept="cash_rate_target", last_n=5)`,
   `get_derived_series(concept="real_cash_rate", last_n=5)`, and
-  `search_datasets(query="unemployment rate", source="abs")`.
+  `search_datasets(query="superannuation assets", source="apra")`.
 
 ## Quality Score
 

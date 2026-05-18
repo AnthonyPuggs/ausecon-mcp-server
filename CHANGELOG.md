@@ -4,6 +4,30 @@ All notable changes to `ausecon-mcp-server` are recorded here. The format follow
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres
 to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.0] - 2026-05-18
+
+### Added
+
+- Added ABS quarterly Household Spending Indicator coverage through `HSI_Q`, including
+  `quarterly_household_spending_current` and `quarterly_household_spending_volume`.
+- Added selected RBA source-native table coverage for `a4`, `c1.1`, `c2.1`, `c4.1`, `d14.1`,
+  `f1.1`, `f2.1`, `i5`, and `j1`.
+- Added APRA catalogue coverage for Quarterly Superannuation Industry, Quarterly Fund-Level,
+  General Insurance Performance, Life Insurance Performance, Private Health Insurance Performance,
+  and Private Health Insurance Membership publications.
+- Added APRA-backed semantic concepts for ADI capital and liquidity ratios, property exposures,
+  superannuation assets and accounts, insurance revenue and claims, and PHI membership.
+- Added derived concepts for `mortgage_rate_spread`, `real_mortgage_rate`, `credit_to_gdp`, and
+  `household_spending_growth`.
+
+### Changed
+
+- Extended semantic provenance metadata to support APRA targets through `apra_table_id` and
+  `apra_series_ids`.
+- Regenerated the semantic concepts reference, increasing the curated concept count to 70.
+- Updated release documentation, roadmap wording, response-schema notes, and hosted deployment
+  guidance for the v1.5 semantic and source expansion.
+
 ## [1.4.1] - 2026-05-16
 
 ### Fixed
@@ -520,7 +544,8 @@ Initial public release.
 - Initial curated catalogues for ABS and RBA, plus a four-concept
   `CURATED_SERIES` semantic shortcut map.
 
-[Unreleased]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.4.1...HEAD
+[Unreleased]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.5.0...HEAD
+[1.5.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.4.1...v1.5.0
 [1.4.1]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.4.0...v1.4.1
 [1.4.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.2.1...v1.3.0

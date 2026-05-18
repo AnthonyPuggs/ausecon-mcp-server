@@ -36,8 +36,9 @@ Optional fields appear when relevant:
 - `stale`, `cached_at`, and `expires_at`
 
 `semantic` appears on responses returned by `get_economic_series`. It records the requested
-concept, resolved variant, requested bounds, resolved source-native bounds, and ABS/RBA target.
-APRA is source-native only in the v1.4.0 foundation tranche, so APRA payloads do not include
+concept, resolved variant, requested bounds, resolved source-native bounds, and ABS/RBA/APRA
+target. APRA semantic targets include `apra_table_id` and `apra_series_ids`. Raw source-native
+responses from `get_abs_data`, `get_rba_table`, and `get_apra_data` do not include
 `metadata.semantic`.
 
 `derived` appears on responses returned by `get_derived_series`. It records the formula, operands,

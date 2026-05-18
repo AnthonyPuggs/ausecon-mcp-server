@@ -28,7 +28,7 @@ Manual MCP tool-call smoke should stay bounded:
 list_economic_concepts(query="cash rate")
 get_economic_series(concept="cash_rate_target", last_n=5)
 get_derived_series(concept="real_cash_rate", last_n=5)
-search_datasets(query="unemployment rate", source="abs")
+search_datasets(query="superannuation assets", source="apra")
 ```
 
 The repository intentionally does not include `scripts/mcp_http_smoke.py`. Reintroduce automated

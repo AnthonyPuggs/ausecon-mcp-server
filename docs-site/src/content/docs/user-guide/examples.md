@@ -63,6 +63,18 @@ get_rba_table(
 )
 ```
 
+## APRA retrieval
+
+Fetch a bounded APRA table directly:
+
+```text
+get_apra_data(
+  publication_id="ADI_QUARTERLY_PERFORMANCE",
+  table_id="key_stats",
+  last_n=4
+)
+```
+
 ## Semantic retrieval
 
 Resolve the cash rate target:
@@ -92,6 +104,15 @@ get_economic_series(
 )
 ```
 
+Resolve an APRA-backed ADI capital ratio:
+
+```text
+get_economic_series(
+  concept="adi_capital_ratio",
+  last_n=4
+)
+```
+
 ## Derived retrieval
 
 Fetch transparent formula-based indicators:
@@ -108,5 +129,12 @@ get_derived_series(
   concept="yield_curve_slope",
   start="2024-01-01",
   last_n=5
+)
+```
+
+```text
+get_derived_series(
+  concept="credit_to_gdp",
+  start="2020-Q1"
 )
 ```

@@ -1,8 +1,8 @@
 # AusEcon MCP Roadmap
 
-This roadmap starts from the v1.1 baseline: stable stdio, hosted Streamable HTTP through
-Render/Smithery, curated ABS/RBA retrieval, generated documentation, and docs-site Vercel Analytics
-plus Speed Insights.
+This roadmap starts from the current v1.5 release line: stable stdio, hosted Streamable HTTP
+through Render/Smithery, curated ABS/RBA/APRA retrieval, generated documentation, and docs-site
+Vercel Analytics plus Speed Insights.
 
 The release strategy remains official-source-first, macro-financial, read-only, and
 Australian-focused. The current response contract, `{metadata, series, observations}`, should be
@@ -12,7 +12,7 @@ preserved until a genuinely different data model is required.
 
 No MCP API or response-schema changes.
 
-- Keep README and documentation wording aligned with v1.1 as the current hosted release baseline.
+- Keep README and documentation wording aligned with the current release metadata.
 - Maintain static checks for the docs-site Vercel Analytics and Speed Insights integration,
   including stripping query strings and fragments before Speed Insights payloads are sent.
 - Keep hosted deployment checks lightweight: `/`, `/healthz`, server-card metadata, Smithery
@@ -61,7 +61,7 @@ and bounded live integration coverage.
 The foundation tranche is now landed: a new read-only `get_derived_series` tool exists rather than
 overloading `get_economic_series`.
 
-Initial derived concepts are intentionally transparent:
+The first derived concepts are intentionally transparent:
 
 - `real_cash_rate`
 - `yield_curve_slope`
@@ -70,17 +70,13 @@ Initial derived concepts are intentionally transparent:
 - `gdp_per_capita`
 
 The normal retrieval shape is preserved with `metadata.derived` carrying the formula, operands,
-source concepts, alignment frequency, units, and dropped-observation counts. Further v1.3 work
-should focus on documentation, live reliability, and small formula refinements only. Do not add
-modelling, forecasting, seasonal adjustment, arbitrary user formulas, or user-supplied Python/R
-execution.
+source concepts, alignment frequency, units, and dropped-observation counts. Do not add modelling,
+forecasting, seasonal adjustment, arbitrary user formulas, or user-supplied Python/R execution.
 
 ## v1.4: APRA as the first third source
 
-The APRA source-native foundation is now the next landed provider milestone. It adds curated
-official APRA XLSX retrieval through `get_apra_data` while preserving
-`{metadata, series, observations}` and deferring APRA semantic shortcuts until exact series
-definitions are fixture-backed and live-validated.
+The APRA source-native foundation is landed. It adds curated official APRA XLSX retrieval through
+`get_apra_data` while preserving `{metadata, series, observations}`.
 
 Initial APRA publication coverage:
 
@@ -89,12 +85,23 @@ Initial APRA publication coverage:
 - Authorised Deposit-taking Institution Centralised Publication
 - Quarterly Authorised Deposit-taking Institution Property Exposures Statistics
 
-Expected public API changes are additive: source filters include `apra`, `get_apra_data` is the
-source-native APRA retrieval tool, and APRA-backed semantic concepts are exposed only after
-fixture and live validation.
-
 The v1.4.1 reliability patch keeps hosted health checks responsive during APRA workbook parsing by
 moving XLSX parsing off the event loop and caching requested APRA tables separately.
+
+## v1.5: semantic and source expansion
+
+The v1.5 expansion is landed and remains additive. It adds ABS quarterly household spending,
+selected RBA source-native tables, APRA superannuation and insurance publications, APRA-backed
+semantic concepts, and four additional transparent derived concepts:
+
+- `mortgage_rate_spread`
+- `real_mortgage_rate`
+- `credit_to_gdp`
+- `household_spending_growth`
+
+APRA semantic concepts are exposed only where exact table and series identifiers are fixture-backed.
+The checked-in response schema now documents APRA semantic targets through `apra_table_id` and
+`apra_series_ids`, without changing the top-level response contract.
 
 Treasury and ASX remain deferred. Treasury is not the main statistical system of record for most
 target macro series, and ASX would shift the product toward market data.
