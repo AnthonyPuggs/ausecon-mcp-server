@@ -342,6 +342,22 @@ def test_curated_shortcuts_cover_current_semantic_concepts() -> None:
         "new_housing_lending",
         "owner_occupier_housing_lending",
         "investor_housing_lending",
+        # Tranche F
+        "quarterly_household_spending_current",
+        "quarterly_household_spending_volume",
+        "adi_capital_ratio",
+        "adi_liquidity_coverage_ratio",
+        "adi_residential_mortgage_exposure",
+        "adi_commercial_property_exposure",
+        "superannuation_total_assets",
+        "superannuation_member_accounts",
+        "general_insurance_premium_revenue",
+        "general_insurance_claims_expense",
+        "life_insurance_premium_revenue",
+        "life_insurance_claims_expense",
+        "phi_premium_revenue",
+        "phi_claims_expense",
+        "phi_membership",
     }
 
 
@@ -432,6 +448,138 @@ TRANCHE_E_ABS = [
     ),
 ]
 
+TRANCHE_F_ABS = [
+    (
+        "quarterly_household_spending_current",
+        "HSI_Q",
+        "current_price_total",
+        "7.TOT.CUR.20.AUS.Q",
+    ),
+    (
+        "quarterly_household_spending_volume",
+        "HSI_Q",
+        "chain_volume_total",
+        "7.TOT.CVM.20.AUS.Q",
+    ),
+]
+
+TRANCHE_F_APRA = [
+    (
+        "adi_capital_ratio",
+        "ADI_QUARTERLY_PERFORMANCE",
+        "total_capital_ratio",
+        "key_stats",
+        ["ADI_QUARTERLY_PERFORMANCE:key_stats:key_figures:total_capital_ratio"],
+    ),
+    (
+        "adi_liquidity_coverage_ratio",
+        "ADI_QUARTERLY_PERFORMANCE",
+        "liquidity_coverage_ratio",
+        "key_stats",
+        ["ADI_QUARTERLY_PERFORMANCE:key_stats:key_figures:liquidity_coverage_ratio_lcr"],
+    ),
+    (
+        "adi_residential_mortgage_exposure",
+        "ADI_PROPERTY_EXPOSURES",
+        "residential_mortgage_exposure",
+        "tab_1b",
+        ["ADI_PROPERTY_EXPOSURES:tab_1b:credit_outstanding:total_credit_oustanding"],
+    ),
+    (
+        "adi_commercial_property_exposure",
+        "ADI_PROPERTY_EXPOSURES",
+        "commercial_property_exposure",
+        "tab_1a",
+        [
+            "ADI_PROPERTY_EXPOSURES:tab_1a:"
+            "commercial_property_actual_exposures:total_commercial_property_exposures"
+        ],
+    ),
+    (
+        "superannuation_total_assets",
+        "APRA_SUPER_INDUSTRY",
+        "total_rse_member_assets",
+        "table_2",
+        ["APRA_SUPER_INDUSTRY:table_2:total_rse_member_assets"],
+    ),
+    (
+        "superannuation_member_accounts",
+        "APRA_SUPER_INDUSTRY",
+        "total_rse_member_accounts",
+        "table_2",
+        ["APRA_SUPER_INDUSTRY:table_2:total_rse_member_accounts"],
+    ),
+    (
+        "general_insurance_premium_revenue",
+        "APRA_GENERAL_INSURANCE_PERFORMANCE",
+        "insurance_revenue",
+        "database",
+        [
+            "APRA_GENERAL_INSURANCE_PERFORMANCE:database:"
+            "insurance_revenue:insurance_revenue:financial_performance:flow:total_industry:value"
+        ],
+    ),
+    (
+        "general_insurance_claims_expense",
+        "APRA_GENERAL_INSURANCE_PERFORMANCE",
+        "insurance_service_expense",
+        "database",
+        [
+            "APRA_GENERAL_INSURANCE_PERFORMANCE:database:"
+            "insurance_service_expense:insurance_service_expense:"
+            "financial_performance:flow:total_industry:value"
+        ],
+    ),
+    (
+        "life_insurance_premium_revenue",
+        "APRA_LIFE_INSURANCE_PERFORMANCE",
+        "insurance_revenue",
+        "database",
+        [
+            "APRA_LIFE_INSURANCE_PERFORMANCE:database:"
+            "insurance_revenue:financial_performance:insurance_revenue:flow:total_entity:value"
+        ],
+    ),
+    (
+        "life_insurance_claims_expense",
+        "APRA_LIFE_INSURANCE_PERFORMANCE",
+        "insurance_service_expense",
+        "database",
+        [
+            "APRA_LIFE_INSURANCE_PERFORMANCE:database:"
+            "insurance_service_expense:financial_performance:"
+            "insurance_service_expense:flow:total_entity:value"
+        ],
+    ),
+    (
+        "phi_premium_revenue",
+        "APRA_PHI_PERFORMANCE",
+        "hib_premium_revenue",
+        "database",
+        [
+            "APRA_PHI_PERFORMANCE:database:"
+            "hib_premium_revenue:financial_performance_supplementary:revenue:flow:value"
+        ],
+    ),
+    (
+        "phi_claims_expense",
+        "APRA_PHI_PERFORMANCE",
+        "hib_insurance_claims",
+        "database",
+        [
+            "APRA_PHI_PERFORMANCE:database:"
+            "hib_insurance_claims:financial_performance_supplementary:expenses:flow:value"
+        ],
+    ),
+    (
+        "phi_membership",
+        "APRA_PHI_MEMBERSHIP",
+        "hospital_coverage",
+        "t1",
+        ["APRA_PHI_MEMBERSHIP:t1:aust:coverage_000"],
+    ),
+]
+
 
 @pytest.mark.parametrize(("concept", "dataset_id", "variant", "abs_key"), TRANCHE_B_ABS)
 @pytest.mark.asyncio
@@ -503,6 +651,38 @@ async def test_resolve_tranche_e_abs_concepts(
     assert result.dataset_id == dataset_id
     assert result.variant == variant
     assert result.abs_key == abs_key
+
+
+@pytest.mark.parametrize(("concept", "dataset_id", "variant", "abs_key"), TRANCHE_F_ABS)
+@pytest.mark.asyncio
+async def test_resolve_tranche_f_abs_concepts(
+    concept: str, dataset_id: str, variant: str, abs_key: str
+) -> None:
+    result = await resolve(concept)
+    assert result.source == "abs"
+    assert result.dataset_id == dataset_id
+    assert result.variant == variant
+    assert result.abs_key == abs_key
+
+
+@pytest.mark.parametrize(
+    ("concept", "dataset_id", "variant", "table_id", "series_ids"),
+    TRANCHE_F_APRA,
+)
+@pytest.mark.asyncio
+async def test_resolve_tranche_f_apra_concepts(
+    concept: str,
+    dataset_id: str,
+    variant: str,
+    table_id: str,
+    series_ids: list[str],
+) -> None:
+    result = await resolve(concept)
+    assert result.source == "apra"
+    assert result.dataset_id == dataset_id
+    assert result.variant == variant
+    assert result.apra_table_id == table_id
+    assert result.apra_series_ids == series_ids
 
 
 def test_list_economic_concepts_uses_variant_frequency_metadata() -> None:

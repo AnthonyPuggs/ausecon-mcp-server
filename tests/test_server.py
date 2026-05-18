@@ -593,20 +593,29 @@ async def test_service_rejects_unsafe_apra_publication_ids_before_provider_call(
 
 
 @pytest.mark.asyncio
-async def test_service_allows_apra_source_filter_without_semantic_concepts() -> None:
+async def test_service_allows_apra_source_filter_with_semantic_concepts() -> None:
     service = AuseconService(
         abs_provider=StubABSProvider(),
         rba_provider=StubRBAProvider(),
         apra_provider=StubAPRAProvider(),
     )
 
-    assert await service.list_economic_concepts(source="apra") == []
+    concepts = await service.list_economic_concepts(source="apra")
+    assert {row["concept"] for row in concepts} >= {
+        "adi_capital_ratio",
+        "superannuation_total_assets",
+        "general_insurance_premium_revenue",
+        "phi_membership",
+    }
     catalogue = await service.list_catalogue(source="apra")
-    assert {item["id"] for item in catalogue} == {
+    assert {item["id"] for item in catalogue} >= {
         "ADI_MONTHLY",
         "ADI_QUARTERLY_PERFORMANCE",
         "ADI_QUARTERLY_CENTRALISED",
         "ADI_PROPERTY_EXPOSURES",
+        "APRA_SUPER_INDUSTRY",
+        "APRA_GENERAL_INSURANCE_PERFORMANCE",
+        "APRA_PHI_MEMBERSHIP",
     }
 
 
@@ -813,6 +822,44 @@ async def test_service_expands_quarterly_cpi_operand_for_real_wage_growth() -> N
             "end": "2024-Q1",
             "last_n": None,
         },
+    ]
+
+
+@pytest.mark.asyncio
+async def test_service_expands_household_spending_operand_for_year_ended_growth() -> None:
+    service = RecordingDerivedService(
+        {
+            "quarterly_household_spending_volume": _semantic_payload(
+                concept="quarterly_household_spending_volume",
+                source="abs",
+                dataset_id="HSI_Q",
+                series_id="hsi",
+                observations=[("2023-Q1", 100.0), ("2024-Q1", 106.0)],
+                frequency="Quarterly",
+                abs_key="7.TOT.CVM.20.AUS.Q",
+            ),
+        }
+    )
+
+    result = await service.get_derived_series(
+        "household_spending_growth",
+        start="2024-Q1",
+        end="2024-Q1",
+    )
+
+    assert service.economic_series_calls == [
+        {
+            "concept": "quarterly_household_spending_volume",
+            "variant": None,
+            "geography": None,
+            "frequency": None,
+            "start": "2023-Q1",
+            "end": "2024-Q1",
+            "last_n": None,
+        }
+    ]
+    assert [(obs["date"], obs["value"]) for obs in result["observations"]] == [
+        ("2024-Q1", pytest.approx(6.0))
     ]
 
 
@@ -1321,6 +1368,47 @@ TRANCHE_E_ABS_SERVICE = [
     ),
 ]
 
+TRANCHE_F_ABS_SERVICE = [
+    ("quarterly_household_spending_current", "HSI_Q", "7.TOT.CUR.20.AUS.Q"),
+    ("quarterly_household_spending_volume", "HSI_Q", "7.TOT.CVM.20.AUS.Q"),
+]
+
+TRANCHE_F_APRA_SERVICE = [
+    (
+        "adi_capital_ratio",
+        "ADI_QUARTERLY_PERFORMANCE",
+        "key_stats",
+        ["ADI_QUARTERLY_PERFORMANCE:key_stats:key_figures:total_capital_ratio"],
+    ),
+    (
+        "adi_residential_mortgage_exposure",
+        "ADI_PROPERTY_EXPOSURES",
+        "tab_1b",
+        ["ADI_PROPERTY_EXPOSURES:tab_1b:credit_outstanding:total_credit_oustanding"],
+    ),
+    (
+        "superannuation_total_assets",
+        "APRA_SUPER_INDUSTRY",
+        "table_2",
+        ["APRA_SUPER_INDUSTRY:table_2:total_rse_member_assets"],
+    ),
+    (
+        "general_insurance_premium_revenue",
+        "APRA_GENERAL_INSURANCE_PERFORMANCE",
+        "database",
+        [
+            "APRA_GENERAL_INSURANCE_PERFORMANCE:database:"
+            "insurance_revenue:insurance_revenue:financial_performance:flow:total_industry:value"
+        ],
+    ),
+    (
+        "phi_membership",
+        "APRA_PHI_MEMBERSHIP",
+        "t1",
+        ["APRA_PHI_MEMBERSHIP:t1:aust:coverage_000"],
+    ),
+]
+
 
 @pytest.mark.parametrize(("concept", "dataflow_id", "abs_key"), TRANCHE_B_ABS_SERVICE)
 @pytest.mark.asyncio
@@ -1410,6 +1498,53 @@ async def test_service_forwards_tranche_e_abs_concepts(
     assert abs_provider.last_get_data_kwargs is not None
     assert abs_provider.last_get_data_kwargs["dataflow_id"] == dataflow_id
     assert abs_provider.last_get_data_kwargs["key"] == abs_key
+
+
+@pytest.mark.parametrize(("concept", "dataflow_id", "abs_key"), TRANCHE_F_ABS_SERVICE)
+@pytest.mark.asyncio
+async def test_service_forwards_tranche_f_abs_concepts(
+    concept: str, dataflow_id: str, abs_key: str
+) -> None:
+    abs_provider = StubABSProvider()
+    service = AuseconService(abs_provider=abs_provider, rba_provider=StubRBAProvider())
+
+    await service.get_economic_series(concept)
+
+    assert abs_provider.last_get_data_kwargs is not None
+    assert abs_provider.last_get_data_kwargs["dataflow_id"] == dataflow_id
+    assert abs_provider.last_get_data_kwargs["key"] == abs_key
+
+
+@pytest.mark.parametrize(
+    ("concept", "publication_id", "table_id", "series_ids"),
+    TRANCHE_F_APRA_SERVICE,
+)
+@pytest.mark.asyncio
+async def test_service_forwards_tranche_f_apra_concepts(
+    concept: str,
+    publication_id: str,
+    table_id: str,
+    series_ids: list[str],
+) -> None:
+    apra = StubAPRAProvider()
+    service = AuseconService(
+        abs_provider=StubABSProvider(),
+        rba_provider=StubRBAProvider(),
+        apra_provider=apra,
+    )
+
+    result = await service.get_economic_series(concept, start="2024-Q1", end="2024-Q2")
+
+    assert apra.last_get_data_kwargs == {
+        "publication_id": publication_id,
+        "table_id": table_id,
+        "series_ids": series_ids,
+        "start_date": "2024-01-01",
+        "end_date": "2024-06-30",
+        "last_n": None,
+    }
+    assert result["metadata"]["semantic"]["target"]["apra_table_id"] == table_id
+    assert result["metadata"]["semantic"]["target"]["apra_series_ids"] == series_ids
 
 
 async def test_service_resolves_abs_upstream_id_before_calling_provider() -> None:

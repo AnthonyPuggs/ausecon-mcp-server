@@ -890,6 +890,47 @@ _RAW_ABS_CATALOGUE = {
             "upstream_title": "Monthly Household Spending Indicator",
         },
     },
+    "HSI_Q": {
+        "id": "HSI_Q",
+        "source": "abs",
+        "name": "Quarterly Household Spending Indicator",
+        "description": (
+            "Quarterly household spending aggregates, including current-price and "
+            "chain-volume total spending."
+        ),
+        "frequency": "Quarterly",
+        "category": "activity",
+        "aliases": [
+            "quarterly household spending",
+            "quarterly household spending indicator",
+            "qhsi",
+            "real household spending",
+        ],
+        "tags": [
+            "consumer activity",
+            "household consumption",
+            "chain volume",
+        ],
+        "frequencies": ["Q"],
+        "geographies": ["national"],
+        "variants": [
+            {
+                "name": "current_price_total",
+                "aliases": ["quarterly household spending", "current price household spending"],
+                "abs_key": "7.TOT.CUR.20.AUS.Q",
+            },
+            {
+                "name": "chain_volume_total",
+                "aliases": ["real household spending", "volume household spending"],
+                "abs_key": "7.TOT.CVM.20.AUS.Q",
+            },
+        ],
+        "audit": {
+            "last_audited": "2026-05-18",
+            "upstream_url": "https://data.api.abs.gov.au/rest/dataflow/ABS/HSI_Q/latest",
+            "upstream_title": "Quarterly Household Spending Indicator",
+        },
+    },
     "CAPEX": {
         "id": "CAPEX",
         "source": "abs",

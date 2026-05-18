@@ -62,8 +62,12 @@ def _payload(
 def test_list_derived_concepts_exposes_only_v13_foundation_concepts() -> None:
     assert list_derived_concepts() == [
         "credit_growth",
+        "credit_to_gdp",
         "gdp_per_capita",
+        "household_spending_growth",
+        "mortgage_rate_spread",
         "real_cash_rate",
+        "real_mortgage_rate",
         "real_wage_growth",
         "yield_curve_slope",
     ]
@@ -273,6 +277,131 @@ def test_gdp_per_capita_scales_real_gdp_millions_to_aud_per_person() -> None:
 
     assert payload["observations"][0]["value"] == pytest.approx(25000.0)
     assert payload["series"][0]["unit"] == "real AUD per person"
+
+
+def test_mortgage_rate_spread_carries_daily_bank_bill_rate_to_monthly_mortgage_periods() -> None:
+    payload = derive_series(
+        "mortgage_rate_spread",
+        {
+            "mortgage_rate": _payload(
+                concept="mortgage_rate",
+                source="rba",
+                dataset_id="f6",
+                series_id="FLRHOOVA",
+                observations=[("2024-01", 6.2), ("2024-02", 6.3)],
+                frequency="Monthly",
+                rba_series_ids=["FLRHOOVA"],
+            ),
+            "bank_bill_rate": _payload(
+                concept="bank_bill_rate",
+                source="rba",
+                dataset_id="f1",
+                series_id="FIRMMBAB90D",
+                observations=[("2024-01-15", 4.3), ("2024-02-20", 4.4)],
+                frequency="Daily",
+                rba_series_ids=["FIRMMBAB90D"],
+            ),
+        },
+        requested_start=None,
+        requested_end=None,
+        last_n=None,
+        server_version="test",
+    )
+
+    assert [(obs["date"], obs["value"]) for obs in payload["observations"]] == [
+        ("2024-01", pytest.approx(1.9)),
+        ("2024-02", pytest.approx(1.9)),
+    ]
+    assert payload["series"][0]["unit"] == "percentage points"
+
+
+def test_real_mortgage_rate_subtracts_monthly_inflation() -> None:
+    payload = derive_series(
+        "real_mortgage_rate",
+        {
+            "mortgage_rate": _payload(
+                concept="mortgage_rate",
+                source="rba",
+                dataset_id="f6",
+                series_id="FLRHOOVA",
+                observations=[("2024-01", 6.2)],
+                frequency="Monthly",
+                rba_series_ids=["FLRHOOVA"],
+            ),
+            "inflation": _payload(
+                concept="monthly_inflation",
+                source="abs",
+                dataset_id="CPI",
+                series_id="cpi",
+                observations=[("2024-01", 4.1)],
+                frequency="Monthly",
+                abs_key="3.10001.10.50.M",
+            ),
+        },
+        requested_start=None,
+        requested_end=None,
+        last_n=None,
+        server_version="test",
+    )
+
+    assert payload["observations"][0]["value"] == pytest.approx(2.1)
+
+
+def test_credit_to_gdp_aligns_latest_monthly_credit_to_quarterly_nominal_gdp() -> None:
+    payload = derive_series(
+        "credit_to_gdp",
+        {
+            "total_credit": _payload(
+                concept="total_credit",
+                source="rba",
+                dataset_id="d2",
+                series_id="DLCACS",
+                observations=[("2024-02", 3900.0), ("2024-03", 4000.0)],
+                frequency="Monthly",
+                rba_series_ids=["DLCACS"],
+            ),
+            "nominal_gdp": _payload(
+                concept="nominal_gdp",
+                source="abs",
+                dataset_id="ANA_AGG",
+                series_id="gdp",
+                observations=[("2024-Q1", 2000.0)],
+                frequency="Quarterly",
+                abs_key="M3.GPM.20.AUS.Q",
+            ),
+        },
+        requested_start=None,
+        requested_end=None,
+        last_n=None,
+        server_version="test",
+    )
+
+    assert payload["observations"][0]["date"] == "2024-Q1"
+    assert payload["observations"][0]["value"] == pytest.approx(200.0)
+
+
+def test_household_spending_growth_derives_year_ended_growth() -> None:
+    payload = derive_series(
+        "household_spending_growth",
+        {
+            "household_spending": _payload(
+                concept="quarterly_household_spending_volume",
+                source="abs",
+                dataset_id="HSI_Q",
+                series_id="spending",
+                observations=[("2023-Q1", 100.0), ("2024-Q1", 106.0)],
+                frequency="Quarterly",
+                abs_key="7.TOT.CVM.20.AUS.Q",
+            )
+        },
+        requested_start=None,
+        requested_end=None,
+        last_n=None,
+        server_version="test",
+    )
+
+    assert payload["observations"][0]["date"] == "2024-Q1"
+    assert payload["observations"][0]["value"] == pytest.approx(6.0)
 
 
 def test_derive_series_rejects_start_after_end() -> None:

@@ -91,6 +91,39 @@ _RAW_RBA_CATALOGUE = {
             "upstream_title": "Monetary Policy Operations – Current",
         },
     },
+    "a4": {
+        "id": "a4",
+        "source": "rba",
+        "name": "Foreign Exchange Transactions and Holdings of Official Reserve Assets",
+        "description": (
+            "Reserve Bank foreign exchange transactions and official reserve asset "
+            "holdings."
+        ),
+        "frequency": "Monthly",
+        "category": "exchange_rates",
+        "aliases": [
+            "official reserve assets",
+            "foreign exchange transactions",
+            "fx reserves",
+            "reserve assets",
+        ],
+        "tags": [
+            "foreign exchange",
+            "official reserves",
+            "reserve assets",
+        ],
+        "frequencies": ["M"],
+        "geographies": ["national"],
+        "csv_path": "a4-data.csv",
+        "variants": [],
+        "audit": {
+            "last_audited": "2026-05-18",
+            "upstream_url": "https://www.rba.gov.au/statistics/tables/csv/a4-data.csv",
+            "upstream_title": (
+                "Foreign Exchange Transactions and Holdings of Official Reserve Assets"
+            ),
+        },
+    },
     "a5": {
         "id": "a5",
         "source": "rba",
@@ -238,6 +271,32 @@ _RAW_RBA_CATALOGUE = {
             "upstream_title": "Credit and Charge Cards – Seasonally Adjusted Series",
         },
     },
+    "c1.1": {
+        "id": "c1.1",
+        "source": "rba",
+        "name": "Credit and Charge Cards - Original Series - Aggregate Data",
+        "description": (
+            "Original-series aggregate credit and charge card transaction values, "
+            "volumes, balances, and repayments."
+        ),
+        "frequency": "Monthly",
+        "category": "payments",
+        "aliases": [
+            "credit cards original aggregate",
+            "credit charge cards aggregate",
+            "card balances original series",
+        ],
+        "tags": ["payments", "credit cards", "original series"],
+        "frequencies": ["M"],
+        "geographies": ["national"],
+        "csv_path": "c1.1-aggregate.csv",
+        "variants": [],
+        "audit": {
+            "last_audited": "2026-05-18",
+            "upstream_url": "https://www.rba.gov.au/statistics/tables/csv/c1.1-aggregate.csv",
+            "upstream_title": "Credit and Charge Cards – Original Series – Aggregate Data",
+        },
+    },
     "c1.2": {
         "id": "c1.2",
         "source": "rba",
@@ -300,6 +359,29 @@ _RAW_RBA_CATALOGUE = {
             "upstream_title": "Debit Cards – Seasonally Adjusted Series",
         },
     },
+    "c2.1": {
+        "id": "c2.1",
+        "source": "rba",
+        "name": "Debit Cards - Original Series",
+        "description": "Original-series aggregate debit card transaction volumes and values.",
+        "frequency": "Monthly",
+        "category": "payments",
+        "aliases": [
+            "debit cards original",
+            "eftpos original series",
+            "debit card aggregate",
+        ],
+        "tags": ["payments", "debit cards", "original series"],
+        "frequencies": ["M"],
+        "geographies": ["national"],
+        "csv_path": "c2.1-aggregate.csv",
+        "variants": [],
+        "audit": {
+            "last_audited": "2026-05-18",
+            "upstream_url": "https://www.rba.gov.au/statistics/tables/csv/c2.1-aggregate.csv",
+            "upstream_title": "Debit Cards – Original Series",
+        },
+    },
     "c3": {
         "id": "c3",
         "source": "rba",
@@ -356,6 +438,29 @@ _RAW_RBA_CATALOGUE = {
             "last_audited": "2026-04-18",
             "upstream_url": "https://www.rba.gov.au/statistics/tables/csv/c4-data.csv",
             "upstream_title": "ATMs – Seasonally Adjusted Series",
+        },
+    },
+    "c4.1": {
+        "id": "c4.1",
+        "source": "rba",
+        "name": "ATMs - Original Series",
+        "description": "Original-series ATM transaction volumes and values.",
+        "frequency": "Monthly",
+        "category": "payments",
+        "aliases": [
+            "atm original series",
+            "cash withdrawals original",
+            "atm withdrawals original",
+        ],
+        "tags": ["payments", "atm", "cash", "original series"],
+        "frequencies": ["M"],
+        "geographies": ["national"],
+        "csv_path": "c4.1-data.csv",
+        "variants": [],
+        "audit": {
+            "last_audited": "2026-05-18",
+            "upstream_url": "https://www.rba.gov.au/statistics/tables/csv/c4.1-data.csv",
+            "upstream_title": "ATMs – Original Series",
         },
     },
     "c5": {
@@ -801,6 +906,39 @@ _RAW_RBA_CATALOGUE = {
             ),
         },
     },
+    "d14.1": {
+        "id": "d14.1",
+        "source": "rba",
+        "name": "Lending to Business - Business Finance Outstanding by Business Size and Industry",
+        "description": (
+            "Outstanding business finance by borrower size and industry. Provides "
+            "industry detail for business-credit analysis."
+        ),
+        "frequency": "Monthly",
+        "category": "money_credit",
+        "aliases": [
+            "business finance by industry",
+            "business lending by industry",
+            "business finance outstanding by size and industry",
+        ],
+        "tags": [
+            "business credit",
+            "industry lending",
+            "sme lending",
+        ],
+        "frequencies": ["M"],
+        "geographies": ["national"],
+        "csv_path": "d14.1-data.csv",
+        "variants": [],
+        "audit": {
+            "last_audited": "2026-05-18",
+            "upstream_url": "https://www.rba.gov.au/statistics/tables/csv/d14.1-data.csv",
+            "upstream_title": (
+                "Lending to Business – Business Finance Outstanding "
+                "by Business Size and Industry"
+            ),
+        },
+    },
     "e1": {
         "id": "e1",
         "source": "rba",
@@ -931,6 +1069,29 @@ _RAW_RBA_CATALOGUE = {
             "upstream_title": "Interest Rates and Yields – Money Market – Daily",
         },
     },
+    "f1.1": {
+        "id": "f1.1",
+        "source": "rba",
+        "name": "Interest Rates and Yields - Money Market - Monthly",
+        "description": "Monthly short-term money market interest rates and yields.",
+        "frequency": "Monthly",
+        "category": "interest_rates",
+        "aliases": [
+            "money market rates monthly",
+            "monthly bank bill rates",
+            "monthly interbank rates",
+        ],
+        "tags": ["bank bills", "money market", "monthly rates"],
+        "frequencies": ["M"],
+        "geographies": ["national"],
+        "csv_path": "f1.1-data.csv",
+        "variants": [],
+        "audit": {
+            "last_audited": "2026-05-18",
+            "upstream_url": "https://www.rba.gov.au/statistics/tables/csv/f1.1-data.csv",
+            "upstream_title": "Interest Rates and Yields – Money Market – Monthly",
+        },
+    },
     "f2": {
         "id": "f2",
         "source": "rba",
@@ -955,6 +1116,29 @@ _RAW_RBA_CATALOGUE = {
             "last_audited": "2026-04-18",
             "upstream_url": "https://www.rba.gov.au/statistics/tables/csv/f2-data.csv",
             "upstream_title": "Capital Market Yields – Government Bonds – Daily",
+        },
+    },
+    "f2.1": {
+        "id": "f2.1",
+        "source": "rba",
+        "name": "Capital Market Yields - Government Bonds - Monthly",
+        "description": "Monthly Australian Government bond yields across key maturities.",
+        "frequency": "Monthly",
+        "category": "interest_rates",
+        "aliases": [
+            "government bond yields monthly",
+            "monthly government bond yields",
+            "monthly capital market yields",
+        ],
+        "tags": ["yield curve", "sovereign yields", "monthly rates"],
+        "frequencies": ["M"],
+        "geographies": ["national"],
+        "csv_path": "f2.1-data.csv",
+        "variants": [],
+        "audit": {
+            "last_audited": "2026-05-18",
+            "upstream_url": "https://www.rba.gov.au/statistics/tables/csv/f2.1-data.csv",
+            "upstream_title": "Capital Market Yields – Government Bonds – Monthly",
         },
     },
     "f3": {
@@ -1831,6 +2015,66 @@ _RAW_RBA_CATALOGUE = {
             "last_audited": "2026-04-18",
             "upstream_url": "https://www.rba.gov.au/statistics/tables/csv/i4-data.csv",
             "upstream_title": "Australia's Gross Foreign Assets and Liabilities",
+        },
+    },
+    "i5": {
+        "id": "i5",
+        "source": "rba",
+        "name": "Australia's Net Foreign Liabilities",
+        "description": (
+            "Quarterly net foreign liability stocks and related external balance-sheet "
+            "aggregates."
+        ),
+        "frequency": "Quarterly",
+        "category": "external_sector",
+        "aliases": [
+            "net foreign liabilities",
+            "net foreign assets",
+            "net international investment position",
+        ],
+        "tags": [
+            "foreign liabilities",
+            "international investment position",
+            "external balance sheet",
+        ],
+        "frequencies": ["Q"],
+        "geographies": ["national"],
+        "csv_path": "i5-data.csv",
+        "variants": [],
+        "audit": {
+            "last_audited": "2026-05-18",
+            "upstream_url": "https://www.rba.gov.au/statistics/tables/csv/i5-data.csv",
+            "upstream_title": "Australia's Net Foreign Liabilities",
+        },
+    },
+    "j1": {
+        "id": "j1",
+        "source": "rba",
+        "name": "Market Economists' Forecasts - GDP Growth",
+        "description": (
+            "Market economists' GDP growth forecasts from the RBA J1 forecast table "
+            "family. The source-native table uses the GDP growth CSV slice."
+        ),
+        "frequency": "Quarterly",
+        "category": "output_labour",
+        "aliases": [
+            "market economists forecasts",
+            "gdp growth forecasts",
+            "rba survey forecasts",
+        ],
+        "tags": [
+            "forecasts",
+            "gdp growth",
+            "survey expectations",
+        ],
+        "frequencies": ["Q"],
+        "geographies": ["national"],
+        "csv_path": "j1-gdp-growth.csv",
+        "variants": [],
+        "audit": {
+            "last_audited": "2026-05-18",
+            "upstream_url": "https://www.rba.gov.au/statistics/tables/csv/j1-gdp-growth.csv",
+            "upstream_title": "Market Economists' Forecasts – GDP Growth",
         },
     },
 }

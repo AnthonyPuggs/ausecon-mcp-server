@@ -27,6 +27,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from ausecon_mcp.catalogue.abs import ABS_CATALOGUE
+from ausecon_mcp.catalogue.apra import APRA_CATALOGUE
 from ausecon_mcp.catalogue.rba import RBA_CATALOGUE
 from ausecon_mcp.errors import AuseconValidationError
 
@@ -203,6 +204,82 @@ CURATED_SHORTCUTS: dict[str, dict[str, Any]] = {
         "dataset_id": "LEND_HOUSING",
         "variant": "investor",
     },
+    # Tranche F
+    "quarterly_household_spending_current": {
+        "source": "abs",
+        "dataset_id": "HSI_Q",
+        "variant": "current_price_total",
+    },
+    "quarterly_household_spending_volume": {
+        "source": "abs",
+        "dataset_id": "HSI_Q",
+        "variant": "chain_volume_total",
+    },
+    "adi_capital_ratio": {
+        "source": "apra",
+        "dataset_id": "ADI_QUARTERLY_PERFORMANCE",
+        "variant": "total_capital_ratio",
+    },
+    "adi_liquidity_coverage_ratio": {
+        "source": "apra",
+        "dataset_id": "ADI_QUARTERLY_PERFORMANCE",
+        "variant": "liquidity_coverage_ratio",
+    },
+    "adi_residential_mortgage_exposure": {
+        "source": "apra",
+        "dataset_id": "ADI_PROPERTY_EXPOSURES",
+        "variant": "residential_mortgage_exposure",
+    },
+    "adi_commercial_property_exposure": {
+        "source": "apra",
+        "dataset_id": "ADI_PROPERTY_EXPOSURES",
+        "variant": "commercial_property_exposure",
+    },
+    "superannuation_total_assets": {
+        "source": "apra",
+        "dataset_id": "APRA_SUPER_INDUSTRY",
+        "variant": "total_rse_member_assets",
+    },
+    "superannuation_member_accounts": {
+        "source": "apra",
+        "dataset_id": "APRA_SUPER_INDUSTRY",
+        "variant": "total_rse_member_accounts",
+    },
+    "general_insurance_premium_revenue": {
+        "source": "apra",
+        "dataset_id": "APRA_GENERAL_INSURANCE_PERFORMANCE",
+        "variant": "insurance_revenue",
+    },
+    "general_insurance_claims_expense": {
+        "source": "apra",
+        "dataset_id": "APRA_GENERAL_INSURANCE_PERFORMANCE",
+        "variant": "insurance_service_expense",
+    },
+    "life_insurance_premium_revenue": {
+        "source": "apra",
+        "dataset_id": "APRA_LIFE_INSURANCE_PERFORMANCE",
+        "variant": "insurance_revenue",
+    },
+    "life_insurance_claims_expense": {
+        "source": "apra",
+        "dataset_id": "APRA_LIFE_INSURANCE_PERFORMANCE",
+        "variant": "insurance_service_expense",
+    },
+    "phi_premium_revenue": {
+        "source": "apra",
+        "dataset_id": "APRA_PHI_PERFORMANCE",
+        "variant": "hib_premium_revenue",
+    },
+    "phi_claims_expense": {
+        "source": "apra",
+        "dataset_id": "APRA_PHI_PERFORMANCE",
+        "variant": "hib_insurance_claims",
+    },
+    "phi_membership": {
+        "source": "apra",
+        "dataset_id": "APRA_PHI_MEMBERSHIP",
+        "variant": "hospital_coverage",
+    },
 }
 
 
@@ -222,7 +299,7 @@ def list_economic_concepts(
             continue
 
         dataset_id = shortcut["dataset_id"]
-        catalogue = ABS_CATALOGUE if shortcut_source == "abs" else RBA_CATALOGUE
+        catalogue = _catalogue_for_source(shortcut_source)
         entry = catalogue[dataset_id]
         if category is not None and entry.get("category") != category:
             continue
@@ -289,6 +366,8 @@ class ResolvedQuery:
     dataset_id: str
     abs_key: str | None
     rba_series_ids: list[str] | None
+    apra_table_id: str | None
+    apra_series_ids: list[str] | None
     frequency: str | None
     variant: str | None
     geography: str | None
@@ -320,6 +399,23 @@ async def resolve(
             dataset_id=dataset_id,
             abs_key=None,
             rba_series_ids=_resolve_rba_series_ids(entry, applied_variant),
+            apra_table_id=None,
+            apra_series_ids=None,
+            frequency=frequency,
+            variant=applied_variant["name"] if applied_variant else None,
+            geography=geography,
+            entry=entry,
+        )
+
+    if source == "apra":
+        apra_table_id, apra_series_ids = _resolve_apra_series_ids(entry, applied_variant)
+        return ResolvedQuery(
+            source="apra",
+            dataset_id=dataset_id,
+            abs_key=None,
+            rba_series_ids=None,
+            apra_table_id=apra_table_id,
+            apra_series_ids=apra_series_ids,
             frequency=frequency,
             variant=applied_variant["name"] if applied_variant else None,
             geography=geography,
@@ -338,6 +434,8 @@ async def resolve(
         dataset_id=dataset_id,
         abs_key=abs_key,
         rba_series_ids=None,
+        apra_table_id=None,
+        apra_series_ids=None,
         frequency=frequency,
         variant=applied_variant["name"] if applied_variant else None,
         geography=geography,
@@ -357,7 +455,7 @@ def _match_concept(concept: str) -> tuple[str, str, dict[str, Any]]:
     if shortcut is not None:
         source = shortcut["source"]
         dataset_id = shortcut["dataset_id"]
-        catalogue = ABS_CATALOGUE if source == "abs" else RBA_CATALOGUE
+        catalogue = _catalogue_for_source(source)
         entry = catalogue.get(dataset_id)
         if entry is None:
             raise AuseconValidationError(
@@ -365,21 +463,30 @@ def _match_concept(concept: str) -> tuple[str, str, dict[str, Any]]:
             )
         return source, dataset_id, entry
 
-    abs_entry = ABS_CATALOGUE.get(concept)
-    rba_entry = RBA_CATALOGUE.get(concept)
-    if abs_entry and rba_entry:
+    direct_matches = [
+        (source, entry["id"], entry)
+        for source, catalogue in (
+            ("abs", ABS_CATALOGUE),
+            ("rba", RBA_CATALOGUE),
+            ("apra", APRA_CATALOGUE),
+        )
+        if (entry := catalogue.get(concept)) is not None
+    ]
+    if len(direct_matches) > 1:
         raise AuseconValidationError(
-            f"Concept {concept!r} is ambiguous; it matches both ABS and RBA datasets. "
+            f"Concept {concept!r} is ambiguous; it matches multiple source datasets. "
             "Pass a curated shortcut instead."
         )
-    if abs_entry:
-        return "abs", abs_entry["id"], abs_entry
-    if rba_entry:
-        return "rba", rba_entry["id"], rba_entry
+    if direct_matches:
+        return direct_matches[0]
 
     candidates: list[tuple[str, str, dict[str, Any]]] = []
     lowered = concept.lower()
-    for src, collection in (("abs", ABS_CATALOGUE), ("rba", RBA_CATALOGUE)):
+    for src, collection in (
+        ("abs", ABS_CATALOGUE),
+        ("rba", RBA_CATALOGUE),
+        ("apra", APRA_CATALOGUE),
+    ):
         for entry in collection.values():
             if entry.get("discontinued", False):
                 continue
@@ -401,6 +508,16 @@ def _match_concept(concept: str) -> tuple[str, str, dict[str, Any]]:
         )
     src, id_, entry = candidates[0]
     return src, id_, entry
+
+
+def _catalogue_for_source(source: str) -> dict[str, dict[str, Any]]:
+    if source == "abs":
+        return ABS_CATALOGUE
+    if source == "rba":
+        return RBA_CATALOGUE
+    if source == "apra":
+        return APRA_CATALOGUE
+    raise AuseconValidationError(f"Unsupported semantic source {source!r}.")
 
 
 def _match_variant(entry: dict[str, Any], variant: str | None) -> dict[str, Any] | None:
@@ -455,6 +572,28 @@ def _resolve_rba_series_ids(
             "rba_series_ids populated yet. Call get_rba_table directly in the meantime."
         )
     return list(series_ids)
+
+
+def _resolve_apra_series_ids(
+    entry: dict[str, Any],
+    variant: dict[str, Any] | None,
+) -> tuple[str | None, list[str] | None]:
+    if variant is None:
+        return None, None
+    table_id = variant.get("apra_table_id")
+    series_ids = variant.get("apra_series_ids")
+    if not table_id or series_ids is None:
+        raise AuseconValidationError(
+            f"Variant {variant['name']!r} is declared for {entry['id']!r} but has no "
+            "APRA table and series identifiers populated yet. Call get_apra_data "
+            "directly in the meantime."
+        )
+    if table_id not in entry.get("tables", {}):
+        raise AuseconValidationError(
+            f"Variant {variant['name']!r} for {entry['id']!r} points at unknown "
+            f"APRA table {table_id!r}."
+        )
+    return str(table_id), list(series_ids)
 
 
 async def _resolve_abs_key(

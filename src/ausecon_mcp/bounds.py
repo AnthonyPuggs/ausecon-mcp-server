@@ -40,7 +40,7 @@ def normalise_semantic_bounds(
     end: str | None,
 ) -> NormalisedSemanticBounds:
     """Normalise analyst-friendly semantic bounds to source-native provider bounds."""
-    if resolved.source == "rba":
+    if resolved.source in {"rba", "apra"}:
         return NormalisedSemanticBounds(
             start=_normalise_rba_bound("start", start, side="start"),
             end=_normalise_rba_bound("end", end, side="end"),

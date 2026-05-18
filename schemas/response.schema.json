@@ -106,7 +106,7 @@
       "properties": {
         "source": {
           "type": "string",
-          "enum": ["abs", "rba"]
+          "enum": ["abs", "rba", "apra"]
         },
         "dataset_id": {
           "type": "string"
@@ -118,6 +118,15 @@
           "type": ["string", "null"]
         },
         "rba_series_ids": {
+          "type": ["array", "null"],
+          "items": {
+            "type": "string"
+          }
+        },
+        "apra_table_id": {
+          "type": ["string", "null"]
+        },
+        "apra_series_ids": {
           "type": ["array", "null"],
           "items": {
             "type": "string"

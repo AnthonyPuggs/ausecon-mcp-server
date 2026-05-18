@@ -56,6 +56,12 @@ def test_apra_catalogue_covers_v14_source_native_publications() -> None:
         "ADI_QUARTERLY_PERFORMANCE",
         "ADI_QUARTERLY_CENTRALISED",
         "ADI_PROPERTY_EXPOSURES",
+        "APRA_SUPER_INDUSTRY",
+        "APRA_SUPER_FUND_LEVEL",
+        "APRA_GENERAL_INSURANCE_PERFORMANCE",
+        "APRA_LIFE_INSURANCE_PERFORMANCE",
+        "APRA_PHI_PERFORMANCE",
+        "APRA_PHI_MEMBERSHIP",
     }
     assert all(
         entry["landing_url"].startswith("https://www.apra.gov.au/")
@@ -117,6 +123,60 @@ def test_rba_variants_carry_name_aliases_and_wired_series_ids() -> None:
             assert all(isinstance(s, str) and s for s in series_ids), (
                 f"{entry['id']}/{variant['name']}: all series ids must be non-empty strings"
             )
+
+
+def test_apra_variants_carry_table_and_series_ids() -> None:
+    for entry in APRA_CATALOGUE.values():
+        for variant in entry["variants"]:
+            assert isinstance(variant.get("name"), str) and variant["name"], entry["id"]
+            assert isinstance(variant.get("aliases"), list), entry["id"]
+            assert variant.get("apra_table_id") in entry["tables"], (
+                f"{entry['id']}/{variant['name']}: apra_table_id must reference a table"
+            )
+            series_ids = variant.get("apra_series_ids")
+            assert isinstance(series_ids, list) and series_ids, (
+                f"{entry['id']}/{variant['name']}: apra_series_ids must be wired"
+            )
+            assert all(isinstance(s, str) and s for s in series_ids), (
+                f"{entry['id']}/{variant['name']}: all APRA series ids must be non-empty"
+            )
+
+
+def test_hsi_q_entry_exposes_current_and_volume_variants() -> None:
+    entry = ABS_CATALOGUE["HSI_Q"]
+
+    assert entry["name"] == "Quarterly Household Spending Indicator"
+    assert entry["frequency"] == "Quarterly"
+    assert entry["category"] == "activity"
+    assert entry["variants"] == [
+        {
+            "name": "current_price_total",
+            "aliases": ["quarterly household spending", "current price household spending"],
+            "abs_key": "7.TOT.CUR.20.AUS.Q",
+        },
+        {
+            "name": "chain_volume_total",
+            "aliases": ["real household spending", "volume household spending"],
+            "abs_key": "7.TOT.CVM.20.AUS.Q",
+        },
+    ]
+
+
+def test_selected_rba_expansion_tables_are_catalogued_with_csv_paths() -> None:
+    expected = {
+        "f1.1": "f1.1-data.csv",
+        "f2.1": "f2.1-data.csv",
+        "a4": "a4-data.csv",
+        "i5": "i5-data.csv",
+        "j1": "j1-gdp-growth.csv",
+        "d14.1": "d14.1-data.csv",
+        "c1.1": "c1.1-aggregate.csv",
+        "c2.1": "c2.1-aggregate.csv",
+        "c4.1": "c4.1-data.csv",
+    }
+
+    for table_id, csv_path in expected.items():
+        assert RBA_CATALOGUE[table_id]["csv_path"] == csv_path
 
 
 def test_building_approvals_entry_has_wired_default_variant() -> None:

@@ -57,6 +57,13 @@ def parse_apra_xlsx(
                 table_id=selected_table_id,
                 table_map=table_map,
             )
+        elif layout == "period_rows":
+            table_series, table_observations = _parse_period_rows(
+                sheet,
+                publication_id=publication_id,
+                table_id=selected_table_id,
+                table_map=table_map,
+            )
         else:
             raise ValueError(f"Unsupported APRA table layout: {layout!r}.")
 
@@ -278,6 +285,78 @@ def _parse_matrix(
     return list(series_by_id.values()), observations
 
 
+def _parse_period_rows(
+    sheet: Any,
+    *,
+    publication_id: str,
+    table_id: str,
+    table_map: dict[str, Any],
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    header_row = int(table_map["header_row"])
+    data_start_row = int(table_map["data_start_row"])
+    month_column = int(table_map["month_column"])
+    year_column = int(table_map["year_column"])
+    metric_column = int(table_map["metric_column"])
+    series_start_column = int(table_map["series_start_column"])
+
+    region_headers = {
+        column: _clean_label(sheet.cell(header_row, column).value)
+        for column in range(series_start_column, (sheet.max_column or series_start_column) + 1)
+    }
+    region_headers = {column: label for column, label in region_headers.items() if label}
+    if not region_headers:
+        raise ValueError(f"APRA period-row table {table_id!r} did not contain region columns.")
+
+    series_by_id: dict[str, dict[str, Any]] = {}
+    observations: list[dict[str, Any]] = []
+    current_month: str | None = None
+    current_year: str | None = None
+
+    for row_index in range(data_start_row, (sheet.max_row or data_start_row) + 1):
+        month_text = _clean_label(sheet.cell(row_index, month_column).value)
+        year_text = _clean_label(sheet.cell(row_index, year_column).value)
+        if month_text:
+            current_month = month_text
+        if year_text:
+            current_year = year_text
+
+        parsed_date = _parse_period_row_date(current_month, current_year)
+        if parsed_date is None:
+            continue
+        metric_label = _clean_label(sheet.cell(row_index, metric_column).value)
+        if not metric_label:
+            continue
+
+        metric_slug = _slug(metric_label)
+        for column, region_label in region_headers.items():
+            value, raw_value = _parse_observation_value(sheet.cell(row_index, column).value)
+            if value is None and raw_value is None:
+                continue
+            region_slug = _slug(region_label)
+            series_id = f"{publication_id}:{table_id}:{region_slug}:{metric_slug}"
+            dimensions = _period_row_dimensions(table_id, table_map, region_label, metric_label)
+            if series_id not in series_by_id:
+                series_by_id[series_id] = SeriesDescriptor(
+                    series_id=series_id,
+                    label=f"{region_label} - {metric_label}",
+                    unit=table_map.get("unit"),
+                    frequency=table_map.get("frequency"),
+                    dimensions=dimensions,
+                    source_key=metric_label,
+                ).to_dict()
+            observations.append(
+                Observation(
+                    date=parsed_date,
+                    series_id=series_id,
+                    value=value,
+                    raw_value=raw_value,
+                    dimensions=dimensions,
+                ).to_dict()
+            )
+
+    return list(series_by_id.values()), observations
+
+
 def _row_dimensions(
     table_id: str,
     table_map: dict[str, Any],
@@ -310,6 +389,22 @@ def _matrix_dimensions(
     return dimensions
 
 
+def _period_row_dimensions(
+    table_id: str,
+    table_map: dict[str, Any],
+    region_label: str,
+    metric_label: str,
+) -> dict[str, dict[str, str]]:
+    return {
+        "table": {
+            "code": table_id,
+            "label": str(table_map.get("title") or table_id),
+        },
+        "region": {"code": _slug(region_label), "label": region_label},
+        "metric": {"code": _slug(metric_label), "label": metric_label},
+    }
+
+
 def _parse_date(value: Any) -> str | None:
     if value is None:
         return None
@@ -332,6 +427,24 @@ def _parse_date(value: Any) -> str | None:
             return date.fromisoformat(text).isoformat()
         except ValueError:
             return None
+    return None
+
+
+def _parse_period_row_date(month_text: str | None, year_text: str | None) -> str | None:
+    if not month_text or not year_text:
+        return None
+    try:
+        year = int(float(year_text))
+    except ValueError:
+        return None
+    for fmt in ("%b", "%B"):
+        try:
+            parsed = datetime.strptime(month_text[:3] if fmt == "%b" else month_text, fmt)
+        except ValueError:
+            continue
+        month = parsed.month
+        day = calendar.monthrange(year, month)[1]
+        return date(year, month, day).isoformat()
     return None
 
 

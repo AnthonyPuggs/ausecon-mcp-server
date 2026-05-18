@@ -12,6 +12,7 @@ from datetime import date
 import pytest
 
 from ausecon_mcp.catalogue.abs import ABS_CATALOGUE
+from ausecon_mcp.catalogue.apra import APRA_CATALOGUE
 from ausecon_mcp.catalogue.rba import RBA_CATALOGUE
 
 MAX_AGE_MONTHS = 24
@@ -22,6 +23,8 @@ def _iter_entries():
         yield f"abs/{entry_id}", entry
     for entry_id, entry in RBA_CATALOGUE.items():
         yield f"rba/{entry_id}", entry
+    for entry_id, entry in APRA_CATALOGUE.items():
+        yield f"apra/{entry_id}", entry
 
 
 @pytest.mark.parametrize(("label", "entry"), list(_iter_entries()))

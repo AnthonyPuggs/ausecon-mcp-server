@@ -520,6 +520,24 @@ class AuseconService:
             _stamp_semantic_metadata(payload, validated_concept, resolved, bounds)
             return payload
 
+        if resolved.source == "apra":
+            validated_start, validated_end = validate_iso_date_range(
+                bounds.start,
+                bounds.end,
+                start_name="start",
+                end_name="end",
+            )
+            payload = await self.get_apra_data(
+                resolved.dataset_id,
+                table_id=resolved.apra_table_id,
+                series_ids=resolved.apra_series_ids,
+                start_date=validated_start,
+                end_date=validated_end,
+                last_n=validated_last_n,
+            )
+            _stamp_semantic_metadata(payload, validated_concept, resolved, bounds)
+            return payload
+
         validated_start, validated_end = validate_abs_period_range(
             bounds.start,
             bounds.end,
@@ -814,6 +832,8 @@ def _stamp_semantic_metadata(
         ),
         "abs_key": resolved.abs_key,
         "rba_series_ids": resolved.rba_series_ids,
+        "apra_table_id": resolved.apra_table_id,
+        "apra_series_ids": resolved.apra_series_ids,
     }
     payload.setdefault("metadata", {})["semantic"] = {
         "concept": concept,

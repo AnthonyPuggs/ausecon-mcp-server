@@ -107,6 +107,73 @@ def _compute_gdp_per_capita(values: dict[str, dict[str, float]]) -> list[tuple[s
     return results
 
 
+def _compute_mortgage_rate_spread(values: dict[str, dict[str, float]]) -> list[tuple[str, float]]:
+    mortgage_rate = values["mortgage_rate"]
+    bank_bill_rate = values["bank_bill_rate"]
+    carried_bank_bill = _carry_forward_to_periods(bank_bill_rate, sorted(mortgage_rate))
+    return [
+        (period, _round(mortgage_rate[period] - carried_bank_bill[period]))
+        for period in sorted(mortgage_rate, key=_period_sort_key)
+        if period in carried_bank_bill
+    ]
+
+
+def _compute_real_mortgage_rate(values: dict[str, dict[str, float]]) -> list[tuple[str, float]]:
+    mortgage_rate = values["mortgage_rate"]
+    inflation = values["inflation"]
+    dates = sorted(set(mortgage_rate) & set(inflation), key=_period_sort_key)
+    return [(period, _round(mortgage_rate[period] - inflation[period])) for period in dates]
+
+
+def _compute_credit_to_gdp(values: dict[str, dict[str, float]]) -> list[tuple[str, float]]:
+    total_credit = values["total_credit"]
+    nominal_gdp = values["nominal_gdp"]
+    carried_credit = _carry_forward_to_periods(total_credit, sorted(nominal_gdp))
+    results: list[tuple[str, float]] = []
+    for period in sorted(nominal_gdp, key=_period_sort_key):
+        gdp_value = nominal_gdp[period]
+        credit_value = carried_credit.get(period)
+        if credit_value is None or gdp_value == 0:
+            continue
+        results.append((period, _round(100 * credit_value / gdp_value)))
+    return results
+
+
+def _compute_household_spending_growth(
+    values: dict[str, dict[str, float]],
+) -> list[tuple[str, float]]:
+    household_spending = values["household_spending"]
+    results: list[tuple[str, float]] = []
+    for period in sorted(household_spending, key=_period_sort_key):
+        lag_period = shift_quarter(period, -4)
+        lag_value = household_spending.get(lag_period)
+        if lag_value in (None, 0):
+            continue
+        results.append((period, _round(100 * (household_spending[period] / lag_value - 1))))
+    return results
+
+
+def _carry_forward_to_periods(
+    source_values: dict[str, float],
+    target_periods: list[str],
+) -> dict[str, float]:
+    source_items = sorted(source_values.items(), key=lambda item: _period_end_date(item[0]))
+    carried: dict[str, float] = {}
+    source_index = 0
+    latest_value: float | None = None
+    for period in sorted(target_periods, key=_period_sort_key):
+        target_end = _period_end_date(period)
+        while (
+            source_index < len(source_items)
+            and _period_end_date(source_items[source_index][0]) <= target_end
+        ):
+            latest_value = source_items[source_index][1]
+            source_index += 1
+        if latest_value is not None:
+            carried[period] = latest_value
+    return carried
+
+
 DERIVED_CONCEPTS: dict[str, DerivedSpec] = {
     "yield_curve_slope": DerivedSpec(
         concept="yield_curve_slope",
@@ -172,6 +239,59 @@ DERIVED_CONCEPTS: dict[str, DerivedSpec] = {
         ),
         compute=_compute_gdp_per_capita,
     ),
+    "mortgage_rate_spread": DerivedSpec(
+        concept="mortgage_rate_spread",
+        label="Mortgage rate spread",
+        description=(
+            "Owner-occupier variable mortgage rate less the carried-forward bank bill rate."
+        ),
+        frequency="Monthly",
+        unit="percentage points",
+        formula="mortgage_rate - bank_bill_rate",
+        operands=(
+            OperandSpec("mortgage_rate", "mortgage_rate"),
+            OperandSpec("bank_bill_rate", "bank_bill_rate"),
+        ),
+        compute=_compute_mortgage_rate_spread,
+    ),
+    "real_mortgage_rate": DerivedSpec(
+        concept="real_mortgage_rate",
+        label="Real mortgage rate",
+        description="Owner-occupier variable mortgage rate less complete monthly CPI inflation.",
+        frequency="Monthly",
+        unit="percentage points",
+        formula="mortgage_rate - monthly_inflation",
+        operands=(
+            OperandSpec("mortgage_rate", "mortgage_rate"),
+            OperandSpec("inflation", "monthly_inflation"),
+        ),
+        compute=_compute_real_mortgage_rate,
+    ),
+    "credit_to_gdp": DerivedSpec(
+        concept="credit_to_gdp",
+        label="Credit-to-GDP ratio",
+        description="Total credit as a percentage of quarterly nominal GDP.",
+        frequency="Quarterly",
+        unit="percent",
+        formula="100 * total_credit / nominal_gdp",
+        operands=(
+            OperandSpec("total_credit", "total_credit"),
+            OperandSpec("nominal_gdp", "nominal_gdp"),
+        ),
+        compute=_compute_credit_to_gdp,
+    ),
+    "household_spending_growth": DerivedSpec(
+        concept="household_spending_growth",
+        label="Household spending growth",
+        description=(
+            "Year-ended growth in quarterly chain-volume household spending."
+        ),
+        frequency="Quarterly",
+        unit="percent year-ended",
+        formula="100 * (household_spending_t / household_spending_t-4 - 1)",
+        operands=(OperandSpec("household_spending", "quarterly_household_spending_volume"),),
+        compute=_compute_household_spending_growth,
+    ),
 }
 
 
@@ -224,6 +344,12 @@ def operand_request_bounds(
     if concept == "credit_growth" and operand_name == "total_credit" and normalised_start:
         normalised_start = shift_month(normalised_start, -12)
     elif concept == "real_wage_growth" and operand_name == "cpi_index" and normalised_start:
+        normalised_start = shift_quarter(normalised_start, -4)
+    elif (
+        concept == "household_spending_growth"
+        and operand_name == "household_spending"
+        and normalised_start
+    ):
         normalised_start = shift_quarter(normalised_start, -4)
     elif concept == "real_cash_rate" and operand_name == "cash_rate":
         normalised_start = None
