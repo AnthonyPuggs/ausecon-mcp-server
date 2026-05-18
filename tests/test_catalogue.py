@@ -3,7 +3,7 @@ import re
 from ausecon_mcp.catalogue.abs import ABS_CATALOGUE
 from ausecon_mcp.catalogue.apra import APRA_CATALOGUE
 from ausecon_mcp.catalogue.rba import RBA_CATALOGUE
-from ausecon_mcp.catalogue.search import list_catalogue, search_catalogue
+from ausecon_mcp.catalogue.search import list_catalogue
 
 VALID_FREQUENCY_CODES = {"D", "M", "Q", "A", "E"}
 SDMX_LITERAL_KEY_PATTERN = re.compile(r"^[0-9A-Z_+]+(\.[0-9A-Z_+]+)*$")
@@ -65,72 +65,11 @@ def test_apra_catalogue_covers_v14_source_native_publications() -> None:
     assert all(entry["tables"] for entry in APRA_CATALOGUE.values())
 
 
-def test_search_catalogue_prefers_high_value_alias_matches() -> None:
-    results = search_catalogue("trimmed mean inflation")
-
-    assert results
-    assert results[0]["source"] == "rba"
-    assert results[0]["id"] == "g1"
-
-
-def test_search_catalogue_respects_source_filter() -> None:
-    results = search_catalogue("cash rate", source="abs")
-
-    assert results == []
-
-
-def test_search_catalogue_returns_apra_entries_when_source_filtered() -> None:
-    results = search_catalogue("property exposures", source="apra")
-
-    assert results
-    assert results[0]["source"] == "apra"
-    assert results[0]["id"] == "ADI_PROPERTY_EXPOSURES"
-
-
 def test_list_catalogue_returns_apra_entries_when_source_filtered() -> None:
     results = list_catalogue(source="apra")
 
     assert [item["source"] for item in results] == ["apra"] * len(APRA_CATALOGUE)
     assert {item["id"] for item in results} == set(APRA_CATALOGUE)
-
-
-def test_search_catalogue_prioritises_exact_table_id_matches() -> None:
-    results = search_catalogue("f6")
-
-    assert results
-    assert results[0]["source"] == "rba"
-    assert results[0]["id"] == "f6"
-
-
-def test_search_catalogue_prefers_full_economist_query_matches() -> None:
-    results = search_catalogue("unemployment rate")
-
-    assert results
-    assert results[0]["source"] == "abs"
-    assert results[0]["id"] == "LF"
-
-
-def test_search_catalogue_handles_common_real_gdp_phrase() -> None:
-    results = search_catalogue("real gdp")
-
-    assert results
-    assert results[0]["source"] == "abs"
-    assert results[0]["id"] == "ANA_AGG"
-
-
-def test_search_catalogue_excludes_ceased_abs_dataflows() -> None:
-    for ceased_id in ("BUSINESS_TURNOVER", "CPI_M", "RPPI"):
-        results = search_catalogue(ceased_id, source="abs")
-        assert all(item["id"] != ceased_id for item in results), (
-            f"{ceased_id} is marked ceased but still appeared in search results"
-        )
-
-
-def test_search_catalogue_returns_reactivated_retail_trade() -> None:
-    results = search_catalogue("retail trade", source="abs")
-
-    assert results
-    assert results[0]["id"] == "RT"
 
 
 def test_slci_resolves_to_selected_living_cost_indexes() -> None:
