@@ -46,6 +46,12 @@ async def test_resolve_rejects_ambiguous_alias() -> None:
 
 
 @pytest.mark.asyncio
+async def test_resolve_does_not_match_ceased_abs_aliases() -> None:
+    with pytest.raises(ValueError, match="Unknown concept"):
+        await resolve("business turnover")
+
+
+@pytest.mark.asyncio
 async def test_resolve_cash_rate_target_defaults_to_target_series() -> None:
     result = await resolve("cash_rate_target")
 

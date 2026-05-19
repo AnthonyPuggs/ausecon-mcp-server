@@ -488,7 +488,7 @@ def _match_concept(concept: str) -> tuple[str, str, dict[str, Any]]:
         ("apra", APRA_CATALOGUE),
     ):
         for entry in collection.values():
-            if entry.get("discontinued", False):
+            if entry.get("discontinued", False) or entry.get("ceased", False):
                 continue
             aliases = [alias.strip().lower() for alias in entry.get("aliases", [])]
             if lowered in aliases:

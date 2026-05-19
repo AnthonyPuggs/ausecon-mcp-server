@@ -1,5 +1,6 @@
 import re
 
+from ausecon_mcp.catalogue._runtime import strip_unwired_variants
 from ausecon_mcp.catalogue.abs import ABS_CATALOGUE
 from ausecon_mcp.catalogue.apra import APRA_CATALOGUE
 from ausecon_mcp.catalogue.rba import RBA_CATALOGUE
@@ -96,6 +97,31 @@ def test_every_catalogue_entry_declares_resolver_schema_fields() -> None:
         assert entry["geographies"], f"{entry['id']}: geographies must not be empty"
 
         assert isinstance(entry.get("variants"), list), entry["id"]
+
+
+def test_strip_unwired_variants_shallow_copies_entries_without_mutating_raw_catalogue() -> None:
+    audit_metadata = {"last_audited": "2026-05-19"}
+    raw_catalogue = {
+        "TEST": {
+            "id": "TEST",
+            "audit": audit_metadata,
+            "variants": [
+                {"name": "wired", "abs_key": "1.2.3.M"},
+                {"name": "unwired", "abs_key": None},
+            ],
+        }
+    }
+
+    runtime_catalogue = strip_unwired_variants(raw_catalogue, key_name="abs_key")
+
+    assert runtime_catalogue is not raw_catalogue
+    assert runtime_catalogue["TEST"] is not raw_catalogue["TEST"]
+    assert runtime_catalogue["TEST"]["audit"] is audit_metadata
+    assert runtime_catalogue["TEST"]["variants"] == [{"name": "wired", "abs_key": "1.2.3.M"}]
+    assert raw_catalogue["TEST"]["variants"] == [
+        {"name": "wired", "abs_key": "1.2.3.M"},
+        {"name": "unwired", "abs_key": None},
+    ]
 
 
 def test_abs_variants_carry_name_aliases_and_wired_sdmx_key() -> None:
