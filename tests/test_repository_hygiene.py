@@ -167,6 +167,13 @@ def test_public_semantic_docs_do_not_contain_known_stale_series_ids() -> None:
             assert stale_id not in text, f"{label} contains stale semantic series id {stale_id}"
 
 
+def test_mcp_client_smoke_does_not_assume_search_result_order() -> None:
+    smoke_text = CLIENT_SMOKE.read_text(encoding="utf-8")
+
+    assert 'search.data[0]["id"] == "a2"' not in smoke_text
+    assert 'any(row.get("id") == "a2" for row in search.data)' in smoke_text
+
+
 def test_docs_site_instruments_vercel_observability_without_query_payloads() -> None:
     package_json = json.loads((DOCS_SITE / "package.json").read_text(encoding="utf-8"))
     layout_text = (DOCS_SITE / "src/layouts/Base.astro").read_text(encoding="utf-8")

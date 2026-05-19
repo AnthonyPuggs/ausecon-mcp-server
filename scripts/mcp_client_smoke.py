@@ -52,7 +52,8 @@ async def main() -> None:
         assert concepts.data and concepts.data[0]["concept"] == "dwelling_approvals"
 
         search = await client.call_tool("search_datasets", {"query": "cash rate"})
-        assert search.data and search.data[0]["id"] == "a2"
+        assert search.data
+        assert any(row.get("id") == "a2" for row in search.data)
 
         catalogue = await client.call_tool(
             "list_catalogue",
