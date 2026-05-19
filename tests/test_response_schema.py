@@ -1,5 +1,6 @@
 import json
 from datetime import datetime
+from importlib import resources
 from pathlib import Path
 
 import pytest
@@ -51,6 +52,15 @@ def test_response_schema_rejects_invalid_retrieved_at_format() -> None:
 
     with pytest.raises(ValidationError):
         _validator().validate(payload)
+
+
+def test_package_contains_namespaced_response_schema_resource() -> None:
+    schema_resource = resources.files("ausecon_mcp").joinpath("schemas/response.schema.json")
+
+    assert schema_resource.is_file()
+    assert json.loads(schema_resource.read_text(encoding="utf-8"))["$id"] == (
+        "https://github.com/AnthonyPuggs/ausecon-mcp-server/schemas/response.schema.json"
+    )
 
 
 @pytest.mark.asyncio

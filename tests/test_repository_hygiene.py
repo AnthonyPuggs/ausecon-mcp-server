@@ -85,6 +85,24 @@ def test_project_metadata_includes_http_container_entrypoint_dependencies() -> N
     assert "starlette>=0.27,<1" in project["dependencies"]
 
 
+def test_project_metadata_declares_yaml_test_dependency_explicitly() -> None:
+    pyproject = tomllib.loads(PYPROJECT.read_text(encoding="utf-8"))
+    dev_dependencies = pyproject["project"]["optional-dependencies"]["dev"]
+
+    assert any(dependency.lower().startswith("pyyaml") for dependency in dev_dependencies)
+
+
+def test_response_schema_is_packaged_under_project_namespace() -> None:
+    pyproject = tomllib.loads(PYPROJECT.read_text(encoding="utf-8"))
+    force_include = pyproject["tool"]["hatch"]["build"]["targets"]["wheel"]["force-include"]
+
+    assert force_include == {
+        "src/ausecon_mcp/schemas/response.schema.json": (
+            "ausecon_mcp/schemas/response.schema.json"
+        )
+    }
+
+
 def test_fastmcp_metadata_points_homepage_to_docs_site() -> None:
     metadata = json.loads(FASTMCP_JSON.read_text(encoding="utf-8"))
 
