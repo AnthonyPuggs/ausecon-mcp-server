@@ -152,7 +152,7 @@ can see why the defaults look the way they do:
 
 - **Bond-yield tenors resolve to `f17`, not `f16`.** `f17` (zero-coupon
   yields) is the modelling-friendly series and avoids the coupon-driven
-  distortions in `f16`. Series IDs: `FZCY0300D` (3y), `FZCY1000D` (10y).
+  distortions in `f16`. Series IDs: `FZCY300D` (3y), `FZCY1000D` (10y).
 - **`housing_credit` returns two SA series, not an aggregate.** The
   default resolves `d2` to `DLCACOHS` (owner-occupier) and `DLCACIHS`
   (investor). Clients that want a total can sum them; we deliberately
