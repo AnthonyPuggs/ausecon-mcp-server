@@ -205,6 +205,14 @@ def test_selected_rba_expansion_tables_are_catalogued_with_csv_paths() -> None:
         assert RBA_CATALOGUE[table_id]["csv_path"] == csv_path
 
 
+def test_rba_j1_tracks_live_table_family_title_while_using_gdp_growth_csv() -> None:
+    entry = RBA_CATALOGUE["j1"]
+
+    assert entry["name"] == "Market Economists' Forecasts - GDP Growth"
+    assert entry["csv_path"] == "j1-gdp-growth.csv"
+    assert entry["audit"]["upstream_title"] == "Market Economists’ Forecasts"
+
+
 def test_building_approvals_entry_has_wired_default_variant() -> None:
     entry = ABS_CATALOGUE["BUILDING_APPROVALS"]
 
