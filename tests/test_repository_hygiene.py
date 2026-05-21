@@ -31,6 +31,10 @@ CLIENT_SMOKE = ROOT / "scripts" / "mcp_client_smoke.py"
 DOCS_SITE = ROOT / "docs-site"
 DOCS_ICON = DOCS_SITE / "public" / "ausecon-icon.svg"
 ROADMAP = ROOT / "docs" / "roadmap.md"
+SEMANTIC_DESIGN = (
+    ROOT / "docs" / "superpowers" / "specs" / "2026-04-19-semantic-layer-expansion-design.md"
+)
+SEMANTIC_REFERENCE = DOCS_SITE / "src" / "content" / "docs" / "reference" / "semantic-concepts.md"
 DOCS_URL = "https://auseconmcp.com/"
 REPOSITORY_URL = "https://github.com/AnthonyPuggs/ausecon-mcp-server"
 
@@ -79,6 +83,24 @@ def test_project_metadata_includes_http_container_entrypoint_dependencies() -> N
     assert project["scripts"]["ausecon-mcp-http"] == "ausecon_mcp.server:main_http"
     assert "fastmcp>=3.2.4" in project["dependencies"]
     assert "starlette>=0.27,<1" in project["dependencies"]
+
+
+def test_project_metadata_declares_yaml_test_dependency_explicitly() -> None:
+    pyproject = tomllib.loads(PYPROJECT.read_text(encoding="utf-8"))
+    dev_dependencies = pyproject["project"]["optional-dependencies"]["dev"]
+
+    assert any(dependency.lower().startswith("pyyaml") for dependency in dev_dependencies)
+
+
+def test_response_schema_is_packaged_under_project_namespace() -> None:
+    pyproject = tomllib.loads(PYPROJECT.read_text(encoding="utf-8"))
+    force_include = pyproject["tool"]["hatch"]["build"]["targets"]["wheel"]["force-include"]
+
+    assert force_include == {
+        "src/ausecon_mcp/schemas/response.schema.json": (
+            "ausecon_mcp/schemas/response.schema.json"
+        )
+    }
 
 
 def test_fastmcp_metadata_points_homepage_to_docs_site() -> None:
@@ -147,6 +169,27 @@ def test_readme_is_slim_landing_page_for_current_release_state() -> None:
     assert "`v0.3.0` is a discovery release" not in readme_text
     assert "The current release includes:" not in readme_text
     assert "`v0.5.0` covers the main analyst workflows more credibly" not in readme_text
+
+
+def test_public_semantic_docs_do_not_contain_known_stale_series_ids() -> None:
+    stale_ids = {"FZCY0300D"}
+    docs = {
+        "README": README,
+        "semantic design": SEMANTIC_DESIGN,
+        "semantic reference": SEMANTIC_REFERENCE,
+    }
+
+    for label, path in docs.items():
+        text = path.read_text(encoding="utf-8")
+        for stale_id in stale_ids:
+            assert stale_id not in text, f"{label} contains stale semantic series id {stale_id}"
+
+
+def test_mcp_client_smoke_does_not_assume_search_result_order() -> None:
+    smoke_text = CLIENT_SMOKE.read_text(encoding="utf-8")
+
+    assert 'search.data[0]["id"] == "a2"' not in smoke_text
+    assert 'any(row.get("id") == "a2" for row in search.data)' in smoke_text
 
 
 def test_docs_site_instruments_vercel_observability_without_query_payloads() -> None:

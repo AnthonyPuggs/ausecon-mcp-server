@@ -1,10 +1,12 @@
 import json
+from datetime import datetime
+from importlib import resources
 from pathlib import Path
 
 import pytest
 import respx
 from httpx import Response
-from jsonschema import Draft202012Validator
+from jsonschema import Draft202012Validator, FormatChecker, ValidationError
 
 from ausecon_mcp.derived import derive_series
 from ausecon_mcp.providers.abs import ABSProvider
@@ -15,15 +17,50 @@ ROOT = Path(__file__).resolve().parents[1]
 SCHEMA_PATH = ROOT / "schemas" / "response.schema.json"
 PAYLOAD_EXAMPLES = ROOT / "examples" / "payloads"
 FIXTURES = Path(__file__).parent / "fixtures"
+FORMAT_CHECKER = FormatChecker()
+
+
+@FORMAT_CHECKER.checks("date-time", raises=ValueError)
+def _is_date_time(value: object) -> bool:
+    if not isinstance(value, str):
+        return True
+    datetime.fromisoformat(value.removesuffix("Z") + ("+00:00" if value.endswith("Z") else ""))
+    return "T" in value
 
 
 def _validator() -> Draft202012Validator:
     schema = json.loads(SCHEMA_PATH.read_text(encoding="utf-8"))
-    return Draft202012Validator(schema)
+    return Draft202012Validator(schema, format_checker=FORMAT_CHECKER)
 
 
 def _assert_valid(payload: dict) -> None:
     _validator().validate(payload)
+
+
+def test_response_schema_rejects_invalid_retrieved_at_format() -> None:
+    payload = {
+        "metadata": {
+            "source": "apra",
+            "dataset_id": "ADI_PROPERTY_EXPOSURES",
+            "retrieved_at": "not-a-date-time",
+            "server_version": "test",
+            "truncated": False,
+        },
+        "series": [],
+        "observations": [],
+    }
+
+    with pytest.raises(ValidationError):
+        _validator().validate(payload)
+
+
+def test_package_contains_namespaced_response_schema_resource() -> None:
+    schema_resource = resources.files("ausecon_mcp").joinpath("schemas/response.schema.json")
+
+    assert schema_resource.is_file()
+    assert json.loads(schema_resource.read_text(encoding="utf-8"))["$id"] == (
+        "https://github.com/AnthonyPuggs/ausecon-mcp-server/schemas/response.schema.json"
+    )
 
 
 @pytest.mark.asyncio

@@ -2072,9 +2072,9 @@ _RAW_RBA_CATALOGUE = {
         "csv_path": "j1-gdp-growth.csv",
         "variants": [],
         "audit": {
-            "last_audited": "2026-05-18",
+            "last_audited": "2026-05-22",
             "upstream_url": "https://www.rba.gov.au/statistics/tables/csv/j1-gdp-growth.csv",
-            "upstream_title": "Market Economists' Forecasts – GDP Growth",
+            "upstream_title": "Market Economists’ Forecasts",
         },
     },
 }
