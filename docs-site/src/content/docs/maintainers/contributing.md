@@ -43,6 +43,42 @@ The smoke path uses a real FastMCP stdio client transport and verifies:
 - `get_economic_series`
 - `get_derived_series`
 
+## Review and maintenance discipline
+
+### Dependency update triage
+
+For every dependency pull request, classify the change explicitly as a direct or transitive
+dependency change, then read the changelog and any security advisory before merging. For
+lockfile-only updates, state the affected runtime surface in the PR notes: server runtime, tests,
+docs-site, or build tooling.
+
+Run the smallest relevant verification first, then the standard suite if the dependency touches
+runtime code. A docs-site preview proves that the documentation site built; it does not prove MCP
+retrieval correctness.
+
+### Review-to-regression lock
+
+Accepted review findings should leave behind a regression test, repository hygiene assertion, or
+client smoke assertion. Prefer behaviour-focused tests that describe the invariant that failed, such
+as schema format validation, package-data layout, search-result independence, or catalogue filtering.
+
+### Catalogue source governance
+
+Catalogue changes need source-native evidence. Record the official source identifier, exact
+`csv_path` or SDMX key, `upstream_url`, `upstream_title`, `last_audited`, aliases, variants, and the
+reason the entry belongs in the curated surface. Keep README, docs-site reference pages, semantic
+design notes, and tests in documentation parity with the implemented identifiers.
+
+If an ABS, RBA, or APRA entry cannot be reconciled to the official source without approximation,
+defer it rather than shipping a semantic shortcut that is difficult to audit.
+
+### Artefact hygiene
+
+Before opening a pull request or cutting a release, check `git status --short` and inspect generated
+or packaged-data directories for copied artefacts. The response schema should exist only at the
+canonical source paths: `schemas/response.schema.json` for the public contract and
+`src/ausecon_mcp/schemas/response.schema.json` for package data.
+
 ## Release discipline
 
 - Keep the MCP tool surface stable unless there is a strong reason to break it.

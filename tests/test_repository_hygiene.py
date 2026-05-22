@@ -29,14 +29,20 @@ CHANGELOG = ROOT / "CHANGELOG.md"
 CONTRIBUTING = ROOT / "docs" / "contributing.md"
 CLIENT_SMOKE = ROOT / "scripts" / "mcp_client_smoke.py"
 DOCS_SITE = ROOT / "docs-site"
+DOCS_SITE_CONTRIBUTING = DOCS_SITE / "src" / "content" / "docs" / "maintainers" / "contributing.md"
 DOCS_ICON = DOCS_SITE / "public" / "ausecon-icon.svg"
 ROADMAP = ROOT / "docs" / "roadmap.md"
+HOSTED_DEPLOYMENT = DOCS_SITE / "src" / "content" / "docs" / "operations" / "hosted-deployment.md"
 SEMANTIC_DESIGN = (
     ROOT / "docs" / "superpowers" / "specs" / "2026-04-19-semantic-layer-expansion-design.md"
 )
 SEMANTIC_REFERENCE = DOCS_SITE / "src" / "content" / "docs" / "reference" / "semantic-concepts.md"
 DOCS_URL = "https://auseconmcp.com/"
 REPOSITORY_URL = "https://github.com/AnthonyPuggs/ausecon-mcp-server"
+
+
+def _normalise_whitespace(text: str) -> str:
+    return re.sub(r"\s+", " ", text)
 
 
 def test_readme_and_example_advertise_pypi_uvx_install() -> None:
@@ -101,6 +107,43 @@ def test_response_schema_is_packaged_under_project_namespace() -> None:
             "ausecon_mcp/schemas/response.schema.json"
         )
     }
+
+
+def test_packaged_schema_directory_contains_only_canonical_schema_file() -> None:
+    schema_dir = ROOT / "src" / "ausecon_mcp" / "schemas"
+
+    assert sorted(path.name for path in schema_dir.iterdir() if path.is_file()) == [
+        "response.schema.json"
+    ]
+
+
+def test_maintainer_docs_capture_review_and_dependency_triage_disciplines() -> None:
+    required_phrases = {
+        "Dependency update triage",
+        "direct or transitive dependency",
+        "security advisory",
+        "Review-to-regression lock",
+        "regression test",
+        "Catalogue source governance",
+        "upstream_title",
+        "csv_path",
+        "documentation parity",
+        "Artefact hygiene",
+    }
+
+    for path in (CONTRIBUTING, DOCS_SITE_CONTRIBUTING):
+        text = _normalise_whitespace(path.read_text(encoding="utf-8"))
+        for phrase in required_phrases:
+            assert phrase in text, f"{path} is missing {phrase!r}"
+
+
+def test_hosted_deployment_docs_scope_vercel_preview_signals_to_docs_site() -> None:
+    hosted_text = _normalise_whitespace(HOSTED_DEPLOYMENT.read_text(encoding="utf-8"))
+
+    assert "Vercel preview" in hosted_text
+    assert "docs-site" in hosted_text
+    assert "not MCP retrieval correctness" in hosted_text
+    assert "manual MCP tool-call smoke" in hosted_text
 
 
 def test_fastmcp_metadata_points_homepage_to_docs_site() -> None:

@@ -35,6 +35,16 @@ The repository intentionally does not include `scripts/mcp_http_smoke.py`. Reint
 hosted tool-call smoke only when the deployed transport and client naming are stable enough to avoid
 false release failures.
 
+## Preview signal scope
+
+Vercel preview comments are docs-site signals. They confirm that the Astro/Starlight documentation
+site built and deployed for the relevant branch, including dependency-update branches that only touch
+lockfiles. They are useful for page rendering and documentation checks, but the signal is not MCP
+retrieval correctness evidence.
+
+Treat Render health checks, Smithery metadata, server logs, catalogue audit output, integration
+tests, and manual MCP tool-call smoke as the evidence for hosted MCP correctness.
+
 ## Residual risks
 
 The public hosted server is acceptable because all tools are read-only and use public ABS, RBA, and
