@@ -19,6 +19,8 @@ LICENSE = ROOT / "LICENSE"
 CI_WORKFLOW = ROOT / ".github" / "workflows" / "ci.yml"
 DOCS_WORKFLOW = ROOT / ".github" / "workflows" / "docs.yml"
 RELEASE_WORKFLOW = ROOT / ".github" / "workflows" / "release.yml"
+CODEQL_WORKFLOW = ROOT / ".github" / "workflows" / "codeql.yml"
+DEPENDABOT = ROOT / ".github" / "dependabot.yml"
 DOCKERFILE = ROOT / "Dockerfile"
 DOCKERIGNORE = ROOT / ".dockerignore"
 SMITHERY_YAML = ROOT / "smithery.yaml"
@@ -105,7 +107,8 @@ def test_response_schema_is_packaged_under_project_namespace() -> None:
     assert force_include == {
         "src/ausecon_mcp/schemas/response.schema.json": (
             "ausecon_mcp/schemas/response.schema.json"
-        )
+        ),
+        "src/ausecon_mcp/data/apra_url_seeds.json": "ausecon_mcp/data/apra_url_seeds.json",
     }
 
 
@@ -171,7 +174,7 @@ def test_ci_workflow_exists_with_quality_checks_and_hygiene_guard() -> None:
     assert "actions/checkout@" in workflow_text
     assert "actions/setup-python@" in workflow_text
     assert "astral-sh/setup-uv@" in workflow_text
-    assert "python-version: ['3.10', '3.12']" in workflow_text
+    assert "python-version: ['3.10', '3.11', '3.12', '3.13']" in workflow_text
     assert "uv sync --python ${{ matrix.python-version }} --extra dev" in workflow_text
     assert "uv run ruff check src tests scripts" in workflow_text
     assert "uv run pytest" in workflow_text
@@ -195,7 +198,7 @@ def test_readme_is_slim_landing_page_for_current_release_state() -> None:
     assert len(readme_text.splitlines()) < 140
     assert "Version `1.5.0` is the current release line." in readme_text
     assert re.search(r"stdio plus\s+Streamable HTTP", readme_text)
-    assert "ten read-only MCP tools" in readme_text
+    assert "fourteen read-only MCP tools" in readme_text
     assert "70 curated analyst-facing economic and financial concepts" in readme_text
     assert "nine\ntransparent derived indicators" in readme_text
     assert "55 curated macroeconomic concepts" not in readme_text
@@ -467,7 +470,21 @@ def test_python_version_story_is_consistent_across_docs_and_ci() -> None:
     assert "Python 3.12 is recommended for local development" in readme_text
     assert "Python 3.10+" in readme_text
     assert "Python 3.12 is recommended for local development" in claude_text
-    assert "python-version: ['3.10', '3.12']" in workflow_text
+    assert "python-version: ['3.10', '3.11', '3.12', '3.13']" in workflow_text
+
+
+def test_codeql_and_dependabot_are_configured_for_visible_security_automation() -> None:
+    codeql_text = CODEQL_WORKFLOW.read_text(encoding="utf-8")
+    dependabot_text = DEPENDABOT.read_text(encoding="utf-8")
+
+    assert "name: CodeQL" in codeql_text
+    assert "github/codeql-action/init@" in codeql_text
+    assert "security-extended" in codeql_text
+    assert "github/codeql-action/analyze@" in codeql_text
+    assert "package-ecosystem: \"pip\"" in dependabot_text
+    assert "package-ecosystem: \"github-actions\"" in dependabot_text
+    assert "package-ecosystem: \"npm\"" in dependabot_text
+    assert "directory: \"/docs-site\"" in dependabot_text
 
 
 def test_readme_release_instructions_match_tag_derived_versioning() -> None:

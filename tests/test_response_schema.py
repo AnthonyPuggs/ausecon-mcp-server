@@ -151,6 +151,91 @@ def test_response_schema_validates_apra_provider_payload() -> None:
     _assert_valid(payload)
 
 
+def test_response_schema_allows_selection_apra_resolution_and_warning_metadata() -> None:
+    payload = {
+        "metadata": {
+            "source": "apra",
+            "dataset_id": "TEST_PUBLICATION",
+            "frequency": "Monthly",
+            "title": "Test APRA publication",
+            "retrieval_url": "https://www.apra.gov.au/sites/default/files/seeded-test.xlsx",
+            "retrieved_at": "2026-05-20T00:00:00Z",
+            "server_version": "test",
+            "truncated": False,
+            "selection": {
+                "type": "top_n",
+                "n": 2,
+                "direction": "highest",
+                "numeric_observation_count": 3,
+                "returned_observation_count": 2,
+                "dropped_non_numeric_count": 1,
+            },
+            "apra_url_resolution": {
+                "strategy": "seed_manifest",
+                "seed_checked_at": "2026-05-20T00:00:00Z",
+            },
+            "framework_breaks": [
+                {
+                    "date": "2023-07-01",
+                    "label": "AASB 17 transition",
+                    "description": "Insurance accounting framework changed.",
+                }
+            ],
+            "warnings": [
+                "AASB 17 transition on 2023-07-01: Insurance accounting framework changed."
+            ],
+        },
+        "series": [
+            {
+                "series_id": "TEST_PUBLICATION:table_1:11111111111:total_residents_assets",
+                "label": "Total residents assets",
+                "unit": "$ million",
+                "frequency": "Monthly",
+                "dimensions": {},
+                "source_key": "Total residents assets",
+                "unit_multiplier": None,
+                "decimals": None,
+                "base_period": None,
+            }
+        ],
+        "observations": [
+            {
+                "date": "2024-02-29",
+                "series_id": "TEST_PUBLICATION:table_1:11111111111:total_residents_assets",
+                "value": 110.0,
+                "dimensions": {},
+                "status": None,
+                "comment": None,
+            }
+        ],
+    }
+
+    _assert_valid(payload)
+
+
+def test_response_schema_allows_catalogue_fallback_apra_resolution_metadata() -> None:
+    payload = {
+        "metadata": {
+            "source": "apra",
+            "dataset_id": "TEST_PUBLICATION",
+            "frequency": "Monthly",
+            "title": "Test APRA publication",
+            "retrieval_url": "https://www.apra.gov.au/sites/default/files/catalogue-test.xlsx",
+            "retrieved_at": "2026-05-20T00:00:00Z",
+            "server_version": "test",
+            "truncated": False,
+            "apra_url_resolution": {
+                "strategy": "catalogue_fallback",
+                "seed_checked_at": None,
+            },
+        },
+        "series": [],
+        "observations": [],
+    }
+
+    _assert_valid(payload)
+
+
 @pytest.mark.asyncio
 async def test_response_schema_validates_semantic_payload() -> None:
     service = AuseconService(abs_provider=ABSProvider(), rba_provider=RBAProvider())

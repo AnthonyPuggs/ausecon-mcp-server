@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import re
 from copy import deepcopy
 from html.parser import HTMLParser
+from importlib import resources
 from time import perf_counter
 from typing import Any
 from urllib.parse import urljoin, urlparse
@@ -21,6 +23,7 @@ from ausecon_mcp.providers._retry import get_with_retries
 
 _logger = get_logger("providers.apra")
 _TRUSTED_APRA_DOWNLOAD_HOSTS = {"apra.gov.au", "www.apra.gov.au"}
+_SEED_RESOURCE = "data/apra_url_seeds.json"
 
 
 class APRAProvider:
@@ -95,6 +98,7 @@ class APRAProvider:
                 "frequency",
                 entry.get("frequency"),
             )
+        _stamp_framework_breaks(payload, entry)
         payload = filter_payload(
             payload,
             series_ids=series_ids,
@@ -134,10 +138,12 @@ class APRAProvider:
             source="apra",
             identifier=publication_id,
         )
-        download_url = resolve_apra_download_url(
+        download_url, resolution_meta = resolve_apra_download_url_with_fallback(
             landing_response.text,
             base_url=landing_url,
             patterns=entry["link_patterns"],
+            publication_id=publication_id,
+            entry=entry,
         )
         xlsx_response = await get_with_retries(
             self._client,
@@ -200,10 +206,29 @@ class APRAProvider:
         )
         payload["metadata"]["retrieval_url"] = str(xlsx_response.request.url)
         payload["metadata"]["retrieved_at"] = utc_now_iso()
+        payload["metadata"]["apra_url_resolution"] = resolution_meta
         return payload
 
 
 def resolve_apra_download_url(html: str, *, base_url: str, patterns: list[str]) -> str:
+    url, _ = resolve_apra_download_url_with_fallback(
+        html,
+        base_url=base_url,
+        patterns=patterns,
+        publication_id=None,
+        entry=None,
+    )
+    return url
+
+
+def resolve_apra_download_url_with_fallback(
+    html: str,
+    *,
+    base_url: str,
+    patterns: list[str],
+    publication_id: str | None,
+    entry: dict[str, Any] | None,
+) -> tuple[str, dict[str, str | None]]:
     links = _LinkExtractor()
     links.feed(html)
     compiled = [re.compile(pattern, re.IGNORECASE) for pattern in patterns]
@@ -217,10 +242,79 @@ def resolve_apra_download_url(html: str, *, base_url: str, patterns: list[str]) 
             continue
         hostname = (parsed.hostname or "").lower()
         if parsed.scheme == "https" and hostname in _TRUSTED_APRA_DOWNLOAD_HOSTS:
-            return candidate_url
+            return candidate_url, {"strategy": "landing_page", "seed_checked_at": None}
+
+    if publication_id is not None and entry is not None:
+        for seed in _url_seeds(publication_id, entry):
+            candidate_url = str(seed.get("url", ""))
+            _validate_apra_xlsx_url(candidate_url)
+            label = str(seed.get("label", ""))
+            if label and not all(pattern.search(label) for pattern in compiled):
+                continue
+            return candidate_url, {
+                "strategy": "seed_manifest",
+                "seed_checked_at": seed.get("checked_at"),
+            }
+
+        fallback_url = str(entry.get("fallback_url", ""))
+        if fallback_url:
+            _validate_apra_xlsx_url(fallback_url)
+            return fallback_url, {
+                "strategy": "catalogue_fallback",
+                "seed_checked_at": None,
+            }
+
     raise AuseconParseError(
         "APRA landing page did not contain the expected trusted APRA HTTPS XLSX link."
     )
+
+
+def _validate_apra_xlsx_url(candidate_url: str) -> None:
+    parsed = urlparse(candidate_url)
+    hostname = (parsed.hostname or "").lower()
+    if (
+        parsed.scheme != "https"
+        or hostname not in _TRUSTED_APRA_DOWNLOAD_HOSTS
+        or not parsed.path.lower().endswith(".xlsx")
+    ):
+        raise AuseconParseError(
+            "APRA landing page did not contain the expected trusted APRA HTTPS XLSX link."
+        )
+
+
+def _url_seeds(publication_id: str, entry: dict[str, Any]) -> list[dict[str, Any]]:
+    seeds = list(entry.get("url_seeds", []))
+    seeds.extend(_bundled_url_seeds().get(publication_id, []))
+    return seeds
+
+
+def _bundled_url_seeds() -> dict[str, list[dict[str, Any]]]:
+    try:
+        text = resources.files("ausecon_mcp").joinpath(_SEED_RESOURCE).read_text(
+            encoding="utf-8"
+        )
+    except FileNotFoundError:
+        return {}
+    return json.loads(text)
+
+
+def _stamp_framework_breaks(payload: dict[str, Any], entry: dict[str, Any]) -> None:
+    framework_breaks = list(entry.get("framework_breaks", []))
+    if not framework_breaks:
+        return
+    payload.setdefault("metadata", {})["framework_breaks"] = framework_breaks
+    payload["metadata"]["warnings"] = [
+        _format_framework_break_warning(item) for item in framework_breaks
+    ]
+
+
+def _format_framework_break_warning(item: dict[str, Any]) -> str:
+    label = item.get("label", "Framework break")
+    date = item.get("date", "unknown date")
+    description = item.get("description", "")
+    if description:
+        return f"{label} on {date}: {description}"
+    return f"{label} on {date}."
 
 
 def _cache_key(publication_id: str, table_id: str | None) -> str:

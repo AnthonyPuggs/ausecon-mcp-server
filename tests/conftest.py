@@ -5,11 +5,11 @@ from pathlib import Path
 
 import pytest
 
-import ausecon_mcp.cache as cache_module
-
 SRC = Path(__file__).resolve().parents[1] / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
+
+import ausecon_mcp.cache as cache_module  # noqa: E402
 
 
 @pytest.fixture(autouse=True)

@@ -1,5 +1,16 @@
 from __future__ import annotations
 
+_AASB17_INSURANCE_FRAMEWORK_BREAK = {
+    "date": "2023-07-01",
+    "label": "AASB 17 transition",
+    "description": (
+        "AASB 17 changed insurance accounting and APRA insurance reporting "
+        "definitions from the September 2023 reference quarter; compare pre- "
+        "and post-transition insurance performance series with care."
+    ),
+}
+
+
 APRA_CATALOGUE: dict[str, dict] = {
     "ADI_MONTHLY": {
         "id": "ADI_MONTHLY",
@@ -18,6 +29,11 @@ APRA_CATALOGUE: dict[str, dict] = {
             "https://www.apra.gov.au/monthly-authorised-deposit-taking-institution-statistics"
         ),
         "link_patterns": [r"back-series.*xlsx"],
+        "fallback_url": (
+            "https://www.apra.gov.au/sites/default/files/2026-05/"
+            "Monthly%20authorised%20deposit-taking%20institution%20statistics%20"
+            "back-series%20March%202019%20-%20April%202026.xlsx"
+        ),
         "tables": {
             "table_1": {
                 "sheet": "Table 1",
@@ -63,6 +79,11 @@ APRA_CATALOGUE: dict[str, dict] = {
             "https://www.apra.gov.au/quarterly-authorised-deposit-taking-institution-statistics"
         ),
         "link_patterns": [r"performance.*xlsx"],
+        "fallback_url": (
+            "https://www.apra.gov.au/sites/default/files/2026-03/"
+            "Quarterly%20authorised%20deposit-taking%20institution%20performance-"
+            "September%202004%20to%20December%202025.xlsx"
+        ),
         "tables": {
             "key_stats": {
                 "sheet": "Key Stats",
@@ -134,6 +155,11 @@ APRA_CATALOGUE: dict[str, dict] = {
             "https://www.apra.gov.au/quarterly-authorised-deposit-taking-institution-statistics"
         ),
         "link_patterns": [r"centralised publication.*xlsx"],
+        "fallback_url": (
+            "https://www.apra.gov.au/sites/default/files/2026-03/"
+            "Authorised%20deposit-taking%20institution%20centralised%20publication%20-%20"
+            "March%202013%20to%20December%202025.xlsx"
+        ),
         "tables": {
             "table_1": {
                 "sheet": "Table 1",
@@ -201,6 +227,11 @@ APRA_CATALOGUE: dict[str, dict] = {
             "https://www.apra.gov.au/quarterly-authorised-deposit-taking-institution-statistics"
         ),
         "link_patterns": [r"property exposures statistics.*xlsx"],
+        "fallback_url": (
+            "https://www.apra.gov.au/sites/default/files/2026-03/"
+            "Quarterly%20authorised%20deposit-taking%20institution%20property%20"
+            "exposures%20statistics%20December%202025.xlsx"
+        ),
         "tables": {
             "tab_1a": {
                 "sheet": "Tab 1a",
@@ -286,6 +317,10 @@ APRA_CATALOGUE: dict[str, dict] = {
         ],
         "landing_url": "https://www.apra.gov.au/quarterly-superannuation-industry-publication",
         "link_patterns": [r"Quarterly Superannuation Industry Publication.*XLSX"],
+        "fallback_url": (
+            "https://www.apra.gov.au/sites/default/files/2026-03/"
+            "Quarterly%20Superannuation%20Industry%20Publication%20-%20December%202025.xlsx"
+        ),
         "tables": {
             "table_2": {
                 "sheet": "Table 2",
@@ -334,6 +369,10 @@ APRA_CATALOGUE: dict[str, dict] = {
         "aliases": ["quarterly fund-level statistics", "superannuation fund statistics"],
         "landing_url": "https://www.apra.gov.au/quarterly-fund-level-statistics",
         "link_patterns": [r"Quarterly Superannuation Fund Statistics.*XLSX"],
+        "fallback_url": (
+            "https://www.apra.gov.au/sites/default/files/2026-03/"
+            "Quarterly%20Superannuation%20Fund%20Statistics%20December%202025.xlsx"
+        ),
         "tables": {
             "table_1": {
                 "sheet": "Table 1",
@@ -383,6 +422,11 @@ APRA_CATALOGUE: dict[str, dict] = {
             "https://www.apra.gov.au/quarterly-general-insurance-performance-statistics"
         ),
         "link_patterns": [r"Quarterly general insurance performance statistics database.*XLSX"],
+        "fallback_url": (
+            "https://www.apra.gov.au/sites/default/files/2026-05/"
+            "Quarterly%20general%20insurance%20performance%20statistics%20database%20"
+            "September%202023%20to%20March%202026.xlsx"
+        ),
         "tables": {
             "database": {
                 "sheet": "Database",
@@ -446,6 +490,7 @@ APRA_CATALOGUE: dict[str, dict] = {
                 ],
             },
         ],
+        "framework_breaks": [_AASB17_INSURANCE_FRAMEWORK_BREAK],
         "audit": {
             "last_audited": "2026-05-18",
             "upstream_url": (
@@ -470,6 +515,11 @@ APRA_CATALOGUE: dict[str, dict] = {
         "aliases": ["life insurance performance", "life insurance statistics"],
         "landing_url": "https://www.apra.gov.au/quarterly-life-insurance-performance-statistics",
         "link_patterns": [r"Quarterly life insurance performance statistics database.*XLSX"],
+        "fallback_url": (
+            "https://www.apra.gov.au/sites/default/files/2026-05/"
+            "Quarterly%20life%20insurance%20performance%20statistics%20database%20"
+            "September%202023%20to%20March%202026.xlsx"
+        ),
         "tables": {
             "database": {
                 "sheet": "Database",
@@ -525,6 +575,7 @@ APRA_CATALOGUE: dict[str, dict] = {
                 ],
             },
         ],
+        "framework_breaks": [_AASB17_INSURANCE_FRAMEWORK_BREAK],
         "audit": {
             "last_audited": "2026-05-18",
             "upstream_url": (
@@ -554,6 +605,11 @@ APRA_CATALOGUE: dict[str, dict] = {
         "link_patterns": [
             r"Quarterly private health insurance performance statistics database.*XLSX"
         ],
+        "fallback_url": (
+            "https://www.apra.gov.au/sites/default/files/2026-05/"
+            "Quarterly%20private%20health%20insurance%20performance%20statistics%20"
+            "database%20-%20September%202023%20to%20March%202026.xlsx"
+        ),
         "tables": {
             "database": {
                 "sheet": "Database",
@@ -596,6 +652,7 @@ APRA_CATALOGUE: dict[str, dict] = {
                 ],
             },
         ],
+        "framework_breaks": [_AASB17_INSURANCE_FRAMEWORK_BREAK],
         "audit": {
             "last_audited": "2026-05-18",
             "upstream_url": (
@@ -624,6 +681,11 @@ APRA_CATALOGUE: dict[str, dict] = {
         ],
         "landing_url": "https://www.apra.gov.au/quarterly-private-health-insurance-statistics",
         "link_patterns": [r"Quarterly Private Health Insurance Membership Coverage.*XLSX"],
+        "fallback_url": (
+            "https://www.apra.gov.au/sites/default/files/2026-05/"
+            "Quarterly%20Private%20Health%20Insurance%20Membership%20Coverage%20"
+            "March%202026.xlsx"
+        ),
         "tables": {
             "t1": {
                 "sheet": "T1",

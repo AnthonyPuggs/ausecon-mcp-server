@@ -3,6 +3,9 @@ import starlight from '@astrojs/starlight';
 
 export default defineConfig({
   site: 'https://auseconmcp.com',
+  vite: {
+    cacheDir: process.env.VITE_CACHE_DIR || 'node_modules/.vite',
+  },
   integrations: [
     starlight({
       title: 'AusEcon MCP Server',

@@ -18,6 +18,10 @@ and APRA data.
 | `get_apra_data` | Retrieve a curated official APRA XLSX publication in a normalised response shape. | `publication_id`, `table_id`, `series_ids`, `start_date`, `end_date`, `last_n` |
 | `get_economic_series` | Preferred analyst-facing retrieval for curated concepts. | `concept`, `variant`, `geography`, `frequency`, `start`, `end`, `last_n` |
 | `get_derived_series` | Retrieve transparent formula-based indicators derived from curated concepts. | `concept`, `start`, `end`, `last_n` |
+| `get_latest_observations` | Convenience wrapper for the latest source-native observations. | `source`, `identifier`, `key`, `table_id`, `series_ids`, `count` |
+| `get_top_observations` | Convenience wrapper for highest or lowest numeric source-native observations. | `source`, `identifier`, `n`, `direction`, `key`, `table_id`, `series_ids`, source-native bounds |
+| `describe_dataset` | Describe a curated ABS, RBA, or APRA entry in plain English while preserving native IDs. | `source`, `identifier`, `table_id`, `include_structure` |
+| `list_release_events` | List ABS/RBA release-calendar and APRA release-pulse rows. | `source`, `query`, `start_date`, `end_date`, `limit` |
 
 ## Preferred LLM flow
 
@@ -52,3 +56,10 @@ where needed, then call `get_abs_data`, `get_rba_table`, or `get_apra_data`. APR
 limited to curated official publication IDs and does not accept arbitrary workbook URLs. For APRA
 XLSX workbooks, provide `table_id` where possible so the hosted server can parse and cache only the
 requested table.
+
+## Convenience flow
+
+Use `describe_dataset` when an agent or analyst needs a source-aware explanation before retrieval.
+Use `get_latest_observations` and `get_top_observations` for quick data checks, but keep source
+native IDs in the call arguments for reproducibility. `list_release_events` combines official ABS
+and RBA release-awareness with APRA cadence and seed-freshness metadata.

@@ -30,6 +30,7 @@ from ausecon_mcp.catalogue.abs import ABS_CATALOGUE
 from ausecon_mcp.catalogue.apra import APRA_CATALOGUE
 from ausecon_mcp.catalogue.rba import RBA_CATALOGUE
 from ausecon_mcp.errors import AuseconValidationError
+from ausecon_mcp.identity import normalise_geography
 
 _FRAGMENT_PIECE_RE = re.compile(r"^([A-Z_][A-Z0-9_]*)=([0-9A-Z_+]+)$")
 _LITERAL_KEY_RE = re.compile(r"^[0-9A-Z_+]+(\.[0-9A-Z_+]+)*$")
@@ -389,9 +390,10 @@ async def resolve(
 
     source, dataset_id, entry = _match_concept(concept_text)
     applied_variant = _match_variant(entry, _pick_variant(concept_text, variant))
+    canonical_geography = normalise_geography(geography)
 
     _validate_frequency(entry, frequency)
-    _validate_geography(entry, geography)
+    _validate_geography(entry, canonical_geography)
 
     if source == "rba":
         return ResolvedQuery(
@@ -403,7 +405,7 @@ async def resolve(
             apra_series_ids=None,
             frequency=frequency,
             variant=applied_variant["name"] if applied_variant else None,
-            geography=geography,
+            geography=canonical_geography,
             entry=entry,
         )
 
@@ -418,7 +420,7 @@ async def resolve(
             apra_series_ids=apra_series_ids,
             frequency=frequency,
             variant=applied_variant["name"] if applied_variant else None,
-            geography=geography,
+            geography=canonical_geography,
             entry=entry,
         )
 
@@ -426,7 +428,7 @@ async def resolve(
         entry,
         applied_variant,
         frequency=frequency,
-        geography=geography,
+        geography=canonical_geography,
         abs_structure_fetcher=abs_structure_fetcher,
     )
     return ResolvedQuery(
@@ -438,7 +440,7 @@ async def resolve(
         apra_series_ids=None,
         frequency=frequency,
         variant=applied_variant["name"] if applied_variant else None,
-        geography=geography,
+        geography=canonical_geography,
         entry=entry,
     )
 
@@ -552,6 +554,8 @@ def _validate_geography(entry: dict[str, Any], geography: str | None) -> None:
     if geography is None:
         return
     geos = entry.get("geographies", [])
+    if geography == "aus" and "national" in geos:
+        return
     if geography not in geos:
         raise AuseconValidationError(
             f"Geography {geography!r} is not supported for {entry['id']!r}. "

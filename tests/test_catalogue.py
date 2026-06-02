@@ -1,4 +1,7 @@
+import json
 import re
+from pathlib import Path
+from urllib.parse import urlparse
 
 from ausecon_mcp.catalogue._runtime import strip_unwired_variants
 from ausecon_mcp.catalogue.abs import ABS_CATALOGUE
@@ -70,6 +73,55 @@ def test_apra_catalogue_covers_v14_source_native_publications() -> None:
     )
     assert all(entry["link_patterns"] for entry in APRA_CATALOGUE.values())
     assert all(entry["tables"] for entry in APRA_CATALOGUE.values())
+
+
+def test_apra_aasb17_framework_breaks_are_limited_to_insurance_performance() -> None:
+    expected_warning_entries = {
+        "APRA_GENERAL_INSURANCE_PERFORMANCE",
+        "APRA_LIFE_INSURANCE_PERFORMANCE",
+        "APRA_PHI_PERFORMANCE",
+    }
+
+    actual_warning_entries = {
+        publication_id
+        for publication_id, entry in APRA_CATALOGUE.items()
+        if any(
+            item.get("label") == "AASB 17 transition"
+            for item in entry.get("framework_breaks", [])
+        )
+    }
+
+    assert actual_warning_entries == expected_warning_entries
+    for publication_id in expected_warning_entries:
+        framework_breaks = APRA_CATALOGUE[publication_id]["framework_breaks"]
+        assert framework_breaks == [
+            {
+                "date": "2023-07-01",
+                "label": "AASB 17 transition",
+                "description": (
+                    "AASB 17 changed insurance accounting and APRA insurance reporting "
+                    "definitions from the September 2023 reference quarter; compare "
+                    "pre- and post-transition insurance performance series with care."
+                ),
+            }
+        ]
+
+
+def test_apra_url_seed_manifest_is_populated_and_trusted() -> None:
+    seed_path = Path(__file__).resolve().parents[1] / "src" / "ausecon_mcp" / "data" / (
+        "apra_url_seeds.json"
+    )
+    seed_manifest = json.loads(seed_path.read_text(encoding="utf-8"))
+
+    assert set(seed_manifest) == set(APRA_CATALOGUE)
+    for publication_id, seeds in seed_manifest.items():
+        assert seeds, publication_id
+        for seed in seeds:
+            parsed = urlparse(seed["url"])
+            assert parsed.scheme == "https", publication_id
+            assert parsed.hostname in {"apra.gov.au", "www.apra.gov.au"}, publication_id
+            assert parsed.path.lower().endswith(".xlsx"), publication_id
+            assert seed["checked_at"], publication_id
 
 
 def test_list_catalogue_returns_apra_entries_when_source_filtered() -> None:

@@ -92,6 +92,25 @@ def _catalogue() -> dict:
     }
 
 
+def _seed_catalogue() -> dict:
+    catalogue = _catalogue()
+    catalogue["TEST_PUBLICATION"]["url_seeds"] = [
+        {
+            "url": "https://www.apra.gov.au/sites/default/files/seeded-test.xlsx",
+            "label": "Test back-series March 2026 XLSX",
+            "checked_at": "2026-05-20T00:00:00Z",
+        }
+    ]
+    catalogue["TEST_PUBLICATION"]["framework_breaks"] = [
+        {
+            "date": "2023-07-01",
+            "label": "AASB 17 transition",
+            "description": "Insurance accounting framework changed from this date.",
+        }
+    ]
+    return catalogue
+
+
 @pytest.mark.parametrize(
     "href",
     [
@@ -137,6 +156,168 @@ async def test_apra_provider_resolves_landing_page_xlsx_and_uses_cache() -> None
     assert first["metadata"]["retrieval_url"].endswith("/sites/default/files/test.xlsx")
     assert first["metadata"]["truncated"] is True
     assert first["observations"][0]["date"] == "2024-02-29"
+
+
+@pytest.mark.asyncio
+async def test_apra_provider_falls_back_to_trusted_url_seed_when_landing_page_drifts() -> None:
+    provider = APRAProvider(catalogue=_seed_catalogue())
+    html = "<html><body><p>No matching workbook link today.</p></body></html>"
+
+    with respx.mock(assert_all_called=True) as router:
+        router.get("https://www.apra.gov.au/test-statistics").mock(
+            return_value=Response(200, text=html)
+        )
+        seeded_route = router.get(
+            "https://www.apra.gov.au/sites/default/files/seeded-test.xlsx"
+        ).mock(return_value=Response(200, content=_xlsx_bytes()))
+
+        result = await provider.get_data("TEST_PUBLICATION", table_id="table_1")
+
+    assert seeded_route.call_count == 1
+    assert result["metadata"]["retrieval_url"].endswith("/seeded-test.xlsx")
+    assert result["metadata"]["apra_url_resolution"] == {
+        "strategy": "seed_manifest",
+        "seed_checked_at": "2026-05-20T00:00:00Z",
+    }
+
+
+@pytest.mark.asyncio
+async def test_apra_provider_uses_bundled_seed_before_catalogue_fallback(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    catalogue = _catalogue()
+    catalogue["TEST_PUBLICATION"]["fallback_url"] = (
+        "https://www.apra.gov.au/sites/default/files/catalogue-test.xlsx"
+    )
+    monkeypatch.setattr(
+        "ausecon_mcp.providers.apra._bundled_url_seeds",
+        lambda: {
+            "TEST_PUBLICATION": [
+                {
+                    "url": "https://www.apra.gov.au/sites/default/files/bundled-seed.xlsx",
+                    "label": "Test back-series March 2026 XLSX",
+                    "checked_at": "2026-05-21T00:00:00Z",
+                }
+            ]
+        },
+    )
+    provider = APRAProvider(catalogue=catalogue)
+    html = "<html><body><p>No matching workbook link today.</p></body></html>"
+
+    with respx.mock(assert_all_called=True) as router:
+        router.get("https://www.apra.gov.au/test-statistics").mock(
+            return_value=Response(200, text=html)
+        )
+        seed_route = router.get(
+            "https://www.apra.gov.au/sites/default/files/bundled-seed.xlsx"
+        ).mock(return_value=Response(200, content=_xlsx_bytes()))
+
+        result = await provider.get_data("TEST_PUBLICATION", table_id="table_1")
+
+    assert seed_route.call_count == 1
+    assert result["metadata"]["retrieval_url"].endswith("/bundled-seed.xlsx")
+    assert result["metadata"]["apra_url_resolution"] == {
+        "strategy": "seed_manifest",
+        "seed_checked_at": "2026-05-21T00:00:00Z",
+    }
+
+
+@pytest.mark.asyncio
+async def test_apra_provider_uses_catalogue_fallback_after_seed_manifest_miss(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    catalogue = _catalogue()
+    catalogue["TEST_PUBLICATION"]["fallback_url"] = (
+        "https://www.apra.gov.au/sites/default/files/catalogue-test.xlsx"
+    )
+    monkeypatch.setattr("ausecon_mcp.providers.apra._bundled_url_seeds", lambda: {})
+    provider = APRAProvider(catalogue=catalogue)
+    html = "<html><body><p>No matching workbook link today.</p></body></html>"
+
+    with respx.mock(assert_all_called=True) as router:
+        router.get("https://www.apra.gov.au/test-statistics").mock(
+            return_value=Response(200, text=html)
+        )
+        fallback_route = router.get(
+            "https://www.apra.gov.au/sites/default/files/catalogue-test.xlsx"
+        ).mock(return_value=Response(200, content=_xlsx_bytes()))
+
+        result = await provider.get_data("TEST_PUBLICATION", table_id="table_1")
+
+    assert fallback_route.call_count == 1
+    assert result["metadata"]["retrieval_url"].endswith("/catalogue-test.xlsx")
+    assert result["metadata"]["apra_url_resolution"] == {
+        "strategy": "catalogue_fallback",
+        "seed_checked_at": None,
+    }
+
+
+@pytest.mark.asyncio
+async def test_apra_provider_rejects_untrusted_seed_urls() -> None:
+    catalogue = _catalogue()
+    catalogue["TEST_PUBLICATION"]["url_seeds"] = [
+        {
+            "url": "https://evil.example/seeded-test.xlsx",
+            "label": "Test back-series March 2026 XLSX",
+            "checked_at": "2026-05-20T00:00:00Z",
+        }
+    ]
+    provider = APRAProvider(catalogue=catalogue)
+    html = "<html><body><p>No matching workbook link today.</p></body></html>"
+
+    with respx.mock(assert_all_called=True) as router:
+        router.get("https://www.apra.gov.au/test-statistics").mock(
+            return_value=Response(200, text=html)
+        )
+
+        with pytest.raises(AuseconParseError, match="trusted APRA HTTPS"):
+            await provider.get_data("TEST_PUBLICATION", table_id="table_1")
+
+
+@pytest.mark.asyncio
+async def test_apra_provider_rejects_untrusted_catalogue_fallback_urls(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    catalogue = _catalogue()
+    catalogue["TEST_PUBLICATION"]["fallback_url"] = "https://evil.example/catalogue-test.xlsx"
+    monkeypatch.setattr("ausecon_mcp.providers.apra._bundled_url_seeds", lambda: {})
+    provider = APRAProvider(catalogue=catalogue)
+    html = "<html><body><p>No matching workbook link today.</p></body></html>"
+
+    with respx.mock(assert_all_called=True) as router:
+        router.get("https://www.apra.gov.au/test-statistics").mock(
+            return_value=Response(200, text=html)
+        )
+
+        with pytest.raises(AuseconParseError, match="trusted APRA HTTPS"):
+            await provider.get_data("TEST_PUBLICATION", table_id="table_1")
+
+
+@pytest.mark.asyncio
+async def test_apra_provider_stamps_framework_break_warnings() -> None:
+    provider = APRAProvider(catalogue=_seed_catalogue())
+    html = '<a href="/sites/default/files/test.xlsx">Test back-series March 2026 XLSX</a>'
+
+    with respx.mock(assert_all_called=True) as router:
+        router.get("https://www.apra.gov.au/test-statistics").mock(
+            return_value=Response(200, text=html)
+        )
+        router.get("https://www.apra.gov.au/sites/default/files/test.xlsx").mock(
+            return_value=Response(200, content=_xlsx_bytes())
+        )
+
+        result = await provider.get_data("TEST_PUBLICATION", table_id="table_1")
+
+    assert result["metadata"]["framework_breaks"] == [
+        {
+            "date": "2023-07-01",
+            "label": "AASB 17 transition",
+            "description": "Insurance accounting framework changed from this date.",
+        }
+    ]
+    assert result["metadata"]["warnings"] == [
+        "AASB 17 transition on 2023-07-01: Insurance accounting framework changed from this date."
+    ]
 
 
 @pytest.mark.asyncio

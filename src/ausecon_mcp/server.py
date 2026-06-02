@@ -26,6 +26,12 @@ from ausecon_mcp.catalogue.resolver import (
 from ausecon_mcp.catalogue.search import list_catalogue as _list_catalogue
 from ausecon_mcp.catalogue.search import search_catalogue
 from ausecon_mcp.contracts import response_output_schema
+from ausecon_mcp.convenience import (
+    describe_dataset as describe_catalogue_dataset,
+)
+from ausecon_mcp.convenience import (
+    select_top_observations,
+)
 from ausecon_mcp.derived import (
     derive_series,
     get_operand_specs,
@@ -38,6 +44,7 @@ from ausecon_mcp.providers._http import resolve_version
 from ausecon_mcp.providers.abs import ABSProvider
 from ausecon_mcp.providers.apra import APRAProvider
 from ausecon_mcp.providers.rba import RBAProvider
+from ausecon_mcp.releases import ReleaseProvider, filter_release_events
 from ausecon_mcp.resources import register_resources
 from ausecon_mcp.validation import (
     require_non_empty,
@@ -74,7 +81,20 @@ TOOL_TITLES = {
     "get_apra_data": "Get APRA Data",
     "get_economic_series": "Get Economic Series",
     "get_derived_series": "Get Derived Series",
+    "get_latest_observations": "Get Latest Observations",
+    "get_top_observations": "Get Top Observations",
+    "describe_dataset": "Describe Dataset",
+    "list_release_events": "List Release Events",
 }
+SourceSelector = Annotated[
+    Literal["abs", "rba", "apra"],
+    Field(
+        description=(
+            "Source selector. Use abs for Australian Bureau of Statistics, rba for "
+            "Reserve Bank of Australia, or apra for Australian Prudential Regulation Authority."
+        ),
+    ),
+]
 SearchQuery = Annotated[str, Field(min_length=1, description="Discovery query text.")]
 Identifier = Annotated[str, Field(min_length=1, description="Non-empty dataset or table id.")]
 AbsKey = Annotated[
@@ -148,6 +168,18 @@ OptionalIsoDateTime = Annotated[
 OptionalPositiveInt = Annotated[
     int | None,
     Field(ge=1, description="Optional positive observation count limit."),
+]
+PositiveCount = Annotated[
+    int,
+    Field(ge=1, description="Positive observation count."),
+]
+TopDirection = Annotated[
+    Literal["highest", "lowest"],
+    Field(description="Whether to return the highest or lowest numeric observations."),
+]
+IncludeStructure = Annotated[
+    bool,
+    Field(description="Whether ABS descriptions should include source-native structure details."),
 ]
 OptionalSeriesIdList = Annotated[
     list[SeriesId] | None,
@@ -330,16 +362,36 @@ def _abs_structure_output_schema() -> dict[str, Any]:
     }
 
 
+def _describe_output_schema() -> dict[str, Any]:
+    return {
+        "type": "object",
+        "description": "Plain-English dataset description preserving source-native identifiers.",
+        "additionalProperties": True,
+    }
+
+
+def _reject_parameter(name: str, value: object, *, source: str) -> None:
+    if value is not None:
+        raise ValueError(f"{name} is not supported for source {source!r}.")
+
+
+def _reject_non_default_key(key: str, *, source: str) -> None:
+    if key != "all":
+        raise ValueError(f"key is only supported for source 'abs', not {source!r}.")
+
+
 class AuseconService:
     def __init__(
         self,
         abs_provider: ABSProvider | Any | None = None,
         rba_provider: RBAProvider | Any | None = None,
         apra_provider: APRAProvider | Any | None = None,
+        release_provider: ReleaseProvider | Any | None = None,
     ) -> None:
         self.abs_provider = abs_provider or ABSProvider()
         self.rba_provider = rba_provider or RBAProvider()
         self.apra_provider = apra_provider or APRAProvider()
+        self.release_provider = release_provider or ReleaseProvider()
 
     async def search_datasets(self, query: str, source: str | None = None) -> list[dict]:
         validated_query = validate_search_query(query)
@@ -586,8 +638,184 @@ class AuseconService:
             server_version=resolve_version(),
         )
 
+    async def get_latest_observations(
+        self,
+        source: str,
+        identifier: str,
+        key: str = "all",
+        table_id: str | None = None,
+        series_ids: list[str] | None = None,
+        count: int = 1,
+    ) -> dict:
+        validated_source = validate_source(source)
+        if validated_source is None:
+            raise ValueError("source must be one of: abs, apra, rba.")
+        validated_identifier = validate_source_token("identifier", identifier)
+        validated_key = validate_source_token("key", key)
+        validated_count = validate_positive_int("count", count) or 1
+
+        if validated_source == "abs":
+            _reject_parameter("series_ids", series_ids, source=validated_source)
+            _reject_parameter("table_id", table_id, source=validated_source)
+            return await self.get_abs_data(
+                validated_identifier,
+                key=validated_key,
+                last_n=validated_count,
+            )
+
+        _reject_non_default_key(validated_key, source=validated_source)
+        if validated_source == "rba":
+            _reject_parameter("table_id", table_id, source=validated_source)
+            return await self.get_rba_table(
+                validated_identifier,
+                series_ids=validate_series_ids(series_ids),
+                last_n=validated_count,
+            )
+
+        validated_table_id = (
+            None if table_id is None else validate_source_token("table_id", table_id)
+        )
+        return await self.get_apra_data(
+            validated_identifier,
+            table_id=validated_table_id,
+            series_ids=validate_apra_series_ids(series_ids),
+            last_n=validated_count,
+        )
+
+    async def get_top_observations(
+        self,
+        source: str,
+        identifier: str,
+        n: int = 10,
+        direction: str = "highest",
+        key: str = "all",
+        table_id: str | None = None,
+        series_ids: list[str] | None = None,
+        start_period: str | None = None,
+        end_period: str | None = None,
+        start_date: str | None = None,
+        end_date: str | None = None,
+    ) -> dict:
+        validated_source = validate_source(source)
+        if validated_source is None:
+            raise ValueError("source must be one of: abs, apra, rba.")
+        validated_identifier = validate_source_token("identifier", identifier)
+        validated_key = validate_source_token("key", key)
+        validated_n = validate_positive_int("n", n) or 10
+        if direction not in {"highest", "lowest"}:
+            raise ValueError("direction must be either 'highest' or 'lowest'.")
+
+        if validated_source == "abs":
+            _reject_parameter("series_ids", series_ids, source=validated_source)
+            _reject_parameter("table_id", table_id, source=validated_source)
+            _reject_parameter("start_date", start_date, source=validated_source)
+            _reject_parameter("end_date", end_date, source=validated_source)
+            validated_start, validated_end = validate_abs_period_range(
+                start_period,
+                end_period,
+                start_name="start_period",
+                end_name="end_period",
+            )
+            payload = await self.get_abs_data(
+                validated_identifier,
+                key=validated_key,
+                start_period=validated_start,
+                end_period=validated_end,
+            )
+            return select_top_observations(payload, n=validated_n, direction=direction)
+
+        _reject_non_default_key(validated_key, source=validated_source)
+        _reject_parameter("start_period", start_period, source=validated_source)
+        _reject_parameter("end_period", end_period, source=validated_source)
+        validated_start_date, validated_end_date = validate_iso_date_range(
+            start_date,
+            end_date,
+            start_name="start_date",
+            end_name="end_date",
+        )
+        if validated_source == "rba":
+            _reject_parameter("table_id", table_id, source=validated_source)
+            payload = await self.get_rba_table(
+                validated_identifier,
+                series_ids=validate_series_ids(series_ids),
+                start_date=validated_start_date,
+                end_date=validated_end_date,
+            )
+            return select_top_observations(payload, n=validated_n, direction=direction)
+
+        validated_table_id = (
+            None if table_id is None else validate_source_token("table_id", table_id)
+        )
+        payload = await self.get_apra_data(
+            validated_identifier,
+            table_id=validated_table_id,
+            series_ids=validate_apra_series_ids(series_ids),
+            start_date=validated_start_date,
+            end_date=validated_end_date,
+        )
+        return select_top_observations(payload, n=validated_n, direction=direction)
+
+    async def describe_dataset(
+        self,
+        source: str,
+        identifier: str,
+        table_id: str | None = None,
+        include_structure: bool = False,
+    ) -> dict:
+        validated_source = validate_source(source)
+        if validated_source is None:
+            raise ValueError("source must be one of: abs, apra, rba.")
+        validated_identifier = validate_source_token("identifier", identifier)
+        validated_table_id = (
+            None if table_id is None else validate_source_token("table_id", table_id)
+        )
+        if validated_source != "apra":
+            _reject_parameter("table_id", validated_table_id, source=validated_source)
+        structure = None
+        if include_structure:
+            if validated_source != "abs":
+                raise ValueError("include_structure is only supported for ABS descriptions.")
+            structure = await self.get_abs_dataset_structure(validated_identifier)
+        return describe_catalogue_dataset(
+            validated_source,
+            validated_identifier,
+            table_id=validated_table_id,
+            structure=structure,
+        )
+
+    async def list_release_events(
+        self,
+        source: str | None = None,
+        query: str | None = None,
+        start_date: str | None = None,
+        end_date: str | None = None,
+        limit: int = 50,
+    ) -> list[dict]:
+        validated_source = validate_source(source)
+        validated_query = None if query is None else validate_search_query(query)
+        validated_start, validated_end = validate_iso_date_range(
+            start_date,
+            end_date,
+            start_name="start_date",
+            end_name="end_date",
+        )
+        validated_limit = validate_positive_int("limit", limit) or 50
+        return filter_release_events(
+            await self.release_provider.list_events(),
+            source=validated_source,
+            query=validated_query,
+            start_date=validated_start,
+            end_date=validated_end,
+            limit=validated_limit,
+        )
+
     async def aclose(self) -> None:
-        for provider in (self.abs_provider, self.rba_provider, self.apra_provider):
+        for provider in (
+            self.abs_provider,
+            self.rba_provider,
+            self.apra_provider,
+            self.release_provider,
+        ):
             close = getattr(provider, "aclose", None)
             if close is not None:
                 await close()
@@ -807,6 +1035,102 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
             start=start,
             end=end,
             last_n=last_n,
+        )
+
+    @mcp.tool(
+        title=TOOL_TITLES["get_latest_observations"],
+        annotations=_tool_annotations("Get Latest Observations"),
+        output_schema=response_output_schema(),
+    )
+    async def get_latest_observations(
+        source: SourceSelector,
+        identifier: Identifier,
+        key: AbsKey = "all",
+        table_id: Identifier | None = None,
+        series_ids: OptionalSeriesIdList = None,
+        count: PositiveCount = 1,
+    ) -> dict:
+        """Source-aware convenience wrapper for the latest observations."""
+        return await app_service.get_latest_observations(
+            source=source,
+            identifier=identifier,
+            key=key,
+            table_id=table_id,
+            series_ids=series_ids,
+            count=count,
+        )
+
+    @mcp.tool(
+        title=TOOL_TITLES["get_top_observations"],
+        annotations=_tool_annotations("Get Top Observations"),
+        output_schema=response_output_schema(),
+    )
+    async def get_top_observations(
+        source: SourceSelector,
+        identifier: Identifier,
+        n: PositiveCount = 10,
+        direction: TopDirection = "highest",
+        key: AbsKey = "all",
+        table_id: Identifier | None = None,
+        series_ids: OptionalSeriesIdList = None,
+        start_period: OptionalAbsPeriod = None,
+        end_period: OptionalAbsPeriod = None,
+        start_date: OptionalIsoDate = None,
+        end_date: OptionalIsoDate = None,
+    ) -> dict:
+        """Source-aware convenience wrapper for highest or lowest numeric observations."""
+        return await app_service.get_top_observations(
+            source=source,
+            identifier=identifier,
+            n=n,
+            direction=direction,
+            key=key,
+            table_id=table_id,
+            series_ids=series_ids,
+            start_period=start_period,
+            end_period=end_period,
+            start_date=start_date,
+            end_date=end_date,
+        )
+
+    @mcp.tool(
+        title=TOOL_TITLES["describe_dataset"],
+        annotations=_tool_annotations("Describe Dataset"),
+        output_schema=_describe_output_schema(),
+    )
+    async def describe_dataset(
+        source: SourceSelector,
+        identifier: Identifier,
+        table_id: Identifier | None = None,
+        include_structure: IncludeStructure = False,
+    ) -> dict:
+        """Describe a source-native ABS, RBA, or APRA dataset without hiding native IDs."""
+        return await app_service.describe_dataset(
+            source=source,
+            identifier=identifier,
+            table_id=table_id,
+            include_structure=include_structure,
+        )
+
+    @mcp.tool(
+        title=TOOL_TITLES["list_release_events"],
+        annotations=_tool_annotations("List Release Events"),
+        output_schema=_list_output_schema("ABS, RBA, and APRA release calendar events."),
+    )
+    async def list_release_events(
+        source: OptionalSourceFilter = None,
+        query: OptionalConceptQuery = None,
+        start_date: OptionalIsoDate = None,
+        end_date: OptionalIsoDate = None,
+        limit: PositiveCount = 50,
+    ) -> list[dict]:
+        """List source-aware release calendar or release-pulse events."""
+        return await app_service.list_release_events(
+            source=source,
+            query=query,
+            start_date=start_date,
+            end_date=end_date,
+            limit=limit,
         )
 
     register_resources(mcp)

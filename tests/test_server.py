@@ -17,6 +17,10 @@ EXPECTED_TOOL_TITLES = {
     "get_apra_data": "Get APRA Data",
     "get_economic_series": "Get Economic Series",
     "get_derived_series": "Get Derived Series",
+    "get_latest_observations": "Get Latest Observations",
+    "get_top_observations": "Get Top Observations",
+    "describe_dataset": "Describe Dataset",
+    "list_release_events": "List Release Events",
 }
 
 
@@ -218,6 +222,16 @@ class StubAPRAProvider:
             "series": [{"series_id": "apra-series"}],
             "observations": [{"date": "2024-03-31", "series_id": "apra-series", "value": 1.0}],
         }
+
+
+class StubReleaseProvider:
+    def __init__(self, events: list[dict]) -> None:
+        self.events = events
+        self.list_events_calls = 0
+
+    async def list_events(self) -> list[dict]:
+        self.list_events_calls += 1
+        return self.events
 
 
 class RecordingDerivedService(AuseconService):
@@ -575,6 +589,224 @@ async def test_service_fetches_apra_data() -> None:
         "end_date": "2024-12-31",
         "last_n": 1,
     }
+
+
+@pytest.mark.asyncio
+async def test_service_get_latest_observations_routes_to_rba_with_count() -> None:
+    rba = StubRBAProvider()
+    service = AuseconService(abs_provider=StubABSProvider(), rba_provider=rba)
+
+    result = await service.get_latest_observations(
+        source="rba",
+        identifier="g1",
+        series_ids=["GCPIAGQP"],
+        count=3,
+    )
+
+    assert result["metadata"]["source"] == "rba"
+    assert rba.last_get_table_kwargs == {
+        "table_id": "g1",
+        "series_ids": ["GCPIAGQP"],
+        "start_date": None,
+        "end_date": None,
+        "last_n": 3,
+        "csv_path": "g1-data.csv",
+    }
+
+
+@pytest.mark.asyncio
+async def test_service_get_latest_observations_rejects_abs_series_id_filter() -> None:
+    service = AuseconService(abs_provider=StubABSProvider(), rba_provider=StubRBAProvider())
+
+    with pytest.raises(ValueError, match="series_ids"):
+        await service.get_latest_observations(
+            source="abs",
+            identifier="CPI",
+            series_ids=["not-supported"],
+        )
+
+
+@pytest.mark.asyncio
+async def test_service_get_top_observations_sorts_numeric_values_and_records_selection() -> None:
+    class TopStubRBAProvider(StubRBAProvider):
+        async def get_table(
+            self,
+            table_id: str,
+            series_ids: list[str] | None = None,
+            start_date: str | None = None,
+            end_date: str | None = None,
+            last_n: int | None = None,
+            csv_path: str | None = None,
+        ) -> dict:
+            self.last_get_table_kwargs = {
+                "table_id": table_id,
+                "series_ids": series_ids,
+                "start_date": start_date,
+                "end_date": end_date,
+                "last_n": last_n,
+                "csv_path": csv_path,
+            }
+            return {
+                "metadata": {
+                    "source": "rba",
+                    "dataset_id": table_id,
+                    "server_version": "test",
+                    "truncated": False,
+                },
+                "series": [
+                    {"series_id": "low", "label": "Low", "dimensions": {}},
+                    {"series_id": "high", "label": "High", "dimensions": {}},
+                    {"series_id": "missing", "label": "Missing", "dimensions": {}},
+                ],
+                "observations": [
+                    {"date": "2024-01-01", "series_id": "low", "value": 1.0, "dimensions": {}},
+                    {"date": "2024-01-02", "series_id": "missing", "value": None, "dimensions": {}},
+                    {"date": "2024-01-03", "series_id": "high", "value": 4.0, "dimensions": {}},
+                    {"date": "2024-01-04", "series_id": "low", "value": 3.0, "dimensions": {}},
+                ],
+            }
+
+    rba = TopStubRBAProvider()
+    service = AuseconService(abs_provider=StubABSProvider(), rba_provider=rba)
+
+    result = await service.get_top_observations(
+        source="rba",
+        identifier="g1",
+        n=2,
+        direction="highest",
+        start_date="2024-01-01",
+    )
+
+    assert [(row["series_id"], row["value"]) for row in result["observations"]] == [
+        ("high", 4.0),
+        ("low", 3.0),
+    ]
+    assert {row["series_id"] for row in result["series"]} == {"high", "low"}
+    assert result["metadata"]["selection"] == {
+        "type": "top_n",
+        "n": 2,
+        "direction": "highest",
+        "numeric_observation_count": 3,
+        "returned_observation_count": 2,
+        "dropped_non_numeric_count": 1,
+    }
+    assert rba.last_get_table_kwargs["start_date"] == "2024-01-01"
+
+
+@pytest.mark.asyncio
+async def test_service_get_top_observations_rejects_date_bounds_for_abs() -> None:
+    service = AuseconService(abs_provider=StubABSProvider(), rba_provider=StubRBAProvider())
+
+    with pytest.raises(ValueError, match="start_date"):
+        await service.get_top_observations(
+            source="abs",
+            identifier="CPI",
+            start_date="2024-01-01",
+        )
+
+
+@pytest.mark.asyncio
+async def test_service_describe_dataset_exposes_plain_english_and_native_ids() -> None:
+    service = AuseconService(
+        abs_provider=StubABSProvider(),
+        rba_provider=StubRBAProvider(),
+        apra_provider=StubAPRAProvider(),
+    )
+
+    result = await service.describe_dataset("apra", "ADI_PROPERTY_EXPOSURES", table_id="tab_1b")
+
+    assert result["source"] == "apra"
+    assert result["id"] == "ADI_PROPERTY_EXPOSURES"
+    assert result["plain_english_summary"]
+    assert result["native_ids"]["publication_id"] == "ADI_PROPERTY_EXPOSURES"
+    assert result["native_ids"]["table_id"] == "tab_1b"
+    assert result["tables"][0]["id"] == "tab_1b"
+    assert result["recommended_call"]["tool"] == "get_apra_data"
+    assert result["recommended_call"]["arguments"]["table_id"] == "tab_1b"
+
+
+@pytest.mark.asyncio
+async def test_service_describe_dataset_exposes_insurance_framework_warning_scope() -> None:
+    service = AuseconService(
+        abs_provider=StubABSProvider(),
+        rba_provider=StubRBAProvider(),
+        apra_provider=StubAPRAProvider(),
+    )
+
+    insurance = await service.describe_dataset(
+        "apra",
+        "APRA_GENERAL_INSURANCE_PERFORMANCE",
+        table_id="database",
+    )
+    membership = await service.describe_dataset("apra", "APRA_PHI_MEMBERSHIP", table_id="t1")
+
+    assert insurance["native_ids"]["publication_id"] == "APRA_GENERAL_INSURANCE_PERFORMANCE"
+    assert insurance["native_ids"]["table_id"] == "database"
+    assert insurance["framework_breaks"] == [
+        {
+            "date": "2023-07-01",
+            "label": "AASB 17 transition",
+            "description": (
+                "AASB 17 changed insurance accounting and APRA insurance reporting "
+                "definitions from the September 2023 reference quarter; compare "
+                "pre- and post-transition insurance performance series with care."
+            ),
+        }
+    ]
+    assert insurance["warnings"] == [
+        (
+            "AASB 17 transition on 2023-07-01: AASB 17 changed insurance accounting "
+            "and APRA insurance reporting definitions from the September 2023 reference "
+            "quarter; compare pre- and post-transition insurance performance series with care."
+        )
+    ]
+    assert membership["framework_breaks"] == []
+    assert membership["warnings"] == []
+
+
+@pytest.mark.asyncio
+async def test_service_list_release_events_uses_release_provider_and_filters_results() -> None:
+    release_provider = StubReleaseProvider(
+        [
+            {
+                "source": "abs",
+                "release_name": "Consumer Price Index, Australia",
+                "release_datetime": "2026-05-27T11:30:00",
+                "timezone": "Australia/Canberra",
+                "reference_period": "April 2026",
+                "matched_catalogue_ids": ["CPI"],
+                "upstream_url": "https://www.abs.gov.au/release-calendar/future-releases",
+            },
+            {
+                "source": "rba",
+                "release_name": "Reserve Bank of Australia Balance Sheet",
+                "release_datetime": "2026-05-29T16:30:00",
+                "timezone": "Australia/Sydney",
+                "reference_period": None,
+                "matched_catalogue_ids": ["a1"],
+                "upstream_url": "https://www.rba.gov.au/schedules-events/",
+            },
+        ]
+    )
+    service = AuseconService(
+        abs_provider=StubABSProvider(),
+        rba_provider=StubRBAProvider(),
+        release_provider=release_provider,
+    )
+
+    result = await service.list_release_events(
+        source="rba",
+        query="balance sheet",
+        start_date="2026-05-01",
+        end_date="2026-06-30",
+        limit=1,
+    )
+
+    assert len(result) == 1
+    assert result[0]["source"] == "rba"
+    assert "balance sheet" in result[0]["release_name"].lower()
+    assert result[0]["matched_catalogue_ids"]
+    assert release_provider.list_events_calls == 1
 
 
 @pytest.mark.asyncio

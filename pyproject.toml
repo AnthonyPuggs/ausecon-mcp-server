@@ -65,3 +65,4 @@ packages = ["src/ausecon_mcp"]
 
 [tool.hatch.build.targets.wheel.force-include]
 "src/ausecon_mcp/schemas/response.schema.json" = "ausecon_mcp/schemas/response.schema.json"
+"src/ausecon_mcp/data/apra_url_seeds.json" = "ausecon_mcp/data/apra_url_seeds.json"

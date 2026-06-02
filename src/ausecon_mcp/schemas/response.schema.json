@@ -83,6 +83,96 @@
         "derived": {
           "description": "Derived-series provenance when returned by get_derived_series.",
           "$ref": "#/$defs/derived_metadata"
+        },
+        "selection": {
+          "description": "Observation-selection provenance when returned by convenience tools.",
+          "$ref": "#/$defs/selection_metadata"
+        },
+        "apra_url_resolution": {
+          "description": "APRA workbook URL resolution strategy used for this retrieval.",
+          "$ref": "#/$defs/apra_url_resolution"
+        },
+        "framework_breaks": {
+          "description": "Known source framework or reporting-definition breaks relevant to the payload.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/framework_break"
+          }
+        },
+        "warnings": {
+          "description": "Plain-English source warnings relevant to the payload.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "selection_metadata": {
+      "type": "object",
+      "required": [
+        "type",
+        "n",
+        "direction",
+        "numeric_observation_count",
+        "returned_observation_count",
+        "dropped_non_numeric_count"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["top_n"]
+        },
+        "n": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "direction": {
+          "type": "string",
+          "enum": ["highest", "lowest"]
+        },
+        "numeric_observation_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "returned_observation_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "dropped_non_numeric_count": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "apra_url_resolution": {
+      "type": "object",
+      "required": ["strategy", "seed_checked_at"],
+      "additionalProperties": false,
+      "properties": {
+        "strategy": {
+          "type": "string",
+          "enum": ["landing_page", "seed_manifest", "catalogue_fallback"]
+        },
+        "seed_checked_at": {
+          "type": ["string", "null"]
+        }
+      }
+    },
+    "framework_break": {
+      "type": "object",
+      "required": ["date", "label", "description"],
+      "additionalProperties": false,
+      "properties": {
+        "date": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
         }
       }
     },

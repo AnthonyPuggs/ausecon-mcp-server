@@ -4,6 +4,18 @@ All notable changes to `ausecon-mcp-server` are recorded here. The format follow
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres
 to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- Added source-aware convenience tools for latest observations, top numeric observations, dataset
+  descriptions, and release events.
+- Added local Australian geography alias normalisation for semantic requests and descriptions.
+- Added APRA URL seed fallback metadata plus APRA framework-break warnings for insurance
+  publications.
+- Added CodeQL and Dependabot configuration, and broadened the CI Python matrix to 3.10, 3.11,
+  3.12, and 3.13.
+
 ## [1.5.0] - 2026-05-18
 
 ### Added

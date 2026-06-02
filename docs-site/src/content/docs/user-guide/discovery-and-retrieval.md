@@ -28,6 +28,13 @@ publication, APRA table, or APRA series IDs you want:
 `list_rba_tables` remains available as a deprecated compatibility alias. New integrations should
 use `list_catalogue(source="rba")`.
 
+Use the convenience layer when the workflow is exploratory or time constrained:
+
+- `describe_dataset` explains a curated entry while preserving native identifiers.
+- `get_latest_observations` calls the appropriate source-native retrieval path with a `count`.
+- `get_top_observations` ranks numeric observations and records selection metadata.
+- `list_release_events` exposes ABS/RBA release awareness and APRA release-pulse rows.
+
 ## Derived retrieval
 
 `get_derived_series` currently supports:
@@ -72,5 +79,7 @@ Raw ABS, RBA, and APRA tools keep source-native conventions:
 - APRA date bounds are validated as ISO dates.
 - Unknown semantic concepts and unsupported variants raise explicit validation errors.
 - Unknown derived concepts raise explicit validation errors.
+- Source-specific convenience arguments are validated; for example, ABS accepts `key` and ABS
+  periods, while RBA/APRA accept ISO dates and optional source-native series filters.
 
 Search scores are ranking metadata, not a stable public contract.

@@ -48,9 +48,21 @@ get_abs_data(
 Fetch the latest observations from RBA table `g1`:
 
 ```text
-get_rba_table(
-  table_id="g1",
-  last_n=8
+get_latest_observations(
+  source="rba",
+  identifier="g1",
+  count=8
+)
+```
+
+Fetch the highest numeric observations in an RBA table:
+
+```text
+get_top_observations(
+  source="rba",
+  identifier="g1",
+  n=5,
+  direction="highest"
 )
 ```
 
@@ -72,6 +84,16 @@ get_apra_data(
   publication_id="ADI_QUARTERLY_PERFORMANCE",
   table_id="key_stats",
   last_n=4
+)
+```
+
+Describe an APRA publication before retrieving it:
+
+```text
+describe_dataset(
+  source="apra",
+  identifier="ADI_QUARTERLY_PERFORMANCE",
+  table_id="key_stats"
 )
 ```
 
@@ -136,5 +158,17 @@ get_derived_series(
 get_derived_series(
   concept="credit_to_gdp",
   start="2020-Q1"
+)
+```
+
+## Release awareness
+
+Find upcoming release or release-pulse rows:
+
+```text
+list_release_events(
+  source="rba",
+  query="balance sheet",
+  limit=5
 )
 ```

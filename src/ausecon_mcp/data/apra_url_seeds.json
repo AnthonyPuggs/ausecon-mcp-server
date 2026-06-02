@@ -1,0 +1,72 @@
+{
+  "ADI_MONTHLY": [
+    {
+      "checked_at": "2026-06-02T15:55:34Z",
+      "label": "Monthly Authorised Deposit-taking Institution Statistics",
+      "url": "https://www.apra.gov.au/sites/default/files/2026-05/Monthly%20authorised%20deposit-taking%20institution%20statistics%20back-series%20March%202019%20-%20April%202026.xlsx"
+    }
+  ],
+  "ADI_PROPERTY_EXPOSURES": [
+    {
+      "checked_at": "2026-06-02T15:55:34Z",
+      "label": "Quarterly Authorised Deposit-taking Institution Property Exposures Statistics",
+      "url": "https://www.apra.gov.au/sites/default/files/2026-03/Quarterly%20authorised%20deposit-taking%20institution%20property%20exposures%20statistics%20December%202025.xlsx"
+    }
+  ],
+  "ADI_QUARTERLY_CENTRALISED": [
+    {
+      "checked_at": "2026-06-02T15:55:34Z",
+      "label": "Authorised Deposit-taking Institution Centralised Publication",
+      "url": "https://www.apra.gov.au/sites/default/files/2026-03/Authorised%20deposit-taking%20institution%20centralised%20publication%20-%20March%202013%20to%20December%202025.xlsx"
+    }
+  ],
+  "ADI_QUARTERLY_PERFORMANCE": [
+    {
+      "checked_at": "2026-06-02T15:55:34Z",
+      "label": "Quarterly Authorised Deposit-taking Institution Performance Statistics",
+      "url": "https://www.apra.gov.au/sites/default/files/2026-03/Quarterly%20authorised%20deposit-taking%20institution%20performance-September%202004%20to%20December%202025.xlsx"
+    }
+  ],
+  "APRA_GENERAL_INSURANCE_PERFORMANCE": [
+    {
+      "checked_at": "2026-06-02T15:55:34Z",
+      "label": "Quarterly General Insurance Performance Statistics",
+      "url": "https://www.apra.gov.au/sites/default/files/2026-05/Quarterly%20general%20insurance%20performance%20statistics%20database%20September%202023%20to%20March%202026.xlsx"
+    }
+  ],
+  "APRA_LIFE_INSURANCE_PERFORMANCE": [
+    {
+      "checked_at": "2026-06-02T15:55:34Z",
+      "label": "Quarterly Life Insurance Performance Statistics",
+      "url": "https://www.apra.gov.au/sites/default/files/2026-05/Quarterly%20life%20insurance%20performance%20statistics%20database%20September%202023%20to%20March%202026.xlsx"
+    }
+  ],
+  "APRA_PHI_MEMBERSHIP": [
+    {
+      "checked_at": "2026-06-02T15:55:34Z",
+      "label": "Quarterly Private Health Insurance Membership Coverage",
+      "url": "https://www.apra.gov.au/sites/default/files/2026-05/Quarterly%20Private%20Health%20Insurance%20Membership%20Coverage%20March%202026.xlsx"
+    }
+  ],
+  "APRA_PHI_PERFORMANCE": [
+    {
+      "checked_at": "2026-06-02T15:55:34Z",
+      "label": "Quarterly Private Health Insurance Performance Statistics",
+      "url": "https://www.apra.gov.au/sites/default/files/2026-05/Quarterly%20private%20health%20insurance%20performance%20statistics%20database%20-%20September%202023%20to%20March%202026.xlsx"
+    }
+  ],
+  "APRA_SUPER_FUND_LEVEL": [
+    {
+      "checked_at": "2026-06-02T15:55:34Z",
+      "label": "Quarterly Fund-Level Statistics",
+      "url": "https://www.apra.gov.au/sites/default/files/2026-03/Quarterly%20Superannuation%20Fund%20Statistics%20December%202025.xlsx"
+    }
+  ],
+  "APRA_SUPER_INDUSTRY": [
+    {
+      "checked_at": "2026-06-02T15:55:34Z",
+      "label": "Quarterly Superannuation Industry Publication",
+      "url": "https://www.apra.gov.au/sites/default/files/2026-03/Quarterly%20Superannuation%20Industry%20Publication%20-%20December%202025.xlsx"
+    }
+  ]
+}

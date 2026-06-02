@@ -15,7 +15,7 @@ macroeconomic and financial data from the Australian Bureau of Statistics (ABS),
 of Australia (RBA), and the Australian Prudential Regulation Authority (APRA).
 
 Version `1.5.0` is the current release line. Transport support is stdio plus Streamable HTTP.
-The server exposes ten read-only MCP tools, four read-only MCP resources, eight prompt templates,
+The server exposes fourteen read-only MCP tools, four read-only MCP resources, eight prompt templates,
 70 curated analyst-facing economic and financial concepts through `get_economic_series`, and nine
 transparent derived indicators through `get_derived_series`.
 
@@ -106,6 +106,10 @@ get_derived_series(concept="real_cash_rate", last_n=12)
 
 For exact source-native control, use `search_datasets`, `list_catalogue`,
 `get_abs_dataset_structure`, `get_abs_data`, `get_rba_table`, and `get_apra_data`.
+
+For quick-turnaround analysis, use `get_latest_observations`, `get_top_observations`,
+`describe_dataset`, and `list_release_events` as additive convenience tools. These wrappers keep
+native ABS, RBA, and APRA identifiers visible.
 
 ## Development
 

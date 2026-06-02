@@ -106,6 +106,15 @@ The checked-in response schema now documents APRA semantic targets through `apra
 Treasury and ASX remain deferred. Treasury is not the main statistical system of record for most
 target macro series, and ASX would shift the product toward market data.
 
+## v1.6: convenience and governance hardening
+
+The v1.6 work is additive convenience and governance hardening, not a product pivot. The planned
+surface adds latest/top observation wrappers, source-aware dataset descriptions,
+release-event awareness, APRA URL seed fallback, APRA framework-break warnings, CodeQL,
+Dependabot, and a broader Python CI matrix.
+
+These tools preserve source-native identifiers and the combined ABS/RBA/APRA server shape.
+
 ## v2.0: only for a second data model
 
 Reserve v2.0 for response-shape changes. Candidate work includes RBA distribution tables, richer

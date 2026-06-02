@@ -4,7 +4,8 @@ description: The normalised retrieval contract for ABS, RBA, APRA, semantic, and
 ---
 
 The retrieval contract for `get_abs_data`, `get_rba_table`, `get_apra_data`,
-`get_economic_series`, and `get_derived_series` is checked in at
+`get_economic_series`, `get_derived_series`, `get_latest_observations`, and
+`get_top_observations` is checked in at
 [`schemas/response.schema.json`](https://github.com/AnthonyPuggs/ausecon-mcp-server/blob/main/schemas/response.schema.json).
 
 ## Top-level shape
@@ -33,6 +34,9 @@ Optional fields appear when relevant:
 - `title` and `publication_date`
 - `semantic`
 - `derived`
+- `selection`
+- `apra_url_resolution`
+- `framework_breaks` and `warnings`
 - `stale`, `cached_at`, and `expires_at`
 
 `semantic` appears on responses returned by `get_economic_series`. It records the requested
@@ -44,6 +48,15 @@ responses from `get_abs_data`, `get_rba_table`, and `get_apra_data` do not inclu
 `derived` appears on responses returned by `get_derived_series`. It records the formula, operands,
 source concepts, alignment frequency, output units, requested and resolved bounds, and
 dropped-observation counts.
+
+`selection` appears on responses returned by `get_top_observations`. It records whether the tool
+selected the highest or lowest numeric observations, how many numeric observations were eligible,
+and how many non-numeric rows were dropped before ranking.
+
+`apra_url_resolution`, `framework_breaks`, and `warnings` appear where relevant on APRA responses.
+The URL-resolution metadata records whether the workbook URL came from the live landing page or a
+trusted bundled seed, with catalogue fallback as the final APRA-hosted XLSX path. Framework
+warnings flag known source reporting breaks such as the AASB 17 insurance performance transition.
 
 ## Series and observations
 
