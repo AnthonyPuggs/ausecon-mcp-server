@@ -3,9 +3,9 @@ title: Roadmap
 description: Release priorities for AusEcon MCP.
 ---
 
-The current v1.5 release line includes stable stdio, hosted Streamable HTTP through
-Render/Smithery, curated ABS/RBA/APRA retrieval, generated documentation, and docs-site Vercel
-Analytics plus Speed Insights.
+The current v1.6.0 release line includes stable stdio, hosted Streamable HTTP through
+Render/Smithery, curated ABS/RBA/APRA retrieval, release-event awareness, convenience observation
+tools, generated documentation, and docs-site Vercel Analytics plus Speed Insights.
 
 The roadmap stays official-source-first, macro-financial, read-only, and Australian-focused. The
 current response contract, `{metadata, series, observations}`, is protected until a genuinely
@@ -80,10 +80,10 @@ target series, and ASX would shift the product toward market data.
 
 ## v1.6
 
-The v1.6 work is additive convenience and governance hardening, not a product pivot. The planned
-surface adds latest/top observation wrappers, source-aware dataset descriptions,
-release-event awareness, APRA URL seed fallback, APRA framework-break warnings, CodeQL,
-Dependabot, and a broader Python CI matrix.
+The v1.6 work is landed. It is additive convenience and governance hardening, not a product pivot.
+The surface adds latest/top observation wrappers, source-aware dataset descriptions, release-event
+awareness, APRA URL seed fallback, APRA framework-break warnings, CodeQL, Dependabot, and a broader
+Python CI matrix.
 
 These tools preserve source-native identifiers and the combined ABS/RBA/APRA server shape.
 
