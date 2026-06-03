@@ -56,6 +56,13 @@ Run the smallest relevant verification first, then the standard suite if the dep
 runtime code. A docs-site preview proves that the documentation site built; it does not prove MCP
 retrieval correctness.
 
+### CodeQL advanced setup
+
+The repository uses the checked-in advanced CodeQL workflow at `.github/workflows/codeql.yml`. In
+GitHub repository settings, disable CodeQL default setup before relying on this advanced CodeQL
+workflow; GitHub rejects CodeQL SARIF uploads when default setup and an advanced workflow are both
+enabled.
+
 ### Review-to-regression lock
 
 Accepted review findings should leave behind a regression test, repository hygiene assertion, or

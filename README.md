@@ -14,7 +14,7 @@
 macroeconomic and financial data from the Australian Bureau of Statistics (ABS), the Reserve Bank
 of Australia (RBA), and the Australian Prudential Regulation Authority (APRA).
 
-Version `1.5.0` is the current release line. Transport support is stdio plus Streamable HTTP.
+Version `1.6.0` is the current release line. Transport support is stdio plus Streamable HTTP.
 The server exposes fourteen read-only MCP tools, four read-only MCP resources, eight prompt templates,
 70 curated analyst-facing economic and financial concepts through `get_economic_series`, and nine
 transparent derived indicators through `get_derived_series`.

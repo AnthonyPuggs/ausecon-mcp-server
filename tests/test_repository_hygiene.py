@@ -140,6 +140,20 @@ def test_maintainer_docs_capture_review_and_dependency_triage_disciplines() -> N
             assert phrase in text, f"{path} is missing {phrase!r}"
 
 
+def test_maintainer_docs_capture_codeql_advanced_setup_requirement() -> None:
+    required_phrases = {
+        "CodeQL advanced setup",
+        "disable CodeQL default setup",
+        "advanced CodeQL workflow",
+        "default setup",
+    }
+
+    for path in (CONTRIBUTING, DOCS_SITE_CONTRIBUTING):
+        text = _normalise_whitespace(path.read_text(encoding="utf-8"))
+        for phrase in required_phrases:
+            assert phrase in text, f"{path} is missing {phrase!r}"
+
+
 def test_hosted_deployment_docs_scope_vercel_preview_signals_to_docs_site() -> None:
     hosted_text = _normalise_whitespace(HOSTED_DEPLOYMENT.read_text(encoding="utf-8"))
 
@@ -194,9 +208,13 @@ def test_ci_workflow_exists_with_quality_checks_and_hygiene_guard() -> None:
 
 def test_readme_is_slim_landing_page_for_current_release_state() -> None:
     readme_text = README.read_text(encoding="utf-8")
+    docs_home_text = (DOCS_SITE / "src/content/docs/index.mdx").read_text(encoding="utf-8")
 
     assert len(readme_text.splitlines()) < 140
-    assert "Version `1.5.0` is the current release line." in readme_text
+    assert "Version `1.6.0` is the current release line." in readme_text
+    assert "Version `1.6.0` is the current release line." in docs_home_text
+    assert "Version `1.5.0` is the current release line." not in readme_text
+    assert "Version `1.5.0` is the current release line." not in docs_home_text
     assert re.search(r"stdio plus\s+Streamable HTTP", readme_text)
     assert "fourteen read-only MCP tools" in readme_text
     assert "70 curated analyst-facing economic and financial concepts" in readme_text
@@ -293,7 +311,9 @@ def test_post_v11_roadmap_is_documented_and_contract_preserving() -> None:
         assert "v1.3" in text
         assert "v1.4" in text
         assert "v1.5" in text
+        assert "v1.6" in text
         assert "v2.0" in text
+        assert "current v1.6.0 release line" in text
         assert "APRA" in text
         assert "APRA source-native foundation" in text
         assert "{metadata, series, observations}" in text
@@ -476,6 +496,9 @@ def test_python_version_story_is_consistent_across_docs_and_ci() -> None:
 def test_codeql_and_dependabot_are_configured_for_visible_security_automation() -> None:
     codeql_text = CODEQL_WORKFLOW.read_text(encoding="utf-8")
     dependabot_text = DEPENDABOT.read_text(encoding="utf-8")
+    releasing_text = (DOCS_SITE / "src/content/docs/maintainers/releasing.md").read_text(
+        encoding="utf-8"
+    )
 
     assert "name: CodeQL" in codeql_text
     assert "github/codeql-action/init@" in codeql_text
@@ -485,6 +508,40 @@ def test_codeql_and_dependabot_are_configured_for_visible_security_automation() 
     assert "package-ecosystem: \"github-actions\"" in dependabot_text
     assert "package-ecosystem: \"npm\"" in dependabot_text
     assert "directory: \"/docs-site\"" in dependabot_text
+    assert "CodeQL default setup is disabled" in releasing_text
+    assert "advanced CodeQL workflow" in releasing_text
+
+
+def test_changelog_promotes_v160_and_keeps_fresh_unreleased_section() -> None:
+    changelog_text = CHANGELOG.read_text(encoding="utf-8")
+    unreleased_index = changelog_text.index("## [Unreleased]")
+    v160_index = changelog_text.index("## [1.6.0] - 2026-06-03")
+
+    assert unreleased_index < v160_index
+    unreleased_section = changelog_text[unreleased_index:v160_index]
+    v160_section = changelog_text[v160_index : changelog_text.index("## [1.5.0]")]
+
+    assert "source-aware convenience tools" not in unreleased_section
+    assert "source-aware convenience tools" in v160_section
+    assert (
+        "[Unreleased]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/"
+        "v1.6.0...HEAD"
+    ) in changelog_text
+    assert (
+        "[1.6.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/"
+        "v1.5.0...v1.6.0"
+    ) in changelog_text
+
+
+def test_smithery_deployment_docs_match_current_release_state() -> None:
+    smithery_text = (ROOT / "docs" / "smithery-deployment.md").read_text(encoding="utf-8")
+
+    assert "v1.6.0" in smithery_text
+    assert "1.6.0" in smithery_text
+    assert "fourteen tools" in smithery_text
+    assert "get_latest_observations" in smithery_text
+    assert "list_release_events" in smithery_text
+    assert "v1.5.0" not in smithery_text
 
 
 def test_readme_release_instructions_match_tag_derived_versioning() -> None:

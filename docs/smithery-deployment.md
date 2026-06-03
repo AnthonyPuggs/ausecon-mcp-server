@@ -10,15 +10,15 @@ Before connecting Smithery, confirm the release state is consistent:
 
 ```bash
 git status --short --branch
-git ls-remote origin refs/heads/main refs/tags/v1.5.0
+git ls-remote origin refs/heads/main refs/tags/v1.6.0
 python3 -m pip index versions ausecon-mcp-server
 ```
 
-Expected state for the v1.5.0 Smithery release:
+Expected state for the v1.6.0 Smithery release:
 
-- `main` and `v1.5.0` point at the same published release commit.
-- PyPI lists `ausecon-mcp-server (1.5.0)`.
-- `server.json` and `CHANGELOG.md` both refer to `1.5.0`.
+- `main` and `v1.6.0` point at the same published release commit.
+- PyPI lists `ausecon-mcp-server (1.6.0)`.
+- `server.json` and `CHANGELOG.md` both refer to `1.6.0`.
 - `smithery.yaml` declares `runtime: "container"` and `startCommand.type: "http"`.
 - `Dockerfile.smithery` builds the local wheel and runs `ausecon-mcp-http`.
 
@@ -48,7 +48,7 @@ startCommand:
   type: "http"
 ```
 
-Do not add `configSchema` or `exampleConfig` for v1.5.0. The server does not
+Do not add `configSchema` or `exampleConfig` for v1.6.0. The server does not
 need user secrets or per-session configuration because every exposed tool reads
 public ABS, RBA, and APRA data.
 
@@ -59,12 +59,14 @@ After the first Smithery build:
 - Confirm the container starts `ausecon-mcp-http`.
 - Confirm Smithery routes MCP traffic to `/mcp`.
 - Confirm the server listens on the platform-provided `PORT`.
-- Confirm Smithery detects the expected ten tools: `search_datasets`, `list_catalogue`,
+- Confirm Smithery detects the expected fourteen tools: `search_datasets`, `list_catalogue`,
   `list_economic_concepts`, `get_abs_dataset_structure`, `get_abs_data`, `list_rba_tables`,
-  `get_rba_table`, `get_apra_data`, `get_economic_series`, and `get_derived_series`.
+  `get_rba_table`, `get_apra_data`, `get_economic_series`, `get_derived_series`,
+  `get_latest_observations`, `get_top_observations`, `describe_dataset`, and
+  `list_release_events`.
 - Check response metadata from a live retrieval. `metadata.server_version`
-  should report `1.5.0`; if it reports a fallback value, configure Smithery to
-  pass `AUSECON_VERSION=1.5.0` as a Docker build argument if the platform
+  should report `1.6.0`; if it reports a fallback value, configure Smithery to
+  pass `AUSECON_VERSION=1.6.0` as a Docker build argument if the platform
   supports build args.
 
 Use the Smithery Playground for smoke tests:
