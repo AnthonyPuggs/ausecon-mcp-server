@@ -90,7 +90,7 @@ def test_project_metadata_includes_http_container_entrypoint_dependencies() -> N
     assert project["scripts"]["ausecon-mcp-server"] == "ausecon_mcp.server:main"
     assert project["scripts"]["ausecon-mcp-http"] == "ausecon_mcp.server:main_http"
     assert "fastmcp>=3.2.4" in project["dependencies"]
-    assert "starlette>=0.27,<1" in project["dependencies"]
+    assert "starlette>=0.27,<2" in project["dependencies"]
 
 
 def test_project_metadata_declares_yaml_test_dependency_explicitly() -> None:
