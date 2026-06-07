@@ -1,6 +1,10 @@
 from __future__ import annotations
 
-from ausecon_mcp.convenience import select_top_observations
+from ausecon_mcp.convenience import (
+    describe_dataset,
+    select_latest_observations,
+    select_top_observations,
+)
 
 
 def _payload() -> dict:
@@ -51,3 +55,50 @@ def test_select_top_observations_keeps_lowest_numeric_rows() -> None:
         ("a", 2.0),
     ]
 
+
+def test_select_latest_observations_records_selection_provenance() -> None:
+    result = select_latest_observations(_payload(), count=2)
+
+    assert result["metadata"]["selection"] == {
+        "type": "latest",
+        "n": 2,
+        "series_count": 3,
+        "returned_observation_count": 4,
+    }
+
+
+def test_describe_dataset_exposes_source_controls_convenience_calls_and_governance() -> None:
+    result = describe_dataset(
+        "apra",
+        "APRA_GENERAL_INSURANCE_PERFORMANCE",
+        table_id="database",
+    )
+
+    assert result["source_controls"]["identifier_field"] == "publication_id"
+    assert result["source_controls"]["identifier"] == "APRA_GENERAL_INSURANCE_PERFORMANCE"
+    assert result["source_controls"]["date_bounds"] == {
+        "start": "start_date",
+        "end": "end_date",
+    }
+    assert "series_ids" in result["source_controls"]["supported_filters"]
+    assert "key" in result["source_controls"]["unsupported_arguments"]
+    assert result["convenience_calls"]["latest"] == {
+        "tool": "get_latest_observations",
+        "arguments": {
+            "source": "apra",
+            "identifier": "APRA_GENERAL_INSURANCE_PERFORMANCE",
+            "table_id": "database",
+            "count": 1,
+        },
+    }
+    assert result["governance"]["accepts_arbitrary_urls"] is False
+    assert result["governance"]["audit_last_audited"] == "2026-05-18"
+    assert result["governance"]["seed_checked_at"]
+    assert result["governance"]["governance_status"] in {"ok", "stale"}
+
+    variant = result["variants"][0]
+    assert variant["recommended_call"]["tool"] == "get_apra_data"
+    assert variant["convenience_calls"]["latest"]["tool"] == "get_latest_observations"
+    assert variant["convenience_calls"]["latest"]["arguments"]["series_ids"] == (
+        variant["apra_series_ids"]
+    )

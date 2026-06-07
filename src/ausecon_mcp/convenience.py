@@ -8,7 +8,19 @@ from ausecon_mcp.catalogue.apra import APRA_CATALOGUE
 from ausecon_mcp.catalogue.rba import RBA_CATALOGUE
 from ausecon_mcp.catalogue.resolver import resolve_abs_dataflow_id, resolve_rba_csv_path
 from ausecon_mcp.errors import AuseconValidationError
+from ausecon_mcp.governance.apra import audit_apra_governance, load_apra_seed_manifest
 from ausecon_mcp.identity import geography_alias_rows
+
+
+def select_latest_observations(payload: dict[str, Any], *, count: int) -> dict[str, Any]:
+    result = deepcopy(payload)
+    result.setdefault("metadata", {})["selection"] = {
+        "type": "latest",
+        "n": count,
+        "series_count": len(result.get("series", [])),
+        "returned_observation_count": len(result.get("observations", [])),
+    }
+    return result
 
 
 def select_top_observations(payload: dict[str, Any], *, n: int, direction: str) -> dict[str, Any]:
@@ -68,6 +80,9 @@ def describe_dataset(
         "warnings": _warning_rows(entry),
         "framework_breaks": list(entry.get("framework_breaks", [])),
         "recommended_call": _recommended_call(source, entry, table_id=table_id),
+        "source_controls": _source_controls(source, entry, table_id=table_id),
+        "convenience_calls": _convenience_calls(source, entry, table_id=table_id),
+        "governance": _governance_summary(source, entry),
     }
     if structure is not None:
         description["structure"] = {
@@ -127,6 +142,8 @@ def _variant_rows(source: str, entry: dict[str, Any]) -> list[dict[str, Any]]:
         else:
             row["apra_table_id"] = variant.get("apra_table_id")
             row["apra_series_ids"] = list(variant.get("apra_series_ids", []))
+        row["recommended_call"] = _variant_recommended_call(source, entry, variant)
+        row["convenience_calls"] = _variant_convenience_calls(source, entry, variant)
         rows.append(row)
     return rows
 
@@ -182,3 +199,143 @@ def _recommended_call(
         arguments["table_id"] = table_id
     return {"tool": "get_apra_data", "arguments": arguments}
 
+
+def _variant_recommended_call(
+    source: str,
+    entry: dict[str, Any],
+    variant: dict[str, Any],
+) -> dict[str, Any]:
+    if source == "abs":
+        return {
+            "tool": "get_abs_data",
+            "arguments": {
+                "dataflow_id": entry["id"],
+                "key": variant.get("abs_key", "all"),
+            },
+        }
+    if source == "rba":
+        return {
+            "tool": "get_rba_table",
+            "arguments": {
+                "table_id": entry["id"],
+                "series_ids": list(variant.get("rba_series_ids", [])),
+            },
+        }
+    return {
+        "tool": "get_apra_data",
+        "arguments": {
+            "publication_id": entry["id"],
+            "table_id": variant.get("apra_table_id"),
+            "series_ids": list(variant.get("apra_series_ids", [])),
+        },
+    }
+
+
+def _convenience_calls(
+    source: str,
+    entry: dict[str, Any],
+    *,
+    table_id: str | None,
+) -> dict[str, dict[str, Any]]:
+    latest_args: dict[str, Any] = {
+        "source": source,
+        "identifier": entry["id"],
+        "count": 1,
+    }
+    top_args: dict[str, Any] = {
+        "source": source,
+        "identifier": entry["id"],
+        "n": 10,
+        "direction": "highest",
+    }
+    if source == "apra" and table_id is not None:
+        latest_args["table_id"] = table_id
+        top_args["table_id"] = table_id
+    return {
+        "latest": {"tool": "get_latest_observations", "arguments": latest_args},
+        "top": {"tool": "get_top_observations", "arguments": top_args},
+    }
+
+
+def _variant_convenience_calls(
+    source: str,
+    entry: dict[str, Any],
+    variant: dict[str, Any],
+) -> dict[str, dict[str, Any]]:
+    calls = _convenience_calls(source, entry, table_id=variant.get("apra_table_id"))
+    if source == "abs":
+        calls["latest"]["arguments"]["key"] = variant.get("abs_key", "all")
+        calls["top"]["arguments"]["key"] = variant.get("abs_key", "all")
+    elif source == "rba":
+        series_ids = list(variant.get("rba_series_ids", []))
+        calls["latest"]["arguments"]["series_ids"] = series_ids
+        calls["top"]["arguments"]["series_ids"] = series_ids
+    elif source == "apra":
+        series_ids = list(variant.get("apra_series_ids", []))
+        calls["latest"]["arguments"]["series_ids"] = series_ids
+        calls["top"]["arguments"]["series_ids"] = series_ids
+    return calls
+
+
+def _source_controls(
+    source: str,
+    entry: dict[str, Any],
+    *,
+    table_id: str | None,
+) -> dict[str, Any]:
+    if source == "abs":
+        return {
+            "identifier_field": "dataflow_id",
+            "identifier": entry["id"],
+            "native_ids": _native_ids(source, entry, table_id=None),
+            "date_bounds": {"start": "start_period", "end": "end_period"},
+            "supported_filters": ["key", "start_period", "end_period", "last_n", "updated_after"],
+            "unsupported_arguments": ["table_id", "series_ids", "start_date", "end_date"],
+        }
+    if source == "rba":
+        return {
+            "identifier_field": "table_id",
+            "identifier": entry["id"],
+            "native_ids": _native_ids(source, entry, table_id=None),
+            "date_bounds": {"start": "start_date", "end": "end_date"},
+            "supported_filters": ["series_ids", "start_date", "end_date", "last_n"],
+            "unsupported_arguments": ["key", "table_id", "start_period", "end_period"],
+        }
+    return {
+        "identifier_field": "publication_id",
+        "identifier": entry["id"],
+        "native_ids": _native_ids(source, entry, table_id=table_id),
+        "date_bounds": {"start": "start_date", "end": "end_date"},
+        "supported_filters": ["table_id", "series_ids", "start_date", "end_date", "last_n"],
+        "unsupported_arguments": ["key", "start_period", "end_period"],
+    }
+
+
+def _governance_summary(source: str, entry: dict[str, Any]) -> dict[str, Any]:
+    audit = entry.get("audit", {})
+    if source != "apra":
+        return {
+            "audit": audit,
+            "audit_last_audited": audit.get("last_audited"),
+            "warnings": [],
+            "framework_breaks": [],
+        }
+
+    seed_manifest = load_apra_seed_manifest()
+    row = audit_apra_governance(
+        {entry["id"]: entry},
+        seed_manifest={entry["id"]: seed_manifest.get(entry["id"], [])},
+    )[0]
+    return {
+        "audit": audit,
+        "audit_last_audited": row["audit_last_audited"],
+        "governance_status": row["status"],
+        "governance_issues": row["issues"],
+        "resolved_url": row["resolved_url"],
+        "resolution_strategy": row["resolution_strategy"],
+        "seed_checked_at": row["seed_checked_at"],
+        "accepts_arbitrary_urls": False,
+        "trusted_url_hosts": ["apra.gov.au", "www.apra.gov.au"],
+        "framework_breaks": list(entry.get("framework_breaks", [])),
+        "warnings": _warning_rows(entry),
+    }

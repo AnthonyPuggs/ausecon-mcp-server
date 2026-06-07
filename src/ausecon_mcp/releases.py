@@ -16,6 +16,7 @@ from ausecon_mcp.catalogue.abs import ABS_CATALOGUE
 from ausecon_mcp.catalogue.apra import APRA_CATALOGUE
 from ausecon_mcp.catalogue.rba import RBA_CATALOGUE
 from ausecon_mcp.errors import AuseconUpstreamError
+from ausecon_mcp.governance.apra import audit_apra_governance, governance_by_publication
 from ausecon_mcp.providers._http import build_client
 from ausecon_mcp.providers._retry import get_with_retries
 
@@ -74,7 +75,11 @@ class ReleaseProvider:
             [
                 *parse_abs_release_events(abs_response.text),
                 *parse_rba_release_events(rba_response.text, today=today),
-                *build_apra_release_events(today=today, seed_checked_at=apra_seed_checked_at()),
+                *build_apra_release_events(
+                    today=today,
+                    seed_checked_at=apra_seed_checked_at(),
+                    governance_rows=audit_apra_governance(today=today),
+                ),
             ],
             key=lambda row: (row["release_datetime"], row["source"], row["release_name"]),
         )
@@ -101,6 +106,8 @@ def parse_abs_release_events(
         events.append(
             {
                 "source": "abs",
+                "event_kind": "official_calendar",
+                "date_source": "official_page",
                 "release_name": release_name,
                 "release_datetime": release_datetime,
                 "timezone": "Australia/Canberra",
@@ -146,6 +153,8 @@ def parse_rba_release_events(
                 events.append(
                     {
                         "source": "rba",
+                        "event_kind": "official_calendar",
+                        "date_source": "official_page",
                         "release_name": release_name,
                         "release_datetime": datetime.combine(
                             release_date,
@@ -165,27 +174,44 @@ def build_apra_release_events(
     *,
     today: date | None = None,
     seed_checked_at: str | None = None,
+    governance_rows: list[dict[str, Any]] | None = None,
 ) -> list[dict[str, Any]]:
     catalogue = catalogue or APRA_CATALOGUE
     today = today or date.today()
+    governance_index = governance_by_publication(governance_rows or [])
     events = []
     for entry in catalogue.values():
         if entry.get("ceased") or entry.get("discontinued"):
             continue
+        governance = governance_index.get(entry["id"], {})
+        row_seed_checked_at = seed_checked_at or governance.get("seed_checked_at")
+        governance_status = str(
+            governance.get("status")
+            or _seed_freshness_status(row_seed_checked_at, entry.get("frequency"), today)
+        )
         release_date = _next_expected_apra_date(entry.get("frequency"), today)
         audit = entry.get("audit", {})
         cadence = f"{entry.get('frequency', 'Unknown')} cadence"
-        if seed_checked_at:
-            cadence = f"{cadence}; seed checked {seed_checked_at}"
+        if row_seed_checked_at:
+            cadence = f"{cadence}; seed checked {row_seed_checked_at}"
         events.append(
             {
                 "source": "apra",
+                "event_kind": "expected_release",
+                "date_source": "cadence_estimate",
                 "release_name": entry["name"],
                 "release_datetime": datetime.combine(release_date, time()).isoformat(
                     timespec="seconds"
                 ),
                 "timezone": "Australia/Sydney",
                 "reference_period": cadence,
+                "cadence": entry.get("frequency"),
+                "seed_checked_at": row_seed_checked_at,
+                "audit_last_audited": audit.get("last_audited"),
+                "governance_status": governance_status,
+                "governance_issues": [
+                    issue.get("code") for issue in governance.get("issues", [])
+                ],
                 "matched_catalogue_ids": [entry["id"]],
                 "upstream_url": audit.get("upstream_url", entry.get("landing_url")),
             }
@@ -210,6 +236,21 @@ def apra_seed_checked_at() -> str | None:
     if not checked_at_values:
         return None
     return min(checked_at_values)
+
+
+def _seed_freshness_status(
+    checked_at: str | None,
+    frequency: str | None,
+    today: date,
+) -> str:
+    if checked_at is None:
+        return "unknown"
+    try:
+        checked_date = datetime.fromisoformat(checked_at.replace("Z", "+00:00")).date()
+    except ValueError:
+        return "fail"
+    threshold = {"Monthly": 45, "Quarterly": 120, "Annual": 400}.get(str(frequency), 400)
+    return "stale" if (today - checked_date).days > threshold else "ok"
 
 
 def filter_release_events(

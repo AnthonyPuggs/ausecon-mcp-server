@@ -30,6 +30,7 @@ from ausecon_mcp.convenience import (
     describe_dataset as describe_catalogue_dataset,
 )
 from ausecon_mcp.convenience import (
+    select_latest_observations,
     select_top_observations,
 )
 from ausecon_mcp.derived import (
@@ -657,30 +658,33 @@ class AuseconService:
         if validated_source == "abs":
             _reject_parameter("series_ids", series_ids, source=validated_source)
             _reject_parameter("table_id", table_id, source=validated_source)
-            return await self.get_abs_data(
+            payload = await self.get_abs_data(
                 validated_identifier,
                 key=validated_key,
                 last_n=validated_count,
             )
+            return select_latest_observations(payload, count=validated_count)
 
         _reject_non_default_key(validated_key, source=validated_source)
         if validated_source == "rba":
             _reject_parameter("table_id", table_id, source=validated_source)
-            return await self.get_rba_table(
+            payload = await self.get_rba_table(
                 validated_identifier,
                 series_ids=validate_series_ids(series_ids),
                 last_n=validated_count,
             )
+            return select_latest_observations(payload, count=validated_count)
 
         validated_table_id = (
             None if table_id is None else validate_source_token("table_id", table_id)
         )
-        return await self.get_apra_data(
+        payload = await self.get_apra_data(
             validated_identifier,
             table_id=validated_table_id,
             series_ids=validate_apra_series_ids(series_ids),
             last_n=validated_count,
         )
+        return select_latest_observations(payload, count=validated_count)
 
     async def get_top_observations(
         self,

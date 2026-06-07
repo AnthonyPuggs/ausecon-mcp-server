@@ -213,6 +213,50 @@ def test_response_schema_allows_selection_apra_resolution_and_warning_metadata()
     _assert_valid(payload)
 
 
+def test_response_schema_allows_latest_selection_metadata() -> None:
+    payload = {
+        "metadata": {
+            "source": "rba",
+            "dataset_id": "g1",
+            "retrieval_url": "https://www.rba.gov.au/statistics/tables/csv/g1-data.csv",
+            "retrieved_at": "2026-06-07T00:00:00Z",
+            "server_version": "test",
+            "truncated": False,
+            "selection": {
+                "type": "latest",
+                "n": 3,
+                "series_count": 1,
+                "returned_observation_count": 1,
+            },
+        },
+        "series": [
+            {
+                "series_id": "GCPIAGQP",
+                "label": "CPI",
+                "unit": "index",
+                "frequency": "Quarterly",
+                "dimensions": {},
+                "source_key": "GCPIAGQP",
+                "unit_multiplier": None,
+                "decimals": None,
+                "base_period": None,
+            }
+        ],
+        "observations": [
+            {
+                "date": "2026-03-31",
+                "series_id": "GCPIAGQP",
+                "value": 140.0,
+                "dimensions": {},
+                "status": None,
+                "comment": None,
+            }
+        ],
+    }
+
+    _assert_valid(payload)
+
+
 def test_response_schema_allows_catalogue_fallback_apra_resolution_metadata() -> None:
     payload = {
         "metadata": {

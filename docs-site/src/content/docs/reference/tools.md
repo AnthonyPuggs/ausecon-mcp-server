@@ -63,6 +63,8 @@ requested table.
 ## Convenience flow
 
 Use `describe_dataset` when an agent or analyst needs a source-aware explanation before retrieval.
-Use `get_latest_observations` and `get_top_observations` for quick data checks, but keep source
-native IDs in the call arguments for reproducibility. `list_release_events` combines official ABS
-and RBA release-awareness with APRA cadence and seed-freshness metadata.
+It returns source controls, source-native identifiers, governance metadata, and safe convenience
+calls that keep the underlying ABS, RBA, or APRA identifier visible. Use `get_latest_observations`
+and `get_top_observations` for quick data checks, but keep source-native IDs in the call arguments
+for reproducibility. `list_release_events` combines official ABS and RBA release-calendar rows with
+APRA expected-release cadence estimates, seed freshness, audit dates, and governance status.

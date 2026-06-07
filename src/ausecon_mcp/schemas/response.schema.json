@@ -109,6 +109,16 @@
       }
     },
     "selection_metadata": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/top_n_selection_metadata"
+        },
+        {
+          "$ref": "#/$defs/latest_selection_metadata"
+        }
+      ]
+    },
+    "top_n_selection_metadata": {
       "type": "object",
       "required": [
         "type",
@@ -141,6 +151,29 @@
           "minimum": 0
         },
         "dropped_non_numeric_count": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "latest_selection_metadata": {
+      "type": "object",
+      "required": ["type", "n", "series_count", "returned_observation_count"],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["latest"]
+        },
+        "n": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "series_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "returned_observation_count": {
           "type": "integer",
           "minimum": 0
         }

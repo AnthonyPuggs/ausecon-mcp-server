@@ -109,7 +109,8 @@ For exact source-native control, use `search_datasets`, `list_catalogue`,
 
 For quick-turnaround analysis, use `get_latest_observations`, `get_top_observations`,
 `describe_dataset`, and `list_release_events` as additive convenience tools. These wrappers keep
-native ABS, RBA, and APRA identifiers visible.
+native ABS, RBA, and APRA identifiers visible, including source controls, safe convenience calls,
+and APRA expected-release cadence estimates.
 
 ## Prompting an AI Agent
 

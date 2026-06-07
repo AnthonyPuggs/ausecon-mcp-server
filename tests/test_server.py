@@ -604,6 +604,12 @@ async def test_service_get_latest_observations_routes_to_rba_with_count() -> Non
     )
 
     assert result["metadata"]["source"] == "rba"
+    assert result["metadata"]["selection"] == {
+        "type": "latest",
+        "n": 3,
+        "series_count": 1,
+        "returned_observation_count": 1,
+    }
     assert rba.last_get_table_kwargs == {
         "table_id": "g1",
         "series_ids": ["GCPIAGQP"],
@@ -623,6 +629,17 @@ async def test_service_get_latest_observations_rejects_abs_series_id_filter() ->
             source="abs",
             identifier="CPI",
             series_ids=["not-supported"],
+        )
+
+
+@pytest.mark.asyncio
+async def test_service_get_latest_observations_rejects_apra_url_like_identifier() -> None:
+    service = AuseconService(apra_provider=StubAPRAProvider())
+
+    with pytest.raises(ValueError, match="URL or path"):
+        await service.get_latest_observations(
+            source="apra",
+            identifier="https://www.apra.gov.au/sites/default/files/book.xlsx",
         )
 
 
@@ -723,6 +740,13 @@ async def test_service_describe_dataset_exposes_plain_english_and_native_ids() -
     assert result["tables"][0]["id"] == "tab_1b"
     assert result["recommended_call"]["tool"] == "get_apra_data"
     assert result["recommended_call"]["arguments"]["table_id"] == "tab_1b"
+    assert result["source_controls"]["identifier_field"] == "publication_id"
+    assert result["source_controls"]["date_bounds"] == {
+        "start": "start_date",
+        "end": "end_date",
+    }
+    assert result["governance"]["accepts_arbitrary_urls"] is False
+    assert result["convenience_calls"]["top"]["arguments"]["table_id"] == "tab_1b"
 
 
 @pytest.mark.asyncio

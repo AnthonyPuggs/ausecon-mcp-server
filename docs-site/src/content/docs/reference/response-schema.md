@@ -49,9 +49,11 @@ responses from `get_abs_data`, `get_rba_table`, and `get_apra_data` do not inclu
 source concepts, alignment frequency, output units, requested and resolved bounds, and
 dropped-observation counts.
 
-`selection` appears on responses returned by `get_top_observations`. It records whether the tool
-selected the highest or lowest numeric observations, how many numeric observations were eligible,
-and how many non-numeric rows were dropped before ranking.
+`selection` appears on responses returned by `get_latest_observations` and
+`get_top_observations`. Latest-selection metadata records the requested count, returned observation
+count, and series count. Top-selection metadata records whether the tool selected the highest or
+lowest numeric observations, how many numeric observations were eligible, and how many non-numeric
+rows were dropped before ranking.
 
 `apra_url_resolution`, `framework_breaks`, and `warnings` appear where relevant on APRA responses.
 The URL-resolution metadata records whether the workbook URL came from the live landing page or a

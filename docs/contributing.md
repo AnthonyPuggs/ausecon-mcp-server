@@ -79,6 +79,12 @@ design notes, and tests in documentation parity with the implemented identifiers
 If an ABS, RBA, or APRA entry cannot be reconciled to the official source without approximation,
 defer it rather than shipping a semantic shortcut that is difficult to audit.
 
+For APRA changes, run `UV_CACHE_DIR=.uv-cache PYTHONPATH=src uv run python
+scripts/audit_apra_governance.py --check` before release. This command validates trusted APRA XLSX
+URLs, bundled seed coverage, table and variant wiring, audit metadata, and framework-break scope.
+Seed-age warnings are reported as stale governance status but do not fail `--check`; hard failures
+come from broken source controls.
+
 ### Artefact hygiene
 
 Before opening a pull request or cutting a release, check `git status --short` and inspect generated

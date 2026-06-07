@@ -35,9 +35,11 @@ use `list_catalogue(source="rba")`.
 Use the convenience layer when the workflow is exploratory or time constrained:
 
 - `describe_dataset` explains a curated entry while preserving native identifiers.
-- `get_latest_observations` calls the appropriate source-native retrieval path with a `count`.
+- `get_latest_observations` calls the appropriate source-native retrieval path with a `count` and
+  records latest-selection metadata.
 - `get_top_observations` ranks numeric observations and records selection metadata.
-- `list_release_events` exposes ABS/RBA release awareness and APRA release-pulse rows.
+- `list_release_events` exposes official ABS/RBA release-calendar rows and APRA expected-release
+  cadence estimates. Treat APRA rows as source-governance signals, not official APRA calendar dates.
 
 ## Derived retrieval
 
