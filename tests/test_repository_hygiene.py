@@ -39,6 +39,9 @@ SEMANTIC_DESIGN = (
     ROOT / "docs" / "superpowers" / "specs" / "2026-04-19-semantic-layer-expansion-design.md"
 )
 SEMANTIC_REFERENCE = DOCS_SITE / "src" / "content" / "docs" / "reference" / "semantic-concepts.md"
+PROMPTING_GUIDE = (
+    DOCS_SITE / "src" / "content" / "docs" / "user-guide" / "prompting-ai-agents.md"
+)
 DOCS_URL = "https://auseconmcp.com/"
 REPOSITORY_URL = "https://github.com/AnthonyPuggs/ausecon-mcp-server"
 
@@ -332,6 +335,36 @@ def test_docs_site_documents_schema_and_preferred_rba_listing_surface() -> None:
     assert "schemas/response.schema.json" in schema_text
     assert 'list_catalogue(source="rba")' in user_guide_text
     assert "Deprecated compatibility alias" in tools_text
+
+
+def test_docs_site_documents_ai_agent_prompting_flow() -> None:
+    readme_text = README.read_text(encoding="utf-8")
+    guide_text = PROMPTING_GUIDE.read_text(encoding="utf-8")
+    astro_config = (DOCS_SITE / "astro.config.mjs").read_text(encoding="utf-8")
+    getting_started_text = (
+        DOCS_SITE / "src/content/docs/getting-started/index.md"
+    ).read_text(encoding="utf-8")
+    discovery_text = (
+        DOCS_SITE / "src/content/docs/user-guide/discovery-and-retrieval.md"
+    ).read_text(encoding="utf-8")
+    examples_text = (
+        DOCS_SITE / "src/content/docs/user-guide/examples.md"
+    ).read_text(encoding="utf-8")
+    tools_text = (DOCS_SITE / "src/content/docs/reference/tools.md").read_text(encoding="utf-8")
+
+    assert "## Prompting an AI Agent" in readme_text
+    assert "Prompting AI Agents" in astro_config
+    assert "user-guide/prompting-ai-agents" in astro_config
+    for text in (getting_started_text, discovery_text, examples_text, tools_text):
+        assert "/user-guide/prompting-ai-agents/" in text
+
+    assert 'list_economic_concepts(query="quarterly real GDP growth")' in guide_text
+    assert 'get_economic_series(concept="gdp_growth", last_n=40)' in guide_text
+    assert 'get_economic_series(concept="cash_rate_target", last_n=1)' in guide_text
+    assert 'get_derived_series(concept="real_cash_rate", last_n=12)' in guide_text
+    assert 'search_datasets(query="housing credit")' in guide_text
+    assert "not a hard guarantee" in guide_text
+    assert "`metadata`, `series`, and `observations`" in guide_text
 
 
 def test_contract_and_architecture_docs_exist() -> None:

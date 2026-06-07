@@ -5,6 +5,9 @@ description: Common discovery and retrieval calls for MCP clients.
 
 ## Discovery
 
+For examples that start with a natural-language user prompt and show the likely AI-agent tool
+sequence, see [Prompting AI Agents](/user-guide/prompting-ai-agents/).
+
 Search for datasets related to the cash rate:
 
 ```text

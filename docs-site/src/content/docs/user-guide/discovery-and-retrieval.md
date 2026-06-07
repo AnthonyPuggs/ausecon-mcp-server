@@ -9,6 +9,10 @@ Use `list_economic_concepts` and `get_economic_series` for ordinary analyst requ
 the safest LLM-facing path because the server controls the mapping from economic concepts to
 audited source datasets and series.
 
+For user-facing prompt examples, see
+[Prompting AI Agents](/user-guide/prompting-ai-agents/). That guide shows how requests such as
+"List the quarterly real GDP growth data for the past 10 years" typically become MCP calls.
+
 Use `get_derived_series` for the deliberately small set of transparent formula-based indicators
 such as real rates, year-ended transformations, and yield-curve slope. Derived retrieval still
 returns the normal `metadata`, `series`, and `observations` shape, with formula provenance in

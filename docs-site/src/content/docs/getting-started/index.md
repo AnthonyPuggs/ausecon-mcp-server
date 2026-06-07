@@ -31,6 +31,10 @@ waits for an MCP client to connect over standard input/output.
 4. Use `search_datasets`, `list_catalogue`, `get_abs_dataset_structure`, `get_abs_data`,
    `get_rba_table`, and `get_apra_data` when you need source-native ABS/RBA/APRA control.
 
+If you are using the server through an AI agent, see
+[Prompting AI Agents](/user-guide/prompting-ai-agents/) for examples of natural-language requests
+and the MCP tool calls they usually trigger.
+
 ## First retrieval pattern
 
 ```text

@@ -33,6 +33,7 @@ export default defineConfig({
           label: 'User Guide',
           items: [
             { label: 'Discovery and Retrieval', slug: 'user-guide/discovery-and-retrieval' },
+            { label: 'Prompting AI Agents', slug: 'user-guide/prompting-ai-agents' },
             { label: 'Examples', slug: 'user-guide/examples' },
           ],
         },

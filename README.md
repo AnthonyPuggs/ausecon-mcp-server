@@ -111,6 +111,15 @@ For quick-turnaround analysis, use `get_latest_observations`, `get_top_observati
 `describe_dataset`, and `list_release_events` as additive convenience tools. These wrappers keep
 native ABS, RBA, and APRA identifiers visible.
 
+## Prompting an AI Agent
+
+When connected to an LLM or AI agent, users can ask in ordinary economic language and the agent can
+translate that request into MCP tool calls. For example, a quarterly real GDP growth prompt usually
+maps to `list_economic_concepts(query="quarterly real GDP growth")` and then
+`get_economic_series(concept="gdp_growth", last_n=40)`. The server returns structured `metadata`,
+`series`, and `observations`; the LLM client decides when to call tools and how to summarise the
+results. See the full [AI-agent prompting guide](https://auseconmcp.com/user-guide/prompting-ai-agents/).
+
 ## Development
 
 Python 3.12 is recommended for local development. The package metadata and CI matrix support

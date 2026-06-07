@@ -39,6 +39,9 @@ get_economic_series(concept="...")
 
 This gives the model a constrained discovery surface before retrieval.
 
+For user-facing natural-language examples, see
+[Prompting AI Agents](/user-guide/prompting-ai-agents/).
+
 For the small derived layer, call:
 
 ```text
