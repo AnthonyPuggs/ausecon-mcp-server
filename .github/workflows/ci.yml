@@ -50,5 +50,16 @@ jobs:
       - name: Test
         run: uv run pytest
 
+      - name: Wheel import smoke
+        if: matrix.python-version == '3.12'
+        shell: bash
+        run: |
+          WHEEL_DIR="${RUNNER_TEMP}/ausecon-wheel"
+          VENV="${RUNNER_TEMP}/ausecon-wheel-venv"
+          uv build --wheel --out-dir "$WHEEL_DIR"
+          uv venv "$VENV" --python 3.12
+          uv pip install --python "$VENV/bin/python" "$WHEEL_DIR"/*.whl
+          "$VENV/bin/python" -c 'import ausecon_mcp.server; from ausecon_mcp.contracts import response_schema; print(response_schema()["$id"])'
+
       - name: Docker smoke build
         run: docker build .

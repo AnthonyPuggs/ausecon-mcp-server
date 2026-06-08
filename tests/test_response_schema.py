@@ -8,6 +8,8 @@ import respx
 from httpx import Response
 from jsonschema import Draft202012Validator, FormatChecker, ValidationError
 
+import ausecon_mcp.contracts as contracts_module
+from ausecon_mcp.contracts import response_schema
 from ausecon_mcp.derived import derive_series
 from ausecon_mcp.providers.abs import ABSProvider
 from ausecon_mcp.providers.rba import RBAProvider
@@ -61,6 +63,25 @@ def test_package_contains_namespaced_response_schema_resource() -> None:
     assert json.loads(schema_resource.read_text(encoding="utf-8"))["$id"] == (
         "https://github.com/AnthonyPuggs/ausecon-mcp-server/schemas/response.schema.json"
     )
+    assert response_schema()["$id"] == (
+        "https://github.com/AnthonyPuggs/ausecon-mcp-server/schemas/response.schema.json"
+    )
+
+
+def test_response_schema_loads_packaged_resource_from_installed_layout(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    installed_contracts = tmp_path / "site-packages" / "ausecon_mcp" / "contracts.py"
+    monkeypatch.setattr(contracts_module, "__file__", str(installed_contracts))
+    response_schema.cache_clear()
+
+    try:
+        assert response_schema()["$id"] == (
+            "https://github.com/AnthonyPuggs/ausecon-mcp-server/schemas/response.schema.json"
+        )
+    finally:
+        response_schema.cache_clear()
 
 
 @pytest.mark.asyncio
