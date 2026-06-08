@@ -1,54 +1,112 @@
-# Australian Economic Data (ABS, RBA & APRA) MCP Server
+<div align="center">
 
-<!-- mcp-name: io.github.AnthonyPuggs/ausecon-mcp-server -->
+<img src="assets/banner.svg" alt="ausecon — Australian economic & financial data MCP server" width="100%" />
 
-[![CI](https://github.com/AnthonyPuggs/ausecon-mcp-server/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/AnthonyPuggs/ausecon-mcp-server/actions/workflows/ci.yml)
-[![Release](https://img.shields.io/github/v/tag/AnthonyPuggs/ausecon-mcp-server?sort=semver&label=release)](https://github.com/AnthonyPuggs/ausecon-mcp-server/tags)\
-[![Smithery](https://smithery.ai/badge/anthonypuggs/ausecon-mcp)](https://smithery.ai/servers/anthonypuggs/ausecon-mcp)
-[![Docs](https://img.shields.io/badge/docs-auseconmcp.com-blue)](https://auseconmcp.com/)
-[![PyPI](https://img.shields.io/pypi/v/ausecon-mcp-server?label=PyPI)](https://pypi.org/project/ausecon-mcp-server/)
-[![Transport](https://img.shields.io/badge/Transport-stdio%20%2B%20HTTP-blue)]()
-[![License-MIT](https://img.shields.io/badge/License-MIT-lightgrey)]()
+<br/>
 
-`ausecon-mcp-server` is a Python Model Context Protocol (MCP) server for structured Australian
-macroeconomic and financial data from the Australian Bureau of Statistics (ABS), the Reserve Bank
-of Australia (RBA), and the Australian Prudential Regulation Authority (APRA).
+[![CI](https://img.shields.io/github/actions/workflow/status/AnthonyPuggs/ausecon-mcp-server/ci.yml?branch=main&label=CI&labelColor=41464d&color=0a7d33)](https://github.com/AnthonyPuggs/ausecon-mcp-server/actions)
+[![PyPI](https://img.shields.io/pypi/v/ausecon-mcp-server?label=PyPI&labelColor=41464d&color=0969da)](https://pypi.org/project/ausecon-mcp-server/)
+[![Python](https://img.shields.io/badge/python-3.10%2B-0b2a52?labelColor=41464d)](https://pypi.org/project/ausecon-mcp-server/)
+[![Transport](https://img.shields.io/badge/transport-stdio%20%C2%B7%20HTTP-0b2a52?labelColor=41464d)](#connect-your-client)
+[![License](https://img.shields.io/badge/license-MIT-6a737d?labelColor=41464d)](LICENSE)
 
-Version `1.6.0` is the current release line. Transport support is stdio plus Streamable HTTP.
-The server exposes fourteen read-only MCP tools, four read-only MCP resources, eight prompt templates,
-70 curated analyst-facing economic and financial concepts through `get_economic_series`, and nine
-transparent derived indicators through `get_derived_series`.
+<p>
+  <b>ausecon</b> is a Model Context Protocol server that gives any AI assistant clean, structured
+  access to Australia&rsquo;s core economic and financial data &mdash; straight from the
+  <b>ABS</b>, <b>RBA</b>, and <b>APRA</b>.
+</p>
 
-## Documentation
+<a href="https://auseconmcp.com"><b>Documentation</b></a> &nbsp;·&nbsp;
+<a href="https://auseconmcp.com/getting-started">Getting started</a> &nbsp;·&nbsp;
+<a href="https://auseconmcp.com/tools">Tool reference</a> &nbsp;·&nbsp;
+<a href="https://github.com/AnthonyPuggs/ausecon-mcp-server/blob/main/CHANGELOG.md">Changelog</a>
 
-Full user and maintainer documentation is published at
-[auseconmcp.com](https://auseconmcp.com/).
+</div>
 
-Useful links:
+---
 
-- [Getting started](https://auseconmcp.com/getting-started/)
-- [Client setup](https://auseconmcp.com/client-setup/)
-- [Tool reference](https://auseconmcp.com/reference/tools/)
-- [Semantic concepts](https://auseconmcp.com/reference/semantic-concepts/)
-- [Response schema](https://auseconmcp.com/reference/response-schema/)
-- [Roadmap](https://auseconmcp.com/maintainers/roadmap/)
-- [Changelog](CHANGELOG.md)
+## Why this exists
+
+Australian economic data is authoritative but awkward to reach &mdash; different portals, different
+formats, and identifiers you have to memorise. **ausecon** puts a friendly, consistent layer in
+front of all three regulators so you (or your AI agent) can just ask for *&ldquo;the cash rate&rdquo;*
+or *&ldquo;quarterly real GDP growth&rdquo;* and get back tidy, source-traceable series &mdash;
+without leaving the conversation.
+
+<table align="center">
+  <tr>
+    <td align="center"><b>14</b><br/><sub>read-only tools</sub></td>
+    <td align="center"><b>70</b><br/><sub>economic concepts</sub></td>
+    <td align="center"><b>9</b><br/><sub>derived indicators</sub></td>
+    <td align="center"><b>8</b><br/><sub>prompt templates</sub></td>
+    <td align="center"><b>3</b><br/><sub>data sources</sub></td>
+  </tr>
+</table>
+
+## What you get
+
+<table>
+  <tr>
+    <td width="33%" valign="top">
+      <h4>🔎 Ask in plain English</h4>
+      Discover concepts with <code>list_economic_concepts</code>, then pull resolved series by
+      name &mdash; no dataset IDs required.
+    </td>
+    <td width="33%" valign="top">
+      <h4>🧱 Three sources, one shape</h4>
+      ABS, RBA and APRA all return the same tidy
+      <code>metadata · series · observations</code> structure.
+    </td>
+    <td width="33%" valign="top">
+      <h4>🧮 Transparent derived series</h4>
+      Nine formula-based indicators like <code>real_cash_rate</code> &mdash; every calculation is
+      open and inspectable.
+    </td>
+  </tr>
+  <tr>
+    <td width="33%" valign="top">
+      <h4>🎯 Source-native control</h4>
+      Drop down to raw <code>get_abs_data</code>, <code>get_rba_table</code> or
+      <code>get_apra_data</code> whenever you need exact control.
+    </td>
+    <td width="33%" valign="top">
+      <h4>⚡ Quick-turn helpers</h4>
+      Convenience tools for latest observations, top movers and release events &mdash; analysis in
+      one call.
+    </td>
+    <td width="33%" valign="top">
+      <h4>🔌 Plugs into your client</h4>
+      Claude Desktop, Claude Code, Codex or Smithery. stdio locally, Streamable HTTP when hosted.
+    </td>
+  </tr>
+</table>
+
+## Data sources
+
+| Source | Coverage |
+| :----- | :------- |
+| **ABS** &nbsp;·&nbsp; Australian Bureau of Statistics | National accounts, prices, labour force, population |
+| **RBA** &nbsp;·&nbsp; Reserve Bank of Australia | Cash rate, monetary & financial aggregates, exchange rates |
+| **APRA** &nbsp;·&nbsp; Aust. Prudential Regulation Authority | ADI & insurer statistics, with release-cadence estimates |
 
 ## Install
 
-The package is published to [PyPI](https://pypi.org/project/ausecon-mcp-server/) and is intended to
-be launched by an MCP client on demand via [`uvx`](https://docs.astral.sh/uv/):
+The package lives on [PyPI](https://pypi.org/project/ausecon-mcp-server/) and is designed to be
+launched on demand by your MCP client via [`uvx`](https://docs.astral.sh/uv/):
 
 ```bash
 uvx ausecon-mcp-server
 ```
 
-The server speaks MCP over standard input/output. When launched manually, it waits for a client to
-connect.
+The server speaks MCP over standard input/output. Launched on its own, it simply waits for a client
+to connect.
 
-## Client Setup
+## Connect your client
 
-Claude Desktop:
+<details open>
+<summary><b>Claude Desktop</b></summary>
+
+Add to your `claude_desktop_config.json`:
 
 ```json
 {
@@ -60,71 +118,52 @@ Claude Desktop:
   }
 }
 ```
+</details>
 
-Claude Code:
+<details>
+<summary><b>Claude Code</b></summary>
 
 ```bash
 claude mcp add --transport stdio ausecon -- uvx ausecon-mcp-server
 ```
+</details>
 
-Codex:
+<details>
+<summary><b>Codex</b></summary>
 
 ```bash
 codex mcp add ausecon -- uvx ausecon-mcp-server
 ```
+</details>
 
-Smithery:
+> **Hosting it instead?** `smithery.yaml` and `Dockerfile.smithery` ship a Streamable HTTP
+> deployment at `/mcp`. See the [Smithery guide](https://auseconmcp.com/smithery).
 
-This repository also includes `smithery.yaml` and `Dockerfile.smithery` for hosted Smithery custom
-container deployment over MCP Streamable HTTP at `/mcp`. The hosted HTTP entrypoint is
-`ausecon-mcp-http`; local users should keep using the stdio command above unless they are testing a
-container deployment. Maintainers can follow the deployment checklist in
-[`docs/smithery-deployment.md`](docs/smithery-deployment.md).
+## A quick taste
 
-## Basic Workflow
+Find the concept you want, then ask for the series:
 
-For normal economic concepts, discover the supported concept first:
-
-```text
+```python
 list_economic_concepts(query="cash rate")
-```
 
-Then retrieve the resolved series:
-
-```text
 get_economic_series(
-  concept="cash_rate_target",
-  start="2020-01-01"
+    concept="cash_rate_target",
+    start="2020-01-01",
 )
 ```
 
-For transparent formula-based indicators, call the derived retrieval surface directly:
+Need a transparent, formula-based indicator? Call the derived surface directly:
 
-```text
+```python
 get_derived_series(concept="real_cash_rate", last_n=12)
 ```
 
-For exact source-native control, use `search_datasets`, `list_catalogue`,
-`get_abs_dataset_structure`, `get_abs_data`, `get_rba_table`, and `get_apra_data`.
+> Connected to an AI agent, you can skip the syntax entirely &mdash; ask for *&ldquo;quarterly real
+> GDP growth&rdquo;* and it maps your request to the right tool calls for you.
 
-For quick-turnaround analysis, use `get_latest_observations`, `get_top_observations`,
-`describe_dataset`, and `list_release_events` as additive convenience tools. These wrappers keep
-native ABS, RBA, and APRA identifiers visible, including source controls, safe convenience calls,
-and APRA expected-release cadence estimates.
+## Develop locally
 
-## Prompting an AI Agent
-
-When connected to an LLM or AI agent, users can ask in ordinary economic language and the agent can
-translate that request into MCP tool calls. For example, a quarterly real GDP growth prompt usually
-maps to `list_economic_concepts(query="quarterly real GDP growth")` and then
-`get_economic_series(concept="gdp_growth", last_n=40)`. The server returns structured `metadata`,
-`series`, and `observations`; the LLM client decides when to call tools and how to summarise the
-results. See the full [AI-agent prompting guide](https://auseconmcp.com/user-guide/prompting-ai-agents/).
-
-## Development
-
-Python 3.12 is recommended for local development. The package metadata and CI matrix support
-Python 3.10+.
+Python 3.12 is recommended; the CI matrix supports 3.10+.
 
 ```bash
 uv sync --python 3.12 --extra dev
@@ -132,8 +171,14 @@ uv run pytest
 uv run ruff check src tests scripts
 ```
 
-## Repository
+---
 
-- Repository: [github.com/AnthonyPuggs/ausecon-mcp-server](https://github.com/AnthonyPuggs/ausecon-mcp-server)
-- Issues: [GitHub Issues](https://github.com/AnthonyPuggs/ausecon-mcp-server/issues)
-- Licence: [MIT](LICENSE)
+<div align="center">
+<sub>
+
+[auseconmcp.com](https://auseconmcp.com) &nbsp;·&nbsp;
+[Issues](https://github.com/AnthonyPuggs/ausecon-mcp-server/issues) &nbsp;·&nbsp;
+MIT Licence &nbsp;·&nbsp; Made for the Australian data community
+
+</sub>
+</div>
