@@ -209,19 +209,24 @@ def test_ci_workflow_exists_with_quality_checks_and_hygiene_guard() -> None:
     )
 
 
-def test_readme_is_slim_landing_page_for_current_release_state() -> None:
+def test_readme_is_rich_landing_page_for_current_release_state() -> None:
     readme_text = README.read_text(encoding="utf-8")
     docs_home_text = (DOCS_SITE / "src/content/docs/index.mdx").read_text(encoding="utf-8")
 
-    assert len(readme_text.splitlines()) < 140
-    assert "Version `1.6.0` is the current release line." in readme_text
+    assert '<img src="assets/banner.svg"' in readme_text
+    assert "Australian economic data is authoritative but awkward to reach" in readme_text
     assert "Version `1.6.0` is the current release line." in docs_home_text
     assert "Version `1.5.0` is the current release line." not in readme_text
     assert "Version `1.5.0` is the current release line." not in docs_home_text
-    assert re.search(r"stdio plus\s+Streamable HTTP", readme_text)
-    assert "fourteen read-only MCP tools" in readme_text
-    assert "70 curated analyst-facing economic and financial concepts" in readme_text
-    assert "nine\ntransparent derived indicators" in readme_text
+
+    assert "<b>14</b>" in readme_text
+    assert "read-only tools" in readme_text
+    assert "<b>70</b>" in readme_text
+    assert "economic concepts" in readme_text
+    assert "<b>9</b>" in readme_text
+    assert "derived indicators" in readme_text
+    assert "stdio locally, Streamable HTTP when hosted" in readme_text
+
     assert "55 curated macroeconomic concepts" not in readme_text
     assert "48 curated macroeconomic concepts" not in readme_text
     assert "36 curated macroeconomic concepts" not in readme_text
@@ -352,7 +357,10 @@ def test_docs_site_documents_ai_agent_prompting_flow() -> None:
     ).read_text(encoding="utf-8")
     tools_text = (DOCS_SITE / "src/content/docs/reference/tools.md").read_text(encoding="utf-8")
 
-    assert "## Prompting an AI Agent" in readme_text
+    assert "## A quick taste" in readme_text
+    assert 'list_economic_concepts(query="cash rate")' in readme_text
+    assert 'get_derived_series(concept="real_cash_rate", last_n=12)' in readme_text
+    assert "Connected to an AI agent" in readme_text
     assert "Prompting AI Agents" in astro_config
     assert "user-guide/prompting-ai-agents" in astro_config
     for text in (getting_started_text, discovery_text, examples_text, tools_text):
@@ -520,8 +528,7 @@ def test_python_version_story_is_consistent_across_docs_and_ci() -> None:
     workflow_text = CI_WORKFLOW.read_text(encoding="utf-8")
 
     assert pyproject["project"]["requires-python"] == ">=3.10"
-    assert "Python 3.12 is recommended for local development" in readme_text
-    assert "Python 3.10+" in readme_text
+    assert "Python 3.12 is recommended; the CI matrix supports 3.10+." in readme_text
     assert "Python 3.12 is recommended for local development" in claude_text
     assert "python-version: ['3.10', '3.11', '3.12', '3.13']" in workflow_text
 
