@@ -1,8 +1,10 @@
 """Shared parsing and ordering helpers for observation periods and date bounds.
 
-Observation dates arrive in any of five formats depending on the source and
-frequency: YYYY, YYYY-QN, YYYY-SN, YYYY-MM, or YYYY-MM-DD. Comparisons across
-granularities must use parsed calendar dates rather than string order.
+Observation dates arrive in several formats depending on the source and
+frequency: YYYY, YYYY-QN, YYYY-SN, YYYY-MM, YYYY-Www, or YYYY-MM-DD.
+Comparisons across granularities must use parsed calendar dates rather than
+string order. ISO week periods are parsed explicitly because
+date.fromisoformat only accepts them on Python 3.11+.
 """
 
 from __future__ import annotations
@@ -17,6 +19,7 @@ YEAR_RE = re.compile(r"^(?P<year>\d{4})$")
 QUARTER_RE = re.compile(r"^(?P<year>\d{4})-Q(?P<quarter>[1-4])$")
 SEMESTER_RE = re.compile(r"^(?P<year>\d{4})-S(?P<semester>[1-2])$")
 MONTH_RE = re.compile(r"^(?P<year>\d{4})-(?P<month>0[1-9]|1[0-2])$")
+WEEK_RE = re.compile(r"^(?P<year>\d{4})-W(?P<week>0[1-9]|[1-4][0-9]|5[0-3])$")
 
 ACCEPTED_PERIOD_FORMATS = "YYYY, YYYY-QN, YYYY-SN, YYYY-MM, or YYYY-MM-DD"
 
@@ -34,6 +37,8 @@ def period_start_date(period: str) -> date:
         return date(int(match.group("year")), int(match.group("month")), 1)
     if match := YEAR_RE.fullmatch(period):
         return date(int(match.group("year")), 1, 1)
+    if parsed := _parse_iso_week(period, weekday=1):
+        return parsed
     return _parse_iso(period)
 
 
@@ -53,6 +58,8 @@ def period_end_date(period: str) -> date:
         return date(year, month, calendar.monthrange(year, month)[1])
     if match := YEAR_RE.fullmatch(period):
         return date(int(match.group("year")), 12, 31)
+    if parsed := _parse_iso_week(period, weekday=7):
+        return parsed
     return _parse_iso(period)
 
 
@@ -68,6 +75,18 @@ def try_period_sort_key(period: str) -> tuple[int, int, int] | None:
         return period_sort_key(period)
     except AuseconValidationError:
         return None
+
+
+def _parse_iso_week(period: str, *, weekday: int) -> date | None:
+    match = WEEK_RE.fullmatch(period)
+    if match is None:
+        return None
+    try:
+        return date.fromisocalendar(int(match.group("year")), int(match.group("week")), weekday)
+    except ValueError as exc:
+        raise AuseconValidationError(
+            f"Unsupported observation period {period!r}; expected {ACCEPTED_PERIOD_FORMATS}."
+        ) from exc
 
 
 def _parse_iso(period: str) -> date:

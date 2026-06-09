@@ -44,9 +44,16 @@ def test_period_helpers_reject_unknown_formats() -> None:
         period_start_date("not-a-period")
 
 
-def test_period_helpers_accept_iso_week_dates() -> None:
-    # date.fromisoformat handles ISO week periods natively on Python 3.11+.
-    assert try_period_sort_key("2025-W01") == (2024, 12, 30)
+def test_period_helpers_accept_iso_week_periods() -> None:
+    # Parsed explicitly (not via date.fromisoformat, which only accepts ISO week
+    # strings on Python 3.11+) so behaviour is identical across supported Pythons.
+    assert period_start_date("2025-W01") == date(2024, 12, 30)
+    assert period_end_date("2025-W01") == date(2025, 1, 5)
+    assert try_period_sort_key("2025-W01") == (2025, 1, 5)
+    # 2020 had 53 ISO weeks; 2025 does not.
+    assert period_end_date("2020-W53") == date(2021, 1, 3)
+    with pytest.raises(AuseconValidationError, match="Unsupported observation period"):
+        period_end_date("2025-W53")
 
 
 def test_try_period_sort_key_returns_none_for_unknown_formats() -> None:
