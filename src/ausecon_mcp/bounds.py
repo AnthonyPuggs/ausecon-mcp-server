@@ -1,18 +1,26 @@
 from __future__ import annotations
 
 import calendar
-import re
 from dataclasses import dataclass
 from datetime import date
 from typing import Any, Literal
 
 from ausecon_mcp.errors import AuseconValidationError
-
-_YEAR_RE = re.compile(r"^(?P<year>\d{4})$")
-_QUARTER_RE = re.compile(r"^(?P<year>\d{4})-Q(?P<quarter>[1-4])$")
-_SEMESTER_RE = re.compile(r"^(?P<year>\d{4})-S(?P<semester>[1-2])$")
-_MONTH_RE = re.compile(r"^(?P<year>\d{4})-(?P<month>0[1-9]|1[0-2])$")
-_ACCEPTED_BOUND_FORMATS = "YYYY, YYYY-QN, YYYY-SN, YYYY-MM, or YYYY-MM-DD"
+from ausecon_mcp.periods import (
+    ACCEPTED_PERIOD_FORMATS as _ACCEPTED_BOUND_FORMATS,
+)
+from ausecon_mcp.periods import (
+    MONTH_RE as _MONTH_RE,
+)
+from ausecon_mcp.periods import (
+    QUARTER_RE as _QUARTER_RE,
+)
+from ausecon_mcp.periods import (
+    SEMESTER_RE as _SEMESTER_RE,
+)
+from ausecon_mcp.periods import (
+    YEAR_RE as _YEAR_RE,
+)
 
 
 @dataclass(frozen=True)
@@ -175,8 +183,10 @@ def _month_for(parsed: _ParsedBound, side: Literal["start", "end"]) -> int:
         return (parsed.quarter - 1) * 3 + (1 if side == "start" else 3)
     if parsed.kind == "semester":
         assert parsed.semester is not None
-        return 1 if parsed.semester == 1 and side == "start" else (
-            6 if parsed.semester == 1 else 7 if side == "start" else 12
+        return (
+            1
+            if parsed.semester == 1 and side == "start"
+            else (6 if parsed.semester == 1 else 7 if side == "start" else 12)
         )
     return 1 if side == "start" else 12
 
@@ -187,8 +197,10 @@ def _quarter_for(parsed: _ParsedBound, side: Literal["start", "end"]) -> int:
         return parsed.quarter
     if parsed.kind == "semester":
         assert parsed.semester is not None
-        return 1 if parsed.semester == 1 and side == "start" else (
-            2 if parsed.semester == 1 else 3 if side == "start" else 4
+        return (
+            1
+            if parsed.semester == 1 and side == "start"
+            else (2 if parsed.semester == 1 else 3 if side == "start" else 4)
         )
     month = _month_for(parsed, side)
     return ((month - 1) // 3) + 1

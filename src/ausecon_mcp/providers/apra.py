@@ -290,9 +290,7 @@ def _url_seeds(publication_id: str, entry: dict[str, Any]) -> list[dict[str, Any
 
 def _bundled_url_seeds() -> dict[str, list[dict[str, Any]]]:
     try:
-        text = resources.files("ausecon_mcp").joinpath(_SEED_RESOURCE).read_text(
-            encoding="utf-8"
-        )
+        text = resources.files("ausecon_mcp").joinpath(_SEED_RESOURCE).read_text(encoding="utf-8")
     except FileNotFoundError:
         return {}
     return json.loads(text)

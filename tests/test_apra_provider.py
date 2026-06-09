@@ -86,7 +86,7 @@ def _catalogue() -> dict:
                     "dimension_columns": {"abn": 2, "institution": 3},
                     "series_start_column": 4,
                     "identity_columns": ["abn"],
-                }
+                },
             },
         }
     }

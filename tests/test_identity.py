@@ -37,4 +37,3 @@ async def test_semantic_resolver_normalises_geography_aliases_before_validation(
 
     assert resolved.geography == "aus"
     assert resolved.abs_key == "1.10001.10.50.Q"
-

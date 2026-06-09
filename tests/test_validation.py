@@ -56,9 +56,9 @@ def test_validate_source_token_rejects_url_path_and_control_characters(value: st
 
 
 def test_validate_apra_series_ids_permits_colon_delimited_source_native_ids() -> None:
-    assert validate_apra_series_ids(
-        ["ADI_MONTHLY:table_1:11111111111:total_residents_assets"]
-    ) == ["ADI_MONTHLY:table_1:11111111111:total_residents_assets"]
+    assert validate_apra_series_ids(["ADI_MONTHLY:table_1:11111111111:total_residents_assets"]) == [
+        "ADI_MONTHLY:table_1:11111111111:total_residents_assets"
+    ]
 
 
 @pytest.mark.parametrize(

@@ -209,9 +209,7 @@ def build_apra_release_events(
                 "seed_checked_at": row_seed_checked_at,
                 "audit_last_audited": audit.get("last_audited"),
                 "governance_status": governance_status,
-                "governance_issues": [
-                    issue.get("code") for issue in governance.get("issues", [])
-                ],
+                "governance_issues": [issue.get("code") for issue in governance.get("issues", [])],
                 "matched_catalogue_ids": [entry["id"]],
                 "upstream_url": audit.get("upstream_url", entry.get("landing_url")),
             }
@@ -221,9 +219,11 @@ def build_apra_release_events(
 
 def apra_seed_checked_at() -> str | None:
     try:
-        text = resources.files("ausecon_mcp").joinpath(
-            "data/apra_url_seeds.json"
-        ).read_text(encoding="utf-8")
+        text = (
+            resources.files("ausecon_mcp")
+            .joinpath("data/apra_url_seeds.json")
+            .read_text(encoding="utf-8")
+        )
     except FileNotFoundError:
         return None
     seeds = json.loads(text)

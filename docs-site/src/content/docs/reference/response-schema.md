@@ -30,6 +30,8 @@ Common fields include:
 Optional fields appear when relevant:
 
 - `frequency`
+- `observations_dropped` — observations removed by `last_n` selection; `truncated` is
+  `true` when this is non-zero
 - `updated_after`
 - `title` and `publication_date`
 - `semantic`
@@ -67,6 +69,9 @@ warnings flag known source reporting breaks such as the AASB 17 insurance perfor
 
 `observations` entries include `date`, `series_id`, nullable `value`, optional `raw_value`, a
 `dimensions` map, optional `status`, and optional ABS comments.
+
+Observations are returned in chronological order (ascending by period end date), regardless of
+upstream row order. `last_n` selects the most recent N observations per series.
 
 Representative payloads live under
 [`examples/payloads/`](https://github.com/AnthonyPuggs/ausecon-mcp-server/tree/main/examples/payloads)

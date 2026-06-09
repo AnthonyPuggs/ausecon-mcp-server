@@ -38,4 +38,3 @@ def geography_alias_rows() -> list[dict[str, str]]:
         {"alias": alias, "canonical": canonical}
         for alias, canonical in sorted(_GEOGRAPHY_ALIASES.items())
     ]
-

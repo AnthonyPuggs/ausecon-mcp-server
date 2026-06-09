@@ -39,9 +39,7 @@ SEMANTIC_DESIGN = (
     ROOT / "docs" / "superpowers" / "specs" / "2026-04-19-semantic-layer-expansion-design.md"
 )
 SEMANTIC_REFERENCE = DOCS_SITE / "src" / "content" / "docs" / "reference" / "semantic-concepts.md"
-PROMPTING_GUIDE = (
-    DOCS_SITE / "src" / "content" / "docs" / "user-guide" / "prompting-ai-agents.md"
-)
+PROMPTING_GUIDE = DOCS_SITE / "src" / "content" / "docs" / "user-guide" / "prompting-ai-agents.md"
 DOCS_URL = "https://auseconmcp.com/"
 REPOSITORY_URL = "https://github.com/AnthonyPuggs/ausecon-mcp-server"
 
@@ -196,16 +194,14 @@ def test_ci_workflow_exists_with_quality_checks_and_hygiene_guard() -> None:
     assert "uv run ruff check src tests scripts" in workflow_text
     assert "uv run pytest" in workflow_text
     assert "test -f LICENSE" in workflow_text
-    assert 'command -v rg >/dev/null 2>&1' in workflow_text
+    assert "command -v rg >/dev/null 2>&1" in workflow_text
     assert (
         'rg -n "rba_abs_mcp|<your-repo-url>" README.md docs-site examples '
-        "pyproject.toml fastmcp.json server.json smithery.yaml Dockerfile.smithery"
-        in workflow_text
+        "pyproject.toml fastmcp.json server.json smithery.yaml Dockerfile.smithery" in workflow_text
     )
     assert (
         'grep -R -n -E "rba_abs_mcp|<your-repo-url>" README.md docs-site examples '
-        "pyproject.toml fastmcp.json server.json smithery.yaml Dockerfile.smithery"
-        in workflow_text
+        "pyproject.toml fastmcp.json server.json smithery.yaml Dockerfile.smithery" in workflow_text
     )
 
 
@@ -281,9 +277,9 @@ def test_docs_site_instruments_vercel_observability_without_query_payloads() -> 
 
 
 def test_operations_docs_separate_server_and_docs_site_observability() -> None:
-    operations_text = (
-        DOCS_SITE / "src/content/docs/operations/caching-and-logging.md"
-    ).read_text(encoding="utf-8")
+    operations_text = (DOCS_SITE / "src/content/docs/operations/caching-and-logging.md").read_text(
+        encoding="utf-8"
+    )
 
     assert "## Server observability" in operations_text
     assert "## Documentation-site observability" in operations_text
@@ -295,9 +291,9 @@ def test_operations_docs_separate_server_and_docs_site_observability() -> None:
 
 def test_hosted_deployment_checklist_is_documented_without_http_smoke_script() -> None:
     smithery_text = (ROOT / "docs" / "smithery-deployment.md").read_text(encoding="utf-8")
-    docs_page = (
-        DOCS_SITE / "src/content/docs/operations/hosted-deployment.md"
-    ).read_text(encoding="utf-8")
+    docs_page = (DOCS_SITE / "src/content/docs/operations/hosted-deployment.md").read_text(
+        encoding="utf-8"
+    )
 
     assert not (ROOT / "scripts" / "mcp_http_smoke.py").exists()
     for text in (smithery_text, docs_page):
@@ -310,9 +306,9 @@ def test_hosted_deployment_checklist_is_documented_without_http_smoke_script() -
 
 def test_post_v11_roadmap_is_documented_and_contract_preserving() -> None:
     roadmap_text = ROADMAP.read_text(encoding="utf-8")
-    docs_roadmap_text = (
-        DOCS_SITE / "src/content/docs/maintainers/roadmap.md"
-    ).read_text(encoding="utf-8")
+    docs_roadmap_text = (DOCS_SITE / "src/content/docs/maintainers/roadmap.md").read_text(
+        encoding="utf-8"
+    )
 
     for text in (roadmap_text, docs_roadmap_text):
         assert "v1.2" in text
@@ -346,15 +342,15 @@ def test_docs_site_documents_ai_agent_prompting_flow() -> None:
     readme_text = README.read_text(encoding="utf-8")
     guide_text = PROMPTING_GUIDE.read_text(encoding="utf-8")
     astro_config = (DOCS_SITE / "astro.config.mjs").read_text(encoding="utf-8")
-    getting_started_text = (
-        DOCS_SITE / "src/content/docs/getting-started/index.md"
-    ).read_text(encoding="utf-8")
+    getting_started_text = (DOCS_SITE / "src/content/docs/getting-started/index.md").read_text(
+        encoding="utf-8"
+    )
     discovery_text = (
         DOCS_SITE / "src/content/docs/user-guide/discovery-and-retrieval.md"
     ).read_text(encoding="utf-8")
-    examples_text = (
-        DOCS_SITE / "src/content/docs/user-guide/examples.md"
-    ).read_text(encoding="utf-8")
+    examples_text = (DOCS_SITE / "src/content/docs/user-guide/examples.md").read_text(
+        encoding="utf-8"
+    )
     tools_text = (DOCS_SITE / "src/content/docs/reference/tools.md").read_text(encoding="utf-8")
 
     assert "## A quick taste" in readme_text
@@ -544,10 +540,10 @@ def test_codeql_and_dependabot_are_configured_for_visible_security_automation() 
     assert "github/codeql-action/init@" in codeql_text
     assert "security-extended" in codeql_text
     assert "github/codeql-action/analyze@" in codeql_text
-    assert "package-ecosystem: \"pip\"" in dependabot_text
-    assert "package-ecosystem: \"github-actions\"" in dependabot_text
-    assert "package-ecosystem: \"npm\"" in dependabot_text
-    assert "directory: \"/docs-site\"" in dependabot_text
+    assert 'package-ecosystem: "pip"' in dependabot_text
+    assert 'package-ecosystem: "github-actions"' in dependabot_text
+    assert 'package-ecosystem: "npm"' in dependabot_text
+    assert 'directory: "/docs-site"' in dependabot_text
     assert "CodeQL default setup is disabled" in releasing_text
     assert "advanced CodeQL workflow" in releasing_text
 
@@ -564,12 +560,10 @@ def test_changelog_promotes_v160_and_keeps_fresh_unreleased_section() -> None:
     assert "source-aware convenience tools" not in unreleased_section
     assert "source-aware convenience tools" in v160_section
     assert (
-        "[Unreleased]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/"
-        "v1.6.0...HEAD"
+        "[Unreleased]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.6.0...HEAD"
     ) in changelog_text
     assert (
-        "[1.6.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/"
-        "v1.5.0...v1.6.0"
+        "[1.6.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.5.0...v1.6.0"
     ) in changelog_text
 
 

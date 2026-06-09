@@ -26,11 +26,15 @@ Common fields:
 Optional fields appear when relevant:
 
 - `frequency`
+- `observations_dropped` — number of observations removed by `last_n` selection;
+  `truncated` is `true` when this is non-zero
 - `updated_after` for ABS requests that use the upstream SDMX filter
 - `title` and `publication_date` for source-native table or publication metadata
 - `semantic` for responses returned by `get_economic_series`
 - `derived` for responses returned by `get_derived_series`
 - `stale`, `cached_at`, and `expires_at` when a stale cached payload is returned after an upstream failure
+- `warnings` — plain-English source warnings, including the empty-window notice when ABS
+  reports no observations for the requested period
 
 `cached_at` and `expires_at` are Unix timestamps from the cache layer rather than ISO datetimes.
 
@@ -52,6 +56,9 @@ requested and resolved bounds, and dropped-observation counts for transparent de
 
 The `dimensions` map is intentionally shared across ABS, RBA, and APRA payloads so downstream
 consumers can parse one stable shape.
+
+Observations are returned in chronological order (ascending by period end date), regardless of
+upstream row order. `last_n` selects the most recent N observations per series.
 
 ## Checked-In Examples
 

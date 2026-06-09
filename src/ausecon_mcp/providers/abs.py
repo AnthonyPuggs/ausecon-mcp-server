@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from copy import deepcopy
 from time import perf_counter
 from typing import Any
@@ -8,7 +9,7 @@ from xml.etree import ElementTree as ET
 import httpx
 
 from ausecon_mcp.cache import TTLCache
-from ausecon_mcp.errors import AuseconParseError, AuseconUpstreamError
+from ausecon_mcp.errors import AuseconNotFoundError, AuseconParseError, AuseconUpstreamError
 from ausecon_mcp.filters import filter_payload
 from ausecon_mcp.logging import get_logger
 from ausecon_mcp.parsers.abs_csv import parse_abs_csv
@@ -17,6 +18,38 @@ from ausecon_mcp.providers._http import build_client, resolve_version, utc_now_i
 from ausecon_mcp.providers._retry import get_with_retries
 
 _logger = get_logger("providers.abs")
+
+
+def _no_records_payload(
+    dataflow_id: str,
+    *,
+    url: str | None,
+    start_period: str | None,
+    end_period: str | None,
+    updated_after: str | None,
+) -> dict[str, Any]:
+    window_parts = []
+    if start_period:
+        window_parts.append(f"start {start_period}")
+    if end_period:
+        window_parts.append(f"end {end_period}")
+    window = f" in the requested window ({', '.join(window_parts)})" if window_parts else ""
+    return {
+        "metadata": {
+            "source": "abs",
+            "dataset_id": dataflow_id,
+            "frequency": None,
+            "retrieval_url": url or "",
+            "retrieved_at": utc_now_iso(),
+            "updated_after": updated_after,
+            "warnings": [
+                f"ABS returned no observations for '{dataflow_id}'{window}. "
+                "The series may not extend that far, or may have ceased."
+            ],
+        },
+        "series": [],
+        "observations": [],
+    }
 
 
 class ABSProvider:
@@ -88,7 +121,10 @@ class ABSProvider:
         last_n: int | None = None,
         updated_after: str | None = None,
     ) -> dict[str, Any]:
-        cache_key = f"abs-data:{dataflow_id}:{key}:{start_period}:{end_period}:{updated_after}"
+        # Structured encoding so a literal "None" value can never alias an absent one.
+        cache_key = "abs-data:" + json.dumps(
+            [dataflow_id, key, start_period, end_period, updated_after]
+        )
         raw_payload = self._cache.get(cache_key)
         stale_meta: dict[str, Any] | None = None
 
@@ -116,6 +152,31 @@ class ABSProvider:
                     source="abs",
                     identifier=dataflow_id,
                 )
+            except AuseconNotFoundError as exc:
+                # The ABS API answers 404 both for unknown dataflows and for valid
+                # dataflows with no observations in the requested window; only the
+                # body distinguishes them. Never fall back to stale data on a 404.
+                if "norecordsfound" in (exc.body or "").lower():
+                    _logger.info(
+                        "request.no_records",
+                        extra={"source": "abs", "identifier": dataflow_id, "url": exc.url},
+                    )
+                    raw_payload = _no_records_payload(
+                        dataflow_id,
+                        url=exc.url,
+                        start_period=start_period,
+                        end_period=end_period,
+                        updated_after=updated_after,
+                    )
+                else:
+                    raise AuseconNotFoundError(
+                        f"ABS request for '{dataflow_id}' failed with HTTP 404: the dataflow "
+                        "appears unknown, renamed, or retired. Check the id with "
+                        "search_datasets or list_catalogue.",
+                        status_code=exc.status_code,
+                        body=exc.body,
+                        url=exc.url,
+                    ) from exc
             except AuseconUpstreamError:
                 stale = self._cache.get_stale(cache_key)
                 if stale is None:

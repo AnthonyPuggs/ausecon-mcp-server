@@ -55,8 +55,20 @@ def test_search_catalogue_excludes_ceased_abs_dataflows() -> None:
         )
 
 
-def test_search_catalogue_returns_reactivated_retail_trade() -> None:
+def test_search_catalogue_excludes_ceased_retail_trade() -> None:
+    # The ABS discontinued Retail Trade after the June 2025 reference month; the
+    # entry stays retrievable via the retail_turnover concept but is hidden from
+    # default discovery like other ceased dataflows.
     results = search_catalogue("retail trade", source="abs")
 
-    assert results
-    assert results[0]["id"] == "RT"
+    assert all(item["id"] != "RT" for item in results)
+
+
+def test_list_catalogue_surfaces_ceased_retail_trade_on_request() -> None:
+    from ausecon_mcp.catalogue.search import list_catalogue
+
+    default_ids = {item["id"] for item in list_catalogue(source="abs")}
+    ceased_ids = {item["id"] for item in list_catalogue(source="abs", include_ceased=True)}
+
+    assert "RT" not in default_ids
+    assert "RT" in ceased_ids

@@ -79,6 +79,8 @@ def describe_dataset(
         "tables": _table_rows(source, entry, table_id=table_id),
         "warnings": _warning_rows(entry),
         "framework_breaks": list(entry.get("framework_breaks", [])),
+        "ceased": bool(entry.get("ceased", False)),
+        "successor": entry.get("successor"),
         "recommended_call": _recommended_call(source, entry, table_id=table_id),
         "source_controls": _source_controls(source, entry, table_id=table_id),
         "convenience_calls": _convenience_calls(source, entry, table_id=table_id),

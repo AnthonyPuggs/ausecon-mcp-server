@@ -72,7 +72,9 @@ def test_parse_abs_csv_preserves_decimals_base_period_and_comments() -> None:
 
 
 def test_parse_rba_csv_extracts_metadata_and_long_observations() -> None:
-    parsed = parse_rba_csv((FIXTURES / "rba_g1_sample.csv").read_text(), table_id="g1")
+    parsed = parse_rba_csv(
+        (FIXTURES / "rba_g1_sample.csv").read_text(encoding="utf-8"), table_id="g1"
+    )
 
     assert parsed["metadata"]["source"] == "rba"
     assert parsed["metadata"]["dataset_id"] == "g1"
@@ -86,7 +88,9 @@ def test_parse_rba_csv_extracts_metadata_and_long_observations() -> None:
 
 
 def test_parse_rba_csv_supports_a2_event_format_and_range_cells() -> None:
-    parsed = parse_rba_csv((FIXTURES / "rba_a2_sample.csv").read_text(), table_id="a2")
+    parsed = parse_rba_csv(
+        (FIXTURES / "rba_a2_sample.csv").read_text(encoding="utf-8"), table_id="a2"
+    )
 
     assert parsed["metadata"]["source"] == "rba"
     assert parsed["metadata"]["dataset_id"] == "a2"

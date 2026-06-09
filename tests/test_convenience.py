@@ -99,6 +99,23 @@ def test_describe_dataset_exposes_source_controls_convenience_calls_and_governan
     variant = result["variants"][0]
     assert variant["recommended_call"]["tool"] == "get_apra_data"
     assert variant["convenience_calls"]["latest"]["tool"] == "get_latest_observations"
-    assert variant["convenience_calls"]["latest"]["arguments"]["series_ids"] == (
-        variant["apra_series_ids"]
+    assert (
+        variant["convenience_calls"]["latest"]["arguments"]["series_ids"]
+        == (variant["apra_series_ids"])
     )
+
+
+def test_describe_dataset_surfaces_ceased_flag_and_successor_for_retail_trade() -> None:
+    result = describe_dataset("abs", "RT")
+
+    assert result["ceased"] is True
+    assert result["successor"]["dataset_id"] == "HSI_M"
+    assert result["successor"]["concept"] == "household_spending"
+    assert any("ceased" in warning.lower() for warning in result["warnings"])
+
+
+def test_describe_dataset_reports_active_datasets_as_not_ceased() -> None:
+    result = describe_dataset("abs", "CPI")
+
+    assert result["ceased"] is False
+    assert result["successor"] is None

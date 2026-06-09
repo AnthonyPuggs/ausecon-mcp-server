@@ -61,6 +61,11 @@
         "truncated": {
           "type": "boolean"
         },
+        "observations_dropped": {
+          "description": "Number of observations removed by last_n selection; truncated is true when this is non-zero.",
+          "type": "integer",
+          "minimum": 0
+        },
         "updated_after": {
           "type": ["string", "null"]
         },

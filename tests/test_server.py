@@ -40,8 +40,7 @@ def _has_schema_description(schema: dict) -> bool:
 
 def _has_string_enum(schema: dict, values: list[str]) -> bool:
     return any(
-        node.get("type") == "string" and node.get("enum") == values
-        for node in _walk_schema(schema)
+        node.get("type") == "string" and node.get("enum") == values for node in _walk_schema(schema)
     )
 
 
@@ -582,9 +581,7 @@ async def test_service_fetches_apra_data() -> None:
     assert apra.last_get_data_kwargs == {
         "publication_id": "ADI_PROPERTY_EXPOSURES",
         "table_id": "tab_1b",
-        "series_ids": [
-            "ADI_PROPERTY_EXPOSURES:tab_1b:credit_outstanding:total_credit_outstanding"
-        ],
+        "series_ids": ["ADI_PROPERTY_EXPOSURES:tab_1b:credit_outstanding:total_credit_outstanding"],
         "start_date": "2024-01-01",
         "end_date": "2024-12-31",
         "last_n": 1,

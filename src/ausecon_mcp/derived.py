@@ -1,18 +1,30 @@
 from __future__ import annotations
 
 import calendar
-import re
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import date, datetime, timezone
 from typing import Any, Literal
 
 from ausecon_mcp.errors import AuseconValidationError
-
-_YEAR_RE = re.compile(r"^(?P<year>\d{4})$")
-_QUARTER_RE = re.compile(r"^(?P<year>\d{4})-Q(?P<quarter>[1-4])$")
-_SEMESTER_RE = re.compile(r"^(?P<year>\d{4})-S(?P<semester>[1-2])$")
-_MONTH_RE = re.compile(r"^(?P<year>\d{4})-(?P<month>0[1-9]|1[0-2])$")
+from ausecon_mcp.periods import (
+    MONTH_RE as _MONTH_RE,
+)
+from ausecon_mcp.periods import (
+    QUARTER_RE as _QUARTER_RE,
+)
+from ausecon_mcp.periods import (
+    SEMESTER_RE as _SEMESTER_RE,
+)
+from ausecon_mcp.periods import (
+    YEAR_RE as _YEAR_RE,
+)
+from ausecon_mcp.periods import (
+    period_end_date as _period_end_date,
+)
+from ausecon_mcp.periods import (
+    period_sort_key as _period_sort_key,
+)
 
 
 @dataclass(frozen=True)
@@ -101,7 +113,7 @@ def _compute_gdp_per_capita(values: dict[str, dict[str, float]]) -> list[tuple[s
     results: list[tuple[str, float]] = []
     for period in dates:
         population_value = population[period]
-        if population_value == 0:
+        if population_value in (None, 0):
             continue
         results.append((period, _round(real_gdp[period] * 1_000_000 / population_value)))
     return results
@@ -133,7 +145,7 @@ def _compute_credit_to_gdp(values: dict[str, dict[str, float]]) -> list[tuple[st
     for period in sorted(nominal_gdp, key=_period_sort_key):
         gdp_value = nominal_gdp[period]
         credit_value = carried_credit.get(period)
-        if credit_value is None or gdp_value == 0:
+        if credit_value is None or gdp_value in (None, 0):
             continue
         results.append((period, _round(100 * credit_value / gdp_value)))
     return results
@@ -283,9 +295,7 @@ DERIVED_CONCEPTS: dict[str, DerivedSpec] = {
     "household_spending_growth": DerivedSpec(
         concept="household_spending_growth",
         label="Household spending growth",
-        description=(
-            "Year-ended growth in quarterly chain-volume household spending."
-        ),
+        description=("Year-ended growth in quarterly chain-volume household spending."),
         frequency="Quarterly",
         unit="percent year-ended",
         formula="100 * (household_spending_t / household_spending_t-4 - 1)",
@@ -672,28 +682,6 @@ def _comparison_key(
             return parsed_date.year, ((parsed_date.month - 1) // 3) + 1, 1
         return int(match.group("year")), int(match.group("quarter")), 1
     raise AuseconValidationError(f"Unsupported derived frequency {frequency!r}.")
-
-
-def _period_sort_key(period: str) -> tuple[int, int, int]:
-    parsed_date = _period_end_date(period)
-    return parsed_date.year, parsed_date.month, parsed_date.day
-
-
-def _period_end_date(period: str) -> date:
-    if match := _QUARTER_RE.fullmatch(period):
-        year = int(match.group("year"))
-        month = int(match.group("quarter")) * 3
-        return date(year, month, calendar.monthrange(year, month)[1])
-    if match := _MONTH_RE.fullmatch(period):
-        year = int(match.group("year"))
-        month = int(match.group("month"))
-        return date(year, month, calendar.monthrange(year, month)[1])
-    if match := _YEAR_RE.fullmatch(period):
-        return date(int(match.group("year")), 12, 31)
-    try:
-        return date.fromisoformat(period)
-    except ValueError as exc:
-        raise AuseconValidationError(f"Unsupported derived observation period {period!r}.") from exc
 
 
 def _round(value: float) -> float:

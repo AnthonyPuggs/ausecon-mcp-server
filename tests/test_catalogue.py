@@ -86,8 +86,7 @@ def test_apra_aasb17_framework_breaks_are_limited_to_insurance_performance() -> 
         publication_id
         for publication_id, entry in APRA_CATALOGUE.items()
         if any(
-            item.get("label") == "AASB 17 transition"
-            for item in entry.get("framework_breaks", [])
+            item.get("label") == "AASB 17 transition" for item in entry.get("framework_breaks", [])
         )
     }
 
@@ -108,8 +107,12 @@ def test_apra_aasb17_framework_breaks_are_limited_to_insurance_performance() -> 
 
 
 def test_apra_url_seed_manifest_is_populated_and_trusted() -> None:
-    seed_path = Path(__file__).resolve().parents[1] / "src" / "ausecon_mcp" / "data" / (
-        "apra_url_seeds.json"
+    seed_path = (
+        Path(__file__).resolve().parents[1]
+        / "src"
+        / "ausecon_mcp"
+        / "data"
+        / ("apra_url_seeds.json")
     )
     seed_manifest = json.loads(seed_path.read_text(encoding="utf-8"))
 

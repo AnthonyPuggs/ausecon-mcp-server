@@ -29,9 +29,7 @@ def validate_search_query(query: str) -> str:
         raise AuseconValidationError("query must be plain search text, not a URL or path.")
     normalised = require_non_empty("query", query)
     if len(normalised) > _MAX_QUERY_LENGTH:
-        raise AuseconValidationError(
-            f"query must be no more than {_MAX_QUERY_LENGTH} characters."
-        )
+        raise AuseconValidationError(f"query must be no more than {_MAX_QUERY_LENGTH} characters.")
     if _URI_SCHEME.match(normalised):
         raise AuseconValidationError("query must be plain search text, not a URL or path.")
     return normalised
@@ -74,16 +72,12 @@ def validate_source_token(
 ) -> str:
     raw = value or ""
     if _SOURCE_TOKEN_UNSAFE.search(raw):
-        raise AuseconValidationError(
-            f"{field_name} contains unsupported URL or path characters."
-        )
+        raise AuseconValidationError(f"{field_name} contains unsupported URL or path characters.")
     normalised = require_non_empty(field_name, value)
     if len(normalised) > max_length:
         raise AuseconValidationError(f"{field_name} must be no more than {max_length} characters.")
     if _URI_SCHEME.match(normalised):
-        raise AuseconValidationError(
-            f"{field_name} contains unsupported URL or path characters."
-        )
+        raise AuseconValidationError(f"{field_name} contains unsupported URL or path characters.")
     return normalised
 
 
@@ -100,10 +94,7 @@ def validate_series_ids(series_ids: list[str] | None) -> list[str] | None:
         return None
 
     try:
-        return [
-            validate_source_token("series_ids", series_id)
-            for series_id in series_ids
-        ]
+        return [validate_source_token("series_ids", series_id) for series_id in series_ids]
     except AuseconValidationError as exc:
         raise AuseconValidationError(
             "series_ids must contain only non-empty source-native identifiers."

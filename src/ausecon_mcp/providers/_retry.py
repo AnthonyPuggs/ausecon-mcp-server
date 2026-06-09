@@ -5,10 +5,19 @@ from time import perf_counter
 
 import httpx
 
-from ausecon_mcp.errors import AuseconUpstreamError
+from ausecon_mcp.errors import AuseconNotFoundError, AuseconUpstreamError
 from ausecon_mcp.logging import get_logger
 
 _logger = get_logger("providers._retry")
+
+_BODY_PREVIEW_BYTES = 2048
+
+
+def _safe_body(response: httpx.Response) -> str | None:
+    try:
+        return response.text[:_BODY_PREVIEW_BYTES]
+    except Exception:  # noqa: BLE001 - body preview is best-effort diagnostics only
+        return None
 
 
 async def get_with_retries(
@@ -42,9 +51,17 @@ async def get_with_retries(
                         "duration_ms": int((perf_counter() - start) * 1000),
                     },
                 )
-                raise AuseconUpstreamError(
+                message = (
                     f"{source.upper()} request for '{identifier}' failed with HTTP {status_code}."
-                ) from exc
+                )
+                if status_code == 404:
+                    raise AuseconNotFoundError(
+                        message,
+                        status_code=status_code,
+                        body=_safe_body(exc.response),
+                        url=str(exc.response.request.url),
+                    ) from exc
+                raise AuseconUpstreamError(message) from exc
             _logger.warning(
                 "request.retry",
                 extra={

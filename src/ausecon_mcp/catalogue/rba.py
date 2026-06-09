@@ -96,8 +96,7 @@ _RAW_RBA_CATALOGUE = {
         "source": "rba",
         "name": "Foreign Exchange Transactions and Holdings of Official Reserve Assets",
         "description": (
-            "Reserve Bank foreign exchange transactions and official reserve asset "
-            "holdings."
+            "Reserve Bank foreign exchange transactions and official reserve asset holdings."
         ),
         "frequency": "Monthly",
         "category": "exchange_rates",
@@ -934,8 +933,7 @@ _RAW_RBA_CATALOGUE = {
             "last_audited": "2026-05-18",
             "upstream_url": "https://www.rba.gov.au/statistics/tables/csv/d14.1-data.csv",
             "upstream_title": (
-                "Lending to Business – Business Finance Outstanding "
-                "by Business Size and Industry"
+                "Lending to Business – Business Finance Outstanding by Business Size and Industry"
             ),
         },
     },
@@ -2022,8 +2020,7 @@ _RAW_RBA_CATALOGUE = {
         "source": "rba",
         "name": "Australia's Net Foreign Liabilities",
         "description": (
-            "Quarterly net foreign liability stocks and related external balance-sheet "
-            "aggregates."
+            "Quarterly net foreign liability stocks and related external balance-sheet aggregates."
         ),
         "frequency": "Quarterly",
         "category": "external_sector",

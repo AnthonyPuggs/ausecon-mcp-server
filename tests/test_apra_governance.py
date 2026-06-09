@@ -54,9 +54,7 @@ def test_apra_governance_flags_stale_seed_freshness_without_hard_failure() -> No
             ]
         },
         landing_pages={
-            "TEST_PUBLICATION": (
-                '<a href="/sites/default/files/test.xlsx">test monthly xlsx</a>'
-            )
+            "TEST_PUBLICATION": ('<a href="/sites/default/files/test.xlsx">test monthly xlsx</a>')
         },
         today=date(2026, 3, 1),
     )
@@ -131,8 +129,5 @@ def test_apra_governance_keeps_aasb17_scope_to_insurance_performance() -> None:
     )
 
     assert not [
-        issue
-        for row in rows
-        for issue in row["issues"]
-        if issue["code"] == "aasb17_scope_mismatch"
+        issue for row in rows for issue in row["issues"] if issue["code"] == "aasb17_scope_mismatch"
     ]

@@ -168,11 +168,27 @@ OptionalIsoDateTime = Annotated[
 ]
 OptionalPositiveInt = Annotated[
     int | None,
-    Field(ge=1, description="Optional positive observation count limit."),
+    Field(
+        ge=1,
+        description=(
+            "Optional limit returning only the most recent N observations per series; "
+            "metadata.truncated is true when older observations were dropped."
+        ),
+    ),
 ]
 PositiveCount = Annotated[
     int,
     Field(ge=1, description="Positive observation count."),
+]
+LatestCount = Annotated[
+    int,
+    Field(
+        ge=1,
+        description=(
+            "Number of most recent observations to return per series; "
+            "metadata.truncated is true when older observations were dropped."
+        ),
+    ),
 ]
 TopDirection = Annotated[
     Literal["highest", "lowest"],
@@ -1052,7 +1068,7 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
         key: AbsKey = "all",
         table_id: Identifier | None = None,
         series_ids: OptionalSeriesIdList = None,
-        count: PositiveCount = 1,
+        count: LatestCount = 1,
     ) -> dict:
         """Source-aware convenience wrapper for the latest observations."""
         return await app_service.get_latest_observations(
@@ -1205,7 +1221,7 @@ def build_http_middleware() -> list[Middleware]:
             allow_headers=["*"],
             expose_headers=["mcp-session-id", "mcp-protocol-version"],
             max_age=86400,
-        )
+        ),
     ]
 
 

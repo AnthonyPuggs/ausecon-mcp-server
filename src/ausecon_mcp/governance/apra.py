@@ -28,9 +28,7 @@ _SEED_RESOURCE = "data/apra_url_seeds.json"
 
 def load_apra_seed_manifest() -> dict[str, list[dict[str, Any]]]:
     try:
-        text = resources.files("ausecon_mcp").joinpath(_SEED_RESOURCE).read_text(
-            encoding="utf-8"
-        )
+        text = resources.files("ausecon_mcp").joinpath(_SEED_RESOURCE).read_text(encoding="utf-8")
     except FileNotFoundError:
         return {}
     return json.loads(text)

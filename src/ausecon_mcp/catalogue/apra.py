@@ -56,8 +56,7 @@ APRA_CATALOGUE: dict[str, dict] = {
         "audit": {
             "last_audited": "2026-05-18",
             "upstream_url": (
-                "https://www.apra.gov.au/"
-                "monthly-authorised-deposit-taking-institution-statistics"
+                "https://www.apra.gov.au/monthly-authorised-deposit-taking-institution-statistics"
             ),
             "upstream_title": "Monthly Authorised Deposit-taking Institution Statistics",
         },
@@ -122,16 +121,14 @@ APRA_CATALOGUE: dict[str, dict] = {
                 "aliases": ["adi liquidity coverage ratio", "lcr"],
                 "apra_table_id": "key_stats",
                 "apra_series_ids": [
-                    "ADI_QUARTERLY_PERFORMANCE:key_stats:"
-                    "key_figures:liquidity_coverage_ratio_lcr"
+                    "ADI_QUARTERLY_PERFORMANCE:key_stats:key_figures:liquidity_coverage_ratio_lcr"
                 ],
             },
         ],
         "audit": {
             "last_audited": "2026-05-18",
             "upstream_url": (
-                "https://www.apra.gov.au/"
-                "quarterly-authorised-deposit-taking-institution-statistics"
+                "https://www.apra.gov.au/quarterly-authorised-deposit-taking-institution-statistics"
             ),
             "upstream_title": (
                 "Quarterly Authorised Deposit-taking Institution Performance Statistics"
@@ -200,8 +197,7 @@ APRA_CATALOGUE: dict[str, dict] = {
         "audit": {
             "last_audited": "2026-05-18",
             "upstream_url": (
-                "https://www.apra.gov.au/"
-                "quarterly-authorised-deposit-taking-institution-statistics"
+                "https://www.apra.gov.au/quarterly-authorised-deposit-taking-institution-statistics"
             ),
             "upstream_title": "Authorised Deposit-taking Institution Centralised Publication",
         },
@@ -282,16 +278,14 @@ APRA_CATALOGUE: dict[str, dict] = {
                 "aliases": ["residential mortgage exposure", "residential property exposure"],
                 "apra_table_id": "tab_1b",
                 "apra_series_ids": [
-                    "ADI_PROPERTY_EXPOSURES:tab_1b:"
-                    "credit_outstanding:total_credit_oustanding"
+                    "ADI_PROPERTY_EXPOSURES:tab_1b:credit_outstanding:total_credit_oustanding"
                 ],
             },
         ],
         "audit": {
             "last_audited": "2026-05-18",
             "upstream_url": (
-                "https://www.apra.gov.au/"
-                "quarterly-authorised-deposit-taking-institution-statistics"
+                "https://www.apra.gov.au/quarterly-authorised-deposit-taking-institution-statistics"
             ),
             "upstream_title": (
                 "Quarterly Authorised Deposit-taking Institution Property Exposures Statistics"
@@ -494,8 +488,7 @@ APRA_CATALOGUE: dict[str, dict] = {
         "audit": {
             "last_audited": "2026-05-18",
             "upstream_url": (
-                "https://www.apra.gov.au/"
-                "quarterly-general-insurance-performance-statistics"
+                "https://www.apra.gov.au/quarterly-general-insurance-performance-statistics"
             ),
             "upstream_title": "Quarterly General Insurance Performance Statistics",
         },
@@ -579,8 +572,7 @@ APRA_CATALOGUE: dict[str, dict] = {
         "audit": {
             "last_audited": "2026-05-18",
             "upstream_url": (
-                "https://www.apra.gov.au/"
-                "quarterly-life-insurance-performance-statistics"
+                "https://www.apra.gov.au/quarterly-life-insurance-performance-statistics"
             ),
             "upstream_title": "Quarterly Life Insurance Performance Statistics",
         },
@@ -599,8 +591,7 @@ APRA_CATALOGUE: dict[str, dict] = {
         "tags": ["apra", "private health insurance", "premium revenue", "claims"],
         "aliases": ["private health insurance performance", "phi performance statistics"],
         "landing_url": (
-            "https://www.apra.gov.au/"
-            "quarterly-private-health-insurance-performance-statistics"
+            "https://www.apra.gov.au/quarterly-private-health-insurance-performance-statistics"
         ),
         "link_patterns": [
             r"Quarterly private health insurance performance statistics database.*XLSX"
@@ -656,8 +647,7 @@ APRA_CATALOGUE: dict[str, dict] = {
         "audit": {
             "last_audited": "2026-05-18",
             "upstream_url": (
-                "https://www.apra.gov.au/"
-                "quarterly-private-health-insurance-performance-statistics"
+                "https://www.apra.gov.au/quarterly-private-health-insurance-performance-statistics"
             ),
             "upstream_title": "Quarterly Private Health Insurance Performance Statistics",
         },

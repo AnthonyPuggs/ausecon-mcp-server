@@ -592,7 +592,7 @@ _RAW_ABS_CATALOGUE = {
                 "name": "gdp_growth",
                 "aliases": ["gdp growth", "economic growth", "real gdp growth"],
                 "abs_key": "M2.GPM.20.AUS.Q",
-            }
+            },
         ],
         "audit": {
             "last_audited": "2026-04-18",
@@ -761,10 +761,13 @@ _RAW_ABS_CATALOGUE = {
     "RT": {
         "id": "RT",
         "source": "abs",
-        "name": "Retail Trade",
+        "name": "Retail Trade (Discontinued)",
         "description": (
             "Monthly retail turnover by industry and geography, including original, "
-            "seasonally adjusted, and trend measures."
+            "seasonally adjusted, and trend measures. The ABS ceased the publication "
+            "with the June 2025 reference month; retained for historical analysis. "
+            "Use the household_spending concept (Monthly Household Spending Indicator, "
+            "HSI_M) for ongoing coverage."
         ),
         "frequency": "Monthly",
         "category": "activity",
@@ -787,8 +790,27 @@ _RAW_ABS_CATALOGUE = {
                 "abs_key": "M1.20.20.AUS.M",
             },
         ],
+        "ceased": True,
+        "successor": {
+            "source": "abs",
+            "dataset_id": "HSI_M",
+            "concept": "household_spending",
+            "note": "Monthly Household Spending Indicator supersedes Retail Trade.",
+        },
+        "framework_breaks": [
+            {
+                "date": "2025-06",
+                "label": "Publication ceased",
+                "description": (
+                    "The ABS discontinued Retail Trade; the final monthly observation "
+                    "is June 2025, so requests starting after 2025-06 return no "
+                    "observations. The Monthly Household Spending Indicator "
+                    "(household_spending concept, dataflow HSI_M) is the successor."
+                ),
+            }
+        ],
         "audit": {
-            "last_audited": "2026-04-20",
+            "last_audited": "2026-06-10",
             "upstream_url": "https://data.api.abs.gov.au/rest/dataflow/ABS/RT/latest",
             "upstream_title": "Retail Trade",
         },
@@ -1021,8 +1043,7 @@ _RAW_ABS_CATALOGUE = {
             "last_audited": "2026-04-20",
             "upstream_url": "https://data.api.abs.gov.au/rest/dataflow/ABS/BA_GCCSA/latest",
             "upstream_title": (
-                "Building Approvals by Greater Capital Cities Statistical Area "
-                "(GCCSA) and above"
+                "Building Approvals by Greater Capital Cities Statistical Area (GCCSA) and above"
             ),
         },
     },

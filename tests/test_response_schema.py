@@ -100,6 +100,36 @@ async def test_response_schema_validates_abs_provider_payload() -> None:
 
 
 @pytest.mark.asyncio
+async def test_response_schema_validates_abs_no_results_payload() -> None:
+    provider = ABSProvider()
+
+    with respx.mock(assert_all_called=True) as router:
+        router.get("https://data.api.abs.gov.au/rest/data/RT/all").mock(
+            return_value=Response(404, text="NoRecordsFound")
+        )
+
+        payload = await provider.get_data("RT", start_period="2026-01")
+
+    _assert_valid(payload)
+
+
+@pytest.mark.asyncio
+async def test_response_schema_validates_shuffled_abs_payload_with_last_n() -> None:
+    provider = ABSProvider()
+    csv_payload = (FIXTURES / "abs_cpi_shuffled.csv").read_text()
+
+    with respx.mock(assert_all_called=True) as router:
+        router.get("https://data.api.abs.gov.au/rest/data/CPI/all").mock(
+            return_value=Response(200, text=csv_payload)
+        )
+
+        payload = await provider.get_data("CPI", last_n=2)
+
+    _assert_valid(payload)
+    assert payload["metadata"]["observations_dropped"] == 60
+
+
+@pytest.mark.asyncio
 async def test_response_schema_validates_rba_provider_payload() -> None:
     provider = RBAProvider()
     csv_payload = (FIXTURES / "rba_g1_sample.csv").read_text()
@@ -131,8 +161,7 @@ def test_response_schema_validates_apra_provider_payload() -> None:
         "series": [
             {
                 "series_id": (
-                    "ADI_PROPERTY_EXPOSURES:tab_1b:credit_outstanding:"
-                    "total_credit_outstanding"
+                    "ADI_PROPERTY_EXPOSURES:tab_1b:credit_outstanding:total_credit_outstanding"
                 ),
                 "label": "Credit outstanding: Total credit outstanding",
                 "unit": "$ million",
@@ -153,8 +182,7 @@ def test_response_schema_validates_apra_provider_payload() -> None:
             {
                 "date": "2024-03-31",
                 "series_id": (
-                    "ADI_PROPERTY_EXPOSURES:tab_1b:credit_outstanding:"
-                    "total_credit_outstanding"
+                    "ADI_PROPERTY_EXPOSURES:tab_1b:credit_outstanding:total_credit_outstanding"
                 ),
                 "value": 1000.0,
                 "dimensions": {
