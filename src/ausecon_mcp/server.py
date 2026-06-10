@@ -1255,6 +1255,9 @@ def _json_metadata(value: Any) -> Any:
 
 async def build_server_card_response(server: FastMCP) -> JSONResponse:
     tools = await server.list_tools(run_middleware=False)
+    resources = await server.list_resources(run_middleware=False)
+    resource_templates = await server.list_resource_templates(run_middleware=False)
+    prompts = await server.list_prompts(run_middleware=False)
     return JSONResponse(
         {
             "serverInfo": {
@@ -1288,8 +1291,44 @@ async def build_server_card_response(server: FastMCP) -> JSONResponse:
                 }
                 for tool in tools
             ],
-            "resources": [],
-            "prompts": [],
+            "resources": [
+                {
+                    "name": resource.name,
+                    "title": resource.title or resource.name,
+                    "description": resource.description or "",
+                    "uri": str(resource.uri),
+                    "mimeType": resource.mime_type,
+                    "annotations": _json_metadata(resource.annotations) or {},
+                }
+                for resource in resources
+            ],
+            "resourceTemplates": [
+                {
+                    "name": template.name,
+                    "title": template.title or template.name,
+                    "description": template.description or "",
+                    "uriTemplate": template.uri_template,
+                    "mimeType": template.mime_type,
+                    "annotations": _json_metadata(template.annotations) or {},
+                }
+                for template in resource_templates
+            ],
+            "prompts": [
+                {
+                    "name": prompt.name,
+                    "title": prompt.title or prompt.name,
+                    "description": prompt.description or "",
+                    "arguments": [
+                        {
+                            "name": argument.name,
+                            "description": argument.description or "",
+                            "required": argument.required,
+                        }
+                        for argument in (prompt.arguments or [])
+                    ],
+                }
+                for prompt in prompts
+            ],
         }
     )
 

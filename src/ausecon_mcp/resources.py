@@ -80,3 +80,16 @@ def register_resources(mcp: FastMCP) -> None:
         if entry is None:
             raise ResourceError(f"Unknown RBA table_id: {table_id!r}")
         return entry
+
+    @mcp.resource(
+        "ausecon://apra/{publication_id}",
+        name="APRA catalogue entry",
+        description="Curated metadata for a single APRA publication.",
+        mime_type="application/json",
+        annotations={"readOnlyHint": True},
+    )
+    def apra_entry(publication_id: str) -> dict:
+        entry = APRA_CATALOGUE.get(publication_id)
+        if entry is None:
+            raise ResourceError(f"Unknown APRA publication_id: {publication_id!r}")
+        return entry

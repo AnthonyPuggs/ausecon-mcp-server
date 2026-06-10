@@ -481,6 +481,37 @@ def test_http_app_exposes_smithery_static_server_card() -> None:
         for parameter, schema in tool["inputSchema"].get("properties", {}).items():
             assert schema.get("description"), f"{name}.{parameter} missing description"
 
+    resource_uris = {resource["uri"] for resource in payload["resources"]}
+    assert resource_uris == {"ausecon://catalogue", "ausecon://concepts"}
+    template_uris = {template["uriTemplate"] for template in payload["resourceTemplates"]}
+    assert template_uris == {
+        "ausecon://abs/{dataflow_id}",
+        "ausecon://rba/{table_id}",
+        "ausecon://apra/{publication_id}",
+    }
+    for entry in payload["resources"] + payload["resourceTemplates"]:
+        assert entry["name"], f"{entry} missing name"
+        assert entry["description"], f"{entry['name']} missing description"
+        assert entry["mimeType"] == "application/json"
+        assert entry["annotations"]["readOnlyHint"] is True
+
+    prompts = {prompt["name"]: prompt for prompt in payload["prompts"]}
+    assert set(prompts) == {
+        "summarise_latest_inflation",
+        "compare_cash_rate_to_cpi",
+        "macro_snapshot",
+        "living_costs_vs_cpi",
+        "construction_pipeline",
+        "labour_slack_snapshot",
+        "yield_curve_snapshot",
+        "discover_dataset",
+    }
+    for name, prompt in prompts.items():
+        assert prompt["description"], f"{name} missing description"
+        for argument in prompt["arguments"]:
+            assert argument["name"], f"{name} prompt argument missing name"
+            assert "required" in argument
+
 
 @pytest.mark.asyncio
 async def test_service_searches_curated_catalogue() -> None:

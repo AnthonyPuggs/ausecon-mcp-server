@@ -6,6 +6,16 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- Added an `ausecon://apra/{publication_id}` resource template exposing curated APRA
+  catalogue entries, matching the existing ABS and RBA per-entry templates.
+
+### Fixed
+
+- The server card at `/.well-known/mcp/server-card.json` now enumerates registered
+  resources, resource templates, and prompts instead of reporting empty arrays.
+
 ### Removed
 
 - Removed sync-collision duplicate `* 2.py` artefacts (`scripts/benchmark_apra_parser 2.py`,

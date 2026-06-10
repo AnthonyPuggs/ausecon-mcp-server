@@ -104,3 +104,20 @@ async def test_rba_resource_raises_for_unknown_table_id() -> None:
     async with Client(mcp) as client:
         with pytest.raises(Exception, match="Unknown RBA table_id"):
             await client.read_resource("ausecon://rba/zzzz")
+
+
+async def test_apra_resource_returns_full_catalogue_entry() -> None:
+    mcp = build_server()
+
+    async with Client(mcp) as client:
+        payload = await _read_json(client, "ausecon://apra/ADI_MONTHLY")
+
+    assert payload == APRA_CATALOGUE["ADI_MONTHLY"]
+
+
+async def test_apra_resource_raises_for_unknown_publication_id() -> None:
+    mcp = build_server()
+
+    async with Client(mcp) as client:
+        with pytest.raises(Exception, match="Unknown APRA publication_id"):
+            await client.read_resource("ausecon://apra/NOT_A_REAL_ID")
