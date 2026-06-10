@@ -3,7 +3,7 @@ title: Roadmap
 description: Release priorities for AusEcon MCP.
 ---
 
-The current v1.6.0 release line includes stable stdio, hosted Streamable HTTP through
+The current v1.8.0 release line includes stable stdio, hosted Streamable HTTP through
 Render/Smithery, curated ABS/RBA/APRA retrieval, release-event awareness, convenience observation
 tools, generated documentation, and docs-site Vercel Analytics plus Speed Insights.
 

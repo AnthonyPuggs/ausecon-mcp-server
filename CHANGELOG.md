@@ -36,6 +36,40 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   `tests/test_apra_parser_benchmark 2.py`) and added a repository-hygiene guard that rejects
   tracked filenames matching the collision pattern.
 
+## [1.8.0] - 2026-06-10
+
+### Fixed
+
+- Observations are now sorted chronologically before `last_n` selection and date
+  filtering (ABS SDMX CSV rows arrive in arbitrary order), so latest-N answers are
+  correct for shuffled payloads, with `truncated` and `observations_dropped` recorded.
+- ABS requests that hit a valid dataflow with no observations in the requested window
+  now return an empty payload with a metadata warning instead of failing, while unknown
+  dataflows raise an actionable 404 error; 404s never fall back to stale cache.
+- ISO week periods are parsed explicitly for Python 3.10 compatibility.
+
+## [1.7.1] - 2026-06-08
+
+### Added
+
+- Wheel import smoke test covering the packaged response schema.
+- Repository banner asset.
+
+### Fixed
+
+- Response schema loading now resolves the packaged resource from installed layouts.
+
+## [1.7.0] - 2026-06-07
+
+### Added
+
+- Benchmark script and test coverage for APRA XLSX parser layouts.
+- AI-agent prompting guide on the documentation site.
+
+### Changed
+
+- Dependency upgrades, including Starlette 1.0 and CI action bumps.
+
 ## [1.6.0] - 2026-06-03
 
 ### Added
@@ -588,7 +622,10 @@ Initial public release.
 - Initial curated catalogues for ABS and RBA, plus a four-concept
   `CURATED_SERIES` semantic shortcut map.
 
-[Unreleased]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.6.0...HEAD
+[Unreleased]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.8.0...HEAD
+[1.8.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.7.1...v1.8.0
+[1.7.1]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.7.0...v1.7.1
+[1.7.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.6.0...v1.7.0
 [1.6.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.5.0...v1.6.0
 [1.5.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.4.1...v1.5.0
 [1.4.1]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.4.0...v1.4.1
