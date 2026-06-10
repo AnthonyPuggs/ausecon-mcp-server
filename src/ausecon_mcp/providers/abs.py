@@ -136,7 +136,7 @@ class ABSProvider:
                 params.append(("endPeriod", end_period))
             if updated_after:
                 params.append(("updatedAfter", updated_after))
-            params.append(("format", "csvfile"))
+            params.append(("format", "csvfilewithlabels"))
 
             url = f"{self.BASE_URL}/data/{dataflow_id}/{key}"
             _logger.info(

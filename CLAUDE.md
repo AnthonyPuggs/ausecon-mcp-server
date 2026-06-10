@@ -64,7 +64,7 @@ cache.py           → Dual-layer TTLCache (memory + on-disk JSON cache)
 
 ### Source differences
 
-- **ABS** uses SDMX REST (`data.api.abs.gov.au/rest`): structure endpoint returns XML, data endpoint returns CSV with `format=csvfile`.
+- **ABS** uses SDMX REST (`data.api.abs.gov.au/rest`): structure endpoint returns XML, data endpoint returns CSV with `format=csvfilewithlabels` (paired code/label columns; the parser also still accepts the code-only `csvfile` layout).
 - The ABS data endpoint answers HTTP 404 both for unknown dataflows and for valid dataflows with no observations in the requested window (response body `NoRecordsFound`). The provider maps the no-results case to an empty payload with a metadata warning; 404s never fall back to stale cache (`AuseconNotFoundError`), unlike transient 5xx/timeout failures which do.
 - **RBA** serves static CSVs at `rba.gov.au/statistics/tables/csv/`; most files use `{table_id}-data.csv`, while catalogue `csv_path` overrides cover exceptions such as `f17-yields.csv`. Filtering is done client-side after download.
 - **APRA** publishes XLSX workbooks; download URLs are resolved via landing pages with seed-manifest and catalogue fallbacks (`governance/`).

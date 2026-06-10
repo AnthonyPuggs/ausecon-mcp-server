@@ -1,65 +1,65 @@
-DATAFLOW,MEASURE,INDEX,TSEST,REGION,FREQ,TIME_PERIOD,OBS_VALUE,UNIT_MEASURE,OBS_STATUS,DECIMALS,OBS_COMMENT,BASE_PERIOD
-ABS:CPI(2.0.0),1,10001,20,50,Q,2020-Q4,212.0,IN,,,25,,25
-ABS:CPI(2.0.0),1,10001,20,50,Q,2021-Q1,213.0,IN,,,25,,25
-ABS:CPI(2.0.0),1,10001,20,50,Q,2018-Q4,204.0,IN,,,25,,25
-ABS:CPI(2.0.0),1,10001,10,50,Q,2020-Q4,112.0,IN,,,25,,25
-ABS:CPI(2.0.0),1,10001,20,50,Q,2023-Q3,223.0,IN,,,25,,25
-ABS:CPI(2.0.0),1,10001,20,50,Q,2022-Q1,217.0,IN,,,25,,25
-ABS:CPI(2.0.0),1,10001,20,50,Q,2020-Q2,210.0,IN,,,25,,25
-ABS:CPI(2.0.0),1,10001,20,50,Q,2025-Q2,230.0,IN,,,25,,25
-ABS:CPI(2.0.0),1,10001,10,50,Q,2023-Q4,124.0,IN,,,25,,25
-ABS:CPI(2.0.0),1,10001,20,50,Q,2019-Q1,205.0,IN,,,25,,25
-ABS:CPI(2.0.0),1,10001,10,50,Q,2023-Q1,121.0,IN,,,25,,25
-ABS:CPI(2.0.0),1,10001,10,50,Q,2020-Q2,110.0,IN,,,25,,25
-ABS:CPI(2.0.0),1,10001,10,50,Q,2023-Q2,122.0,IN,,,25,,25
-ABS:CPI(2.0.0),1,10001,20,50,Q,2021-Q4,216.0,IN,,,25,,25
-ABS:CPI(2.0.0),1,10001,10,50,Q,2020-Q1,109.0,IN,,,25,,25
-ABS:CPI(2.0.0),1,10001,20,50,Q,2020-Q3,211.0,IN,,,25,,25
-ABS:CPI(2.0.0),1,10001,10,50,Q,2022-Q3,119.0,IN,,,25,,25
-ABS:CPI(2.0.0),1,10001,20,50,Q,2023-Q1,221.0,IN,,,25,,25
-ABS:CPI(2.0.0),1,10001,20,50,Q,2021-Q3,215.0,IN,,,25,,25
-ABS:CPI(2.0.0),1,10001,10,50,Q,2020-Q3,111.0,IN,,,25,,25
-ABS:CPI(2.0.0),1,10001,20,50,Q,2019-Q2,206.0,IN,,,25,,25
-ABS:CPI(2.0.0),1,10001,10,50,Q,2024-Q2,126.0,IN,,,25,,25
-ABS:CPI(2.0.0),1,10001,20,50,Q,2022-Q4,220.0,IN,,,25,,25
-ABS:CPI(2.0.0),1,10001,10,50,Q,2024-Q1,125.0,IN,,,25,,25
-ABS:CPI(2.0.0),1,10001,20,50,Q,2018-Q2,202.0,IN,,,25,,25
-ABS:CPI(2.0.0),1,10001,10,50,Q,2021-Q4,116.0,IN,,,25,,25
-ABS:CPI(2.0.0),1,10001,10,50,Q,2021-Q1,113.0,IN,,,25,,25
-ABS:CPI(2.0.0),1,10001,20,50,Q,2024-Q4,228.0,IN,,,25,,25
-ABS:CPI(2.0.0),1,10001,10,50,Q,2018-Q3,103.0,IN,,,25,,25
-ABS:CPI(2.0.0),1,10001,20,50,Q,2025-Q1,229.0,IN,,,25,,25
-ABS:CPI(2.0.0),1,10001,10,50,Q,2024-Q4,128.0,IN,,,25,,25
-ABS:CPI(2.0.0),1,10001,20,50,Q,2024-Q1,225.0,IN,,,25,,25
-ABS:CPI(2.0.0),1,10001,10,50,Q,2019-Q2,106.0,IN,,,25,,25
-ABS:CPI(2.0.0),1,10001,10,50,Q,2018-Q1,101.0,IN,,,25,,25
-ABS:CPI(2.0.0),1,10001,10,50,Q,2025-Q3,131.0,IN,,,25,,25
-ABS:CPI(2.0.0),1,10001,10,50,Q,2021-Q3,115.0,IN,,,25,,25
-ABS:CPI(2.0.0),1,10001,10,50,Q,2023-Q3,123.0,IN,,,25,,25
-ABS:CPI(2.0.0),1,10001,10,50,Q,2021-Q2,114.0,IN,,,25,,25
-ABS:CPI(2.0.0),1,10001,10,50,Q,2024-Q3,127.0,IN,,,25,,25
-ABS:CPI(2.0.0),1,10001,10,50,Q,2019-Q3,107.0,IN,,,25,,25
-ABS:CPI(2.0.0),1,10001,20,50,Q,2022-Q2,218.0,IN,,,25,,25
-ABS:CPI(2.0.0),1,10001,20,50,Q,2024-Q3,227.0,IN,,,25,,25
-ABS:CPI(2.0.0),1,10001,10,50,Q,2022-Q4,120.0,IN,,,25,,25
-ABS:CPI(2.0.0),1,10001,10,50,Q,2022-Q1,117.0,IN,,,25,,25
-ABS:CPI(2.0.0),1,10001,10,50,Q,2025-Q2,130.0,IN,,,25,,25
-ABS:CPI(2.0.0),1,10001,20,50,Q,2019-Q3,207.0,IN,,,25,,25
-ABS:CPI(2.0.0),1,10001,20,50,Q,2024-Q2,226.0,IN,,,25,,25
-ABS:CPI(2.0.0),1,10001,10,50,Q,2025-Q4,132.0,IN,,,25,,25
-ABS:CPI(2.0.0),1,10001,10,50,Q,2018-Q2,102.0,IN,,,25,,25
-ABS:CPI(2.0.0),1,10001,20,50,Q,2021-Q2,214.0,IN,,,25,,25
-ABS:CPI(2.0.0),1,10001,20,50,Q,2022-Q3,219.0,IN,,,25,,25
-ABS:CPI(2.0.0),1,10001,20,50,Q,2018-Q3,203.0,IN,,,25,,25
-ABS:CPI(2.0.0),1,10001,10,50,Q,2022-Q2,118.0,IN,,,25,,25
-ABS:CPI(2.0.0),1,10001,10,50,Q,2025-Q1,129.0,IN,,,25,,25
-ABS:CPI(2.0.0),1,10001,20,50,Q,2023-Q2,222.0,IN,,,25,,25
-ABS:CPI(2.0.0),1,10001,10,50,Q,2018-Q4,104.0,IN,,,25,,25
-ABS:CPI(2.0.0),1,10001,20,50,Q,2025-Q3,231.0,IN,,,25,,25
-ABS:CPI(2.0.0),1,10001,10,50,Q,2019-Q1,105.0,IN,,,25,,25
-ABS:CPI(2.0.0),1,10001,20,50,Q,2025-Q4,232.0,IN,,,25,,25
-ABS:CPI(2.0.0),1,10001,20,50,Q,2019-Q4,208.0,IN,,,25,,25
-ABS:CPI(2.0.0),1,10001,20,50,Q,2020-Q1,209.0,IN,,,25,,25
-ABS:CPI(2.0.0),1,10001,20,50,Q,2023-Q4,224.0,IN,,,25,,25
-ABS:CPI(2.0.0),1,10001,20,50,Q,2018-Q1,201.0,IN,,,25,,25
-ABS:CPI(2.0.0),1,10001,10,50,Q,2019-Q4,108.0,IN,,,25,,25
+STRUCTURE,STRUCTURE_ID,STRUCTURE_NAME,ACTION,MEASURE,Measure,INDEX,Index,TSEST,Adjustment Type,REGION,Region,FREQ,Frequency,TIME_PERIOD,Time Period,OBS_VALUE,Observation Value,UNIT_MEASURE,Unit of Measure,OBS_STATUS,Observation Status,DECIMALS,Decimals,OBS_COMMENT,Observation Comment,BASE_PERIOD,Reference Base Period
+DATAFLOW,ABS:CPI(2.0.0),Consumer Price Index (CPI),I,1,Index numbers,10001,All groups CPI,20,Seasonally adjusted,50,Australia,Q,Quarterly,2020-Q4,,212.0,,IN,Index Numbers,,,,,,,25,Sep 2025 = 100.0
+DATAFLOW,ABS:CPI(2.0.0),Consumer Price Index (CPI),I,1,Index numbers,10001,All groups CPI,20,Seasonally adjusted,50,Australia,Q,Quarterly,2021-Q1,,213.0,,IN,Index Numbers,,,,,,,25,Sep 2025 = 100.0
+DATAFLOW,ABS:CPI(2.0.0),Consumer Price Index (CPI),I,1,Index numbers,10001,All groups CPI,20,Seasonally adjusted,50,Australia,Q,Quarterly,2018-Q4,,204.0,,IN,Index Numbers,,,,,,,25,Sep 2025 = 100.0
+DATAFLOW,ABS:CPI(2.0.0),Consumer Price Index (CPI),I,1,Index numbers,10001,All groups CPI,10,Original,50,Australia,Q,Quarterly,2020-Q4,,112.0,,IN,Index Numbers,,,,,,,25,Sep 2025 = 100.0
+DATAFLOW,ABS:CPI(2.0.0),Consumer Price Index (CPI),I,1,Index numbers,10001,All groups CPI,20,Seasonally adjusted,50,Australia,Q,Quarterly,2023-Q3,,223.0,,IN,Index Numbers,,,,,,,25,Sep 2025 = 100.0
+DATAFLOW,ABS:CPI(2.0.0),Consumer Price Index (CPI),I,1,Index numbers,10001,All groups CPI,20,Seasonally adjusted,50,Australia,Q,Quarterly,2022-Q1,,217.0,,IN,Index Numbers,,,,,,,25,Sep 2025 = 100.0
+DATAFLOW,ABS:CPI(2.0.0),Consumer Price Index (CPI),I,1,Index numbers,10001,All groups CPI,20,Seasonally adjusted,50,Australia,Q,Quarterly,2020-Q2,,210.0,,IN,Index Numbers,,,,,,,25,Sep 2025 = 100.0
+DATAFLOW,ABS:CPI(2.0.0),Consumer Price Index (CPI),I,1,Index numbers,10001,All groups CPI,20,Seasonally adjusted,50,Australia,Q,Quarterly,2025-Q2,,230.0,,IN,Index Numbers,,,,,,,25,Sep 2025 = 100.0
+DATAFLOW,ABS:CPI(2.0.0),Consumer Price Index (CPI),I,1,Index numbers,10001,All groups CPI,10,Original,50,Australia,Q,Quarterly,2023-Q4,,124.0,,IN,Index Numbers,,,,,,,25,Sep 2025 = 100.0
+DATAFLOW,ABS:CPI(2.0.0),Consumer Price Index (CPI),I,1,Index numbers,10001,All groups CPI,20,Seasonally adjusted,50,Australia,Q,Quarterly,2019-Q1,,205.0,,IN,Index Numbers,,,,,,,25,Sep 2025 = 100.0
+DATAFLOW,ABS:CPI(2.0.0),Consumer Price Index (CPI),I,1,Index numbers,10001,All groups CPI,10,Original,50,Australia,Q,Quarterly,2023-Q1,,121.0,,IN,Index Numbers,,,,,,,25,Sep 2025 = 100.0
+DATAFLOW,ABS:CPI(2.0.0),Consumer Price Index (CPI),I,1,Index numbers,10001,All groups CPI,10,Original,50,Australia,Q,Quarterly,2020-Q2,,110.0,,IN,Index Numbers,,,,,,,25,Sep 2025 = 100.0
+DATAFLOW,ABS:CPI(2.0.0),Consumer Price Index (CPI),I,1,Index numbers,10001,All groups CPI,10,Original,50,Australia,Q,Quarterly,2023-Q2,,122.0,,IN,Index Numbers,,,,,,,25,Sep 2025 = 100.0
+DATAFLOW,ABS:CPI(2.0.0),Consumer Price Index (CPI),I,1,Index numbers,10001,All groups CPI,20,Seasonally adjusted,50,Australia,Q,Quarterly,2021-Q4,,216.0,,IN,Index Numbers,,,,,,,25,Sep 2025 = 100.0
+DATAFLOW,ABS:CPI(2.0.0),Consumer Price Index (CPI),I,1,Index numbers,10001,All groups CPI,10,Original,50,Australia,Q,Quarterly,2020-Q1,,109.0,,IN,Index Numbers,,,,,,,25,Sep 2025 = 100.0
+DATAFLOW,ABS:CPI(2.0.0),Consumer Price Index (CPI),I,1,Index numbers,10001,All groups CPI,20,Seasonally adjusted,50,Australia,Q,Quarterly,2020-Q3,,211.0,,IN,Index Numbers,,,,,,,25,Sep 2025 = 100.0
+DATAFLOW,ABS:CPI(2.0.0),Consumer Price Index (CPI),I,1,Index numbers,10001,All groups CPI,10,Original,50,Australia,Q,Quarterly,2022-Q3,,119.0,,IN,Index Numbers,,,,,,,25,Sep 2025 = 100.0
+DATAFLOW,ABS:CPI(2.0.0),Consumer Price Index (CPI),I,1,Index numbers,10001,All groups CPI,20,Seasonally adjusted,50,Australia,Q,Quarterly,2023-Q1,,221.0,,IN,Index Numbers,,,,,,,25,Sep 2025 = 100.0
+DATAFLOW,ABS:CPI(2.0.0),Consumer Price Index (CPI),I,1,Index numbers,10001,All groups CPI,20,Seasonally adjusted,50,Australia,Q,Quarterly,2021-Q3,,215.0,,IN,Index Numbers,,,,,,,25,Sep 2025 = 100.0
+DATAFLOW,ABS:CPI(2.0.0),Consumer Price Index (CPI),I,1,Index numbers,10001,All groups CPI,10,Original,50,Australia,Q,Quarterly,2020-Q3,,111.0,,IN,Index Numbers,,,,,,,25,Sep 2025 = 100.0
+DATAFLOW,ABS:CPI(2.0.0),Consumer Price Index (CPI),I,1,Index numbers,10001,All groups CPI,20,Seasonally adjusted,50,Australia,Q,Quarterly,2019-Q2,,206.0,,IN,Index Numbers,,,,,,,25,Sep 2025 = 100.0
+DATAFLOW,ABS:CPI(2.0.0),Consumer Price Index (CPI),I,1,Index numbers,10001,All groups CPI,10,Original,50,Australia,Q,Quarterly,2024-Q2,,126.0,,IN,Index Numbers,,,,,,,25,Sep 2025 = 100.0
+DATAFLOW,ABS:CPI(2.0.0),Consumer Price Index (CPI),I,1,Index numbers,10001,All groups CPI,20,Seasonally adjusted,50,Australia,Q,Quarterly,2022-Q4,,220.0,,IN,Index Numbers,,,,,,,25,Sep 2025 = 100.0
+DATAFLOW,ABS:CPI(2.0.0),Consumer Price Index (CPI),I,1,Index numbers,10001,All groups CPI,10,Original,50,Australia,Q,Quarterly,2024-Q1,,125.0,,IN,Index Numbers,,,,,,,25,Sep 2025 = 100.0
+DATAFLOW,ABS:CPI(2.0.0),Consumer Price Index (CPI),I,1,Index numbers,10001,All groups CPI,20,Seasonally adjusted,50,Australia,Q,Quarterly,2018-Q2,,202.0,,IN,Index Numbers,,,,,,,25,Sep 2025 = 100.0
+DATAFLOW,ABS:CPI(2.0.0),Consumer Price Index (CPI),I,1,Index numbers,10001,All groups CPI,10,Original,50,Australia,Q,Quarterly,2021-Q4,,116.0,,IN,Index Numbers,,,,,,,25,Sep 2025 = 100.0
+DATAFLOW,ABS:CPI(2.0.0),Consumer Price Index (CPI),I,1,Index numbers,10001,All groups CPI,10,Original,50,Australia,Q,Quarterly,2021-Q1,,113.0,,IN,Index Numbers,,,,,,,25,Sep 2025 = 100.0
+DATAFLOW,ABS:CPI(2.0.0),Consumer Price Index (CPI),I,1,Index numbers,10001,All groups CPI,20,Seasonally adjusted,50,Australia,Q,Quarterly,2024-Q4,,228.0,,IN,Index Numbers,,,,,,,25,Sep 2025 = 100.0
+DATAFLOW,ABS:CPI(2.0.0),Consumer Price Index (CPI),I,1,Index numbers,10001,All groups CPI,10,Original,50,Australia,Q,Quarterly,2018-Q3,,103.0,,IN,Index Numbers,,,,,,,25,Sep 2025 = 100.0
+DATAFLOW,ABS:CPI(2.0.0),Consumer Price Index (CPI),I,1,Index numbers,10001,All groups CPI,20,Seasonally adjusted,50,Australia,Q,Quarterly,2025-Q1,,229.0,,IN,Index Numbers,,,,,,,25,Sep 2025 = 100.0
+DATAFLOW,ABS:CPI(2.0.0),Consumer Price Index (CPI),I,1,Index numbers,10001,All groups CPI,10,Original,50,Australia,Q,Quarterly,2024-Q4,,128.0,,IN,Index Numbers,,,,,,,25,Sep 2025 = 100.0
+DATAFLOW,ABS:CPI(2.0.0),Consumer Price Index (CPI),I,1,Index numbers,10001,All groups CPI,20,Seasonally adjusted,50,Australia,Q,Quarterly,2024-Q1,,225.0,,IN,Index Numbers,,,,,,,25,Sep 2025 = 100.0
+DATAFLOW,ABS:CPI(2.0.0),Consumer Price Index (CPI),I,1,Index numbers,10001,All groups CPI,10,Original,50,Australia,Q,Quarterly,2019-Q2,,106.0,,IN,Index Numbers,,,,,,,25,Sep 2025 = 100.0
+DATAFLOW,ABS:CPI(2.0.0),Consumer Price Index (CPI),I,1,Index numbers,10001,All groups CPI,10,Original,50,Australia,Q,Quarterly,2018-Q1,,101.0,,IN,Index Numbers,,,,,,,25,Sep 2025 = 100.0
+DATAFLOW,ABS:CPI(2.0.0),Consumer Price Index (CPI),I,1,Index numbers,10001,All groups CPI,10,Original,50,Australia,Q,Quarterly,2025-Q3,,131.0,,IN,Index Numbers,,,,,,,25,Sep 2025 = 100.0
+DATAFLOW,ABS:CPI(2.0.0),Consumer Price Index (CPI),I,1,Index numbers,10001,All groups CPI,10,Original,50,Australia,Q,Quarterly,2021-Q3,,115.0,,IN,Index Numbers,,,,,,,25,Sep 2025 = 100.0
+DATAFLOW,ABS:CPI(2.0.0),Consumer Price Index (CPI),I,1,Index numbers,10001,All groups CPI,10,Original,50,Australia,Q,Quarterly,2023-Q3,,123.0,,IN,Index Numbers,,,,,,,25,Sep 2025 = 100.0
+DATAFLOW,ABS:CPI(2.0.0),Consumer Price Index (CPI),I,1,Index numbers,10001,All groups CPI,10,Original,50,Australia,Q,Quarterly,2021-Q2,,114.0,,IN,Index Numbers,,,,,,,25,Sep 2025 = 100.0
+DATAFLOW,ABS:CPI(2.0.0),Consumer Price Index (CPI),I,1,Index numbers,10001,All groups CPI,10,Original,50,Australia,Q,Quarterly,2024-Q3,,127.0,,IN,Index Numbers,,,,,,,25,Sep 2025 = 100.0
+DATAFLOW,ABS:CPI(2.0.0),Consumer Price Index (CPI),I,1,Index numbers,10001,All groups CPI,10,Original,50,Australia,Q,Quarterly,2019-Q3,,107.0,,IN,Index Numbers,,,,,,,25,Sep 2025 = 100.0
+DATAFLOW,ABS:CPI(2.0.0),Consumer Price Index (CPI),I,1,Index numbers,10001,All groups CPI,20,Seasonally adjusted,50,Australia,Q,Quarterly,2022-Q2,,218.0,,IN,Index Numbers,,,,,,,25,Sep 2025 = 100.0
+DATAFLOW,ABS:CPI(2.0.0),Consumer Price Index (CPI),I,1,Index numbers,10001,All groups CPI,20,Seasonally adjusted,50,Australia,Q,Quarterly,2024-Q3,,227.0,,IN,Index Numbers,,,,,,,25,Sep 2025 = 100.0
+DATAFLOW,ABS:CPI(2.0.0),Consumer Price Index (CPI),I,1,Index numbers,10001,All groups CPI,10,Original,50,Australia,Q,Quarterly,2022-Q4,,120.0,,IN,Index Numbers,,,,,,,25,Sep 2025 = 100.0
+DATAFLOW,ABS:CPI(2.0.0),Consumer Price Index (CPI),I,1,Index numbers,10001,All groups CPI,10,Original,50,Australia,Q,Quarterly,2022-Q1,,117.0,,IN,Index Numbers,,,,,,,25,Sep 2025 = 100.0
+DATAFLOW,ABS:CPI(2.0.0),Consumer Price Index (CPI),I,1,Index numbers,10001,All groups CPI,10,Original,50,Australia,Q,Quarterly,2025-Q2,,130.0,,IN,Index Numbers,,,,,,,25,Sep 2025 = 100.0
+DATAFLOW,ABS:CPI(2.0.0),Consumer Price Index (CPI),I,1,Index numbers,10001,All groups CPI,20,Seasonally adjusted,50,Australia,Q,Quarterly,2019-Q3,,207.0,,IN,Index Numbers,,,,,,,25,Sep 2025 = 100.0
+DATAFLOW,ABS:CPI(2.0.0),Consumer Price Index (CPI),I,1,Index numbers,10001,All groups CPI,20,Seasonally adjusted,50,Australia,Q,Quarterly,2024-Q2,,226.0,,IN,Index Numbers,,,,,,,25,Sep 2025 = 100.0
+DATAFLOW,ABS:CPI(2.0.0),Consumer Price Index (CPI),I,1,Index numbers,10001,All groups CPI,10,Original,50,Australia,Q,Quarterly,2025-Q4,,132.0,,IN,Index Numbers,,,,,,,25,Sep 2025 = 100.0
+DATAFLOW,ABS:CPI(2.0.0),Consumer Price Index (CPI),I,1,Index numbers,10001,All groups CPI,10,Original,50,Australia,Q,Quarterly,2018-Q2,,102.0,,IN,Index Numbers,,,,,,,25,Sep 2025 = 100.0
+DATAFLOW,ABS:CPI(2.0.0),Consumer Price Index (CPI),I,1,Index numbers,10001,All groups CPI,20,Seasonally adjusted,50,Australia,Q,Quarterly,2021-Q2,,214.0,,IN,Index Numbers,,,,,,,25,Sep 2025 = 100.0
+DATAFLOW,ABS:CPI(2.0.0),Consumer Price Index (CPI),I,1,Index numbers,10001,All groups CPI,20,Seasonally adjusted,50,Australia,Q,Quarterly,2022-Q3,,219.0,,IN,Index Numbers,,,,,,,25,Sep 2025 = 100.0
+DATAFLOW,ABS:CPI(2.0.0),Consumer Price Index (CPI),I,1,Index numbers,10001,All groups CPI,20,Seasonally adjusted,50,Australia,Q,Quarterly,2018-Q3,,203.0,,IN,Index Numbers,,,,,,,25,Sep 2025 = 100.0
+DATAFLOW,ABS:CPI(2.0.0),Consumer Price Index (CPI),I,1,Index numbers,10001,All groups CPI,10,Original,50,Australia,Q,Quarterly,2022-Q2,,118.0,,IN,Index Numbers,,,,,,,25,Sep 2025 = 100.0
+DATAFLOW,ABS:CPI(2.0.0),Consumer Price Index (CPI),I,1,Index numbers,10001,All groups CPI,10,Original,50,Australia,Q,Quarterly,2025-Q1,,129.0,,IN,Index Numbers,,,,,,,25,Sep 2025 = 100.0
+DATAFLOW,ABS:CPI(2.0.0),Consumer Price Index (CPI),I,1,Index numbers,10001,All groups CPI,20,Seasonally adjusted,50,Australia,Q,Quarterly,2023-Q2,,222.0,,IN,Index Numbers,,,,,,,25,Sep 2025 = 100.0
+DATAFLOW,ABS:CPI(2.0.0),Consumer Price Index (CPI),I,1,Index numbers,10001,All groups CPI,10,Original,50,Australia,Q,Quarterly,2018-Q4,,104.0,,IN,Index Numbers,,,,,,,25,Sep 2025 = 100.0
+DATAFLOW,ABS:CPI(2.0.0),Consumer Price Index (CPI),I,1,Index numbers,10001,All groups CPI,20,Seasonally adjusted,50,Australia,Q,Quarterly,2025-Q3,,231.0,,IN,Index Numbers,,,,,,,25,Sep 2025 = 100.0
+DATAFLOW,ABS:CPI(2.0.0),Consumer Price Index (CPI),I,1,Index numbers,10001,All groups CPI,10,Original,50,Australia,Q,Quarterly,2019-Q1,,105.0,,IN,Index Numbers,,,,,,,25,Sep 2025 = 100.0
+DATAFLOW,ABS:CPI(2.0.0),Consumer Price Index (CPI),I,1,Index numbers,10001,All groups CPI,20,Seasonally adjusted,50,Australia,Q,Quarterly,2025-Q4,,232.0,,IN,Index Numbers,,,,,,,25,Sep 2025 = 100.0
+DATAFLOW,ABS:CPI(2.0.0),Consumer Price Index (CPI),I,1,Index numbers,10001,All groups CPI,20,Seasonally adjusted,50,Australia,Q,Quarterly,2019-Q4,,208.0,,IN,Index Numbers,,,,,,,25,Sep 2025 = 100.0
+DATAFLOW,ABS:CPI(2.0.0),Consumer Price Index (CPI),I,1,Index numbers,10001,All groups CPI,20,Seasonally adjusted,50,Australia,Q,Quarterly,2020-Q1,,209.0,,IN,Index Numbers,,,,,,,25,Sep 2025 = 100.0
+DATAFLOW,ABS:CPI(2.0.0),Consumer Price Index (CPI),I,1,Index numbers,10001,All groups CPI,20,Seasonally adjusted,50,Australia,Q,Quarterly,2023-Q4,,224.0,,IN,Index Numbers,,,,,,,25,Sep 2025 = 100.0
+DATAFLOW,ABS:CPI(2.0.0),Consumer Price Index (CPI),I,1,Index numbers,10001,All groups CPI,20,Seasonally adjusted,50,Australia,Q,Quarterly,2018-Q1,,201.0,,IN,Index Numbers,,,,,,,25,Sep 2025 = 100.0
+DATAFLOW,ABS:CPI(2.0.0),Consumer Price Index (CPI),I,1,Index numbers,10001,All groups CPI,10,Original,50,Australia,Q,Quarterly,2019-Q4,,108.0,,IN,Index Numbers,,,,,,,25,Sep 2025 = 100.0

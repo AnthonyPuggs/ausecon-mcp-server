@@ -1,4 +1,4 @@
-DATAFLOW,MEASURE,INDEX,TSEST,REGION,FREQ,TIME_PERIOD,OBS_VALUE,UNIT_MEASURE,OBS_STATUS,DECIMALS,OBS_COMMENT,BASE_PERIOD
-ABS:CPI(2.0.0),1,10001,10,50,Q,2025-Q2,140.2,IN,,,25,,25
-ABS:CPI(2.0.0),1,10001,10,50,Q,2025-Q3,141.1,IN,,,25,,25
-ABS:CPI(2.0.0),1,10001,10,50,Q,2025-Q4,142.1,IN,,,25,,25
+STRUCTURE,STRUCTURE_ID,STRUCTURE_NAME,ACTION,MEASURE,Measure,INDEX,Index,TSEST,Adjustment Type,REGION,Region,FREQ,Frequency,TIME_PERIOD,Time Period,OBS_VALUE,Observation Value,UNIT_MEASURE,Unit of Measure,OBS_STATUS,Observation Status,DECIMALS,Decimals,OBS_COMMENT,Observation Comment,BASE_PERIOD,Reference Base Period
+DATAFLOW,ABS:CPI(2.0.0),Consumer Price Index (CPI),I,1,Index numbers,10001,All groups CPI,10,Original,50,Australia,Q,Quarterly,2025-Q2,,140.2,,IN,Index Numbers,,,,,,,25,Sep 2025 = 100.0
+DATAFLOW,ABS:CPI(2.0.0),Consumer Price Index (CPI),I,1,Index numbers,10001,All groups CPI,10,Original,50,Australia,Q,Quarterly,2025-Q3,,141.1,,IN,Index Numbers,,,,,,,25,Sep 2025 = 100.0
+DATAFLOW,ABS:CPI(2.0.0),Consumer Price Index (CPI),I,1,Index numbers,10001,All groups CPI,10,Original,50,Australia,Q,Quarterly,2025-Q4,,142.1,,IN,Index Numbers,,,,,,,25,Sep 2025 = 100.0

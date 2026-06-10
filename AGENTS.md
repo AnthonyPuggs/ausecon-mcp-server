@@ -53,7 +53,7 @@ cache.py           → Dual-layer TTLCache (memory + on-disk JSON cache)
 
 ### ABS vs RBA differences
 
-- **ABS** uses SDMX REST (`data.api.abs.gov.au/rest`): structure endpoint returns XML, data endpoint returns CSV with `format=csvfile`.
+- **ABS** uses SDMX REST (`data.api.abs.gov.au/rest`): structure endpoint returns XML, data endpoint returns CSV with `format=csvfilewithlabels` (paired code/label columns; the parser also still accepts the code-only `csvfile` layout).
 - **RBA** serves static CSVs at `rba.gov.au/statistics/tables/csv/`; most files use `{table_id}-data.csv`, while catalogue `csv_path` overrides cover exceptions such as `f17-yields.csv`. Filtering is done client-side after download.
 
 ### Tool injection pattern

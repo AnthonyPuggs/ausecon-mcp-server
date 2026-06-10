@@ -13,6 +13,11 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- ABS data retrieval now requests `format=csvfilewithlabels`, so responses carry
+  human-readable dimension, unit, frequency, and base-period labels (e.g. REGION
+  "Australia" instead of "50") plus a dataset `title` in metadata, instead of bare
+  SDMX codes. The parser handles the labelled paired-column layout and still accepts
+  the legacy code-only `csvfile` layout.
 - Per-observation `dimensions` are now omitted by default from retrieval responses
   (roughly a 3.5x payload reduction on dimension-heavy ABS calls); the same dimensions
   remain on each series descriptor and are encoded in `series_id`. Pass

@@ -57,7 +57,7 @@ async def test_abs_provider_fetches_filtered_data_and_uses_cache() -> None:
     assert route.call_count == 1
     assert first == second
     assert first["metadata"]["retrieval_url"].endswith(
-        "startPeriod=2024-01&endPeriod=2024-06&format=csvfile"
+        "startPeriod=2024-01&endPeriod=2024-06&format=csvfilewithlabels"
     )
     assert len(first["observations"]) == 2
     assert first["metadata"]["truncated"] is True

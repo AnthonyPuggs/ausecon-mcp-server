@@ -27,22 +27,35 @@ def test_parse_abs_structure_extracts_dimensions_and_codelists() -> None:
     assert structure["dimensions"][3]["values"][-1]["label"] == "Australia"
 
 
-def test_parse_abs_csv_normalises_series_and_observations() -> None:
+def test_parse_abs_csv_normalises_labelled_series_and_observations() -> None:
+    # abs_cpi_sample.csv mirrors the live csvfilewithlabels layout: paired
+    # code/label columns and STRUCTURE_ID/STRUCTURE_NAME instead of DATAFLOW.
     parsed = parse_abs_csv((FIXTURES / "abs_cpi_sample.csv").read_text())
 
     assert parsed["metadata"]["source"] == "abs"
     assert parsed["metadata"]["dataset_id"] == "CPI"
-    assert parsed["metadata"]["frequency"] == "Q"
+    assert parsed["metadata"]["frequency"] == "Quarterly"
+    assert parsed["metadata"]["title"] == "Consumer Price Index (CPI)"
     assert len(parsed["series"]) == 1
-    assert parsed["series"][0]["unit"] == "IN"
+    assert parsed["series"][0]["unit"] == "Index Numbers"
     assert parsed["series"][0]["series_id"] == "MEASURE=1|INDEX=10001|TSEST=10|REGION=50|FREQ=Q"
+    assert parsed["series"][0]["label"] == (
+        "Index numbers / All groups CPI / Original / Australia / Quarterly"
+    )
+    assert parsed["series"][0]["source_key"] == "ABS:CPI(2.0.0)"
+    assert parsed["series"][0]["base_period"] == "Sep 2025 = 100.0"
     assert parsed["observations"][0]["date"] == "2025-Q2"
     assert parsed["observations"][0]["value"] == 140.2
-    assert parsed["observations"][0]["dimensions"]["REGION"]["label"] == "50"
+    assert parsed["observations"][0]["dimensions"]["REGION"] == {
+        "code": "50",
+        "label": "Australia",
+    }
     assert parsed["observations"][0]["dimensions"]["INDEX"]["code"] == "10001"
 
 
 def test_parse_abs_csv_preserves_unit_multiplier_and_status_metadata() -> None:
+    # abs_ana_agg_sample.csv stays in the code-only csvfile layout to prove the
+    # parser still handles the legacy variant (no paired label columns).
     parsed = parse_abs_csv((FIXTURES / "abs_ana_agg_sample.csv").read_text())
 
     assert parsed["metadata"]["dataset_id"] == "ANA_AGG"
