@@ -1,6 +1,6 @@
 # AusEcon MCP Roadmap
 
-This roadmap starts from the current v1.8.0 release line: stable stdio, hosted Streamable HTTP
+This roadmap starts from the current v1.9.0 release line: stable stdio, hosted Streamable HTTP
 through Render/Smithery, curated ABS/RBA/APRA retrieval, release-event awareness, convenience
 observation tools, generated documentation, and docs-site Vercel Analytics plus Speed Insights.
 

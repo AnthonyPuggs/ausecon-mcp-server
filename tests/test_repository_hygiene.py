@@ -212,9 +212,9 @@ def test_readme_is_rich_landing_page_for_current_release_state() -> None:
 
     assert '<img src="assets/banner.svg"' in readme_text
     assert "Australian economic data is authoritative but awkward to reach" in readme_text
-    assert "Version `1.8.0` is the current release line." in docs_home_text
-    assert "Version `1.6.0` is the current release line." not in readme_text
-    assert "Version `1.6.0` is the current release line." not in docs_home_text
+    assert "Version `1.9.0` is the current release line." in docs_home_text
+    assert "Version `1.8.0` is the current release line." not in readme_text
+    assert "Version `1.8.0` is the current release line." not in docs_home_text
 
     assert "<b>14</b>" in readme_text
     assert "read-only tools" in readme_text
@@ -318,7 +318,7 @@ def test_post_v11_roadmap_is_documented_and_contract_preserving() -> None:
         assert "v1.5" in text
         assert "v1.6" in text
         assert "v2.0" in text
-        assert "current v1.8.0 release line" in text
+        assert "current v1.9.0 release line" in text
         assert "APRA" in text
         assert "APRA source-native foundation" in text
         assert "{metadata, series, observations}" in text
@@ -549,19 +549,23 @@ def test_codeql_and_dependabot_are_configured_for_visible_security_automation() 
     assert "advanced CodeQL workflow" in releasing_text
 
 
-def test_changelog_promotes_v180_and_keeps_fresh_unreleased_section() -> None:
+def test_changelog_promotes_v190_and_keeps_fresh_unreleased_section() -> None:
     changelog_text = CHANGELOG.read_text(encoding="utf-8")
     unreleased_index = changelog_text.index("## [Unreleased]")
-    v180_index = changelog_text.index("## [1.8.0] - 2026-06-10")
+    v190_index = changelog_text.index("## [1.9.0] - 2026-06-11")
 
-    assert unreleased_index < v180_index
-    unreleased_section = changelog_text[unreleased_index:v180_index]
-    v180_section = changelog_text[v180_index : changelog_text.index("## [1.7.1]")]
+    assert unreleased_index < v190_index
+    unreleased_section = changelog_text[unreleased_index:v190_index]
+    v190_section = changelog_text[v190_index : changelog_text.index("## [1.8.0]")]
 
-    assert "sorted chronologically" not in unreleased_section
-    assert "sorted chronologically" in v180_section
+    assert "csvfilewithlabels" not in unreleased_section
+    assert "csvfilewithlabels" in v190_section
+    assert "include_observation_dimensions" in v190_section
     assert (
-        "[Unreleased]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.8.0...HEAD"
+        "[Unreleased]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.9.0...HEAD"
+    ) in changelog_text
+    assert (
+        "[1.9.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.8.0...v1.9.0"
     ) in changelog_text
     assert (
         "[1.8.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.7.1...v1.8.0"
@@ -577,12 +581,12 @@ def test_changelog_promotes_v180_and_keeps_fresh_unreleased_section() -> None:
 def test_smithery_deployment_docs_match_current_release_state() -> None:
     smithery_text = (ROOT / "docs" / "smithery-deployment.md").read_text(encoding="utf-8")
 
-    assert "v1.8.0" in smithery_text
-    assert "1.8.0" in smithery_text
+    assert "v1.9.0" in smithery_text
+    assert "1.9.0" in smithery_text
     assert "fourteen tools" in smithery_text
     assert "get_latest_observations" in smithery_text
     assert "list_release_events" in smithery_text
-    assert "v1.6.0" not in smithery_text
+    assert "v1.8.0" not in smithery_text
 
 
 def test_readme_release_instructions_match_tag_derived_versioning() -> None:
