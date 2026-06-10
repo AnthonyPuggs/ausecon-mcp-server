@@ -68,3 +68,15 @@ def filter_payload(
     payload["metadata"]["truncated"] = truncated
     payload["metadata"]["observations_dropped"] = dropped
     return payload
+
+
+def strip_observation_dimensions(payload: dict[str, Any]) -> dict[str, Any]:
+    """Drop the per-observation dimension dicts, keeping them on the series descriptors.
+
+    Each observation repeats the dimension dict already present on its series
+    descriptor (and encoded in ``series_id``), roughly tripling payload size for
+    no information.
+    """
+    for observation in payload.get("observations", []):
+        observation.pop("dimensions", None)
+    return payload

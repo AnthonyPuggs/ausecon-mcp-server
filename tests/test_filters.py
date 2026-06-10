@@ -1,6 +1,6 @@
 from copy import deepcopy
 
-from ausecon_mcp.filters import filter_payload
+from ausecon_mcp.filters import filter_payload, strip_observation_dimensions
 
 
 def _sample_payload() -> dict:
@@ -152,3 +152,33 @@ def test_filter_payload_preserves_source_order_for_unrecognised_period_formats()
     result = filter_payload(payload)
 
     assert [item["date"] for item in result["observations"]] == ["Jun-2025", "May-2025"]
+
+
+def test_strip_observation_dimensions_keeps_series_dimensions() -> None:
+    region = {"REGION": {"code": "50", "label": "Australia"}}
+    payload = {
+        "metadata": {"source": "abs", "dataset_id": "CPI"},
+        "series": [{"series_id": "A", "label": "Series A", "dimensions": region}],
+        "observations": [
+            {"date": "2024-Q1", "series_id": "A", "value": 1.0, "dimensions": dict(region)},
+            {"date": "2024-Q2", "series_id": "A", "value": 2.0, "dimensions": dict(region)},
+        ],
+    }
+
+    result = strip_observation_dimensions(payload)
+
+    assert result is payload
+    assert all("dimensions" not in item for item in result["observations"])
+    assert result["series"][0]["dimensions"] == region
+
+
+def test_strip_observation_dimensions_is_idempotent_on_slim_payloads() -> None:
+    payload = {
+        "metadata": {"source": "rba", "dataset_id": "g1"},
+        "series": [{"series_id": "A", "label": "Series A", "dimensions": {}}],
+        "observations": [{"date": "2024-01-01", "series_id": "A", "value": 1.0}],
+    }
+
+    result = strip_observation_dimensions(strip_observation_dimensions(payload))
+
+    assert result["observations"] == [{"date": "2024-01-01", "series_id": "A", "value": 1.0}]

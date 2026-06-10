@@ -39,6 +39,7 @@ from ausecon_mcp.derived import (
     operand_request_bounds,
     validate_derived_bounds,
 )
+from ausecon_mcp.filters import strip_observation_dimensions
 from ausecon_mcp.logging import configure_logging, get_logger
 from ausecon_mcp.prompts import register_prompts
 from ausecon_mcp.providers._http import resolve_version
@@ -147,6 +148,16 @@ IncludeCeased = Annotated[
 IncludeDiscontinued = Annotated[
     bool,
     Field(description="Whether to include discontinued RBA catalogue entries."),
+]
+IncludeObservationDimensions = Annotated[
+    bool,
+    Field(
+        description=(
+            "Whether to repeat the full dimension dict on every observation. Off by "
+            "default because the same dimensions already appear on each series "
+            "descriptor and are encoded in series_id."
+        ),
+    ),
 ]
 OptionalAbsPeriod = Annotated[
     str | None,
@@ -462,6 +473,7 @@ class AuseconService:
         end_period: str | None = None,
         last_n: int | None = None,
         updated_after: str | None = None,
+        include_observation_dimensions: bool = False,
     ) -> dict:
         validated_dataflow_id = validate_source_token("dataflow_id", dataflow_id)
         validated_key = validate_source_token("key", key)
@@ -474,7 +486,7 @@ class AuseconService:
         validated_last_n = validate_positive_int("last_n", last_n)
         validated_updated_after = validate_iso_datetime("updated_after", updated_after)
         upstream_id = resolve_abs_dataflow_id(validated_dataflow_id)
-        return await self.abs_provider.get_data(
+        payload = await self.abs_provider.get_data(
             dataflow_id=upstream_id,
             key=validated_key,
             start_period=validated_start_period,
@@ -482,6 +494,9 @@ class AuseconService:
             last_n=validated_last_n,
             updated_after=validated_updated_after,
         )
+        if not include_observation_dimensions:
+            strip_observation_dimensions(payload)
+        return payload
 
     async def list_rba_tables(
         self,
@@ -501,6 +516,7 @@ class AuseconService:
         start_date: str | None = None,
         end_date: str | None = None,
         last_n: int | None = None,
+        include_observation_dimensions: bool = False,
     ) -> dict:
         validated_table_id = validate_source_token("table_id", table_id)
         validated_series_ids = validate_series_ids(series_ids)
@@ -512,7 +528,7 @@ class AuseconService:
         )
         validated_last_n = validate_positive_int("last_n", last_n)
         csv_path = resolve_rba_csv_path(validated_table_id)
-        return await self.rba_provider.get_table(
+        payload = await self.rba_provider.get_table(
             table_id=validated_table_id,
             series_ids=validated_series_ids,
             start_date=validated_start_date,
@@ -520,6 +536,9 @@ class AuseconService:
             last_n=validated_last_n,
             csv_path=csv_path,
         )
+        if not include_observation_dimensions:
+            strip_observation_dimensions(payload)
+        return payload
 
     async def get_apra_data(
         self,
@@ -529,6 +548,7 @@ class AuseconService:
         start_date: str | None = None,
         end_date: str | None = None,
         last_n: int | None = None,
+        include_observation_dimensions: bool = False,
     ) -> dict:
         validated_publication_id = validate_source_token("publication_id", publication_id)
         validated_table_id = (
@@ -542,7 +562,7 @@ class AuseconService:
             end_name="end_date",
         )
         validated_last_n = validate_positive_int("last_n", last_n)
-        return await self.apra_provider.get_data(
+        payload = await self.apra_provider.get_data(
             publication_id=validated_publication_id,
             table_id=validated_table_id,
             series_ids=validated_series_ids,
@@ -550,6 +570,9 @@ class AuseconService:
             end_date=validated_end_date,
             last_n=validated_last_n,
         )
+        if not include_observation_dimensions:
+            strip_observation_dimensions(payload)
+        return payload
 
     async def get_economic_series(
         self,
@@ -560,6 +583,7 @@ class AuseconService:
         start: str | None = None,
         end: str | None = None,
         last_n: int | None = None,
+        include_observation_dimensions: bool = False,
     ) -> dict:
         validated_concept = require_non_empty("concept", concept)
         validated_last_n = validate_positive_int("last_n", last_n)
@@ -585,6 +609,7 @@ class AuseconService:
                 start_date=validated_start,
                 end_date=validated_end,
                 last_n=validated_last_n,
+                include_observation_dimensions=include_observation_dimensions,
             )
             _stamp_semantic_metadata(payload, validated_concept, resolved, bounds)
             return payload
@@ -603,6 +628,7 @@ class AuseconService:
                 start_date=validated_start,
                 end_date=validated_end,
                 last_n=validated_last_n,
+                include_observation_dimensions=include_observation_dimensions,
             )
             _stamp_semantic_metadata(payload, validated_concept, resolved, bounds)
             return payload
@@ -619,6 +645,7 @@ class AuseconService:
             start_period=validated_start,
             end_period=validated_end,
             last_n=validated_last_n,
+            include_observation_dimensions=include_observation_dimensions,
         )
         _stamp_semantic_metadata(payload, validated_concept, resolved, bounds)
         return payload
@@ -932,6 +959,7 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
         end_period: OptionalAbsPeriod = None,
         last_n: OptionalPositiveInt = None,
         updated_after: OptionalIsoDateTime = None,
+        include_observation_dimensions: IncludeObservationDimensions = False,
     ) -> dict:
         """Expert/source-native ABS SDMX retrieval in a normalised response shape."""
         return await app_service.get_abs_data(
@@ -941,6 +969,7 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
             end_period=end_period,
             last_n=last_n,
             updated_after=updated_after,
+            include_observation_dimensions=include_observation_dimensions,
         )
 
     @mcp.tool(
@@ -969,6 +998,7 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
         start_date: OptionalIsoDate = None,
         end_date: OptionalIsoDate = None,
         last_n: OptionalPositiveInt = None,
+        include_observation_dimensions: IncludeObservationDimensions = False,
     ) -> dict:
         """Expert/source-native RBA statistical table retrieval in a normalised response shape."""
         return await app_service.get_rba_table(
@@ -977,6 +1007,7 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
             start_date=start_date,
             end_date=end_date,
             last_n=last_n,
+            include_observation_dimensions=include_observation_dimensions,
         )
 
     @mcp.tool(
@@ -991,6 +1022,7 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
         start_date: OptionalIsoDate = None,
         end_date: OptionalIsoDate = None,
         last_n: OptionalPositiveInt = None,
+        include_observation_dimensions: IncludeObservationDimensions = False,
     ) -> dict:
         """Expert/source-native APRA public XLSX publication retrieval.
 
@@ -1003,6 +1035,7 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
             start_date=start_date,
             end_date=end_date,
             last_n=last_n,
+            include_observation_dimensions=include_observation_dimensions,
         )
 
     @mcp.tool(
@@ -1018,6 +1051,7 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
         start: OptionalSemanticStartEnd = None,
         end: OptionalSemanticStartEnd = None,
         last_n: OptionalPositiveInt = None,
+        include_observation_dimensions: IncludeObservationDimensions = False,
     ) -> dict:
         """Preferred analyst-facing retrieval tool for curated ABS/RBA economic concepts.
 
@@ -1032,6 +1066,7 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
             start=start,
             end=end,
             last_n=last_n,
+            include_observation_dimensions=include_observation_dimensions,
         )
 
     @mcp.tool(

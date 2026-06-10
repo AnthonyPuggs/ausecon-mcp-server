@@ -476,7 +476,7 @@
     },
     "observation": {
       "type": "object",
-      "required": ["date", "series_id", "value", "dimensions"],
+      "required": ["date", "series_id", "value"],
       "additionalProperties": false,
       "properties": {
         "date": {

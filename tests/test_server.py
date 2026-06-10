@@ -590,6 +590,49 @@ async def test_service_fetches_abs_data() -> None:
     assert result["metadata"]["dataset_id"] == "CPI"
 
 
+class DimensionedABSProvider(StubABSProvider):
+    async def get_data(self, *args, **kwargs) -> dict:
+        payload = await super().get_data(*args, **kwargs)
+        dimensions = {"REGION": {"code": "50", "label": "Australia"}}
+        for series in payload["series"]:
+            series["dimensions"] = dimensions
+        for observation in payload["observations"]:
+            observation["dimensions"] = dict(dimensions)
+        return payload
+
+
+@pytest.mark.asyncio
+async def test_service_omits_observation_dimensions_by_default() -> None:
+    service = AuseconService(abs_provider=DimensionedABSProvider(), rba_provider=StubRBAProvider())
+
+    result = await service.get_abs_data("CPI")
+
+    assert all("dimensions" not in item for item in result["observations"])
+    assert result["series"][0]["dimensions"] == {"REGION": {"code": "50", "label": "Australia"}}
+
+
+@pytest.mark.asyncio
+async def test_service_keeps_observation_dimensions_when_requested() -> None:
+    service = AuseconService(abs_provider=DimensionedABSProvider(), rba_provider=StubRBAProvider())
+
+    result = await service.get_abs_data("CPI", include_observation_dimensions=True)
+
+    assert result["observations"][0]["dimensions"] == {
+        "REGION": {"code": "50", "label": "Australia"}
+    }
+
+
+@pytest.mark.asyncio
+async def test_semantic_series_threads_include_observation_dimensions() -> None:
+    service = AuseconService(abs_provider=DimensionedABSProvider(), rba_provider=StubRBAProvider())
+
+    slim = await service.get_economic_series("headline_cpi")
+    full = await service.get_economic_series("headline_cpi", include_observation_dimensions=True)
+
+    assert all("dimensions" not in item for item in slim["observations"])
+    assert all("dimensions" in item for item in full["observations"])
+
+
 @pytest.mark.asyncio
 async def test_service_fetches_apra_data() -> None:
     apra = StubAPRAProvider()

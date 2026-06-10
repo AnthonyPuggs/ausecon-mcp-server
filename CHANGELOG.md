@@ -11,6 +11,15 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Added an `ausecon://apra/{publication_id}` resource template exposing curated APRA
   catalogue entries, matching the existing ABS and RBA per-entry templates.
 
+### Changed
+
+- Per-observation `dimensions` are now omitted by default from retrieval responses
+  (roughly a 3.5x payload reduction on dimension-heavy ABS calls); the same dimensions
+  remain on each series descriptor and are encoded in `series_id`. Pass
+  `include_observation_dimensions=true` to `get_abs_data`, `get_rba_table`,
+  `get_apra_data`, or `get_economic_series` to restore them. The response schema no
+  longer lists `dimensions` as required on observations.
+
 ### Fixed
 
 - The server card at `/.well-known/mcp/server-card.json` now enumerates registered

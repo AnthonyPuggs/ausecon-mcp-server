@@ -200,6 +200,45 @@ def test_response_schema_validates_apra_provider_payload() -> None:
     _assert_valid(payload)
 
 
+def test_response_schema_accepts_observations_without_dimensions() -> None:
+    # Mirrors the default slim service output: per-observation dimensions are
+    # omitted and only the series descriptor carries them.
+    payload = {
+        "metadata": {
+            "source": "abs",
+            "dataset_id": "CPI",
+            "frequency": "Quarterly",
+            "retrieved_at": "2026-06-11T00:00:00Z",
+            "server_version": "test",
+            "truncated": False,
+        },
+        "series": [
+            {
+                "series_id": "MEASURE=1|REGION=50",
+                "label": "Index Numbers / Australia",
+                "unit": "Index Numbers",
+                "frequency": "Quarterly",
+                "dimensions": {"REGION": {"code": "50", "label": "Australia"}},
+                "source_key": "ABS:CPI(2.0.0)",
+                "unit_multiplier": None,
+                "decimals": None,
+                "base_period": None,
+            }
+        ],
+        "observations": [
+            {
+                "date": "2025-Q2",
+                "series_id": "MEASURE=1|REGION=50",
+                "value": 140.2,
+                "status": None,
+                "comment": None,
+            }
+        ],
+    }
+
+    _assert_valid(payload)
+
+
 def test_response_schema_allows_selection_apra_resolution_and_warning_metadata() -> None:
     payload = {
         "metadata": {
