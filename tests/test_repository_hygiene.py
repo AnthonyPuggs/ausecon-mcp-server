@@ -4,6 +4,7 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
 import yaml
 
 if sys.version_info >= (3, 11):
@@ -613,3 +614,18 @@ def test_integration_fixture_monkeypatches_cache_root_directly() -> None:
 
     assert "AUSECON_CACHE_DIR" not in text
     assert 'monkeypatch.setattr(cache_module, "_default_disk_dir"' in text
+
+
+def test_no_sync_collision_duplicate_python_files_are_tracked() -> None:
+    try:
+        result = subprocess.run(
+            ["git", "ls-files"],
+            cwd=ROOT,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+    except (OSError, subprocess.CalledProcessError):
+        pytest.skip("git ls-files unavailable (e.g. sdist checkout)")
+    offenders = [line for line in result.stdout.splitlines() if re.search(r"\s\d+\.py$", line)]
+    assert not offenders, f"sync-collision duplicate files tracked: {offenders}"

@@ -6,6 +6,12 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Removed
+
+- Removed sync-collision duplicate `* 2.py` artefacts (`scripts/benchmark_apra_parser 2.py`,
+  `tests/test_apra_parser_benchmark 2.py`) and added a repository-hygiene guard that rejects
+  tracked filenames matching the collision pattern.
+
 ## [1.6.0] - 2026-06-03
 
 ### Added
