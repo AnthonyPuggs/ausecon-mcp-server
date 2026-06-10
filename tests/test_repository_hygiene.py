@@ -34,7 +34,6 @@ CLIENT_SMOKE = ROOT / "scripts" / "mcp_client_smoke.py"
 DOCS_SITE = ROOT / "docs-site"
 DOCS_SITE_CONTRIBUTING = DOCS_SITE / "src" / "content" / "docs" / "maintainers" / "contributing.md"
 DOCS_ICON = DOCS_SITE / "public" / "ausecon-icon.svg"
-ROADMAP = ROOT / "docs" / "roadmap.md"
 HOSTED_DEPLOYMENT = DOCS_SITE / "src" / "content" / "docs" / "operations" / "hosted-deployment.md"
 SEMANTIC_DESIGN = (
     ROOT / "docs" / "superpowers" / "specs" / "2026-04-19-semantic-layer-expansion-design.md"
@@ -306,23 +305,21 @@ def test_hosted_deployment_checklist_is_documented_without_http_smoke_script() -
 
 
 def test_post_v11_roadmap_is_documented_and_contract_preserving() -> None:
-    roadmap_text = ROADMAP.read_text(encoding="utf-8")
     docs_roadmap_text = (DOCS_SITE / "src/content/docs/maintainers/roadmap.md").read_text(
         encoding="utf-8"
     )
 
-    for text in (roadmap_text, docs_roadmap_text):
-        assert "v1.2" in text
-        assert "v1.3" in text
-        assert "v1.4" in text
-        assert "v1.5" in text
-        assert "v1.6" in text
-        assert "v2.0" in text
-        assert "current v1.9.0 release line" in text
-        assert "APRA" in text
-        assert "APRA source-native foundation" in text
-        assert "{metadata, series, observations}" in text
-        assert "mcp_http_smoke.py" not in text
+    assert "v1.2" in docs_roadmap_text
+    assert "v1.3" in docs_roadmap_text
+    assert "v1.4" in docs_roadmap_text
+    assert "v1.5" in docs_roadmap_text
+    assert "v1.6" in docs_roadmap_text
+    assert "v2.0" in docs_roadmap_text
+    assert "current v1.9.0 release line" in docs_roadmap_text
+    assert "APRA" in docs_roadmap_text
+    assert "APRA source-native foundation" in docs_roadmap_text
+    assert "{metadata, series, observations}" in docs_roadmap_text
+    assert "mcp_http_smoke.py" not in docs_roadmap_text
 
 
 def test_docs_site_documents_schema_and_preferred_rba_listing_surface() -> None:
