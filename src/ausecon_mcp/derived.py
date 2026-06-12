@@ -52,30 +52,105 @@ def _compute_yield_curve_slope(values: dict[str, dict[str, float]]) -> list[tupl
     return [(period, _round(long_yield[period] - short_yield[period])) for period in dates]
 
 
-def _compute_real_cash_rate(values: dict[str, dict[str, float]]) -> list[tuple[str, float]]:
-    cash_rate = values["cash_rate"]
-    inflation = values["inflation"]
-    cash_items = sorted(cash_rate.items(), key=lambda item: _period_end_date(item[0]))
-    results: list[tuple[str, float]] = []
-    cash_index = 0
-    latest_cash: float | None = None
+def _real_rate_minus_inflation(
+    rate: dict[str, float],
+    inflation: dict[str, float],
+) -> list[tuple[str, float]]:
+    """Carry a higher-frequency rate forward to each inflation period, then subtract.
 
-    sorted_inflation = sorted(
-        inflation.items(),
-        key=lambda item: _period_sort_key(item[0]),
-    )
+    Shared by the real-rate family. ``rate`` may be daily (cash rate, bond yield,
+    bank bill rate); the latest rate observed on or before each inflation period
+    end is used.
+    """
+    rate_items = sorted(rate.items(), key=lambda item: _period_end_date(item[0]))
+    results: list[tuple[str, float]] = []
+    rate_index = 0
+    latest_rate: float | None = None
+
+    sorted_inflation = sorted(inflation.items(), key=lambda item: _period_sort_key(item[0]))
     for period, inflation_value in sorted_inflation:
         period_end = _period_end_date(period)
         while (
-            cash_index < len(cash_items)
-            and _period_end_date(cash_items[cash_index][0]) <= period_end
+            rate_index < len(rate_items)
+            and _period_end_date(rate_items[rate_index][0]) <= period_end
         ):
-            latest_cash = cash_items[cash_index][1]
-            cash_index += 1
-        if latest_cash is None:
+            latest_rate = rate_items[rate_index][1]
+            rate_index += 1
+        if latest_rate is None:
             continue
-        results.append((period, _round(latest_cash - inflation_value)))
+        results.append((period, _round(latest_rate - inflation_value)))
 
+    return results
+
+
+def _monthly_year_ended_growth(levels: dict[str, float]) -> list[tuple[str, float]]:
+    """Year-ended percentage growth of a monthly level series (current vs 12 months prior).
+
+    Robust to both ``YYYY-MM`` (ABS) and ``YYYY-MM-DD`` end-of-month (RBA) period
+    formats by indexing observations on their (year, month) rather than reconstructing
+    a string key.
+    """
+    by_month: dict[tuple[int, int], float] = {}
+    for period, value in levels.items():
+        year, month, _ = _period_sort_key(period)
+        by_month[(year, month)] = value
+
+    results: list[tuple[str, float]] = []
+    for period in sorted(levels, key=_period_sort_key):
+        year, month, _ = _period_sort_key(period)
+        lag_value = by_month.get((year - 1, month))
+        if lag_value in (None, 0):
+            continue
+        results.append((period, _round(100 * (levels[period] / lag_value - 1))))
+    return results
+
+
+def _compute_real_cash_rate(values: dict[str, dict[str, float]]) -> list[tuple[str, float]]:
+    return _real_rate_minus_inflation(values["cash_rate"], values["inflation"])
+
+
+def _compute_real_10y_bond_yield(values: dict[str, dict[str, float]]) -> list[tuple[str, float]]:
+    return _real_rate_minus_inflation(values["bond_yield"], values["inflation"])
+
+
+def _compute_real_bank_bill_rate(values: dict[str, dict[str, float]]) -> list[tuple[str, float]]:
+    return _real_rate_minus_inflation(values["bank_bill_rate"], values["inflation"])
+
+
+def _compute_real_business_lending_rate(
+    values: dict[str, dict[str, float]],
+) -> list[tuple[str, float]]:
+    lending_rate = values["lending_rate"]
+    inflation = values["inflation"]
+    dates = sorted(set(lending_rate) & set(inflation), key=_period_sort_key)
+    return [(period, _round(lending_rate[period] - inflation[period])) for period in dates]
+
+
+def _compute_broad_money_growth(values: dict[str, dict[str, float]]) -> list[tuple[str, float]]:
+    return _monthly_year_ended_growth(values["broad_money"])
+
+
+def _compute_employment_growth(values: dict[str, dict[str, float]]) -> list[tuple[str, float]]:
+    return _monthly_year_ended_growth(values["employment"])
+
+
+def _compute_misery_index(values: dict[str, dict[str, float]]) -> list[tuple[str, float]]:
+    unemployment = values["unemployment_rate"]
+    inflation = values["inflation"]
+    dates = sorted(set(unemployment) & set(inflation), key=_period_sort_key)
+    return [(period, _round(unemployment[period] + inflation[period])) for period in dates]
+
+
+def _compute_terms_of_trade(values: dict[str, dict[str, float]]) -> list[tuple[str, float]]:
+    export_prices = values["export_prices"]
+    import_prices = values["import_prices"]
+    dates = sorted(set(export_prices) & set(import_prices), key=_period_sort_key)
+    results: list[tuple[str, float]] = []
+    for period in dates:
+        import_value = import_prices[period]
+        if import_value in (None, 0):
+            continue
+        results.append((period, _round(100 * export_prices[period] / import_value)))
     return results
 
 
@@ -95,15 +170,7 @@ def _compute_real_wage_growth(values: dict[str, dict[str, float]]) -> list[tuple
 
 
 def _compute_credit_growth(values: dict[str, dict[str, float]]) -> list[tuple[str, float]]:
-    total_credit = values["total_credit"]
-    results: list[tuple[str, float]] = []
-    for period in sorted(total_credit, key=_period_sort_key):
-        lag_period = shift_month(period, -12)
-        lag_value = total_credit.get(lag_period)
-        if lag_value in (None, 0):
-            continue
-        results.append((period, _round(100 * (total_credit[period] / lag_value - 1))))
-    return results
+    return _monthly_year_ended_growth(values["total_credit"])
 
 
 def _compute_gdp_per_capita(values: dict[str, dict[str, float]]) -> list[tuple[str, float]]:
@@ -302,6 +369,103 @@ DERIVED_CONCEPTS: dict[str, DerivedSpec] = {
         operands=(OperandSpec("household_spending", "quarterly_household_spending_volume"),),
         compute=_compute_household_spending_growth,
     ),
+    "real_10y_bond_yield": DerivedSpec(
+        concept="real_10y_bond_yield",
+        label="Real 10-year bond yield",
+        description=(
+            "Ten-year Australian government bond yield less complete monthly CPI "
+            "year-ended inflation."
+        ),
+        frequency="Monthly",
+        unit="percentage points",
+        formula="government_bond_yield_10y - monthly_inflation",
+        operands=(
+            OperandSpec("bond_yield", "government_bond_yield_10y"),
+            OperandSpec("inflation", "monthly_inflation"),
+        ),
+        compute=_compute_real_10y_bond_yield,
+    ),
+    "real_bank_bill_rate": DerivedSpec(
+        concept="real_bank_bill_rate",
+        label="Real bank bill rate",
+        description=(
+            "Three-month bank bill swap rate less complete monthly CPI year-ended inflation."
+        ),
+        frequency="Monthly",
+        unit="percentage points",
+        formula="bank_bill_rate - monthly_inflation",
+        operands=(
+            OperandSpec("bank_bill_rate", "bank_bill_rate"),
+            OperandSpec("inflation", "monthly_inflation"),
+        ),
+        compute=_compute_real_bank_bill_rate,
+    ),
+    "real_business_lending_rate": DerivedSpec(
+        concept="real_business_lending_rate",
+        label="Real business lending rate",
+        description=(
+            "Small-business indicator lending rate less complete monthly CPI year-ended inflation."
+        ),
+        frequency="Monthly",
+        unit="percentage points",
+        formula="business_lending_rate - monthly_inflation",
+        operands=(
+            OperandSpec("lending_rate", "business_lending_rate"),
+            OperandSpec("inflation", "monthly_inflation"),
+        ),
+        compute=_compute_real_business_lending_rate,
+    ),
+    "broad_money_growth": DerivedSpec(
+        concept="broad_money_growth",
+        label="Broad money growth",
+        description="Year-ended growth in broad money derived from RBA broad-money levels.",
+        frequency="Monthly",
+        unit="percent year-ended",
+        formula="100 * (broad_money_t / broad_money_t-12 - 1)",
+        operands=(OperandSpec("broad_money", "broad_money"),),
+        compute=_compute_broad_money_growth,
+    ),
+    "employment_growth": DerivedSpec(
+        concept="employment_growth",
+        label="Employment growth",
+        description="Year-ended growth in total employment derived from ABS Labour Force levels.",
+        frequency="Monthly",
+        unit="percent year-ended",
+        formula="100 * (employment_t / employment_t-12 - 1)",
+        operands=(OperandSpec("employment", "employment"),),
+        compute=_compute_employment_growth,
+    ),
+    "misery_index": DerivedSpec(
+        concept="misery_index",
+        label="Misery index",
+        description=(
+            "Unemployment rate plus complete monthly CPI year-ended inflation (Okun misery index)."
+        ),
+        frequency="Monthly",
+        unit="percentage points",
+        formula="unemployment_rate + monthly_inflation",
+        operands=(
+            OperandSpec("unemployment_rate", "unemployment_rate"),
+            OperandSpec("inflation", "monthly_inflation"),
+        ),
+        compute=_compute_misery_index,
+    ),
+    "terms_of_trade": DerivedSpec(
+        concept="terms_of_trade",
+        label="Terms of trade",
+        description=(
+            "All-groups export price index relative to the all-groups import price "
+            "index, expressed as an index (×100)."
+        ),
+        frequency="Quarterly",
+        unit="index",
+        formula="100 * export_price_index / import_price_index",
+        operands=(
+            OperandSpec("export_prices", "export_price_index"),
+            OperandSpec("import_prices", "import_price_index"),
+        ),
+        compute=_compute_terms_of_trade,
+    ),
 }
 
 
@@ -353,6 +517,10 @@ def operand_request_bounds(
 
     if concept == "credit_growth" and operand_name == "total_credit" and normalised_start:
         normalised_start = shift_month(normalised_start, -12)
+    elif concept == "broad_money_growth" and operand_name == "broad_money" and normalised_start:
+        normalised_start = shift_month(normalised_start, -12)
+    elif concept == "employment_growth" and operand_name == "employment" and normalised_start:
+        normalised_start = shift_month(normalised_start, -12)
     elif concept == "real_wage_growth" and operand_name == "cpi_index" and normalised_start:
         normalised_start = shift_quarter(normalised_start, -4)
     elif (
@@ -362,6 +530,10 @@ def operand_request_bounds(
     ):
         normalised_start = shift_quarter(normalised_start, -4)
     elif concept == "real_cash_rate" and operand_name == "cash_rate":
+        normalised_start = None
+    elif concept == "real_10y_bond_yield" and operand_name == "bond_yield":
+        normalised_start = None
+    elif concept == "real_bank_bill_rate" and operand_name == "bank_bill_rate":
         normalised_start = None
 
     return normalised_start, normalised_end

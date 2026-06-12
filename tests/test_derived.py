@@ -59,16 +59,23 @@ def _payload(
     }
 
 
-def test_list_derived_concepts_exposes_only_v13_foundation_concepts() -> None:
+def test_list_derived_concepts_exposes_expected_concepts() -> None:
     assert list_derived_concepts() == [
+        "broad_money_growth",
         "credit_growth",
         "credit_to_gdp",
+        "employment_growth",
         "gdp_per_capita",
         "household_spending_growth",
+        "misery_index",
         "mortgage_rate_spread",
+        "real_10y_bond_yield",
+        "real_bank_bill_rate",
+        "real_business_lending_rate",
         "real_cash_rate",
         "real_mortgage_rate",
         "real_wage_growth",
+        "terms_of_trade",
         "yield_curve_slope",
     ]
 
@@ -402,6 +409,247 @@ def test_household_spending_growth_derives_year_ended_growth() -> None:
 
     assert payload["observations"][0]["date"] == "2024-Q1"
     assert payload["observations"][0]["value"] == pytest.approx(6.0)
+
+
+def test_real_10y_bond_yield_carries_daily_yield_forward_to_monthly_inflation() -> None:
+    payload = derive_series(
+        "real_10y_bond_yield",
+        {
+            "bond_yield": _payload(
+                concept="government_bond_yield_10y",
+                source="rba",
+                dataset_id="f17",
+                series_id="FZCY1000D",
+                observations=[("2024-01-10", 4.2), ("2024-03-15", 4.0)],
+                frequency="Daily",
+                unit="Percent per annum",
+                rba_series_ids=["FZCY1000D"],
+            ),
+            "inflation": _payload(
+                concept="monthly_inflation",
+                source="abs",
+                dataset_id="CPI",
+                series_id="cpi",
+                observations=[("2024-01", 4.1), ("2024-02", 3.8), ("2024-03", 3.5)],
+                frequency="Monthly",
+                unit="Percent",
+                abs_key="3.10001.10.50.M",
+            ),
+        },
+        requested_start=None,
+        requested_end=None,
+        last_n=None,
+        server_version="test",
+    )
+
+    values = [(obs["date"], obs["value"]) for obs in payload["observations"]]
+    assert values == [
+        ("2024-01", pytest.approx(0.1)),
+        ("2024-02", pytest.approx(0.4)),
+        ("2024-03", pytest.approx(0.5)),
+    ]
+    assert payload["metadata"]["derived"]["alignment_frequency"] == "Monthly"
+    assert payload["series"][0]["unit"] == "percentage points"
+
+
+def test_real_bank_bill_rate_subtracts_inflation_from_carried_rate() -> None:
+    payload = derive_series(
+        "real_bank_bill_rate",
+        {
+            "bank_bill_rate": _payload(
+                concept="bank_bill_rate",
+                source="rba",
+                dataset_id="f1",
+                series_id="FIRMMBAB90D",
+                observations=[("2024-01-15", 4.35)],
+                frequency="Daily",
+                rba_series_ids=["FIRMMBAB90D"],
+            ),
+            "inflation": _payload(
+                concept="monthly_inflation",
+                source="abs",
+                dataset_id="CPI",
+                series_id="cpi",
+                observations=[("2024-01", 4.1), ("2024-02", 3.8)],
+                frequency="Monthly",
+                abs_key="3.10001.10.50.M",
+            ),
+        },
+        requested_start=None,
+        requested_end=None,
+        last_n=None,
+        server_version="test",
+    )
+
+    assert [(obs["date"], obs["value"]) for obs in payload["observations"]] == [
+        ("2024-01", pytest.approx(0.25)),
+        ("2024-02", pytest.approx(0.55)),
+    ]
+
+
+def test_real_business_lending_rate_intersects_monthly_periods() -> None:
+    payload = derive_series(
+        "real_business_lending_rate",
+        {
+            "lending_rate": _payload(
+                concept="business_lending_rate",
+                source="rba",
+                dataset_id="f7",
+                series_id="FLRMBSV",
+                observations=[("2024-01", 8.5), ("2024-02", 8.6)],
+                frequency="Monthly",
+                rba_series_ids=["FLRMBSV"],
+            ),
+            "inflation": _payload(
+                concept="monthly_inflation",
+                source="abs",
+                dataset_id="CPI",
+                series_id="cpi",
+                observations=[("2024-01", 4.1), ("2024-03", 3.5)],
+                frequency="Monthly",
+                abs_key="3.10001.10.50.M",
+            ),
+        },
+        requested_start=None,
+        requested_end=None,
+        last_n=None,
+        server_version="test",
+    )
+
+    assert [(obs["date"], obs["value"]) for obs in payload["observations"]] == [
+        ("2024-01", pytest.approx(4.4)),
+    ]
+
+
+def test_broad_money_growth_derives_year_ended_growth() -> None:
+    payload = derive_series(
+        "broad_money_growth",
+        {
+            "broad_money": _payload(
+                concept="broad_money",
+                source="rba",
+                dataset_id="d3",
+                series_id="DMABMS",
+                # RBA monthly series arrive as end-of-month ISO dates, not YYYY-MM.
+                observations=[("2023-01-31", 100.0), ("2024-01-31", 106.0)],
+                frequency="Monthly",
+                rba_series_ids=["DMABMS"],
+            )
+        },
+        requested_start=None,
+        requested_end=None,
+        last_n=None,
+        server_version="test",
+    )
+
+    assert [(obs["date"], obs["value"]) for obs in payload["observations"]] == [
+        ("2024-01-31", pytest.approx(6.0)),
+    ]
+    assert payload["metadata"]["derived"]["formula"] == (
+        "100 * (broad_money_t / broad_money_t-12 - 1)"
+    )
+
+
+def test_employment_growth_derives_year_ended_growth() -> None:
+    payload = derive_series(
+        "employment_growth",
+        {
+            "employment": _payload(
+                concept="employment",
+                source="abs",
+                dataset_id="LF",
+                series_id="employment",
+                observations=[("2023-05", 13000.0), ("2024-05", 13390.0)],
+                frequency="Monthly",
+                abs_key="employment-key",
+            )
+        },
+        requested_start=None,
+        requested_end=None,
+        last_n=None,
+        server_version="test",
+    )
+
+    assert [(obs["date"], obs["value"]) for obs in payload["observations"]] == [
+        ("2024-05", pytest.approx(3.0)),
+    ]
+
+
+def test_misery_index_sums_unemployment_and_inflation() -> None:
+    payload = derive_series(
+        "misery_index",
+        {
+            "unemployment_rate": _payload(
+                concept="unemployment_rate",
+                source="abs",
+                dataset_id="LF",
+                series_id="unemployment_rate",
+                observations=[("2024-01", 4.1), ("2024-02", 4.0)],
+                frequency="Monthly",
+                abs_key="unemp-key",
+            ),
+            "inflation": _payload(
+                concept="monthly_inflation",
+                source="abs",
+                dataset_id="CPI",
+                series_id="cpi",
+                observations=[("2024-01", 3.4), ("2024-03", 3.5)],
+                frequency="Monthly",
+                abs_key="3.10001.10.50.M",
+            ),
+        },
+        requested_start=None,
+        requested_end=None,
+        last_n=None,
+        server_version="test",
+    )
+
+    assert [(obs["date"], obs["value"]) for obs in payload["observations"]] == [
+        ("2024-01", pytest.approx(7.5)),
+    ]
+    assert payload["series"][0]["unit"] == "percentage points"
+
+
+def test_terms_of_trade_ratios_export_to_import_prices() -> None:
+    payload = derive_series(
+        "terms_of_trade",
+        {
+            "export_prices": _payload(
+                concept="export_price_index",
+                source="abs",
+                dataset_id="ITPI_EXP",
+                series_id="MEASURE=1|INDEX=8093697|FREQ=Q",
+                observations=[("2025-Q4", 157.8), ("2026-Q1", 158.6)],
+                frequency="Quarterly",
+                unit="Index Numbers",
+                abs_key="1.8093697.Q",
+            ),
+            "import_prices": _payload(
+                concept="import_price_index",
+                source="abs",
+                dataset_id="ITPI_IMP",
+                series_id="MEASURE=1|INDEX=6011001|FREQ=Q",
+                observations=[("2025-Q4", 135.4), ("2026-Q1", 135.5)],
+                frequency="Quarterly",
+                unit="Index Numbers",
+                abs_key="1.6011001.Q",
+            ),
+        },
+        requested_start=None,
+        requested_end=None,
+        last_n=None,
+        server_version="test",
+    )
+
+    values = [(obs["date"], obs["value"]) for obs in payload["observations"]]
+    assert values == [
+        ("2025-Q4", pytest.approx(116.543574)),
+        ("2026-Q1", pytest.approx(117.047970)),
+    ]
+    assert payload["metadata"]["derived"]["formula"] == (
+        "100 * export_price_index / import_price_index"
+    )
+    assert payload["series"][0]["unit"] == "index"
 
 
 def test_derive_series_rejects_start_after_end() -> None:

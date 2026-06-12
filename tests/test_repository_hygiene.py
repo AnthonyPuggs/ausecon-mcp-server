@@ -217,9 +217,9 @@ def test_readme_is_rich_landing_page_for_current_release_state() -> None:
 
     assert "<b>14</b>" in readme_text
     assert "read-only tools" in readme_text
-    assert "<b>70</b>" in readme_text
+    assert "<b>75</b>" in readme_text
     assert "economic concepts" in readme_text
-    assert "<b>9</b>" in readme_text
+    assert "<b>16</b>" in readme_text
     assert "derived indicators" in readme_text
     assert "stdio locally, Streamable HTTP when hosted" in readme_text
 

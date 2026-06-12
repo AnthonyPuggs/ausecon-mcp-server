@@ -48,9 +48,11 @@ For the small derived layer, call:
 get_derived_series(concept="real_cash_rate")
 ```
 
-Supported derived concepts are `real_cash_rate`, `yield_curve_slope`, `real_wage_growth`,
-`credit_growth`, `gdp_per_capita`, `mortgage_rate_spread`, `real_mortgage_rate`,
-`credit_to_gdp`, and `household_spending_growth`.
+Supported derived concepts are `real_cash_rate`, `real_mortgage_rate`,
+`real_10y_bond_yield`, `real_bank_bill_rate`, `real_business_lending_rate`,
+`yield_curve_slope`, `real_wage_growth`, `credit_growth`, `broad_money_growth`,
+`employment_growth`, `gdp_per_capita`, `mortgage_rate_spread`, `credit_to_gdp`,
+`household_spending_growth`, `misery_index`, and `terms_of_trade`.
 
 ## Expert source-native flow
 

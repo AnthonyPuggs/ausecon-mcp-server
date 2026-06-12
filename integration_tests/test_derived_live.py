@@ -13,6 +13,10 @@ pytestmark = pytest.mark.asyncio
         ("yield_curve_slope", "Daily"),
         ("real_cash_rate", "Monthly"),
         ("gdp_per_capita", "Quarterly"),
+        ("misery_index", "Monthly"),
+        ("real_10y_bond_yield", "Monthly"),
+        ("broad_money_growth", "Monthly"),
+        ("terms_of_trade", "Quarterly"),
     ],
 )
 async def test_live_derived_series_foundation_concepts(concept: str, frequency: str) -> None:

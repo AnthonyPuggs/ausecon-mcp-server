@@ -36,8 +36,8 @@ without leaving the conversation.
 <table align="center">
   <tr>
     <td align="center"><b>14</b><br/><sub>read-only tools</sub></td>
-    <td align="center"><b>70</b><br/><sub>economic concepts</sub></td>
-    <td align="center"><b>9</b><br/><sub>derived indicators</sub></td>
+    <td align="center"><b>75</b><br/><sub>economic concepts</sub></td>
+    <td align="center"><b>16</b><br/><sub>derived indicators</sub></td>
     <td align="center"><b>8</b><br/><sub>prompt templates</sub></td>
     <td align="center"><b>3</b><br/><sub>data sources</sub></td>
   </tr>

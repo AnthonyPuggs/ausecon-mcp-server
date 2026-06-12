@@ -192,7 +192,13 @@ _RAW_ABS_CATALOGUE = {
         ],
         "frequencies": ["Q"],
         "geographies": ["national"],
-        "variants": [],
+        "variants": [
+            {
+                "name": "all_groups",
+                "aliases": ["headline", "all groups", "export price index"],
+                "abs_key": "1.8093697.Q",
+            },
+        ],
         "audit": {
             "last_audited": "2026-04-18",
             "upstream_url": "https://data.api.abs.gov.au/rest/dataflow/ABS/ITPI_EXP/latest",
@@ -218,7 +224,13 @@ _RAW_ABS_CATALOGUE = {
         ],
         "frequencies": ["Q"],
         "geographies": ["national"],
-        "variants": [],
+        "variants": [
+            {
+                "name": "all_groups",
+                "aliases": ["headline", "all groups", "import price index"],
+                "abs_key": "1.6011001.Q",
+            },
+        ],
         "audit": {
             "last_audited": "2026-04-18",
             "upstream_url": "https://data.api.abs.gov.au/rest/dataflow/ABS/ITPI_IMP/latest",

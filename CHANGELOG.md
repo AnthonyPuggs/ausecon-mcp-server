@@ -6,6 +6,24 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- Seven new transparent derived indicators (16 total): `real_10y_bond_yield`,
+  `real_bank_bill_rate`, and `real_business_lending_rate` (real-rate family);
+  `broad_money_growth` and `employment_growth` (year-ended growth from levels);
+  `misery_index` (unemployment rate plus monthly inflation); and `terms_of_trade`
+  (all-groups export price index relative to import price index).
+- Five new curated semantic concepts (75 total): `export_price_index` (ABS
+  `ITPI_EXP`), `import_price_index` (ABS `ITPI_IMP`), `household_debt_to_income`
+  (RBA `e2`), `labour_productivity` (RBA `h4`), and `real_twi` (RBA `f15`).
+
+### Fixed
+
+- Year-ended growth derivations (`credit_growth`, `broad_money_growth`,
+  `employment_growth`) now handle RBA monthly series that arrive as end-of-month
+  ISO dates (`YYYY-MM-DD`) in addition to ABS `YYYY-MM` periods, instead of
+  raising a period-format error.
+
 ## [1.9.0] - 2026-06-11
 
 ### Added

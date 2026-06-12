@@ -9,7 +9,7 @@ description: Curated concepts accepted by get_economic_series.
 source-native ABS, RBA, or APRA target and can be discovered at runtime with
 `list_economic_concepts` or the `ausecon://concepts` resource.
 
-Total concepts: `70`.
+Total concepts: `75`.
 
 ## Activity
 
@@ -53,6 +53,7 @@ Total concepts: `70`.
 | `aud_jpy` | RBA | `f11` | `aud_jpy` | Monthly | `get_economic_series(concept="aud_jpy")` |
 | `aud_nzd` | RBA | `f11` | `aud_nzd` | Monthly | `get_economic_series(concept="aud_nzd")` |
 | `aud_usd` | RBA | `f11` | `aud_usd` | Monthly | `get_economic_series(concept="aud_usd")` |
+| `real_twi` | RBA | `f15` | `real_twi` | Monthly | `get_economic_series(concept="real_twi")` |
 | `trade_weighted_index` | RBA | `f11` | `twi` | Monthly | `get_economic_series(concept="trade_weighted_index")` |
 
 ## External Sector
@@ -62,6 +63,12 @@ Total concepts: `70`.
 | `current_account_balance` | ABS | `BOP` | `current_account` | Quarterly | `get_economic_series(concept="current_account_balance")` |
 | `trade_balance` | ABS | `ITGS` | `trade_balance` | Monthly | `get_economic_series(concept="trade_balance")` |
 | `commodity_prices` | RBA | `i2` | `rba_commodity_index` | Monthly | `get_economic_series(concept="commodity_prices")` |
+
+## Household Finance
+
+| Concept | Source | Dataset | Variant | Frequency | Recommended call |
+| --- | --- | --- | --- | --- | --- |
+| `household_debt_to_income` | RBA | `e2` | `debt_to_income` | Quarterly | `get_economic_series(concept="household_debt_to_income")` |
 
 ## Housing Construction
 
@@ -141,11 +148,19 @@ Total concepts: `70`.
 | `private_investment` | ABS | `ANA_EXP` | `private_investment` | Quarterly | `get_economic_series(concept="private_investment")` |
 | `real_gdp` | ABS | `ANA_AGG` | `real_gdp` | Quarterly | `get_economic_series(concept="real_gdp")` |
 
+## Output Labour
+
+| Concept | Source | Dataset | Variant | Frequency | Recommended call |
+| --- | --- | --- | --- | --- | --- |
+| `labour_productivity` | RBA | `h4` | `labour_productivity` | Quarterly | `get_economic_series(concept="labour_productivity")` |
+
 ## Prices Inflation
 
 | Concept | Source | Dataset | Variant | Frequency | Recommended call |
 | --- | --- | --- | --- | --- | --- |
+| `export_price_index` | ABS | `ITPI_EXP` | `all_groups` | Quarterly | `get_economic_series(concept="export_price_index")` |
 | `headline_cpi` | ABS | `CPI` | `headline` | Quarterly | `get_economic_series(concept="headline_cpi")` |
+| `import_price_index` | ABS | `ITPI_IMP` | `all_groups` | Quarterly | `get_economic_series(concept="import_price_index")` |
 | `monthly_cpi_change` | ABS | `CPI` | `monthly_change` | Monthly | `get_economic_series(concept="monthly_cpi_change")` |
 | `monthly_cpi_index` | ABS | `CPI` | `monthly_index` | Monthly | `get_economic_series(concept="monthly_cpi_index")` |
 | `monthly_inflation` | ABS | `CPI` | `monthly_annual_change` | Monthly | `get_economic_series(concept="monthly_inflation")` |

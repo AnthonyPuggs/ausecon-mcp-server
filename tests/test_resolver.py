@@ -364,6 +364,12 @@ def test_curated_shortcuts_cover_current_semantic_concepts() -> None:
         "phi_premium_revenue",
         "phi_claims_expense",
         "phi_membership",
+        # Tranche G
+        "export_price_index",
+        "import_price_index",
+        "household_debt_to_income",
+        "labour_productivity",
+        "real_twi",
     }
 
 
@@ -689,6 +695,42 @@ async def test_resolve_tranche_f_apra_concepts(
     assert result.variant == variant
     assert result.apra_table_id == table_id
     assert result.apra_series_ids == series_ids
+
+
+TRANCHE_G_ABS = [
+    ("export_price_index", "ITPI_EXP", "all_groups", "1.8093697.Q"),
+    ("import_price_index", "ITPI_IMP", "all_groups", "1.6011001.Q"),
+]
+
+TRANCHE_G_RBA = [
+    ("household_debt_to_income", "e2", "debt_to_income", ["BHFDDIT"]),
+    ("labour_productivity", "h4", "labour_productivity", ["GNFPROSQI"]),
+    ("real_twi", "f15", "real_twi", ["FRERTWI"]),
+]
+
+
+@pytest.mark.parametrize(("concept", "dataset_id", "variant", "abs_key"), TRANCHE_G_ABS)
+@pytest.mark.asyncio
+async def test_resolve_tranche_g_abs_concepts(
+    concept: str, dataset_id: str, variant: str, abs_key: str
+) -> None:
+    result = await resolve(concept)
+    assert result.source == "abs"
+    assert result.dataset_id == dataset_id
+    assert result.variant == variant
+    assert result.abs_key == abs_key
+
+
+@pytest.mark.parametrize(("concept", "dataset_id", "variant", "series_ids"), TRANCHE_G_RBA)
+@pytest.mark.asyncio
+async def test_resolve_tranche_g_rba_concepts(
+    concept: str, dataset_id: str, variant: str, series_ids: list[str]
+) -> None:
+    result = await resolve(concept)
+    assert result.source == "rba"
+    assert result.dataset_id == dataset_id
+    assert result.variant == variant
+    assert result.rba_series_ids == series_ids
 
 
 def test_list_economic_concepts_uses_variant_frequency_metadata() -> None:

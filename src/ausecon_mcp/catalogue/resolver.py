@@ -281,6 +281,32 @@ CURATED_SHORTCUTS: dict[str, dict[str, Any]] = {
         "dataset_id": "APRA_PHI_MEMBERSHIP",
         "variant": "hospital_coverage",
     },
+    # Tranche G — external prices, household, productivity, real exchange rate
+    "export_price_index": {
+        "source": "abs",
+        "dataset_id": "ITPI_EXP",
+        "variant": "all_groups",
+    },
+    "import_price_index": {
+        "source": "abs",
+        "dataset_id": "ITPI_IMP",
+        "variant": "all_groups",
+    },
+    "household_debt_to_income": {
+        "source": "rba",
+        "dataset_id": "e2",
+        "variant": "debt_to_income",
+    },
+    "labour_productivity": {
+        "source": "rba",
+        "dataset_id": "h4",
+        "variant": "labour_productivity",
+    },
+    "real_twi": {
+        "source": "rba",
+        "dataset_id": "f15",
+        "variant": "real_twi",
+    },
 }
 
 

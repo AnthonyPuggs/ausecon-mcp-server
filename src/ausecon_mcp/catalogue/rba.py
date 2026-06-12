@@ -987,7 +987,13 @@ _RAW_RBA_CATALOGUE = {
         ],
         "frequencies": ["Q"],
         "geographies": ["national"],
-        "variants": [],
+        "variants": [
+            {
+                "name": "debt_to_income",
+                "aliases": ["household debt to income", "debt to income ratio"],
+                "rba_series_ids": ["BHFDDIT"],
+            },
+        ],
         "audit": {
             "last_audited": "2026-04-18",
             "upstream_url": "https://www.rba.gov.au/statistics/tables/csv/e2-data.csv",
@@ -1499,7 +1505,13 @@ _RAW_RBA_CATALOGUE = {
         ],
         "frequencies": ["M"],
         "geographies": ["national"],
-        "variants": [],
+        "variants": [
+            {
+                "name": "real_twi",
+                "aliases": ["real trade-weighted index", "real twi"],
+                "rba_series_ids": ["FRERTWI"],
+            },
+        ],
         "audit": {
             "last_audited": "2026-04-18",
             "upstream_url": "https://www.rba.gov.au/statistics/tables/csv/f15-data.csv",
@@ -1837,7 +1849,17 @@ _RAW_RBA_CATALOGUE = {
         ],
         "frequencies": ["Q"],
         "geographies": ["national"],
-        "variants": [],
+        "variants": [
+            {
+                "name": "labour_productivity",
+                "aliases": [
+                    "labour productivity",
+                    "non-farm labour productivity per hour",
+                    "productivity index",
+                ],
+                "rba_series_ids": ["GNFPROSQI"],
+            },
+        ],
         "audit": {
             "last_audited": "2026-04-18",
             "upstream_url": "https://www.rba.gov.au/statistics/tables/csv/h4-data.csv",
