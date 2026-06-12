@@ -9,6 +9,7 @@
 [![Python](https://img.shields.io/badge/python-3.10%2B-0b2a52?labelColor=41464d)](https://pypi.org/project/ausecon-mcp-server/)
 [![Transport](https://img.shields.io/badge/transport-stdio%20%C2%B7%20HTTP-0b2a52?labelColor=41464d)](#connect-your-client)
 [![License](https://img.shields.io/badge/license-MIT-6a737d?labelColor=41464d)](LICENSE)
+[![smithery badge](https://smithery.ai/badge/anthonypuggs/ausecon-mcp)](https://smithery.ai/servers/anthonypuggs/ausecon-mcp)
 
 <p>
   <b>ausecon</b> is a Model Context Protocol server that gives any AI assistant clean, structured
