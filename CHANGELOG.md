@@ -6,6 +6,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.10.0] - 2026-06-13
+
 ### Added
 
 - Seven new transparent derived indicators (16 total): `real_10y_bond_yield`,
@@ -642,7 +644,8 @@ Initial public release.
 - Initial curated catalogues for ABS and RBA, plus a four-concept
   `CURATED_SERIES` semantic shortcut map.
 
-[Unreleased]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.9.0...HEAD
+[Unreleased]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.10.0...HEAD
+[1.10.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.9.0...v1.10.0
 [1.9.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.8.0...v1.9.0
 [1.8.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.7.1...v1.8.0
 [1.7.1]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.7.0...v1.7.1
