@@ -496,7 +496,9 @@ def test_real_business_lending_rate_intersects_monthly_periods() -> None:
                 source="rba",
                 dataset_id="f7",
                 series_id="FLRMBSV",
-                observations=[("2024-01", 8.5), ("2024-02", 8.6)],
+                # RBA monthly series arrive as end-of-month ISO dates, not YYYY-MM,
+                # so this must align with ABS YYYY-MM inflation by (year, month).
+                observations=[("2024-01-31", 8.5), ("2024-02-29", 8.6)],
                 frequency="Monthly",
                 rba_series_ids=["FLRMBSV"],
             ),
@@ -517,7 +519,7 @@ def test_real_business_lending_rate_intersects_monthly_periods() -> None:
     )
 
     assert [(obs["date"], obs["value"]) for obs in payload["observations"]] == [
-        ("2024-01", pytest.approx(4.4)),
+        ("2024-01-31", pytest.approx(4.4)),
     ]
 
 

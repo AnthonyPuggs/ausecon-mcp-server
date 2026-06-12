@@ -122,8 +122,19 @@ def _compute_real_business_lending_rate(
 ) -> list[tuple[str, float]]:
     lending_rate = values["lending_rate"]
     inflation = values["inflation"]
-    dates = sorted(set(lending_rate) & set(inflation), key=_period_sort_key)
-    return [(period, _round(lending_rate[period] - inflation[period])) for period in dates]
+    # Align by (year, month): the lending rate is RBA monthly (YYYY-MM-DD
+    # end-of-month) while inflation is ABS monthly (YYYY-MM), so the raw
+    # period strings never intersect.
+    inflation_by_month = {
+        _period_sort_key(period)[:2]: value for period, value in inflation.items()
+    }
+    results: list[tuple[str, float]] = []
+    for period in sorted(lending_rate, key=_period_sort_key):
+        inflation_value = inflation_by_month.get(_period_sort_key(period)[:2])
+        if inflation_value is None:
+            continue
+        results.append((period, _round(lending_rate[period] - inflation_value)))
+    return results
 
 
 def _compute_broad_money_growth(values: dict[str, dict[str, float]]) -> list[tuple[str, float]]:

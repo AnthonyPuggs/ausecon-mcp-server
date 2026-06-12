@@ -15,6 +15,7 @@ pytestmark = pytest.mark.asyncio
         ("gdp_per_capita", "Quarterly"),
         ("misery_index", "Monthly"),
         ("real_10y_bond_yield", "Monthly"),
+        ("real_business_lending_rate", "Monthly"),
         ("broad_money_growth", "Monthly"),
         ("terms_of_trade", "Quarterly"),
     ],
