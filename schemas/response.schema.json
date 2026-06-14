@@ -372,6 +372,7 @@
       "type": "object",
       "required": [
         "concept",
+        "description",
         "formula",
         "operands",
         "source_concepts",
@@ -385,6 +386,9 @@
       "additionalProperties": false,
       "properties": {
         "concept": {
+          "type": "string"
+        },
+        "description": {
           "type": "string"
         },
         "formula": {

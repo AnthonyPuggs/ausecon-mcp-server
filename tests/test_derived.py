@@ -172,6 +172,7 @@ def test_real_cash_rate_carries_cash_rate_forward_to_monthly_cpi_periods() -> No
         ("2024-03", pytest.approx(0.6)),
     ]
     assert payload["metadata"]["derived"]["alignment_frequency"] == "Monthly"
+    assert "ex-post" in payload["metadata"]["derived"]["description"].lower()
 
 
 def test_real_wage_growth_subtracts_quarterly_cpi_year_ended_growth() -> None:
@@ -699,6 +700,10 @@ def test_terms_of_trade_metadata_carries_alignment_method() -> None:
     )
 
     assert payload["metadata"]["derived"]["alignment_method"] == "period_intersection"
+    assert (
+        payload["metadata"]["derived"]["description"]
+        == DERIVED_CONCEPTS["terms_of_trade"].description
+    )
 
 
 @pytest.mark.parametrize(

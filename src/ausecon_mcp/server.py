@@ -16,13 +16,14 @@ from starlette.types import ASGIApp, Receive, Scope, Send
 
 from ausecon_mcp.bounds import NormalisedSemanticBounds, normalise_semantic_bounds
 from ausecon_mcp.catalogue.resolver import (
-    list_economic_concepts as _list_economic_concepts,
-)
-from ausecon_mcp.catalogue.resolver import (
+    concepts_for_dataset,
     resolve,
     resolve_abs_dataflow_id,
     resolve_abs_structure_id,
     resolve_rba_csv_path,
+)
+from ausecon_mcp.catalogue.resolver import (
+    list_economic_concepts as _list_economic_concepts,
 )
 from ausecon_mcp.catalogue.search import list_catalogue as _list_catalogue
 from ausecon_mcp.catalogue.search import search_catalogue
@@ -409,6 +410,33 @@ def _reject_non_default_key(key: str, *, source: str) -> None:
         raise ValueError(f"key is only supported for source 'abs', not {source!r}.")
 
 
+# Below this many series there is no firehose worth flagging; a caller who passes
+# series_ids (or uses a curated concept) lands well under it and gets no nudge.
+NARROWING_HINT_MIN_SERIES = 10
+
+
+def _append_narrowing_guidance(payload: dict, source: str, identifier: str) -> None:
+    """Nudge callers off a heavy unfiltered curated dataset toward the lean path.
+
+    When a broad ``get_latest_observations`` / ``get_top_observations`` pull returns
+    many series from a dataset that has curated ``get_economic_series`` concept(s),
+    append a plain-English ``metadata.warnings`` line pointing at the concept and the
+    ``series_ids`` escape hatch. Appends (never assigns) so source warnings such as
+    APRA framework breaks are preserved.
+    """
+    concepts = concepts_for_dataset(source, identifier)
+    series = payload.get("series", [])
+    if not concepts or len(series) < NARROWING_HINT_MIN_SERIES:
+        return
+    head = ", ".join(concepts[:3])
+    message = (
+        f"{identifier} exposes {len(series)} series. For a single indicator call "
+        f"get_economic_series(concept='{concepts[0]}') (e.g. {head}), or pass "
+        f"series_ids=[...] to narrow this result."
+    )
+    payload.setdefault("metadata", {}).setdefault("warnings", []).append(message)
+
+
 class AuseconService:
     def __init__(
         self,
@@ -685,8 +713,7 @@ class AuseconService:
             )
         )
         operands = {
-            operand.name: payload
-            for operand, payload in zip(operand_specs, fetched, strict=True)
+            operand.name: payload for operand, payload in zip(operand_specs, fetched, strict=True)
         }
         return derive_series(
             validated_concept,
@@ -722,7 +749,9 @@ class AuseconService:
                 last_n=validated_count,
                 latest_n=validated_count,
             )
-            return select_latest_observations(payload, count=validated_count)
+            result = select_latest_observations(payload, count=validated_count)
+            _append_narrowing_guidance(result, validated_source, validated_identifier)
+            return result
 
         _reject_non_default_key(validated_key, source=validated_source)
         if validated_source == "rba":
@@ -732,7 +761,9 @@ class AuseconService:
                 series_ids=validate_series_ids(series_ids),
                 last_n=validated_count,
             )
-            return select_latest_observations(payload, count=validated_count)
+            result = select_latest_observations(payload, count=validated_count)
+            _append_narrowing_guidance(result, validated_source, validated_identifier)
+            return result
 
         validated_table_id = (
             None if table_id is None else validate_source_token("table_id", table_id)
@@ -743,7 +774,9 @@ class AuseconService:
             series_ids=validate_apra_series_ids(series_ids),
             last_n=validated_count,
         )
-        return select_latest_observations(payload, count=validated_count)
+        result = select_latest_observations(payload, count=validated_count)
+        _append_narrowing_guidance(result, validated_source, validated_identifier)
+        return result
 
     async def get_top_observations(
         self,
@@ -785,7 +818,9 @@ class AuseconService:
                 start_period=validated_start,
                 end_period=validated_end,
             )
-            return select_top_observations(payload, n=validated_n, direction=direction)
+            result = select_top_observations(payload, n=validated_n, direction=direction)
+            _append_narrowing_guidance(result, validated_source, validated_identifier)
+            return result
 
         _reject_non_default_key(validated_key, source=validated_source)
         _reject_parameter("start_period", start_period, source=validated_source)
@@ -804,7 +839,9 @@ class AuseconService:
                 start_date=validated_start_date,
                 end_date=validated_end_date,
             )
-            return select_top_observations(payload, n=validated_n, direction=direction)
+            result = select_top_observations(payload, n=validated_n, direction=direction)
+            _append_narrowing_guidance(result, validated_source, validated_identifier)
+            return result
 
         validated_table_id = (
             None if table_id is None else validate_source_token("table_id", table_id)
@@ -816,7 +853,9 @@ class AuseconService:
             start_date=validated_start_date,
             end_date=validated_end_date,
         )
-        return select_top_observations(payload, n=validated_n, direction=direction)
+        result = select_top_observations(payload, n=validated_n, direction=direction)
+        _append_narrowing_guidance(result, validated_source, validated_identifier)
+        return result
 
     async def describe_dataset(
         self,
@@ -1121,7 +1160,12 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
         series_ids: OptionalSeriesIdList = None,
         count: LatestCount = 1,
     ) -> dict:
-        """Source-aware convenience wrapper for the latest observations."""
+        """Source-aware convenience wrapper for the latest observations.
+
+        For a single curated indicator prefer get_economic_series(concept=...), which
+        resolves one series; pass series_ids=[...] to narrow a broad dataset instead of
+        returning every series it contains.
+        """
         return await app_service.get_latest_observations(
             source=source,
             identifier=identifier,
@@ -1149,7 +1193,12 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
         start_date: OptionalIsoDate = None,
         end_date: OptionalIsoDate = None,
     ) -> dict:
-        """Source-aware convenience wrapper for highest or lowest numeric observations."""
+        """Source-aware convenience wrapper for highest or lowest numeric observations.
+
+        For a single curated indicator prefer get_economic_series(concept=...), which
+        resolves one series; pass series_ids=[...] to narrow a broad dataset instead of
+        returning every series it contains.
+        """
         return await app_service.get_top_observations(
             source=source,
             identifier=identifier,

@@ -232,6 +232,37 @@ class StubAPRAProvider:
         }
 
 
+class HeavyAPRAProvider:
+    """APRA stub returning many series unfiltered, a single series when narrowed.
+
+    Carries a pre-existing source warning so tests can assert the narrowing
+    guidance is appended rather than overwriting framework-break warnings.
+    """
+
+    async def get_data(
+        self,
+        publication_id: str,
+        table_id: str | None = None,
+        series_ids: list[str] | None = None,
+        start_date: str | None = None,
+        end_date: str | None = None,
+        last_n: int | None = None,
+    ) -> dict:
+        count = 1 if series_ids else 12
+        return {
+            "metadata": {
+                "source": "apra",
+                "dataset_id": publication_id,
+                "warnings": ["Framework break on 2023-01-01: definitions changed."],
+            },
+            "series": [{"series_id": f"s{i}"} for i in range(count)],
+            "observations": [
+                {"date": "2026-03-31", "series_id": f"s{i}", "value": float(i)}
+                for i in range(count)
+            ],
+        }
+
+
 class StubReleaseProvider:
     def __init__(self, events: list[dict]) -> None:
         self.events = events
@@ -721,6 +752,41 @@ async def test_service_get_latest_observations_rejects_apra_url_like_identifier(
             source="apra",
             identifier="https://www.apra.gov.au/sites/default/files/book.xlsx",
         )
+
+
+@pytest.mark.asyncio
+async def test_service_get_latest_observations_appends_narrowing_guidance() -> None:
+    service = AuseconService(apra_provider=HeavyAPRAProvider())
+
+    result = await service.get_latest_observations(
+        source="apra",
+        identifier="ADI_QUARTERLY_PERFORMANCE",
+        count=1,
+    )
+
+    warnings = result["metadata"]["warnings"]
+    # Pre-existing source warning preserved (appended, not overwritten).
+    assert "Framework break on 2023-01-01: definitions changed." in warnings
+    nudges = [w for w in warnings if "get_economic_series" in w]
+    assert len(nudges) == 1
+    assert "adi_capital_ratio" in nudges[0]
+    assert "series_ids" in nudges[0]
+
+
+@pytest.mark.asyncio
+async def test_service_get_latest_observations_suppresses_guidance_when_narrowed() -> None:
+    service = AuseconService(apra_provider=HeavyAPRAProvider())
+
+    result = await service.get_latest_observations(
+        source="apra",
+        identifier="ADI_QUARTERLY_PERFORMANCE",
+        series_ids=["ADI_QUARTERLY_PERFORMANCE:key_stats:key_figures:total_capital_ratio"],
+        count=1,
+    )
+
+    warnings = result["metadata"].get("warnings", [])
+    assert not any("get_economic_series" in w for w in warnings)
+    assert len(result["series"]) == 1
 
 
 @pytest.mark.asyncio

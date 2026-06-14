@@ -310,6 +310,20 @@ CURATED_SHORTCUTS: dict[str, dict[str, Any]] = {
 }
 
 
+def concepts_for_dataset(source: str, dataset_id: str) -> list[str]:
+    """Curated concept names whose shortcut targets this ``(source, dataset_id)``.
+
+    Used to steer callers from a broad source-native pull (e.g. every series in
+    ``ADI_QUARTERLY_PERFORMANCE``) toward the lean ``get_economic_series`` concept
+    that resolves a single curated variant.
+    """
+    return sorted(
+        name
+        for name, shortcut in CURATED_SHORTCUTS.items()
+        if shortcut["source"] == source and shortcut["dataset_id"] == dataset_id
+    )
+
+
 def list_economic_concepts(
     *,
     query: str | None = None,
