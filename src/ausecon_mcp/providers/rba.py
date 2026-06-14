@@ -67,7 +67,7 @@ class RBAProvider:
         csv_path: str | None = None,
     ) -> dict[str, Any]:
         cache_key = f"rba-table:{table_id}"
-        raw_payload = self._cache.get(cache_key)
+        raw_payload = await self._cache.aget(cache_key)
         stale_meta: dict[str, Any] | None = None
 
         if raw_payload is None:
@@ -124,7 +124,7 @@ class RBAProvider:
                     ) from exc
                 raw_payload["metadata"]["retrieval_url"] = str(response.request.url)
                 raw_payload["metadata"]["retrieved_at"] = utc_now_iso()
-                raw_payload = self._cache.set(cache_key, raw_payload, self._ttl_seconds)
+                raw_payload = await self._cache.aset(cache_key, raw_payload, self._ttl_seconds)
 
         payload = filter_payload(
             raw_payload,

@@ -71,7 +71,7 @@ class ABSProvider:
 
     async def get_dataset_structure(self, dataflow_id: str) -> dict[str, Any]:
         cache_key = f"abs-structure:{dataflow_id}"
-        cached = self._cache.get(cache_key)
+        cached = await self._cache.aget(cache_key)
         if cached is not None:
             _logger.debug("cache.hit", extra={"source": "abs", "identifier": dataflow_id})
             return cached
@@ -109,7 +109,7 @@ class ABSProvider:
             raise AuseconParseError(
                 f"Failed to parse ABS structure payload for '{dataflow_id}'."
             ) from exc
-        return self._cache.set(cache_key, parsed, self._ttl_seconds)
+        return await self._cache.aset(cache_key, parsed, self._ttl_seconds)
 
     async def get_data(
         self,
@@ -124,7 +124,7 @@ class ABSProvider:
         cache_key = "abs-data:" + json.dumps(
             [dataflow_id, key, start_period, end_period, updated_after]
         )
-        raw_payload = self._cache.get(cache_key)
+        raw_payload = await self._cache.aget(cache_key)
         stale_meta: dict[str, Any] | None = None
 
         if raw_payload is None:
@@ -215,7 +215,7 @@ class ABSProvider:
                 raw_payload["metadata"]["retrieval_url"] = str(response.request.url)
                 raw_payload["metadata"]["retrieved_at"] = utc_now_iso()
                 raw_payload["metadata"]["updated_after"] = updated_after
-                raw_payload = self._cache.set(cache_key, raw_payload, self._ttl_seconds)
+                raw_payload = await self._cache.aset(cache_key, raw_payload, self._ttl_seconds)
 
         payload = filter_payload(raw_payload, last_n=last_n)
         payload["metadata"]["server_version"] = resolve_version()

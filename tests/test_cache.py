@@ -284,6 +284,26 @@ def test_unlink_ignores_paths_outside_trusted_cache_root(tmp_path) -> None:
     assert outside.exists()
 
 
+async def test_async_round_trip_matches_sync(_isolated_cache_dir: Path) -> None:
+    cache = TTLCache(ttl_seconds=60)
+
+    returned = await cache.aset("k", {"v": 1})
+    returned["v"] = 999  # mutating the return must not poison the cache
+
+    assert await cache.aget("k") == {"v": 1}
+    assert await cache.aget("missing") is None
+
+
+async def test_aget_promotes_a_warm_disk_entry(_isolated_cache_dir: Path) -> None:
+    # Exercises the threaded disk path: aset writes to disk, then a fresh cache
+    # with an empty in-memory layer must read it back through aget.
+    first = TTLCache(ttl_seconds=60)
+    await first.aset("k", {"v": 1})
+
+    second = TTLCache(ttl_seconds=60)
+    assert await second.aget("k") == {"v": 1}
+
+
 @pytest.mark.parametrize("ttl", [0, -1])
 def test_zero_or_negative_ttl_expires_immediately(ttl) -> None:
     cache = TTLCache(ttl_seconds=ttl)

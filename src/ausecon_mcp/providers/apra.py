@@ -63,7 +63,7 @@ class APRAProvider:
             )
 
         cache_key = _cache_key(publication_id, table_id)
-        raw_payload = self._cache.get(cache_key)
+        raw_payload = await self._cache.aget(cache_key)
         stale_meta: dict[str, Any] | None = None
 
         if raw_payload is None:
@@ -89,7 +89,7 @@ class APRAProvider:
                     },
                 )
             else:
-                raw_payload = self._cache.set(cache_key, raw_payload, self._ttl_seconds)
+                raw_payload = await self._cache.aset(cache_key, raw_payload, self._ttl_seconds)
 
         payload = raw_payload
         if table_id is not None:
