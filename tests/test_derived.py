@@ -667,6 +667,40 @@ def test_every_derived_concept_declares_a_valid_alignment_method() -> None:
         assert spec.alignment_method in _VALID_ALIGNMENT_METHODS, name
 
 
+def test_terms_of_trade_metadata_carries_alignment_method() -> None:
+    payload = derive_series(
+        "terms_of_trade",
+        {
+            "export_prices": _payload(
+                concept="export_price_index",
+                source="abs",
+                dataset_id="ITPI_EXP",
+                series_id="MEASURE=1|INDEX=8093697|FREQ=Q",
+                observations=[("2025-Q4", 157.8), ("2026-Q1", 158.6)],
+                frequency="Quarterly",
+                unit="Index Numbers",
+                abs_key="1.8093697.Q",
+            ),
+            "import_prices": _payload(
+                concept="import_price_index",
+                source="abs",
+                dataset_id="ITPI_IMP",
+                series_id="MEASURE=1|INDEX=6011001|FREQ=Q",
+                observations=[("2025-Q4", 135.4), ("2026-Q1", 135.5)],
+                frequency="Quarterly",
+                unit="Index Numbers",
+                abs_key="1.6011001.Q",
+            ),
+        },
+        requested_start=None,
+        requested_end=None,
+        last_n=None,
+        server_version="test",
+    )
+
+    assert payload["metadata"]["derived"]["alignment_method"] == "period_intersection"
+
+
 def test_derive_series_rejects_start_after_end() -> None:
     with pytest.raises(ValueError, match="start must be before or equal to end"):
         derive_series(

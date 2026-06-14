@@ -639,6 +639,7 @@ def derive_series(
                 ],
                 "source_concepts": [operand.concept for operand in spec.operands],
                 "alignment_frequency": spec.frequency,
+                "alignment_method": spec.alignment_method,
                 "units": spec.unit,
                 "requested_bounds": {"start": requested_start, "end": requested_end},
                 "resolved_bounds": {"start": resolved_start, "end": resolved_end},
