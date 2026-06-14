@@ -290,3 +290,13 @@ def test_zero_or_negative_ttl_expires_immediately(ttl) -> None:
     cache.set("k", {"v": 1})
 
     assert cache.get("k") is None
+
+
+def test_set_returns_a_private_copy() -> None:
+    cache = TTLCache(ttl_seconds=60)
+    payload = {"series": [{"id": "a"}]}
+
+    returned = cache.set("k", payload)
+    returned["series"].append({"id": "mutated"})
+
+    assert cache.get("k") == {"series": [{"id": "a"}]}

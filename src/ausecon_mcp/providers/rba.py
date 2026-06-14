@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from copy import deepcopy
 from time import perf_counter
 from typing import Any
 
@@ -128,7 +127,7 @@ class RBAProvider:
                 raw_payload = self._cache.set(cache_key, raw_payload, self._ttl_seconds)
 
         payload = filter_payload(
-            deepcopy(raw_payload),
+            raw_payload,
             series_ids=series_ids,
             start_date=start_date,
             end_date=end_date,

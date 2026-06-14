@@ -80,7 +80,9 @@ class TTLCache:
         entry = _CacheEntry(cached_at=now, expires_at=expires_at, value=value)
         self._entries[key] = entry
         self._write_disk(key, entry)
-        return value
+        # Return a private copy (as get() does) so callers may mutate the result
+        # freely without aliasing the stored entry. The cache is the sole copy owner.
+        return deepcopy(value)
 
     def get_stale(self, key: str) -> dict[str, Any] | None:
         if self._disabled:

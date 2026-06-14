@@ -3,7 +3,6 @@ from __future__ import annotations
 import asyncio
 import json
 import re
-from copy import deepcopy
 from html.parser import HTMLParser
 from importlib import resources
 from time import perf_counter
@@ -92,7 +91,7 @@ class APRAProvider:
             else:
                 raw_payload = self._cache.set(cache_key, raw_payload, self._ttl_seconds)
 
-        payload = deepcopy(raw_payload)
+        payload = raw_payload
         if table_id is not None:
             payload["metadata"]["frequency"] = entry["tables"][table_id].get(
                 "frequency",

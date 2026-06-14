@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-from copy import deepcopy
 from time import perf_counter
 from typing import Any
 from xml.etree import ElementTree as ET
@@ -218,7 +217,7 @@ class ABSProvider:
                 raw_payload["metadata"]["updated_after"] = updated_after
                 raw_payload = self._cache.set(cache_key, raw_payload, self._ttl_seconds)
 
-        payload = filter_payload(deepcopy(raw_payload), last_n=last_n)
+        payload = filter_payload(raw_payload, last_n=last_n)
         payload["metadata"]["server_version"] = resolve_version()
         if stale_meta is not None:
             payload["metadata"]["stale"] = True
