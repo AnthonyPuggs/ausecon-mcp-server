@@ -283,7 +283,11 @@ DERIVED_CONCEPTS: dict[str, DerivedSpec] = {
     "real_cash_rate": DerivedSpec(
         concept="real_cash_rate",
         label="Real cash rate",
-        description="RBA cash-rate target less complete monthly CPI year-ended inflation.",
+        description=(
+            "RBA cash-rate target less complete monthly CPI year-ended inflation. "
+            "This is an ex-post real rate (the nominal rate less realised year-ended "
+            "CPI inflation), not the ex-ante Fisher rate (less expected inflation)."
+        ),
         frequency="Monthly",
         unit="percentage points",
         formula="cash_rate_target - monthly_inflation",
@@ -354,7 +358,11 @@ DERIVED_CONCEPTS: dict[str, DerivedSpec] = {
     "real_mortgage_rate": DerivedSpec(
         concept="real_mortgage_rate",
         label="Real mortgage rate",
-        description="Owner-occupier variable mortgage rate less complete monthly CPI inflation.",
+        description=(
+            "Owner-occupier variable mortgage rate less complete monthly CPI inflation. "
+            "This is an ex-post real rate (the nominal rate less realised year-ended "
+            "CPI inflation), not the ex-ante Fisher rate (less expected inflation)."
+        ),
         frequency="Monthly",
         unit="percentage points",
         formula="mortgage_rate - monthly_inflation",
@@ -395,7 +403,9 @@ DERIVED_CONCEPTS: dict[str, DerivedSpec] = {
         label="Real 10-year bond yield",
         description=(
             "Ten-year Australian government bond yield less complete monthly CPI "
-            "year-ended inflation."
+            "year-ended inflation. This is an ex-post real rate (the nominal rate "
+            "less realised year-ended CPI inflation), not the ex-ante Fisher rate "
+            "(less expected inflation)."
         ),
         frequency="Monthly",
         unit="percentage points",
@@ -411,7 +421,9 @@ DERIVED_CONCEPTS: dict[str, DerivedSpec] = {
         concept="real_bank_bill_rate",
         label="Real bank bill rate",
         description=(
-            "Three-month bank bill swap rate less complete monthly CPI year-ended inflation."
+            "Three-month bank bill swap rate less complete monthly CPI year-ended inflation. "
+            "This is an ex-post real rate (the nominal rate less realised year-ended "
+            "CPI inflation), not the ex-ante Fisher rate (less expected inflation)."
         ),
         frequency="Monthly",
         unit="percentage points",
@@ -427,7 +439,9 @@ DERIVED_CONCEPTS: dict[str, DerivedSpec] = {
         concept="real_business_lending_rate",
         label="Real business lending rate",
         description=(
-            "Small-business indicator lending rate less complete monthly CPI year-ended inflation."
+            "Small-business indicator lending rate less complete monthly CPI year-ended inflation. "
+            "This is an ex-post real rate (the nominal rate less realised year-ended "
+            "CPI inflation), not the ex-ante Fisher rate (less expected inflation)."
         ),
         frequency="Monthly",
         unit="percentage points",

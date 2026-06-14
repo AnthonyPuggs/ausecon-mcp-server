@@ -701,6 +701,20 @@ def test_terms_of_trade_metadata_carries_alignment_method() -> None:
     assert payload["metadata"]["derived"]["alignment_method"] == "period_intersection"
 
 
+@pytest.mark.parametrize(
+    "concept",
+    [
+        "real_cash_rate",
+        "real_10y_bond_yield",
+        "real_bank_bill_rate",
+        "real_business_lending_rate",
+        "real_mortgage_rate",
+    ],
+)
+def test_real_rate_descriptions_state_ex_post(concept: str) -> None:
+    assert "ex-post" in DERIVED_CONCEPTS[concept].description.lower()
+
+
 def test_derive_series_rejects_start_after_end() -> None:
     with pytest.raises(ValueError, match="start must be before or equal to end"):
         derive_series(
