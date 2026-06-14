@@ -376,6 +376,7 @@
         "operands",
         "source_concepts",
         "alignment_frequency",
+        "alignment_method",
         "units",
         "requested_bounds",
         "resolved_bounds",
@@ -403,6 +404,10 @@
         },
         "alignment_frequency": {
           "type": "string"
+        },
+        "alignment_method": {
+          "type": "string",
+          "enum": ["locf", "exact_month", "period_intersection", "year_ended_lag"]
         },
         "units": {
           "type": "string"

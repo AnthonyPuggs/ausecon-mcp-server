@@ -41,6 +41,7 @@ class DerivedSpec:
     frequency: Literal["Daily", "Monthly", "Quarterly"]
     unit: str
     formula: str
+    alignment_method: Literal["locf", "exact_month", "period_intersection", "year_ended_lag"]
     operands: tuple[OperandSpec, ...]
     compute: Callable[[dict[str, dict[str, float]]], list[tuple[str, float]]]
 
@@ -272,6 +273,7 @@ DERIVED_CONCEPTS: dict[str, DerivedSpec] = {
         frequency="Daily",
         unit="percentage points",
         formula="government_bond_yield_10y - government_bond_yield_3y",
+        alignment_method="period_intersection",
         operands=(
             OperandSpec("long_yield", "government_bond_yield_10y"),
             OperandSpec("short_yield", "government_bond_yield_3y"),
@@ -281,10 +283,15 @@ DERIVED_CONCEPTS: dict[str, DerivedSpec] = {
     "real_cash_rate": DerivedSpec(
         concept="real_cash_rate",
         label="Real cash rate",
-        description="RBA cash-rate target less complete monthly CPI year-ended inflation.",
+        description=(
+            "RBA cash-rate target less complete monthly CPI year-ended inflation. "
+            "This is an ex-post real rate (the nominal rate less realised year-ended "
+            "CPI inflation), not the ex-ante Fisher rate (less expected inflation)."
+        ),
         frequency="Monthly",
         unit="percentage points",
         formula="cash_rate_target - monthly_inflation",
+        alignment_method="locf",
         operands=(
             OperandSpec("cash_rate", "cash_rate_target"),
             OperandSpec("inflation", "monthly_inflation"),
@@ -300,6 +307,7 @@ DERIVED_CONCEPTS: dict[str, DerivedSpec] = {
         frequency="Quarterly",
         unit="percentage points",
         formula="wage_growth - headline_cpi_yoy",
+        alignment_method="period_intersection",
         operands=(
             OperandSpec("wage_growth", "wage_growth"),
             OperandSpec("cpi_index", "headline_cpi"),
@@ -313,6 +321,7 @@ DERIVED_CONCEPTS: dict[str, DerivedSpec] = {
         frequency="Monthly",
         unit="percent year-ended",
         formula="100 * (total_credit_t / total_credit_t-12 - 1)",
+        alignment_method="year_ended_lag",
         operands=(OperandSpec("total_credit", "total_credit"),),
         compute=_compute_credit_growth,
     ),
@@ -323,6 +332,7 @@ DERIVED_CONCEPTS: dict[str, DerivedSpec] = {
         frequency="Quarterly",
         unit="real AUD per person",
         formula="real_gdp * 1_000_000 / population",
+        alignment_method="period_intersection",
         operands=(
             OperandSpec("real_gdp", "real_gdp"),
             OperandSpec("population", "population"),
@@ -338,6 +348,7 @@ DERIVED_CONCEPTS: dict[str, DerivedSpec] = {
         frequency="Monthly",
         unit="percentage points",
         formula="mortgage_rate - bank_bill_rate",
+        alignment_method="locf",
         operands=(
             OperandSpec("mortgage_rate", "mortgage_rate"),
             OperandSpec("bank_bill_rate", "bank_bill_rate"),
@@ -347,10 +358,15 @@ DERIVED_CONCEPTS: dict[str, DerivedSpec] = {
     "real_mortgage_rate": DerivedSpec(
         concept="real_mortgage_rate",
         label="Real mortgage rate",
-        description="Owner-occupier variable mortgage rate less complete monthly CPI inflation.",
+        description=(
+            "Owner-occupier variable mortgage rate less complete monthly CPI inflation. "
+            "This is an ex-post real rate (the nominal rate less realised year-ended "
+            "CPI inflation), not the ex-ante Fisher rate (less expected inflation)."
+        ),
         frequency="Monthly",
         unit="percentage points",
         formula="mortgage_rate - monthly_inflation",
+        alignment_method="period_intersection",
         operands=(
             OperandSpec("mortgage_rate", "mortgage_rate"),
             OperandSpec("inflation", "monthly_inflation"),
@@ -364,6 +380,7 @@ DERIVED_CONCEPTS: dict[str, DerivedSpec] = {
         frequency="Quarterly",
         unit="percent",
         formula="100 * total_credit / nominal_gdp",
+        alignment_method="locf",
         operands=(
             OperandSpec("total_credit", "total_credit"),
             OperandSpec("nominal_gdp", "nominal_gdp"),
@@ -377,6 +394,7 @@ DERIVED_CONCEPTS: dict[str, DerivedSpec] = {
         frequency="Quarterly",
         unit="percent year-ended",
         formula="100 * (household_spending_t / household_spending_t-4 - 1)",
+        alignment_method="year_ended_lag",
         operands=(OperandSpec("household_spending", "quarterly_household_spending_volume"),),
         compute=_compute_household_spending_growth,
     ),
@@ -385,11 +403,14 @@ DERIVED_CONCEPTS: dict[str, DerivedSpec] = {
         label="Real 10-year bond yield",
         description=(
             "Ten-year Australian government bond yield less complete monthly CPI "
-            "year-ended inflation."
+            "year-ended inflation. This is an ex-post real rate (the nominal rate "
+            "less realised year-ended CPI inflation), not the ex-ante Fisher rate "
+            "(less expected inflation)."
         ),
         frequency="Monthly",
         unit="percentage points",
         formula="government_bond_yield_10y - monthly_inflation",
+        alignment_method="locf",
         operands=(
             OperandSpec("bond_yield", "government_bond_yield_10y"),
             OperandSpec("inflation", "monthly_inflation"),
@@ -400,11 +421,14 @@ DERIVED_CONCEPTS: dict[str, DerivedSpec] = {
         concept="real_bank_bill_rate",
         label="Real bank bill rate",
         description=(
-            "Three-month bank bill swap rate less complete monthly CPI year-ended inflation."
+            "Three-month bank bill swap rate less complete monthly CPI year-ended inflation. "
+            "This is an ex-post real rate (the nominal rate less realised year-ended "
+            "CPI inflation), not the ex-ante Fisher rate (less expected inflation)."
         ),
         frequency="Monthly",
         unit="percentage points",
         formula="bank_bill_rate - monthly_inflation",
+        alignment_method="locf",
         operands=(
             OperandSpec("bank_bill_rate", "bank_bill_rate"),
             OperandSpec("inflation", "monthly_inflation"),
@@ -415,11 +439,14 @@ DERIVED_CONCEPTS: dict[str, DerivedSpec] = {
         concept="real_business_lending_rate",
         label="Real business lending rate",
         description=(
-            "Small-business indicator lending rate less complete monthly CPI year-ended inflation."
+            "Small-business indicator lending rate less complete monthly CPI year-ended inflation. "
+            "This is an ex-post real rate (the nominal rate less realised year-ended "
+            "CPI inflation), not the ex-ante Fisher rate (less expected inflation)."
         ),
         frequency="Monthly",
         unit="percentage points",
         formula="business_lending_rate - monthly_inflation",
+        alignment_method="exact_month",
         operands=(
             OperandSpec("lending_rate", "business_lending_rate"),
             OperandSpec("inflation", "monthly_inflation"),
@@ -433,6 +460,7 @@ DERIVED_CONCEPTS: dict[str, DerivedSpec] = {
         frequency="Monthly",
         unit="percent year-ended",
         formula="100 * (broad_money_t / broad_money_t-12 - 1)",
+        alignment_method="year_ended_lag",
         operands=(OperandSpec("broad_money", "broad_money"),),
         compute=_compute_broad_money_growth,
     ),
@@ -443,6 +471,7 @@ DERIVED_CONCEPTS: dict[str, DerivedSpec] = {
         frequency="Monthly",
         unit="percent year-ended",
         formula="100 * (employment_t / employment_t-12 - 1)",
+        alignment_method="year_ended_lag",
         operands=(OperandSpec("employment", "employment"),),
         compute=_compute_employment_growth,
     ),
@@ -455,6 +484,7 @@ DERIVED_CONCEPTS: dict[str, DerivedSpec] = {
         frequency="Monthly",
         unit="percentage points",
         formula="unemployment_rate + monthly_inflation",
+        alignment_method="period_intersection",
         operands=(
             OperandSpec("unemployment_rate", "unemployment_rate"),
             OperandSpec("inflation", "monthly_inflation"),
@@ -471,6 +501,7 @@ DERIVED_CONCEPTS: dict[str, DerivedSpec] = {
         frequency="Quarterly",
         unit="index",
         formula="100 * export_price_index / import_price_index",
+        alignment_method="period_intersection",
         operands=(
             OperandSpec("export_prices", "export_price_index"),
             OperandSpec("import_prices", "import_price_index"),
@@ -622,6 +653,7 @@ def derive_series(
                 ],
                 "source_concepts": [operand.concept for operand in spec.operands],
                 "alignment_frequency": spec.frequency,
+                "alignment_method": spec.alignment_method,
                 "units": spec.unit,
                 "requested_bounds": {"start": requested_start, "end": requested_end},
                 "resolved_bounds": {"start": resolved_start, "end": resolved_end},
