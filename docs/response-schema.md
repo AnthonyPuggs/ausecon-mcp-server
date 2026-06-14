@@ -43,8 +43,9 @@ source-native resolved bounds, and the ABS/RBA/APRA target used for retrieval. A
 targets include `apra_table_id` and `apra_series_ids`. Raw `get_abs_data`, `get_rba_table`, and
 `get_apra_data` responses do not include this field.
 
-`derived` records the formula, operands, source concepts, alignment frequency, output units,
-requested and resolved bounds, and dropped-observation counts for transparent derived indicators.
+`derived` records the formula, operands, source concepts, alignment frequency, alignment method,
+output units, requested and resolved bounds, and dropped-observation counts for transparent derived
+indicators.
 
 ## Series And Observations
 

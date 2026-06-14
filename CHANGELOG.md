@@ -6,6 +6,40 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.11.0] - 2026-06-15
+
+### Added
+
+- `metadata.derived` now carries an explicit `alignment_method` — one of `locf`,
+  `exact_month`, `period_intersection`, or `year_ended_lag` — declared on all 16
+  derived concepts, so consumers can tell how each indicator's operands were aligned
+  (e.g. last-observation-carried-forward, which can bias spreads and ratios around
+  turning points).
+
+### Changed
+
+- Real-rate concept descriptions (`real_cash_rate`, `real_10y_bond_yield`,
+  `real_bank_bill_rate`, `real_business_lending_rate`, `real_mortgage_rate`) now state
+  explicitly that they are ex-post real rates (nominal less realised year-ended CPI
+  inflation), not the ex-ante Fisher definition.
+- `get_latest_observations` for ABS now requests only the most recent observations
+  upstream via SDMX `lastNObservations`, keyed distinctly in the cache, instead of
+  downloading the full dataflow and truncating client-side. The expert `get_abs_data`
+  tool is unchanged.
+- Internal request hot-path performance: derived-operand fetches now run concurrently
+  (`asyncio.gather`); payload copying is centralised in the cache (the request hot path
+  drops from two deep copies to one); cache disk I/O is offloaded off the event loop;
+  and concurrent identical upstream fetches are coalesced with a single-flight helper so
+  a burst of duplicate requests hits the source only once.
+- The response schema's `derived_metadata` gains a required `alignment_method` field.
+  This is additive — existing fields and tool signatures are unchanged.
+
+### Fixed
+
+- `real_business_lending_rate` now aligns its lending-rate and inflation operands by
+  `(year, month)`, so the RBA monthly end-of-month series and the ABS monthly CPI series
+  intersect correctly instead of yielding an empty result.
+
 ## [1.10.0] - 2026-06-13
 
 ### Added
@@ -644,7 +678,8 @@ Initial public release.
 - Initial curated catalogues for ABS and RBA, plus a four-concept
   `CURATED_SERIES` semantic shortcut map.
 
-[Unreleased]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.10.0...HEAD
+[Unreleased]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.11.0...HEAD
+[1.11.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.10.0...v1.11.0
 [1.10.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.9.0...v1.10.0
 [1.9.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.8.0...v1.9.0
 [1.8.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.7.1...v1.8.0

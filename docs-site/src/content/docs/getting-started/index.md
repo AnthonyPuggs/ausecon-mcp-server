@@ -50,5 +50,5 @@ get_economic_series(
 
 Retrieval responses include `metadata`, `series`, and `observations`. Semantic retrievals also
 include `metadata.semantic`, recording the resolved source target and normalised date bounds.
-Derived retrievals include `metadata.derived`, recording the formula, operands, units, and
-alignment frequency.
+Derived retrievals include `metadata.derived`, recording the formula, operands, units, alignment
+frequency, and alignment method.
