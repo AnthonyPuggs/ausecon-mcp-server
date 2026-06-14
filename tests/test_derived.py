@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from ausecon_mcp.derived import derive_series, list_derived_concepts
+from ausecon_mcp.derived import DERIVED_CONCEPTS, derive_series, list_derived_concepts
 
 
 def _payload(
@@ -652,6 +652,19 @@ def test_terms_of_trade_ratios_export_to_import_prices() -> None:
         "100 * export_price_index / import_price_index"
     )
     assert payload["series"][0]["unit"] == "index"
+
+
+_VALID_ALIGNMENT_METHODS = {
+    "locf",
+    "exact_month",
+    "period_intersection",
+    "year_ended_lag",
+}
+
+
+def test_every_derived_concept_declares_a_valid_alignment_method() -> None:
+    for name, spec in DERIVED_CONCEPTS.items():
+        assert spec.alignment_method in _VALID_ALIGNMENT_METHODS, name
 
 
 def test_derive_series_rejects_start_after_end() -> None:
