@@ -6,6 +6,20 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- Derived series now expose their concept `description` in
+  `metadata.derived.description`, so the curated caveats (e.g. that real rates are
+  ex-post, not ex-ante Fisher) reach MCP clients instead of living only in source.
+  The response schema's `derived_metadata` gains a required `description` field
+  (additive; existing fields and tool signatures unchanged).
+- `get_latest_observations` and `get_top_observations` now append a plain-English
+  `metadata.warnings` nudge when an unfiltered curated dataset returns many series
+  (e.g. all of `ADI_QUARTERLY_PERFORMANCE`), pointing callers at the lean
+  `get_economic_series(concept=...)` path and the `series_ids` filter. The nudge is
+  suppressed once a result is narrowed, and is appended without clobbering existing
+  source warnings such as APRA framework breaks.
+
 ## [1.11.0] - 2026-06-15
 
 ### Added

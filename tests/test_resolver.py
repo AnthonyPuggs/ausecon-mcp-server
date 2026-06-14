@@ -7,6 +7,7 @@ from ausecon_mcp.catalogue.rba import RBA_CATALOGUE
 from ausecon_mcp.catalogue.resolver import (
     CURATED_SHORTCUTS,
     build_abs_key,
+    concepts_for_dataset,
     list_economic_concepts,
     resolve,
     resolve_abs_dataflow_id,
@@ -284,6 +285,17 @@ def test_resolve_rba_csv_path_uses_explicit_csv_path_when_declared() -> None:
         assert resolve_rba_csv_path("__test__") == "custom-file.csv"
     finally:
         del RBA_CATALOGUE["__test__"]
+
+
+def test_concepts_for_dataset_returns_curated_concepts_for_apra_dataset() -> None:
+    concepts = concepts_for_dataset("apra", "ADI_QUARTERLY_PERFORMANCE")
+    assert "adi_capital_ratio" in concepts
+    assert concepts == sorted(concepts)
+
+
+def test_concepts_for_dataset_returns_empty_for_unknown_dataset() -> None:
+    assert concepts_for_dataset("apra", "NOT_A_DATASET") == []
+    assert concepts_for_dataset("abs", "ADI_QUARTERLY_PERFORMANCE") == []
 
 
 def test_curated_shortcuts_cover_current_semantic_concepts() -> None:

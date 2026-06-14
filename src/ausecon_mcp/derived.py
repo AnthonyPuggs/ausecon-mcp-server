@@ -646,6 +646,7 @@ def derive_series(
             "truncated": truncated,
             "derived": {
                 "concept": spec.concept,
+                "description": spec.description,
                 "formula": spec.formula,
                 "operands": [
                     _operand_metadata(operand.name, operand.concept, operands[operand.name])
