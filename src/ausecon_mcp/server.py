@@ -475,6 +475,8 @@ class AuseconService:
         last_n: int | None = None,
         updated_after: str | None = None,
         include_observation_dimensions: bool = False,
+        *,
+        latest_n: int | None = None,
     ) -> dict:
         validated_dataflow_id = validate_source_token("dataflow_id", dataflow_id)
         validated_key = validate_source_token("key", key)
@@ -494,6 +496,7 @@ class AuseconService:
             end_period=validated_end_period,
             last_n=validated_last_n,
             updated_after=validated_updated_after,
+            latest_n=latest_n,
         )
         if not include_observation_dimensions:
             strip_observation_dimensions(payload)
@@ -717,6 +720,7 @@ class AuseconService:
                 validated_identifier,
                 key=validated_key,
                 last_n=validated_count,
+                latest_n=validated_count,
             )
             return select_latest_observations(payload, count=validated_count)
 

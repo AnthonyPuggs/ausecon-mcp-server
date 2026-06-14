@@ -122,10 +122,11 @@ class ABSProvider:
         end_period: str | None = None,
         last_n: int | None = None,
         updated_after: str | None = None,
+        latest_n: int | None = None,
     ) -> dict[str, Any]:
         # Structured encoding so a literal "None" value can never alias an absent one.
         cache_key = "abs-data:" + json.dumps(
-            [dataflow_id, key, start_period, end_period, updated_after]
+            [dataflow_id, key, start_period, end_period, updated_after, latest_n]
         )
         raw_payload = await self._cache.aget(cache_key)
         stale_meta: dict[str, Any] | None = None
@@ -138,6 +139,7 @@ class ABSProvider:
                     start_period,
                     end_period,
                     updated_after,
+                    latest_n,
                     cache_key,
                 ),
             )
@@ -158,6 +160,7 @@ class ABSProvider:
         start_period: str | None,
         end_period: str | None,
         updated_after: str | None,
+        latest_n: int | None,
         cache_key: str,
     ) -> tuple[dict[str, Any], dict[str, Any] | None]:
         stale_meta: dict[str, Any] | None = None
@@ -169,6 +172,8 @@ class ABSProvider:
             params.append(("endPeriod", end_period))
         if updated_after:
             params.append(("updatedAfter", updated_after))
+        if latest_n is not None:
+            params.append(("lastNObservations", str(latest_n)))
         params.append(("format", "csvfilewithlabels"))
 
         url = f"{self.BASE_URL}/data/{dataflow_id}/{key}"

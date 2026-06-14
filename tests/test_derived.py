@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from ausecon_mcp.derived import derive_series, list_derived_concepts
+from ausecon_mcp.derived import DERIVED_CONCEPTS, derive_series, list_derived_concepts
 
 
 def _payload(
@@ -652,6 +652,67 @@ def test_terms_of_trade_ratios_export_to_import_prices() -> None:
         "100 * export_price_index / import_price_index"
     )
     assert payload["series"][0]["unit"] == "index"
+
+
+_VALID_ALIGNMENT_METHODS = {
+    "locf",
+    "exact_month",
+    "period_intersection",
+    "year_ended_lag",
+}
+
+
+def test_every_derived_concept_declares_a_valid_alignment_method() -> None:
+    for name, spec in DERIVED_CONCEPTS.items():
+        assert spec.alignment_method in _VALID_ALIGNMENT_METHODS, name
+
+
+def test_terms_of_trade_metadata_carries_alignment_method() -> None:
+    payload = derive_series(
+        "terms_of_trade",
+        {
+            "export_prices": _payload(
+                concept="export_price_index",
+                source="abs",
+                dataset_id="ITPI_EXP",
+                series_id="MEASURE=1|INDEX=8093697|FREQ=Q",
+                observations=[("2025-Q4", 157.8), ("2026-Q1", 158.6)],
+                frequency="Quarterly",
+                unit="Index Numbers",
+                abs_key="1.8093697.Q",
+            ),
+            "import_prices": _payload(
+                concept="import_price_index",
+                source="abs",
+                dataset_id="ITPI_IMP",
+                series_id="MEASURE=1|INDEX=6011001|FREQ=Q",
+                observations=[("2025-Q4", 135.4), ("2026-Q1", 135.5)],
+                frequency="Quarterly",
+                unit="Index Numbers",
+                abs_key="1.6011001.Q",
+            ),
+        },
+        requested_start=None,
+        requested_end=None,
+        last_n=None,
+        server_version="test",
+    )
+
+    assert payload["metadata"]["derived"]["alignment_method"] == "period_intersection"
+
+
+@pytest.mark.parametrize(
+    "concept",
+    [
+        "real_cash_rate",
+        "real_10y_bond_yield",
+        "real_bank_bill_rate",
+        "real_business_lending_rate",
+        "real_mortgage_rate",
+    ],
+)
+def test_real_rate_descriptions_state_ex_post(concept: str) -> None:
+    assert "ex-post" in DERIVED_CONCEPTS[concept].description.lower()
 
 
 def test_derive_series_rejects_start_after_end() -> None:
