@@ -1,3 +1,4 @@
+import asyncio
 from datetime import datetime
 from pathlib import Path
 
@@ -416,3 +417,21 @@ async def test_abs_provider_sends_identified_user_agent() -> None:
     ua = route.calls.last.request.headers["user-agent"]
     assert ua.startswith("ausecon-mcp-server/")
     assert "github.com/AnthonyPuggs/ausecon-mcp-server" in ua
+
+
+@pytest.mark.asyncio
+async def test_abs_concurrent_identical_calls_hit_upstream_once() -> None:
+    provider = ABSProvider()
+    csv_payload = (FIXTURES / "abs_cpi_sample.csv").read_text()
+
+    with respx.mock(assert_all_called=True) as router:
+        route = router.get("https://data.api.abs.gov.au/rest/data/CPI/all").mock(
+            return_value=Response(200, text=csv_payload)
+        )
+        await asyncio.gather(
+            provider.get_data("CPI", key="all"),
+            provider.get_data("CPI", key="all"),
+            provider.get_data("CPI", key="all"),
+        )
+
+    assert route.call_count == 1

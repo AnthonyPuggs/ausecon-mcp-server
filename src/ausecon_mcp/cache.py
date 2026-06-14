@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import hashlib
 import json
 import os
@@ -80,7 +81,36 @@ class TTLCache:
         entry = _CacheEntry(cached_at=now, expires_at=expires_at, value=value)
         self._entries[key] = entry
         self._write_disk(key, entry)
-        return value
+        # Return a private copy (as get() does) so callers may mutate the result
+        # freely without aliasing the stored entry. The cache is the sole copy owner.
+        return deepcopy(value)
+
+    async def aget(self, key: str) -> Any | None:
+        if self._disabled:
+            return None
+        now = time()
+        entry = self._entries.get(key)
+        if entry is not None:
+            if entry.expires_at >= now:
+                return deepcopy(entry.value)
+            self._entries.pop(key, None)
+        if not self._disk_enabled:
+            return None
+        disk = await asyncio.to_thread(self._read_disk, key)
+        if disk is None or disk.expires_at < now:
+            return None
+        self._entries[key] = disk
+        return deepcopy(disk.value)
+
+    async def aset(self, key: str, value: Any, ttl_seconds: int | None = None) -> Any:
+        if self._disabled:
+            return value
+        ttl = self._ttl_seconds if ttl_seconds is None else ttl_seconds
+        now = time()
+        entry = _CacheEntry(cached_at=now, expires_at=now + ttl, value=value)
+        self._entries[key] = entry
+        await asyncio.to_thread(self._write_disk, key, entry)
+        return deepcopy(value)
 
     def get_stale(self, key: str) -> dict[str, Any] | None:
         if self._disabled:

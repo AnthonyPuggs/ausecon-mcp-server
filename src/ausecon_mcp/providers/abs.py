@@ -16,6 +16,7 @@ from ausecon_mcp.parsers.abs_csv import parse_abs_csv
 from ausecon_mcp.parsers.abs_structure import parse_abs_structure
 from ausecon_mcp.providers._http import build_client, resolve_version, utc_now_iso
 from ausecon_mcp.providers._retry import get_with_retries
+from ausecon_mcp.providers._single_flight import SingleFlight
 
 _logger = get_logger("providers.abs")
 
@@ -65,6 +66,7 @@ class ABSProvider:
         self._client = client or build_client()
         self._cache = cache or TTLCache()
         self._ttl_seconds = ttl_seconds
+        self._single_flight = SingleFlight()
 
     async def aclose(self) -> None:
         if self._owns_client:
@@ -72,7 +74,7 @@ class ABSProvider:
 
     async def get_dataset_structure(self, dataflow_id: str) -> dict[str, Any]:
         cache_key = f"abs-structure:{dataflow_id}"
-        cached = self._cache.get(cache_key)
+        cached = await self._cache.aget(cache_key)
         if cached is not None:
             _logger.debug("cache.hit", extra={"source": "abs", "identifier": dataflow_id})
             return cached
@@ -110,7 +112,7 @@ class ABSProvider:
             raise AuseconParseError(
                 f"Failed to parse ABS structure payload for '{dataflow_id}'."
             ) from exc
-        return self._cache.set(cache_key, parsed, self._ttl_seconds)
+        return await self._cache.aset(cache_key, parsed, self._ttl_seconds)
 
     async def get_data(
         self,
@@ -126,105 +128,132 @@ class ABSProvider:
         cache_key = "abs-data:" + json.dumps(
             [dataflow_id, key, start_period, end_period, updated_after, latest_n]
         )
-        raw_payload = self._cache.get(cache_key)
+        raw_payload = await self._cache.aget(cache_key)
         stale_meta: dict[str, Any] | None = None
-
         if raw_payload is None:
-            params: list[tuple[str, str]] = []
-            if start_period:
-                params.append(("startPeriod", start_period))
-            if end_period:
-                params.append(("endPeriod", end_period))
-            if updated_after:
-                params.append(("updatedAfter", updated_after))
-            if latest_n is not None:
-                params.append(("lastNObservations", str(latest_n)))
-            params.append(("format", "csvfilewithlabels"))
-
-            url = f"{self.BASE_URL}/data/{dataflow_id}/{key}"
-            _logger.info(
-                "request.start",
-                extra={"source": "abs", "identifier": dataflow_id, "url": url},
+            raw_payload, stale_meta = await self._single_flight.run(
+                cache_key,
+                lambda: self._fetch_data(
+                    dataflow_id,
+                    key,
+                    start_period,
+                    end_period,
+                    updated_after,
+                    latest_n,
+                    cache_key,
+                ),
             )
-            start = perf_counter()
-            try:
-                response = await get_with_retries(
-                    self._client,
-                    url,
-                    params=params,
-                    source="abs",
-                    identifier=dataflow_id,
-                )
-            except AuseconNotFoundError as exc:
-                # The ABS API answers 404 both for unknown dataflows and for valid
-                # dataflows with no observations in the requested window; only the
-                # body distinguishes them. Never fall back to stale data on a 404.
-                if "norecordsfound" in (exc.body or "").lower():
-                    _logger.info(
-                        "request.no_records",
-                        extra={"source": "abs", "identifier": dataflow_id, "url": exc.url},
-                    )
-                    raw_payload = _no_records_payload(
-                        dataflow_id,
-                        url=exc.url,
-                        start_period=start_period,
-                        end_period=end_period,
-                        updated_after=updated_after,
-                    )
-                else:
-                    raise AuseconNotFoundError(
-                        f"ABS request for '{dataflow_id}' failed with HTTP 404: the dataflow "
-                        "appears unknown, renamed, or retired. Check the id with "
-                        "search_datasets or list_catalogue.",
-                        status_code=exc.status_code,
-                        body=exc.body,
-                        url=exc.url,
-                    ) from exc
-            except AuseconUpstreamError:
-                stale = self._cache.get_stale(cache_key)
-                if stale is None:
-                    raise
-                raw_payload = stale["value"]
-                stale_meta = stale
-                _logger.warning(
-                    "request.stale_fallback",
-                    extra={
-                        "source": "abs",
-                        "identifier": dataflow_id,
-                        "cached_at": stale["cached_at"],
-                        "expires_at": stale["expires_at"],
-                    },
-                )
-            else:
-                _logger.info(
-                    "request.success",
-                    extra={
-                        "source": "abs",
-                        "identifier": dataflow_id,
-                        "status_code": response.status_code,
-                        "duration_ms": int((perf_counter() - start) * 1000),
-                        "bytes": len(response.content),
-                    },
-                )
-                try:
-                    raw_payload = parse_abs_csv(response.text)
-                except (KeyError, TypeError, ValueError) as exc:
-                    _logger.error(
-                        "parse.failed",
-                        extra={"source": "abs", "identifier": dataflow_id, "url": url},
-                    )
-                    raise AuseconParseError(
-                        f"Failed to parse ABS data payload for '{dataflow_id}'."
-                    ) from exc
-                raw_payload["metadata"]["retrieval_url"] = str(response.request.url)
-                raw_payload["metadata"]["retrieved_at"] = utc_now_iso()
-                raw_payload["metadata"]["updated_after"] = updated_after
-                raw_payload = self._cache.set(cache_key, raw_payload, self._ttl_seconds)
+            raw_payload = deepcopy(raw_payload)
 
-        payload = filter_payload(deepcopy(raw_payload), last_n=last_n)
+        payload = filter_payload(raw_payload, last_n=last_n)
         payload["metadata"]["server_version"] = resolve_version()
         if stale_meta is not None:
             payload["metadata"]["stale"] = True
             payload["metadata"]["cached_at"] = stale_meta["cached_at"]
             payload["metadata"]["expires_at"] = stale_meta["expires_at"]
         return payload
+
+    async def _fetch_data(
+        self,
+        dataflow_id: str,
+        key: str,
+        start_period: str | None,
+        end_period: str | None,
+        updated_after: str | None,
+        latest_n: int | None,
+        cache_key: str,
+    ) -> tuple[dict[str, Any], dict[str, Any] | None]:
+        stale_meta: dict[str, Any] | None = None
+        raw_payload = None
+        params: list[tuple[str, str]] = []
+        if start_period:
+            params.append(("startPeriod", start_period))
+        if end_period:
+            params.append(("endPeriod", end_period))
+        if updated_after:
+            params.append(("updatedAfter", updated_after))
+        if latest_n is not None:
+            params.append(("lastNObservations", str(latest_n)))
+        params.append(("format", "csvfilewithlabels"))
+
+        url = f"{self.BASE_URL}/data/{dataflow_id}/{key}"
+        _logger.info(
+            "request.start",
+            extra={"source": "abs", "identifier": dataflow_id, "url": url},
+        )
+        start = perf_counter()
+        try:
+            response = await get_with_retries(
+                self._client,
+                url,
+                params=params,
+                source="abs",
+                identifier=dataflow_id,
+            )
+        except AuseconNotFoundError as exc:
+            # The ABS API answers 404 both for unknown dataflows and for valid
+            # dataflows with no observations in the requested window; only the
+            # body distinguishes them. Never fall back to stale data on a 404.
+            if "norecordsfound" in (exc.body or "").lower():
+                _logger.info(
+                    "request.no_records",
+                    extra={"source": "abs", "identifier": dataflow_id, "url": exc.url},
+                )
+                raw_payload = _no_records_payload(
+                    dataflow_id,
+                    url=exc.url,
+                    start_period=start_period,
+                    end_period=end_period,
+                    updated_after=updated_after,
+                )
+            else:
+                raise AuseconNotFoundError(
+                    f"ABS request for '{dataflow_id}' failed with HTTP 404: the dataflow "
+                    "appears unknown, renamed, or retired. Check the id with "
+                    "search_datasets or list_catalogue.",
+                    status_code=exc.status_code,
+                    body=exc.body,
+                    url=exc.url,
+                ) from exc
+        except AuseconUpstreamError:
+            stale = self._cache.get_stale(cache_key)
+            if stale is None:
+                raise
+            raw_payload = stale["value"]
+            stale_meta = stale
+            _logger.warning(
+                "request.stale_fallback",
+                extra={
+                    "source": "abs",
+                    "identifier": dataflow_id,
+                    "cached_at": stale["cached_at"],
+                    "expires_at": stale["expires_at"],
+                },
+            )
+        else:
+            _logger.info(
+                "request.success",
+                extra={
+                    "source": "abs",
+                    "identifier": dataflow_id,
+                    "status_code": response.status_code,
+                    "duration_ms": int((perf_counter() - start) * 1000),
+                    "bytes": len(response.content),
+                },
+            )
+            try:
+                raw_payload = parse_abs_csv(response.text)
+            except (KeyError, TypeError, ValueError) as exc:
+                _logger.error(
+                    "parse.failed",
+                    extra={"source": "abs", "identifier": dataflow_id, "url": url},
+                )
+                raise AuseconParseError(
+                    f"Failed to parse ABS data payload for '{dataflow_id}'."
+                ) from exc
+            raw_payload["metadata"]["retrieval_url"] = str(response.request.url)
+            raw_payload["metadata"]["retrieved_at"] = utc_now_iso()
+            raw_payload["metadata"]["updated_after"] = updated_after
+            raw_payload = await self._cache.aset(cache_key, raw_payload, self._ttl_seconds)
+
+        return raw_payload, stale_meta

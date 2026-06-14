@@ -1,3 +1,4 @@
+import asyncio
 from pathlib import Path
 
 import pytest
@@ -2057,3 +2058,29 @@ async def test_all_registered_tools_expose_output_schema() -> None:
         output_schema = tool.outputSchema
         assert output_schema["type"] == "object", f"{tool.name} missing object output schema"
         assert output_schema.get("description") or output_schema.get("title")
+
+
+@pytest.mark.asyncio
+async def test_get_derived_series_fetches_operands_concurrently(monkeypatch) -> None:
+    service = AuseconService()
+    active = 0
+    max_active = 0
+
+    async def fake_get_economic_series(concept, *, start=None, end=None, **kwargs):
+        nonlocal active, max_active
+        active += 1
+        max_active = max(max_active, active)
+        await asyncio.sleep(0.05)
+        active -= 1
+        return {
+            "metadata": {"source": "rba", "dataset_id": concept},
+            "series": [{"series_id": concept}],
+            "observations": [],
+        }
+
+    monkeypatch.setattr(service, "get_economic_series", fake_get_economic_series)
+
+    # misery_index has two independent operands (unemployment_rate, monthly_inflation)
+    await service.get_derived_series("misery_index")
+
+    assert max_active == 2

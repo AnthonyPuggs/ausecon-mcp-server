@@ -14,6 +14,7 @@ from ausecon_mcp.logging import get_logger
 from ausecon_mcp.parsers.rba_csv import parse_rba_csv
 from ausecon_mcp.providers._http import build_client, resolve_version, utc_now_iso
 from ausecon_mcp.providers._retry import get_with_retries
+from ausecon_mcp.providers._single_flight import SingleFlight
 
 _logger = get_logger("providers.rba")
 
@@ -31,6 +32,7 @@ class RBAProvider:
         self._client = client or build_client()
         self._cache = cache or TTLCache()
         self._ttl_seconds = ttl_seconds
+        self._single_flight = SingleFlight()
 
     async def aclose(self) -> None:
         if self._owns_client:
@@ -68,67 +70,17 @@ class RBAProvider:
         csv_path: str | None = None,
     ) -> dict[str, Any]:
         cache_key = f"rba-table:{table_id}"
-        raw_payload = self._cache.get(cache_key)
+        raw_payload = await self._cache.aget(cache_key)
         stale_meta: dict[str, Any] | None = None
-
         if raw_payload is None:
-            filename = csv_path or f"{table_id}-data.csv"
-            url = f"{self.BASE_URL}/{filename}"
-            _logger.info(
-                "request.start",
-                extra={"source": "rba", "identifier": table_id, "url": url},
+            raw_payload, stale_meta = await self._single_flight.run(
+                cache_key,
+                lambda: self._fetch_table(table_id, csv_path, cache_key),
             )
-            start = perf_counter()
-            try:
-                response = await get_with_retries(
-                    self._client,
-                    url,
-                    params=None,
-                    source="rba",
-                    identifier=table_id,
-                )
-            except AuseconUpstreamError:
-                stale = self._cache.get_stale(cache_key)
-                if stale is None:
-                    raise
-                raw_payload = stale["value"]
-                stale_meta = stale
-                _logger.warning(
-                    "request.stale_fallback",
-                    extra={
-                        "source": "rba",
-                        "identifier": table_id,
-                        "cached_at": stale["cached_at"],
-                        "expires_at": stale["expires_at"],
-                    },
-                )
-            else:
-                _logger.info(
-                    "request.success",
-                    extra={
-                        "source": "rba",
-                        "identifier": table_id,
-                        "status_code": response.status_code,
-                        "duration_ms": int((perf_counter() - start) * 1000),
-                        "bytes": len(response.content),
-                    },
-                )
-                try:
-                    raw_payload = parse_rba_csv(response.text, table_id=table_id)
-                except (IndexError, KeyError, TypeError, ValueError) as exc:
-                    _logger.error(
-                        "parse.failed",
-                        extra={"source": "rba", "identifier": table_id, "url": url},
-                    )
-                    raise AuseconParseError(
-                        f"Failed to parse RBA table payload for '{table_id}'."
-                    ) from exc
-                raw_payload["metadata"]["retrieval_url"] = str(response.request.url)
-                raw_payload["metadata"]["retrieved_at"] = utc_now_iso()
-                raw_payload = self._cache.set(cache_key, raw_payload, self._ttl_seconds)
+            raw_payload = deepcopy(raw_payload)
 
         payload = filter_payload(
-            deepcopy(raw_payload),
+            raw_payload,
             series_ids=series_ids,
             start_date=start_date,
             end_date=end_date,
@@ -140,3 +92,68 @@ class RBAProvider:
             payload["metadata"]["cached_at"] = stale_meta["cached_at"]
             payload["metadata"]["expires_at"] = stale_meta["expires_at"]
         return payload
+
+    async def _fetch_table(
+        self,
+        table_id: str,
+        csv_path: str | None,
+        cache_key: str,
+    ) -> tuple[dict[str, Any], dict[str, Any] | None]:
+        stale_meta: dict[str, Any] | None = None
+        raw_payload = None
+        filename = csv_path or f"{table_id}-data.csv"
+        url = f"{self.BASE_URL}/{filename}"
+        _logger.info(
+            "request.start",
+            extra={"source": "rba", "identifier": table_id, "url": url},
+        )
+        start = perf_counter()
+        try:
+            response = await get_with_retries(
+                self._client,
+                url,
+                params=None,
+                source="rba",
+                identifier=table_id,
+            )
+        except AuseconUpstreamError:
+            stale = self._cache.get_stale(cache_key)
+            if stale is None:
+                raise
+            raw_payload = stale["value"]
+            stale_meta = stale
+            _logger.warning(
+                "request.stale_fallback",
+                extra={
+                    "source": "rba",
+                    "identifier": table_id,
+                    "cached_at": stale["cached_at"],
+                    "expires_at": stale["expires_at"],
+                },
+            )
+        else:
+            _logger.info(
+                "request.success",
+                extra={
+                    "source": "rba",
+                    "identifier": table_id,
+                    "status_code": response.status_code,
+                    "duration_ms": int((perf_counter() - start) * 1000),
+                    "bytes": len(response.content),
+                },
+            )
+            try:
+                raw_payload = parse_rba_csv(response.text, table_id=table_id)
+            except (IndexError, KeyError, TypeError, ValueError) as exc:
+                _logger.error(
+                    "parse.failed",
+                    extra={"source": "rba", "identifier": table_id, "url": url},
+                )
+                raise AuseconParseError(
+                    f"Failed to parse RBA table payload for '{table_id}'."
+                ) from exc
+            raw_payload["metadata"]["retrieval_url"] = str(response.request.url)
+            raw_payload["metadata"]["retrieved_at"] = utc_now_iso()
+            raw_payload = await self._cache.aset(cache_key, raw_payload, self._ttl_seconds)
+
+        return raw_payload, stale_meta

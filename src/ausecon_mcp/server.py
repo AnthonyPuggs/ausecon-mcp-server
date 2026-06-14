@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import os
 from typing import Annotated, Any, Literal
 
@@ -663,19 +664,30 @@ class AuseconService:
         validated_concept = require_non_empty("concept", concept)
         validated_last_n = validate_positive_int("last_n", last_n)
         validate_derived_bounds(validated_concept, start=start, end=end)
-        operands: dict[str, dict] = {}
-        for operand in get_operand_specs(validated_concept):
-            operand_start, operand_end = operand_request_bounds(
+        operand_specs = list(get_operand_specs(validated_concept))
+        operand_bounds = {
+            operand.name: operand_request_bounds(
                 validated_concept,
                 operand.name,
                 start=start,
                 end=end,
             )
-            operands[operand.name] = await self.get_economic_series(
-                operand.concept,
-                start=operand_start,
-                end=operand_end,
+            for operand in operand_specs
+        }
+        fetched = await asyncio.gather(
+            *(
+                self.get_economic_series(
+                    operand.concept,
+                    start=operand_bounds[operand.name][0],
+                    end=operand_bounds[operand.name][1],
+                )
+                for operand in operand_specs
             )
+        )
+        operands = {
+            operand.name: payload
+            for operand, payload in zip(operand_specs, fetched, strict=True)
+        }
         return derive_series(
             validated_concept,
             operands,
