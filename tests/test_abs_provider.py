@@ -373,6 +373,35 @@ async def test_abs_provider_404_does_not_serve_stale(_isolated_cache_dir) -> Non
 
 
 @pytest.mark.asyncio
+async def test_abs_latest_n_sends_lastnobservations_param() -> None:
+    provider = ABSProvider()
+    csv_payload = (FIXTURES / "abs_cpi_sample.csv").read_text()
+
+    with respx.mock(assert_all_called=True) as router:
+        route = router.get("https://data.api.abs.gov.au/rest/data/CPI/all").mock(
+            return_value=Response(200, text=csv_payload)
+        )
+        await provider.get_data("CPI", key="all", latest_n=3)
+
+    assert "lastNObservations=3" in str(route.calls.last.request.url)
+
+
+@pytest.mark.asyncio
+async def test_abs_latest_n_uses_a_distinct_cache_key() -> None:
+    provider = ABSProvider()
+    csv_payload = (FIXTURES / "abs_cpi_sample.csv").read_text()
+
+    with respx.mock(assert_all_called=True) as router:
+        route = router.get("https://data.api.abs.gov.au/rest/data/CPI/all").mock(
+            return_value=Response(200, text=csv_payload)
+        )
+        await provider.get_data("CPI", key="all", latest_n=3)
+        await provider.get_data("CPI", key="all")  # full-history: must miss cache
+
+    assert route.call_count == 2
+
+
+@pytest.mark.asyncio
 async def test_abs_provider_sends_identified_user_agent() -> None:
     provider = ABSProvider()
     structure_xml = (FIXTURES / "abs_cpi_structure.xml").read_text()
