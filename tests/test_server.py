@@ -1,9 +1,15 @@
+from pathlib import Path
+
 import pytest
+import respx
 from fastmcp import Client
+from httpx import Response
 from starlette.middleware.cors import CORSMiddleware
 from starlette.testclient import TestClient
 
 import ausecon_mcp.server as server_module
+from ausecon_mcp.providers.abs import ABSProvider
+from ausecon_mcp.providers.rba import RBAProvider
 from ausecon_mcp.server import AuseconService, build_server
 
 EXPECTED_TOOL_TITLES = {
@@ -117,6 +123,7 @@ class StubABSProvider:
         end_period: str | None = None,
         last_n: int | None = None,
         updated_after: str | None = None,
+        latest_n: int | None = None,
     ) -> dict:
         self.last_get_data_kwargs = {
             "dataflow_id": dataflow_id,
@@ -125,6 +132,7 @@ class StubABSProvider:
             "end_period": end_period,
             "last_n": last_n,
             "updated_after": updated_after,
+            "latest_n": latest_n,
         }
         return {
             "metadata": {"source": "abs", "dataset_id": dataflow_id},
@@ -1918,6 +1926,19 @@ async def test_registered_tools_carry_readonly_and_openworld_annotations() -> No
         assert annotations.destructiveHint is False, f"{tool.name} missing destructiveHint"
         assert annotations.idempotentHint is True, f"{tool.name} missing idempotentHint"
         assert annotations.openWorldHint is True, f"{tool.name} missing openWorldHint"
+
+
+async def test_get_latest_observations_abs_requests_lastnobservations() -> None:
+    csv_payload = (Path(__file__).parent / "fixtures" / "abs_cpi_sample.csv").read_text()
+    service = AuseconService(abs_provider=ABSProvider(), rba_provider=RBAProvider())
+
+    with respx.mock(assert_all_called=True) as router:
+        route = router.get("https://data.api.abs.gov.au/rest/data/CPI/all").mock(
+            return_value=Response(200, text=csv_payload)
+        )
+        await service.get_latest_observations(source="abs", identifier="CPI", count=2)
+
+    assert "lastNObservations=2" in str(route.calls.last.request.url)
 
 
 async def test_registered_tools_expose_top_level_titles_for_hosted_registries() -> None:
