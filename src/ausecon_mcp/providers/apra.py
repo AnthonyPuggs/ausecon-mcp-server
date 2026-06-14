@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import json
 import re
+from copy import deepcopy
 from html.parser import HTMLParser
 from importlib import resources
 from time import perf_counter
@@ -19,6 +20,7 @@ from ausecon_mcp.logging import get_logger
 from ausecon_mcp.parsers.apra_xlsx import parse_apra_xlsx
 from ausecon_mcp.providers._http import build_client, resolve_version, utc_now_iso
 from ausecon_mcp.providers._retry import get_with_retries
+from ausecon_mcp.providers._single_flight import SingleFlight
 
 _logger = get_logger("providers.apra")
 _TRUSTED_APRA_DOWNLOAD_HOSTS = {"apra.gov.au", "www.apra.gov.au"}
@@ -38,6 +40,7 @@ class APRAProvider:
         self._cache = cache or TTLCache()
         self._ttl_seconds = ttl_seconds
         self._catalogue = catalogue or APRA_CATALOGUE
+        self._single_flight = SingleFlight()
 
     async def aclose(self) -> None:
         if self._owns_client:
@@ -65,31 +68,12 @@ class APRAProvider:
         cache_key = _cache_key(publication_id, table_id)
         raw_payload = await self._cache.aget(cache_key)
         stale_meta: dict[str, Any] | None = None
-
         if raw_payload is None:
-            try:
-                raw_payload = await self._fetch_and_parse(
-                    publication_id,
-                    entry,
-                    table_id=table_id,
-                )
-            except AuseconUpstreamError:
-                stale = self._cache.get_stale(cache_key)
-                if stale is None:
-                    raise
-                raw_payload = stale["value"]
-                stale_meta = stale
-                _logger.warning(
-                    "request.stale_fallback",
-                    extra={
-                        "source": "apra",
-                        "identifier": publication_id,
-                        "cached_at": stale["cached_at"],
-                        "expires_at": stale["expires_at"],
-                    },
-                )
-            else:
-                raw_payload = await self._cache.aset(cache_key, raw_payload, self._ttl_seconds)
+            raw_payload, stale_meta = await self._single_flight.run(
+                cache_key,
+                lambda: self._fetch_publication(publication_id, entry, table_id, cache_key),
+            )
+            raw_payload = deepcopy(raw_payload)
 
         payload = raw_payload
         if table_id is not None:
@@ -111,6 +95,40 @@ class APRAProvider:
             payload["metadata"]["cached_at"] = stale_meta["cached_at"]
             payload["metadata"]["expires_at"] = stale_meta["expires_at"]
         return payload
+
+    async def _fetch_publication(
+        self,
+        publication_id: str,
+        entry: dict[str, Any],
+        table_id: str | None,
+        cache_key: str,
+    ) -> tuple[dict[str, Any], dict[str, Any] | None]:
+        stale_meta: dict[str, Any] | None = None
+        try:
+            raw_payload = await self._fetch_and_parse(
+                publication_id,
+                entry,
+                table_id=table_id,
+            )
+        except AuseconUpstreamError:
+            stale = self._cache.get_stale(cache_key)
+            if stale is None:
+                raise
+            raw_payload = stale["value"]
+            stale_meta = stale
+            _logger.warning(
+                "request.stale_fallback",
+                extra={
+                    "source": "apra",
+                    "identifier": publication_id,
+                    "cached_at": stale["cached_at"],
+                    "expires_at": stale["expires_at"],
+                },
+            )
+        else:
+            raw_payload = await self._cache.aset(cache_key, raw_payload, self._ttl_seconds)
+
+        return raw_payload, stale_meta
 
     async def _fetch_and_parse(
         self,
