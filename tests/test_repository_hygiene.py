@@ -240,10 +240,11 @@ def test_readme_leads_with_open_free_correctness_value_props() -> None:
     assert "no API key" in readme_text
     assert "no-API-key" in readme_text
     assert "fresh &amp; fully source-traceable" in readme_text
-    assert "never from a stale cache" in readme_text
 
-    # The new "Fresh & source-traceable" card.
+    # Correctness framed honestly: staleness is flagged, not denied (no false absolute).
     assert "Fresh &amp; source-traceable" in readme_text
+    assert "never served silently" in readme_text
+    assert "never from a stale cache" not in readme_text
 
     # Lead clause preserved; no competitor naming.
     assert "Australian economic data is authoritative but awkward to reach" in readme_text

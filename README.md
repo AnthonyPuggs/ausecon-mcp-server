@@ -35,8 +35,8 @@
 
 Australian economic data is authoritative but awkward to reach &mdash; scattered across portals,
 formats, and identifiers you have to memorise. **ausecon** is the **open, free, no-API-key** way to
-put it in front of any AI assistant: every series comes back **fresh and fully source-traceable**
-&mdash; stamped with its provenance, never from a stale cache &mdash; in **one consistent shape**
+put it in front of any AI assistant: every series comes back **fresh and fully source-traceable**, stamped with its provenance,
+in **one consistent shape**
 (`metadata · series · observations`) across all three regulators. Ask for *&ldquo;the cash
 rate&rdquo;* or *&ldquo;quarterly real GDP growth&rdquo;* and get research-grade data back without
 leaving the conversation.
@@ -58,8 +58,8 @@ leaving the conversation.
     <td width="33%" valign="top">
       <h4>🔒 Fresh &amp; source-traceable</h4>
       Every value is fetched live and stamped with its provenance
-      (<code>retrieved_at</code>, <code>source</code>, <code>server_version</code>) &mdash; never
-      served from a stale cache.
+      (<code>retrieved_at</code>, <code>source</code>, <code>server_version</code>). On an upstream
+      outage, a cached fallback is always flagged <code>stale</code> &mdash; never served silently.
     </td>
     <td width="33%" valign="top">
       <h4>🧱 Three sources, one shape</h4>
