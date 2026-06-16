@@ -215,11 +215,8 @@ def test_readme_is_rich_landing_page_for_current_release_state() -> None:
     assert "Version `1.10.0` is the current release line." not in readme_text
     assert "Version `1.10.0` is the current release line." not in docs_home_text
 
-    assert "<b>14</b>" in readme_text
     assert "read-only tools" in readme_text
-    assert "<b>75</b>" in readme_text
     assert "economic concepts" in readme_text
-    assert "<b>16</b>" in readme_text
     assert "derived indicators" in readme_text
     assert "stdio locally, Streamable HTTP when hosted" in readme_text
 
@@ -247,6 +244,34 @@ def test_readme_does_not_advertise_a_contradictory_derived_count() -> None:
     # the table correctly said 16).
     assert "Nine formula-based indicators" not in readme_text
     assert "Formula-based indicators like <code>real_cash_rate</code>" in readme_text
+
+
+async def test_readme_surface_counts_are_code_derived() -> None:
+    from ausecon_mcp.catalogue.resolver import list_economic_concepts
+    from ausecon_mcp.derived import DERIVED_CONCEPTS
+    from ausecon_mcp.server import build_server
+
+    mcp = build_server()
+    tools = await mcp.list_tools(run_middleware=False)
+    prompts = await mcp.list_prompts()
+
+    # Each cell in the README stats table must match the live count from code.
+    expected = {
+        "read-only tools": len(tools),
+        "economic concepts": len(list_economic_concepts()),
+        "derived indicators": len(DERIVED_CONCEPTS),
+        "prompt templates": len(prompts),
+        "data sources": 3,  # ABS, RBA, APRA — fixed architectural triad
+    }
+
+    readme_text = README.read_text(encoding="utf-8")
+    for label, count in expected.items():
+        match = re.search(rf"<b>(\d+)</b><br/><sub>{re.escape(label)}</sub>", readme_text)
+        assert match is not None, f"README stats table has no cell labelled {label!r}"
+        assert int(match.group(1)) == count, (
+            f"README says {match.group(1)} {label!r}, code has {count}. "
+            "Update the stats table in README.md."
+        )
 
 
 def test_public_semantic_docs_do_not_contain_known_stale_series_ids() -> None:
