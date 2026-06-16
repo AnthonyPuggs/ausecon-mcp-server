@@ -91,6 +91,24 @@ without leaving the conversation.
 | **RBA** &nbsp;·&nbsp; Reserve Bank of Australia | Cash rate, monetary & financial aggregates, exchange rates |
 | **APRA** &nbsp;·&nbsp; Aust. Prudential Regulation Authority | ADI & insurer statistics, with release-cadence estimates |
 
+## Try it instantly (no install)
+
+Prefer not to install anything? A hosted, **read-only, no-API-key** instance speaks MCP over
+Streamable HTTP at:
+
+```text
+https://ausecon-mcp-server.onrender.com/mcp
+```
+
+Point any MCP client that supports remote (Streamable HTTP) servers at that URL — for example, in
+Claude Code:
+
+```bash
+claude mcp add --transport http ausecon https://ausecon-mcp-server.onrender.com/mcp
+```
+
+> The hosted instance may take a few seconds to wake on the first request.
+
 ## Install
 
 The package lives on [PyPI](https://pypi.org/project/ausecon-mcp-server/) and is designed to be

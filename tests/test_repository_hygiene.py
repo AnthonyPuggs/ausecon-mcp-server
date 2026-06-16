@@ -702,6 +702,26 @@ def test_server_json_advertises_hosted_streamable_http_remote() -> None:
     assert server_metadata["packages"][0]["transport"]["type"] == "stdio"
 
 
+def test_readme_advertises_hosted_try_instantly_path() -> None:
+    readme_text = README.read_text(encoding="utf-8")
+
+    assert "Try it instantly" in readme_text
+    assert "https://ausecon-mcp-server.onrender.com/mcp" in readme_text
+    assert (
+        "claude mcp add --transport http ausecon "
+        "https://ausecon-mcp-server.onrender.com/mcp" in readme_text
+    )
+
+
+def test_docs_site_getting_started_advertises_hosted_try_instantly_path() -> None:
+    getting_started = (
+        DOCS_SITE / "src/content/docs/getting-started/index.md"
+    ).read_text(encoding="utf-8")
+
+    assert "Try it instantly" in getting_started
+    assert "https://ausecon-mcp-server.onrender.com/mcp" in getting_started
+
+
 def test_claude_session_lock_is_not_tracked() -> None:
     assert not (ROOT / ".claude" / "scheduled_tasks.lock").exists()
 

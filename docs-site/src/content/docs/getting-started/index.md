@@ -9,6 +9,18 @@ description: Install and make your first MCP retrieval.
 - [`uv`](https://docs.astral.sh/uv/) for the `uvx` launcher.
 - An MCP client that supports local stdio servers.
 
+## Try it instantly (no install)
+
+A hosted, read-only, no-API-key instance is available over Streamable HTTP at
+`https://ausecon-mcp-server.onrender.com/mcp`. Point any MCP client that supports remote servers
+at that URL, or in Claude Code:
+
+```bash
+claude mcp add --transport http ausecon https://ausecon-mcp-server.onrender.com/mcp
+```
+
+The hosted instance may take a few seconds to wake on the first request.
+
 ## Install
 
 The package is published to [PyPI](https://pypi.org/project/ausecon-mcp-server/) and is intended
