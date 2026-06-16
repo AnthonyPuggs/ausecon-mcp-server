@@ -35,9 +35,6 @@ DOCS_SITE = ROOT / "docs-site"
 DOCS_SITE_CONTRIBUTING = DOCS_SITE / "src" / "content" / "docs" / "maintainers" / "contributing.md"
 DOCS_ICON = DOCS_SITE / "public" / "ausecon-icon.svg"
 HOSTED_DEPLOYMENT = DOCS_SITE / "src" / "content" / "docs" / "operations" / "hosted-deployment.md"
-SEMANTIC_DESIGN = (
-    ROOT / "docs" / "superpowers" / "specs" / "2026-04-19-semantic-layer-expansion-design.md"
-)
 SEMANTIC_REFERENCE = DOCS_SITE / "src" / "content" / "docs" / "reference" / "semantic-concepts.md"
 PROMPTING_GUIDE = DOCS_SITE / "src" / "content" / "docs" / "user-guide" / "prompting-ai-agents.md"
 DOCS_URL = "https://auseconmcp.com/"
@@ -276,9 +273,10 @@ async def test_readme_surface_counts_are_code_derived() -> None:
 
 def test_public_semantic_docs_do_not_contain_known_stale_series_ids() -> None:
     stale_ids = {"FZCY0300D"}
+    # The semantic design doc now lives under the gitignored docs/superpowers/ tree
+    # (a private planning doc), so it is no longer a public surface this guard polices.
     docs = {
         "README": README,
-        "semantic design": SEMANTIC_DESIGN,
         "semantic reference": SEMANTIC_REFERENCE,
     }
 
