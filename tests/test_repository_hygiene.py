@@ -233,6 +233,29 @@ def test_readme_is_rich_landing_page_for_current_release_state() -> None:
     assert "`v0.5.0` covers the main analyst workflows more credibly" not in readme_text
 
 
+def test_readme_documents_local_client_install_configs() -> None:
+    readme_text = README.read_text(encoding="utf-8")
+
+    # Cursor: config file path, mcpServers config, and the one-click deeplink.
+    assert "~/.cursor/mcp.json" in readme_text
+    assert (
+        "cursor://anysphere.cursor-deeplink/mcp/install?name=ausecon&config="
+        "eyJjb21tYW5kIjoidXZ4IiwiYXJncyI6WyJhdXNlY29uLW1jcC1zZXJ2ZXIiXX0=" in readme_text
+    )
+
+    # Windsurf: config file path and mcpServers config (no one-click for unlisted servers).
+    assert "~/.codeium/windsurf/mcp_config.json" in readme_text
+
+    # VS Code: .vscode/mcp.json "servers" config + GitHub-clickable https install badge.
+    assert ".vscode/mcp.json" in readme_text
+    assert '"servers"' in readme_text
+    assert (
+        "https://insiders.vscode.dev/redirect/mcp/install?name=ausecon&config="
+        "%7B%22command%22%3A%22uvx%22%2C%22args%22%3A%5B%22ausecon-mcp-server%22%5D%7D"
+        in readme_text
+    )
+
+
 def test_readme_does_not_advertise_a_contradictory_derived_count() -> None:
     readme_text = README.read_text(encoding="utf-8")
 

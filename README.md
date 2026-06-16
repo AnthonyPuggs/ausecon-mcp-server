@@ -77,7 +77,8 @@ without leaving the conversation.
     </td>
     <td width="33%" valign="top">
       <h4>🔌 Plugs into your client</h4>
-      Claude Desktop, Claude Code, Codex or Smithery. stdio locally, Streamable HTTP when hosted.
+      Claude Desktop, Claude Code, Cursor, Windsurf, VS Code, Codex or Smithery.
+      stdio locally, Streamable HTTP when hosted.
     </td>
   </tr>
 </table>
@@ -134,6 +135,67 @@ claude mcp add --transport stdio ausecon -- uvx ausecon-mcp-server
 
 ```bash
 codex mcp add ausecon -- uvx ausecon-mcp-server
+```
+</details>
+
+<details>
+<summary><b>Cursor</b></summary>
+
+Add to `~/.cursor/mcp.json` (global) or `.cursor/mcp.json` (project):
+
+```json
+{
+  "mcpServers": {
+    "ausecon": {
+      "command": "uvx",
+      "args": ["ausecon-mcp-server"]
+    }
+  }
+}
+```
+
+Or paste this one-click link into your browser:
+
+```text
+cursor://anysphere.cursor-deeplink/mcp/install?name=ausecon&config=eyJjb21tYW5kIjoidXZ4IiwiYXJncyI6WyJhdXNlY29uLW1jcC1zZXJ2ZXIiXX0=
+```
+</details>
+
+<details>
+<summary><b>Windsurf</b></summary>
+
+Add to `~/.codeium/windsurf/mcp_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "ausecon": {
+      "command": "uvx",
+      "args": ["ausecon-mcp-server"],
+      "env": {}
+    }
+  }
+}
+```
+</details>
+
+<details>
+<summary><b>VS Code</b></summary>
+
+[![Install in VS Code](https://img.shields.io/badge/VS_Code-Install_ausecon-0098FF?logo=visualstudiocode&logoColor=white)](https://insiders.vscode.dev/redirect/mcp/install?name=ausecon&config=%7B%22command%22%3A%22uvx%22%2C%22args%22%3A%5B%22ausecon-mcp-server%22%5D%7D)
+
+Or add to `.vscode/mcp.json` (workspace) or your user `mcp.json`:
+
+```json
+{
+  "servers": {
+    "ausecon": {
+      "type": "stdio",
+      "command": "uvx",
+      "args": ["ausecon-mcp-server"]
+    }
+  }
+}
 ```
 </details>
 
