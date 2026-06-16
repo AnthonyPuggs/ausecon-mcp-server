@@ -256,6 +256,20 @@ def test_readme_documents_local_client_install_configs() -> None:
     )
 
 
+def test_docs_site_getting_started_documents_client_install_configs() -> None:
+    getting_started = (
+        DOCS_SITE / "src/content/docs/getting-started/index.md"
+    ).read_text(encoding="utf-8")
+
+    # Same three new clients as the README, with the docs-site (real HTML) using
+    # the directly-clickable URI-scheme one-click links.
+    assert "~/.cursor/mcp.json" in getting_started
+    assert "cursor://anysphere.cursor-deeplink/mcp/install?name=ausecon" in getting_started
+    assert "~/.codeium/windsurf/mcp_config.json" in getting_started
+    assert ".vscode/mcp.json" in getting_started
+    assert "vscode:mcp/install?" in getting_started
+
+
 def test_readme_does_not_advertise_a_contradictory_derived_count() -> None:
     readme_text = README.read_text(encoding="utf-8")
 

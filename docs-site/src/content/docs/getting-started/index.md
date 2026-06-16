@@ -21,6 +21,64 @@ uvx ausecon-mcp-server
 On first use, `uvx` downloads the package into an isolated cached environment. The process then
 waits for an MCP client to connect over standard input/output.
 
+## Connect your client
+
+ausecon speaks MCP over stdio, launched on demand with `uvx`.
+
+**Claude Code**
+
+```bash
+claude mcp add --transport stdio ausecon -- uvx ausecon-mcp-server
+```
+
+**Codex**
+
+```bash
+codex mcp add ausecon -- uvx ausecon-mcp-server
+```
+
+**Claude Desktop** — add to `claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "ausecon": { "command": "uvx", "args": ["ausecon-mcp-server"] }
+  }
+}
+```
+
+**Cursor** — add to `~/.cursor/mcp.json`, or use the one-click link
+[Add to Cursor](cursor://anysphere.cursor-deeplink/mcp/install?name=ausecon&config=eyJjb21tYW5kIjoidXZ4IiwiYXJncyI6WyJhdXNlY29uLW1jcC1zZXJ2ZXIiXX0=):
+
+```json
+{
+  "mcpServers": {
+    "ausecon": { "command": "uvx", "args": ["ausecon-mcp-server"] }
+  }
+}
+```
+
+**Windsurf** — add to `~/.codeium/windsurf/mcp_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "ausecon": { "command": "uvx", "args": ["ausecon-mcp-server"], "env": {} }
+  }
+}
+```
+
+**VS Code** — add to `.vscode/mcp.json`, or use the one-click link
+[Install in VS Code](vscode:mcp/install?%7B%22name%22%3A%22ausecon%22%2C%22command%22%3A%22uvx%22%2C%22args%22%3A%5B%22ausecon-mcp-server%22%5D%7D):
+
+```json
+{
+  "servers": {
+    "ausecon": { "type": "stdio", "command": "uvx", "args": ["ausecon-mcp-server"] }
+  }
+}
+```
+
 ## Recommended workflow
 
 1. Use `list_economic_concepts` for ordinary economic requests such as GDP, CPI, unemployment,
