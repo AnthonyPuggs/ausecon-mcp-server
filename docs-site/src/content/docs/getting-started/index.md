@@ -7,7 +7,8 @@ description: Install and make your first MCP retrieval.
 
 - Python `3.10+`.
 - [`uv`](https://docs.astral.sh/uv/) for the `uvx` launcher.
-- An MCP client that supports local stdio servers.
+- An MCP client — local `stdio` for the installed server, or a remote (Streamable HTTP)
+  client for the hosted "try it instantly" option below.
 
 ## Try it instantly (no install)
 
