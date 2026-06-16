@@ -10,6 +10,10 @@ export default defineConfig({
     starlight({
       title: 'AusEcon MCP Server',
       description: 'Documentation for Australian economic data from the ABS and RBA over MCP.',
+      logo: {
+        src: './src/assets/logo.png',
+        alt: 'ausecon logo',
+      },
       editLink: {
         baseUrl: 'https://github.com/AnthonyPuggs/ausecon-mcp-server/edit/main/docs-site/',
       },
