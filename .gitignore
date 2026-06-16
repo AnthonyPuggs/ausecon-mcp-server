@@ -21,3 +21,4 @@ src/ausecon_mcp/_version.py
 releases/
 review/
 docs/superpowers/
+mcp-publisher*
