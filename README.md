@@ -1,3 +1,5 @@
+<!-- mcp-name: io.github.AnthonyPuggs/ausecon-mcp-server -->
+
 <div align="center">
 
 <img src="assets/banner.svg" alt="ausecon — Australian economic & financial data MCP server" width="100%" />

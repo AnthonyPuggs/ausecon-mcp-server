@@ -6,6 +6,16 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.12.1] - 2026-06-17
+
+Registry-publishing patch — no functional changes.
+
+### Added
+
+- An `mcp-name: io.github.AnthonyPuggs/ausecon-mcp-server` marker in the README (the PyPI
+  long-description) so the package can be published to the official MCP registry, which
+  validates PyPI package ownership via this marker.
+
 ## [1.12.0] - 2026-06-16
 
 A distribution and positioning release. ausecon now offers a hosted, no-install way to try
@@ -724,7 +734,8 @@ Initial public release.
 - Initial curated catalogues for ABS and RBA, plus a four-concept
   `CURATED_SERIES` semantic shortcut map.
 
-[Unreleased]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.12.0...HEAD
+[Unreleased]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.12.1...HEAD
+[1.12.1]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.12.0...v1.12.1
 [1.12.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.11.0...v1.12.0
 [1.11.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.10.0...v1.11.0
 [1.10.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.9.0...v1.10.0
