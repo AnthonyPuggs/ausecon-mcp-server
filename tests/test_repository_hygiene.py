@@ -688,6 +688,20 @@ def test_server_metadata_matches_current_changelog_release() -> None:
     )
 
 
+def test_server_json_advertises_hosted_streamable_http_remote() -> None:
+    server_metadata = json.loads(SERVER_JSON.read_text(encoding="utf-8"))
+
+    remotes = server_metadata.get("remotes", [])
+    assert any(
+        remote.get("type") == "streamable-http"
+        and remote.get("url") == "https://ausecon-mcp-server.onrender.com/mcp"
+        for remote in remotes
+    ), "server.json must advertise the hosted Streamable HTTP /mcp remote"
+
+    # packages (stdio) must remain alongside the new remote.
+    assert server_metadata["packages"][0]["transport"]["type"] == "stdio"
+
+
 def test_claude_session_lock_is_not_tracked() -> None:
     assert not (ROOT / ".claude" / "scheduled_tasks.lock").exists()
 

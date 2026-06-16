@@ -15,6 +15,12 @@
       }
     }
   ],
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://ausecon-mcp-server.onrender.com/mcp"
+    }
+  ],
   "repository": {
     "source": "github",
     "url": "https://github.com/AnthonyPuggs/ausecon-mcp-server"
