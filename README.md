@@ -13,6 +13,7 @@
 [![License](https://img.shields.io/badge/license-MIT-6a737d?labelColor=41464d)](LICENSE)
 [![smithery badge](https://smithery.ai/badge/anthonypuggs/ausecon-mcp)](https://smithery.ai/servers/anthonypuggs/ausecon-mcp)
 
+[![ausecon-mcp-server MCP server](https://glama.ai/mcp/servers/AnthonyPuggs/ausecon-mcp-server/badges/card.svg)](https://glama.ai/mcp/servers/AnthonyPuggs/ausecon-mcp-server)
 <p>
   <b>ausecon</b> is a Model Context Protocol server that gives any AI assistant clean, structured
   access to Australia&rsquo;s core economic and financial data &mdash; straight from the
