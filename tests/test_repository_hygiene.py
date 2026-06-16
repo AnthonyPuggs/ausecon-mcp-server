@@ -251,6 +251,19 @@ def test_readme_leads_with_open_free_correctness_value_props() -> None:
     assert "ausdata" not in readme_text.lower()
 
 
+def test_docs_landing_leads_with_open_free_correctness_value_props() -> None:
+    docs_home = (DOCS_SITE / "src/content/docs/index.mdx").read_text(encoding="utf-8")
+
+    assert "no-API-key" in docs_home
+    assert "source-traceable" in docs_home
+    # Correctness framed honestly (no false absolute).
+    assert "flagged, never silent" in docs_home
+    assert "never a stale cache" not in docs_home
+    assert "ausdata" not in docs_home.lower()
+    # Release-line marker preserved (asserted elsewhere too).
+    assert "Version `1.11.0` is the current release line." in docs_home
+
+
 def test_readme_documents_local_client_install_configs() -> None:
     readme_text = README.read_text(encoding="utf-8")
 
