@@ -17,6 +17,11 @@
   <b>ABS</b>, <b>RBA</b>, and <b>APRA</b>.
 </p>
 
+<p>
+  <b>Open</b> &middot; <b>free</b> &middot; <b>no API key</b> &mdash; always
+  <b>fresh &amp; fully source-traceable</b>, three official sources in <b>one shape</b>.
+</p>
+
 <a href="https://auseconmcp.com"><b>Documentation</b></a> &nbsp;·&nbsp;
 <a href="https://auseconmcp.com/getting-started">Getting started</a> &nbsp;·&nbsp;
 <a href="https://auseconmcp.com/tools">Tool reference</a> &nbsp;·&nbsp;
@@ -28,11 +33,13 @@
 
 ## Why this exists
 
-Australian economic data is authoritative but awkward to reach &mdash; different portals, different
-formats, and identifiers you have to memorise. **ausecon** puts a friendly, consistent layer in
-front of all three regulators so you (or your AI agent) can just ask for *&ldquo;the cash rate&rdquo;*
-or *&ldquo;quarterly real GDP growth&rdquo;* and get back tidy, source-traceable series &mdash;
-without leaving the conversation.
+Australian economic data is authoritative but awkward to reach &mdash; scattered across portals,
+formats, and identifiers you have to memorise. **ausecon** is the **open, free, no-API-key** way to
+put it in front of any AI assistant: every series comes back **fresh and fully source-traceable**
+&mdash; stamped with its provenance, never from a stale cache &mdash; in **one consistent shape**
+(`metadata · series · observations`) across all three regulators. Ask for *&ldquo;the cash
+rate&rdquo;* or *&ldquo;quarterly real GDP growth&rdquo;* and get research-grade data back without
+leaving the conversation.
 
 <table align="center">
   <tr>
@@ -49,9 +56,10 @@ without leaving the conversation.
 <table>
   <tr>
     <td width="33%" valign="top">
-      <h4>🔎 Ask in plain English</h4>
-      Discover concepts with <code>list_economic_concepts</code>, then pull resolved series by
-      name &mdash; no dataset IDs required.
+      <h4>🔒 Fresh &amp; source-traceable</h4>
+      Every value is fetched live and stamped with its provenance
+      (<code>retrieved_at</code>, <code>source</code>, <code>server_version</code>) &mdash; never
+      served from a stale cache.
     </td>
     <td width="33%" valign="top">
       <h4>🧱 Three sources, one shape</h4>

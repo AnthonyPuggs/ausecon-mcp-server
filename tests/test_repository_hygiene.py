@@ -233,6 +233,23 @@ def test_readme_is_rich_landing_page_for_current_release_state() -> None:
     assert "`v0.5.0` covers the main analyst workflows more credibly" not in readme_text
 
 
+def test_readme_leads_with_open_free_correctness_value_props() -> None:
+    readme_text = README.read_text(encoding="utf-8")
+
+    # Differentiator strip + "Why this exists" lead on the durable value props.
+    assert "no API key" in readme_text
+    assert "no-API-key" in readme_text
+    assert "fresh &amp; fully source-traceable" in readme_text
+    assert "never from a stale cache" in readme_text
+
+    # The new "Fresh & source-traceable" card.
+    assert "Fresh &amp; source-traceable" in readme_text
+
+    # Lead clause preserved; no competitor naming.
+    assert "Australian economic data is authoritative but awkward to reach" in readme_text
+    assert "ausdata" not in readme_text.lower()
+
+
 def test_readme_documents_local_client_install_configs() -> None:
     readme_text = README.read_text(encoding="utf-8")
 
