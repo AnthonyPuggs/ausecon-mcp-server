@@ -6,6 +6,14 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.12.0] - 2026-06-16
+
+A distribution and positioning release. ausecon now offers a hosted, no-install way to try
+the server, ships copy-paste install configs for more clients, and leads its documentation
+with what sets it apart — open, free, no API key, and fully source-traceable. Tool behaviour
+and the response contract are unchanged apart from the additive
+`metadata.derived.description` field below.
+
 ### Added
 
 - Derived series now expose their concept `description` in
@@ -19,6 +27,30 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   `get_economic_series(concept=...)` path and the `series_ids` filter. The nudge is
   suppressed once a result is narrowed, and is appended without clobbering existing
   source warnings such as APRA framework breaks.
+- A hosted, read-only, no-API-key instance over Streamable HTTP at
+  `https://ausecon-mcp-server.onrender.com/mcp`, now advertised as a `remotes` entry in
+  `server.json` for registry-driven clients and documented as a zero-install "try it
+  instantly" path in the README and docs.
+- One-step install configs for Cursor (with an "Add to Cursor" one-click link), Windsurf,
+  and VS Code (with a one-click install badge), alongside the existing Claude Desktop,
+  Claude Code, and Codex instructions.
+
+### Changed
+
+- Repositioned the README and docs landing to lead with the durable differentiators:
+  open, free, no API key; fresh and fully source-traceable; and one consistent shape
+  (`metadata · series · observations`) across the ABS, RBA, and APRA.
+- Documentation now frames freshness honestly: a cache fallback during an upstream outage
+  is flagged `stale` rather than served silently (replacing an inaccurate
+  "never from a stale cache" claim).
+- Surfaced documentation counts (tools, concepts, derived indicators, prompts) are now
+  derived from code to prevent drift, and the `server.json` description was shortened to
+  satisfy the official MCP registry schema.
+
+### Fixed
+
+- The README no longer contradicts itself on the number of derived indicators (the stale
+  "nine" now correctly reads sixteen).
 
 ## [1.11.0] - 2026-06-15
 
@@ -692,7 +724,8 @@ Initial public release.
 - Initial curated catalogues for ABS and RBA, plus a four-concept
   `CURATED_SERIES` semantic shortcut map.
 
-[Unreleased]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.11.0...HEAD
+[Unreleased]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.12.0...HEAD
+[1.12.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.11.0...v1.12.0
 [1.11.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.10.0...v1.11.0
 [1.10.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.9.0...v1.10.0
 [1.9.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.8.0...v1.9.0
