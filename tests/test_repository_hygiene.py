@@ -239,6 +239,16 @@ def test_readme_is_rich_landing_page_for_current_release_state() -> None:
     assert "`v0.5.0` covers the main analyst workflows more credibly" not in readme_text
 
 
+def test_readme_does_not_advertise_a_contradictory_derived_count() -> None:
+    readme_text = README.read_text(encoding="utf-8")
+
+    # The derived-indicator count lives once, in the stats table. Prose must not
+    # hardcode a second, drift-prone figure (this is how "Nine" went stale while
+    # the table correctly said 16).
+    assert "Nine formula-based indicators" not in readme_text
+    assert "Formula-based indicators like <code>real_cash_rate</code>" in readme_text
+
+
 def test_public_semantic_docs_do_not_contain_known_stale_series_ids() -> None:
     stale_ids = {"FZCY0300D"}
     docs = {

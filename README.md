@@ -60,7 +60,7 @@ without leaving the conversation.
     </td>
     <td width="33%" valign="top">
       <h4>🧮 Transparent derived series</h4>
-      Nine formula-based indicators like <code>real_cash_rate</code> &mdash; every calculation is
+      Formula-based indicators like <code>real_cash_rate</code> &mdash; every calculation is
       open and inspectable.
     </td>
   </tr>
