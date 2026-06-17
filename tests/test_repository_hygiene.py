@@ -782,3 +782,34 @@ def test_no_sync_collision_duplicate_python_files_are_tracked() -> None:
         pytest.skip("git ls-files unavailable (e.g. sdist checkout)")
     offenders = [line for line in result.stdout.splitlines() if re.search(r"\s\d+\.py$", line)]
     assert not offenders, f"sync-collision duplicate files tracked: {offenders}"
+
+
+DATA_FRESHNESS_PAGE = (
+    DOCS_SITE / "src" / "content" / "docs" / "user-guide" / "data-freshness-and-provenance.md"
+)
+ASTRO_CONFIG = DOCS_SITE / "astro.config.mjs"
+
+
+def test_data_freshness_page_exists_and_is_linked() -> None:
+    page = DATA_FRESHNESS_PAGE.read_text(encoding="utf-8")
+    sidebar = ASTRO_CONFIG.read_text(encoding="utf-8")
+    schema = (
+        DOCS_SITE / "src" / "content" / "docs" / "reference" / "response-schema.md"
+    ).read_text(encoding="utf-8")
+
+    # The page documents the already-stamped provenance fields and the honest stale rule.
+    for field in ("retrieval_url", "retrieved_at", "server_version", "updated_after"):
+        assert field in page, f"freshness page must document {field}"
+    assert "stale" in page
+    assert "never" in page.lower()  # the honest "never silently stale" framing
+    assert "ausdata" not in page.lower()  # name no competitor
+
+    # Registered in the sidebar and cross-linked from the response schema.
+    assert "user-guide/data-freshness-and-provenance" in sidebar
+    assert "data-freshness-and-provenance" in schema
+
+
+def test_readme_advertises_nightly_integration_badge() -> None:
+    readme_text = README.read_text(encoding="utf-8")
+    assert "actions/workflow/status/AnthonyPuggs/ausecon-mcp-server/integration.yml" in readme_text
+    assert "label=Integration" in readme_text

@@ -30,4 +30,8 @@ def utc_now_iso() -> str:
 
 
 def build_client(timeout: float = 30.0) -> httpx.AsyncClient:
-    return httpx.AsyncClient(timeout=timeout, headers={"User-Agent": build_user_agent()})
+    return httpx.AsyncClient(
+        timeout=timeout,
+        headers={"User-Agent": build_user_agent()},
+        follow_redirects=True,
+    )

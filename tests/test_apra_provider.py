@@ -482,6 +482,28 @@ async def test_apra_provider_parses_workbooks_off_event_loop(
 
 
 @pytest.mark.asyncio
+async def test_apra_provider_rejects_untrusted_final_host_after_redirect() -> None:
+    """Post-redirect host re-validation rejects a final host outside the trusted APRA host set."""
+    provider = APRAProvider(catalogue=_catalogue())
+    html = '<a href="/sites/default/files/test.xlsx">Test back-series March 2026 XLSX</a>'
+
+    with respx.mock(assert_all_called=True) as router:
+        router.get("https://www.apra.gov.au/test-statistics").mock(
+            return_value=Response(200, text=html)
+        )
+        # The XLSX URL redirects to an untrusted host.
+        router.get("https://www.apra.gov.au/sites/default/files/test.xlsx").mock(
+            return_value=Response(301, headers={"Location": "https://evil.example/file.xlsx"})
+        )
+        router.get("https://evil.example/file.xlsx").mock(
+            return_value=Response(200, content=_xlsx_bytes())
+        )
+
+        with pytest.raises(AuseconParseError, match="untrusted host"):
+            await provider.get_data("TEST_PUBLICATION", table_id="table_1")
+
+
+@pytest.mark.asyncio
 async def test_apra_provider_rejects_unknown_publication() -> None:
     provider = APRAProvider(catalogue=_catalogue())
 

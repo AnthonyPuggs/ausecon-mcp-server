@@ -1,0 +1,54 @@
+# Golden values: known-good observations pinned to FINALIZED, non-revising periods.
+# Checked end-to-end against the live source by integration_tests/test_golden_values.py
+# (nightly). Structure is validated per-PR by tests/test_golden_manifest.py.
+#
+# Choose only values that do not revise: published policy rates, and CPI (which ABS does
+# not revise). Avoid seasonally-adjusted/GDP/labour-force series, which are routinely revised.
+
+- id: rba_new_cash_rate_target_2016_08_03
+  source: rba
+  identifier: a2
+  key: ARBAMPCNCRT
+  start: "2016-08-01"
+  end: "2016-08-31"
+  match_date: "2016-08-03"
+  expected_value: 1.5
+  tolerance: 0.0
+  note: "RBA New Cash Rate Target announced 2016-08-03; a published decision, never revised."
+
+- id: rba_change_in_cash_rate_target_2016_08_03
+  source: rba
+  identifier: a2
+  key: ARBAMPCCCR
+  start: "2016-08-01"
+  end: "2016-08-31"
+  match_date: "2016-08-03"
+  expected_value: -0.25
+  tolerance: 0.0
+  note: "RBA Change in Cash Rate Target on 2016-08-03; a published decision, never revised."
+
+- id: abs_cpi_all_groups_australia_2015_q1
+  source: abs
+  identifier: CPI
+  key: "1.10001.10.50.Q"
+  start: "2015-Q1"
+  end: "2015-Q1"
+  match_date: "2015-Q1"
+  expected_value: 74.16
+  tolerance: 0.01
+  note: >-
+    All groups CPI index, Original, Australia, Quarterly. CPI is not revised. Caveat:
+    the index level is on the current ABS reference base (Sep 2025 = 100); update only
+    if ABS re-references CPI (the nightly drift issue will surface it).
+
+- id: apra_adi_quarterly_performance_total_assets_2019_q2
+  source: apra
+  identifier: ADI_QUARTERLY_PERFORMANCE
+  key: ADI_QUARTERLY_PERFORMANCE:key_stats:key_figures:total_assets_m
+  table_id: key_stats
+  start: "2019-06-30"
+  end: "2019-06-30"
+  match_date: "2019-06-30"
+  expected_value: 4891150.8
+  tolerance: 0.1
+  note: "APRA total assets of all ADIs (AUD millions) for the quarter ending 2019-06-30; a closed period, restatements are rare for old periods."

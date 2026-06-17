@@ -38,6 +38,7 @@ export default defineConfig({
           items: [
             { label: 'Discovery and Retrieval', slug: 'user-guide/discovery-and-retrieval' },
             { label: 'Prompting AI Agents', slug: 'user-guide/prompting-ai-agents' },
+            { label: 'Data Freshness and Provenance', slug: 'user-guide/data-freshness-and-provenance' },
             { label: 'Examples', slug: 'user-guide/examples' },
           ],
         },

@@ -7,6 +7,7 @@
 <br/>
 
 [![CI](https://img.shields.io/github/actions/workflow/status/AnthonyPuggs/ausecon-mcp-server/ci.yml?branch=main&label=CI&labelColor=41464d&color=0a7d33)](https://github.com/AnthonyPuggs/ausecon-mcp-server/actions)
+[![Integration](https://img.shields.io/github/actions/workflow/status/AnthonyPuggs/ausecon-mcp-server/integration.yml?branch=main&label=Integration&labelColor=41464d&color=0a7d33)](https://github.com/AnthonyPuggs/ausecon-mcp-server/actions/workflows/integration.yml)
 [![PyPI](https://img.shields.io/pypi/v/ausecon-mcp-server?label=PyPI&labelColor=41464d&color=0969da)](https://pypi.org/project/ausecon-mcp-server/)
 [![Python](https://img.shields.io/badge/python-3.10%2B-0b2a52?labelColor=41464d)](https://pypi.org/project/ausecon-mcp-server/)
 [![Transport](https://img.shields.io/badge/transport-stdio%20%C2%B7%20HTTP-0b2a52?labelColor=41464d)](#connect-your-client)

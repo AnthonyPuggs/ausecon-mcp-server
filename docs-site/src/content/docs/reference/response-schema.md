@@ -41,6 +41,9 @@ Optional fields appear when relevant:
 - `framework_breaks` and `warnings`
 - `stale`, `cached_at`, and `expires_at`
 
+See [Data freshness and provenance](/user-guide/data-freshness-and-provenance/) for how these
+provenance and freshness fields are produced and verified.
+
 `semantic` appears on responses returned by `get_economic_series`. It records the requested
 concept, resolved variant, requested bounds, resolved source-native bounds, and ABS/RBA/APRA
 target. APRA semantic targets include `apra_table_id` and `apra_series_ids`. Raw source-native
