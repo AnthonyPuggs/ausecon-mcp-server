@@ -23,6 +23,7 @@
     "yaml-language-server": {
       "yaml": "^2.8.3"
     },
-    "esbuild": "^0.28.1"
+    "esbuild": "^0.28.1",
+    "vite": "^7.3.5"
   }
 }
