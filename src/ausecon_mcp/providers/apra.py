@@ -169,6 +169,13 @@ class APRAProvider:
             source="apra",
             identifier=publication_id,
         )
+        final_parsed = urlparse(str(xlsx_response.url))
+        final_host = (final_parsed.hostname or "").lower()
+        if final_parsed.scheme != "https" or final_host not in _TRUSTED_APRA_DOWNLOAD_HOSTS:
+            raise AuseconParseError(
+                f"APRA download for '{publication_id}' redirected to an untrusted host "
+                f"({xlsx_response.url!r}); refusing to parse."
+            )
         download_ms = int((perf_counter() - start) * 1000)
         parse_start = perf_counter()
         _logger.info(
