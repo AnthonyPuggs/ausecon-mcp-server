@@ -493,9 +493,7 @@ async def test_apra_provider_rejects_untrusted_final_host_after_redirect() -> No
         )
         # The XLSX URL redirects to an untrusted host.
         router.get("https://www.apra.gov.au/sites/default/files/test.xlsx").mock(
-            return_value=Response(
-                301, headers={"Location": "https://evil.example/file.xlsx"}
-            )
+            return_value=Response(301, headers={"Location": "https://evil.example/file.xlsx"})
         )
         router.get("https://evil.example/file.xlsx").mock(
             return_value=Response(200, content=_xlsx_bytes())
