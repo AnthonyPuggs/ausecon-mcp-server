@@ -807,3 +807,9 @@ def test_data_freshness_page_exists_and_is_linked() -> None:
     # Registered in the sidebar and cross-linked from the response schema.
     assert "user-guide/data-freshness-and-provenance" in sidebar
     assert "data-freshness-and-provenance" in schema
+
+
+def test_readme_advertises_nightly_integration_badge() -> None:
+    readme_text = README.read_text(encoding="utf-8")
+    assert "actions/workflow/status/AnthonyPuggs/ausecon-mcp-server/integration.yml" in readme_text
+    assert "label=Integration" in readme_text
