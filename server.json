@@ -3,13 +3,13 @@
   "name": "io.github.AnthonyPuggs/ausecon-mcp-server",
   "title": "Australian Economic Data (ABS, RBA & APRA)",
   "description": "Australian economic data from the ABS, RBA, and APRA: CPI, GDP, cash rate, labour, and more.",
-  "version": "1.12.1",
+  "version": "1.13.0",
   "packages": [
     {
       "identifier": "ausecon-mcp-server",
       "registryType": "pypi",
       "runtimeHint": "uvx",
-      "version": "1.12.1",
+      "version": "1.13.0",
       "transport": {
         "type": "stdio"
       }

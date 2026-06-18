@@ -6,6 +6,21 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.13.0] - 2026-06-18
+
+Deepens the curated semantic layer with six national-accounts concepts an analyst reaches for
+directly. Additive only — no tool, response-shape, or existing-concept changes.
+
+### Added
+
+- Six new `get_economic_series` concepts drawn from the ABS national accounts, taking the
+  semantic catalogue from 75 to 81 concepts:
+  - `household_saving_ratio` and `real_net_national_disposable_income` (from `ANA_AGG`).
+  - `gdp_deflator`, `government_consumption`, `exports`, and `imports` (from `ANA_EXP`).
+
+  All six resolve through the existing curated shortcut path (no new logic) and are validated
+  end-to-end against the live ABS SDMX API by a new integration test.
+
 ## [1.12.1] - 2026-06-17
 
 Registry-publishing patch — no functional changes.
@@ -734,7 +749,8 @@ Initial public release.
 - Initial curated catalogues for ABS and RBA, plus a four-concept
   `CURATED_SERIES` semantic shortcut map.
 
-[Unreleased]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.12.1...HEAD
+[Unreleased]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.13.0...HEAD
+[1.13.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.12.1...v1.13.0
 [1.12.1]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.12.0...v1.12.1
 [1.12.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.11.0...v1.12.0
 [1.11.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.10.0...v1.11.0
