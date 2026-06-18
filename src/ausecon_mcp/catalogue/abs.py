@@ -605,6 +605,20 @@ _RAW_ABS_CATALOGUE = {
                 "aliases": ["gdp growth", "economic growth", "real gdp growth"],
                 "abs_key": "M2.GPM.20.AUS.Q",
             },
+            {
+                "name": "household_saving_ratio",
+                "aliases": ["household saving ratio", "saving ratio", "savings ratio"],
+                "abs_key": "M7.HSR.20.AUS.Q",
+            },
+            {
+                "name": "real_net_national_disposable_income",
+                "aliases": [
+                    "real net national disposable income",
+                    "net national disposable income",
+                    "real disposable income",
+                ],
+                "abs_key": "M1.NNDI.20.AUS.Q",
+            },
         ],
         "audit": {
             "last_audited": "2026-04-18",
@@ -652,6 +666,34 @@ _RAW_ABS_CATALOGUE = {
                     "business investment",
                 ],
                 "abs_key": "VCH.GFC_PBI.PSS.20.AUS.Q",
+            },
+            {
+                "name": "gdp_deflator",
+                "aliases": [
+                    "gdp deflator",
+                    "gdp implicit price deflator",
+                    "implicit price deflator",
+                ],
+                "abs_key": "DCH.GPM.SSS.20.AUS.Q",
+            },
+            {
+                "name": "government_consumption",
+                "aliases": [
+                    "government consumption",
+                    "government final consumption",
+                    "public consumption",
+                ],
+                "abs_key": "VCH.FCE.GGS.20.AUS.Q",
+            },
+            {
+                "name": "exports",
+                "aliases": ["exports of goods and services", "goods and services exports"],
+                "abs_key": "VCH.XGS.SSS.20.AUS.Q",
+            },
+            {
+                "name": "imports",
+                "aliases": ["imports of goods and services", "goods and services imports"],
+                "abs_key": "VCH.MGS.SSS.20.AUS.Q",
             },
         ],
         "audit": {

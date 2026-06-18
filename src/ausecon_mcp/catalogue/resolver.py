@@ -307,6 +307,25 @@ CURATED_SHORTCUTS: dict[str, dict[str, Any]] = {
         "dataset_id": "f15",
         "variant": "real_twi",
     },
+    # Tranche H — national-accounts depth (saving ratio, NNDI, deflator, government, trade)
+    "household_saving_ratio": {
+        "source": "abs",
+        "dataset_id": "ANA_AGG",
+        "variant": "household_saving_ratio",
+    },
+    "real_net_national_disposable_income": {
+        "source": "abs",
+        "dataset_id": "ANA_AGG",
+        "variant": "real_net_national_disposable_income",
+    },
+    "gdp_deflator": {"source": "abs", "dataset_id": "ANA_EXP", "variant": "gdp_deflator"},
+    "government_consumption": {
+        "source": "abs",
+        "dataset_id": "ANA_EXP",
+        "variant": "government_consumption",
+    },
+    "exports": {"source": "abs", "dataset_id": "ANA_EXP", "variant": "exports"},
+    "imports": {"source": "abs", "dataset_id": "ANA_EXP", "variant": "imports"},
 }
 
 

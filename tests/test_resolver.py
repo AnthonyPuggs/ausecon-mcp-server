@@ -382,6 +382,13 @@ def test_curated_shortcuts_cover_current_semantic_concepts() -> None:
         "household_debt_to_income",
         "labour_productivity",
         "real_twi",
+        # Tranche H — national-accounts depth
+        "household_saving_ratio",
+        "real_net_national_disposable_income",
+        "gdp_deflator",
+        "government_consumption",
+        "exports",
+        "imports",
     }
 
 
