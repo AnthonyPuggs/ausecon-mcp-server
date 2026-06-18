@@ -136,6 +136,22 @@ to connect.
 ## Connect your client
 
 <details open>
+<summary><b>Claude Code</b></summary>
+
+```bash
+claude mcp add --transport stdio ausecon -- uvx ausecon-mcp-server
+```
+</details>
+
+<details open>
+<summary><b>Codex</b></summary>
+
+```bash
+codex mcp add ausecon -- uvx ausecon-mcp-server
+```
+</details>
+
+<details>
 <summary><b>Claude Desktop</b></summary>
 
 Add to your `claude_desktop_config.json`:
@@ -149,22 +165,6 @@ Add to your `claude_desktop_config.json`:
     }
   }
 }
-```
-</details>
-
-<details>
-<summary><b>Claude Code</b></summary>
-
-```bash
-claude mcp add --transport stdio ausecon -- uvx ausecon-mcp-server
-```
-</details>
-
-<details>
-<summary><b>Codex</b></summary>
-
-```bash
-codex mcp add ausecon -- uvx ausecon-mcp-server
 ```
 </details>
 
