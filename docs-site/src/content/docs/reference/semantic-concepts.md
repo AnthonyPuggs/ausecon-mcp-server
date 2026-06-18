@@ -9,7 +9,7 @@ description: Curated concepts accepted by get_economic_series.
 source-native ABS, RBA, or APRA target and can be discovered at runtime with
 `list_economic_concepts` or the `ausecon://concepts` resource.
 
-Total concepts: `75`.
+Total concepts: `81`.
 
 ## Activity
 
@@ -142,11 +142,17 @@ Total concepts: `75`.
 
 | Concept | Source | Dataset | Variant | Frequency | Recommended call |
 | --- | --- | --- | --- | --- | --- |
+| `exports` | ABS | `ANA_EXP` | `exports` | Quarterly | `get_economic_series(concept="exports")` |
+| `gdp_deflator` | ABS | `ANA_EXP` | `gdp_deflator` | Quarterly | `get_economic_series(concept="gdp_deflator")` |
 | `gdp_growth` | ABS | `ANA_AGG` | `gdp_growth` | Quarterly | `get_economic_series(concept="gdp_growth")` |
+| `government_consumption` | ABS | `ANA_EXP` | `government_consumption` | Quarterly | `get_economic_series(concept="government_consumption")` |
 | `household_consumption` | ABS | `ANA_EXP` | `household_consumption` | Quarterly | `get_economic_series(concept="household_consumption")` |
+| `household_saving_ratio` | ABS | `ANA_AGG` | `household_saving_ratio` | Quarterly | `get_economic_series(concept="household_saving_ratio")` |
+| `imports` | ABS | `ANA_EXP` | `imports` | Quarterly | `get_economic_series(concept="imports")` |
 | `nominal_gdp` | ABS | `ANA_AGG` | `nominal_gdp` | Quarterly | `get_economic_series(concept="nominal_gdp")` |
 | `private_investment` | ABS | `ANA_EXP` | `private_investment` | Quarterly | `get_economic_series(concept="private_investment")` |
 | `real_gdp` | ABS | `ANA_AGG` | `real_gdp` | Quarterly | `get_economic_series(concept="real_gdp")` |
+| `real_net_national_disposable_income` | ABS | `ANA_AGG` | `real_net_national_disposable_income` | Quarterly | `get_economic_series(concept="real_net_national_disposable_income")` |
 
 ## Output Labour
 
