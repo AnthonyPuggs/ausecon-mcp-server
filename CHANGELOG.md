@@ -8,11 +8,23 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [1.13.0] - 2026-06-18
 
-Deepens the curated semantic layer with six national-accounts concepts an analyst reaches for
-directly. Additive only — no tool, response-shape, or existing-concept changes.
+A correctness-and-coverage release. ausecon now continuously validates its own output against
+live official data, fixes a silent APRA staleness bug, and adds six national-accounts concepts,
+alongside dependency-security updates and branding. The response contract
+`{metadata, series, observations}` and all tool signatures are unchanged.
 
 ### Added
 
+- Live golden-value validation: a pinned set of known-good observations
+  (`integration_tests/golden_values.yaml`) is checked end-to-end against the live RBA, ABS, and
+  APRA sources nightly, so upstream drift or a broken fetch path fails loudly instead of silently.
+  Values are chosen from finalized, non-revising periods — RBA cash-rate-target decisions
+  (2016-08-03), all-groups CPI (2015-Q1), and total ADI assets (2019-Q2). A per-PR manifest guard
+  (`tests/test_golden_manifest.py`) keeps the set structurally valid and multi-source.
+- A "Data freshness and provenance" user-guide page explaining how `retrieved_at`, `source`,
+  `updated_after`, cache-fallback behaviour, and the nightly validation fit together, with
+  cross-links from the response-schema reference.
+- Nightly Integration validation workflow and a status badge on the README.
 - Six new `get_economic_series` concepts drawn from the ABS national accounts, taking the
   semantic catalogue from 75 to 81 concepts:
   - `household_saving_ratio` and `real_net_national_disposable_income` (from `ANA_AGG`).
@@ -20,6 +32,19 @@ directly. Additive only — no tool, response-shape, or existing-concept changes
 
   All six resolve through the existing curated shortcut path (no new logic) and are validated
   end-to-end against the live ABS SDMX API by a new integration test.
+- Project logo in the docs-site navbar (served at `/logo.png`) and a listing badge.
+
+### Fixed
+
+- APRA was silently serving stale cache: APRA landing pages 301-redirect `www` to non-`www`, and
+  the client was not following redirects, so the live fetch failed and fell back to cached data
+  without surfacing it. The shared HTTP client now follows redirects, and the final APRA download
+  host is re-validated against the trusted-host set so a redirect cannot reach an untrusted origin.
+
+### Security
+
+- Forced `vite >= 7.3.5` to clear GHSA-fx2h-pf6j-xcff and GHSA-v6wh-96g9-6wx3 in the docs
+  toolchain (#77), and bumped `pyjwt` (#71), `js-yaml` (#75), and the `uv` dependency group (#74).
 
 ## [1.12.1] - 2026-06-17
 
