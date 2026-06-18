@@ -252,3 +252,25 @@ async def test_live_semantic_tranche_e_housing_lending_concepts(
     assert result["metadata"]["dataset_id"] == "LEND_HOUSING"
     series_ids = {s["series_id"] for s in result["series"]}
     assert series_id in series_ids
+
+
+# Tranche H live coverage — national-accounts depth
+
+
+@pytest.mark.parametrize(
+    ("concept", "dataset_id"),
+    [
+        ("household_saving_ratio", "ANA_AGG"),
+        ("real_net_national_disposable_income", "ANA_AGG"),
+        ("gdp_deflator", "ANA_EXP"),
+        ("government_consumption", "ANA_EXP"),
+        ("exports", "ANA_EXP"),
+        ("imports", "ANA_EXP"),
+    ],
+)
+async def test_live_semantic_tranche_h_concepts(concept: str, dataset_id: str) -> None:
+    result = await _call(concept)
+
+    assert result["metadata"]["source"] == "abs"
+    assert result["metadata"]["dataset_id"] == dataset_id
+    assert result["observations"], f"expected observations for {concept}"
