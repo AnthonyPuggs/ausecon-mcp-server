@@ -62,4 +62,15 @@ jobs:
           "$VENV/bin/python" -c 'import ausecon_mcp.server; from ausecon_mcp.contracts import response_schema; print(response_schema()["$id"])'
 
       - name: Docker smoke build
-        run: docker build .
+        # Docker Hub metadata requests intermittently time out on hosted
+        # runners, so retry transient failures before declaring defeat.
+        run: |
+          for attempt in 1 2 3; do
+            if docker build .; then
+              exit 0
+            fi
+            echo "docker build failed (attempt ${attempt}/3); retrying in 30s..."
+            sleep 30
+          done
+          echo "docker build failed after 3 attempts"
+          exit 1
