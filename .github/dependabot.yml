@@ -14,3 +14,8 @@ updates:
     directory: "/docs-site"
     schedule:
       interval: "weekly"
+    ignore:
+      # TypeScript 7 is blocked by @astrojs/check / @astrojs/language-server
+      # peer ranges; drop this once the Astro toolchain supports TS 7.
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
