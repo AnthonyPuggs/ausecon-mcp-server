@@ -109,17 +109,19 @@ Prefer not to install anything? A hosted, **read-only, no-API-key** instance spe
 Streamable HTTP at:
 
 ```text
-https://ausecon-mcp-server.onrender.com/mcp
+https://mcp.auseconmcp.com/mcp
 ```
 
 Point any MCP client that supports remote (Streamable HTTP) servers at that URL — for example, in
 Claude Code:
 
 ```bash
-claude mcp add --transport http ausecon https://ausecon-mcp-server.onrender.com/mcp
+claude mcp add --transport http ausecon https://mcp.auseconmcp.com/mcp
 ```
 
-> The hosted instance may take a few seconds to wake on the first request.
+> The hosted instance may take a few seconds to wake on the first request. The previous
+> `https://ausecon-mcp-server.onrender.com/mcp` URL continues to work and points at the
+> same instance.
 
 ## Install
 

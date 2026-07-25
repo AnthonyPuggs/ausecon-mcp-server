@@ -733,7 +733,7 @@ def test_server_json_advertises_hosted_streamable_http_remote() -> None:
     remotes = server_metadata.get("remotes", [])
     assert any(
         remote.get("type") == "streamable-http"
-        and remote.get("url") == "https://ausecon-mcp-server.onrender.com/mcp"
+        and remote.get("url") == "https://mcp.auseconmcp.com/mcp"
         for remote in remotes
     ), "server.json must advertise the hosted Streamable HTTP /mcp remote"
 
@@ -745,10 +745,10 @@ def test_readme_advertises_hosted_try_instantly_path() -> None:
     readme_text = README.read_text(encoding="utf-8")
 
     assert "Try it instantly" in readme_text
-    assert "https://ausecon-mcp-server.onrender.com/mcp" in readme_text
+    assert "https://mcp.auseconmcp.com/mcp" in readme_text
     assert (
         "claude mcp add --transport http ausecon "
-        "https://ausecon-mcp-server.onrender.com/mcp" in readme_text
+        "https://mcp.auseconmcp.com/mcp" in readme_text
     )
 
 
@@ -758,7 +758,7 @@ def test_docs_site_getting_started_advertises_hosted_try_instantly_path() -> Non
     ).read_text(encoding="utf-8")
 
     assert "Try it instantly" in getting_started
-    assert "https://ausecon-mcp-server.onrender.com/mcp" in getting_started
+    assert "https://mcp.auseconmcp.com/mcp" in getting_started
 
 
 def test_claude_session_lock_is_not_tracked() -> None:
