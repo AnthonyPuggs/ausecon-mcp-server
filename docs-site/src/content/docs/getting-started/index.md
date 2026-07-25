@@ -13,14 +13,16 @@ description: Install and make your first MCP retrieval.
 ## Try it instantly (no install)
 
 A hosted, read-only, no-API-key instance is available over Streamable HTTP at
-`https://ausecon-mcp-server.onrender.com/mcp`. Point any MCP client that supports remote servers
+`https://mcp.auseconmcp.com/mcp`. Point any MCP client that supports remote servers
 at that URL, or in Claude Code:
 
 ```bash
-claude mcp add --transport http ausecon https://ausecon-mcp-server.onrender.com/mcp
+claude mcp add --transport http ausecon https://mcp.auseconmcp.com/mcp
 ```
 
-The hosted instance may take a few seconds to wake on the first request.
+The hosted instance may take a few seconds to wake on the first request. The previous
+`https://ausecon-mcp-server.onrender.com/mcp` URL continues to work and points at the
+same instance.
 
 ## Install
 

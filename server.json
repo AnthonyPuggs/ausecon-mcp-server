@@ -18,7 +18,7 @@
   "remotes": [
     {
       "type": "streamable-http",
-      "url": "https://ausecon-mcp-server.onrender.com/mcp"
+      "url": "https://mcp.auseconmcp.com/mcp"
     }
   ],
   "repository": {
