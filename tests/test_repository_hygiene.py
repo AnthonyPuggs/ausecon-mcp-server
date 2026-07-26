@@ -362,19 +362,16 @@ def test_mcp_client_smoke_does_not_assume_search_result_order() -> None:
 
 
 def test_docs_site_instruments_vercel_observability_without_query_payloads() -> None:
-    package_json = json.loads((DOCS_SITE / "package.json").read_text(encoding="utf-8"))
-    layout_text = (DOCS_SITE / "src/layouts/Base.astro").read_text(encoding="utf-8")
+    config_text = (DOCS_SITE / "astro.config.mjs").read_text(encoding="utf-8")
 
-    assert package_json["dependencies"]["@vercel/analytics"].startswith("^")
-    assert package_json["dependencies"]["@vercel/speed-insights"].startswith("^")
-    assert "import Analytics from '@vercel/analytics/astro'" in layout_text
-    assert "import SpeedInsights from '@vercel/speed-insights/astro'" in layout_text
-    assert "function speedInsightsBeforeSend" in layout_text
-    assert "window.speedInsightsBeforeSend = speedInsightsBeforeSend" in layout_text
-    assert "u.search = ''" in layout_text
-    assert "u.hash = ''" in layout_text
-    assert "<SpeedInsights />" in layout_text
-    assert "<Analytics />" in layout_text
+    # Starlight owns the page layout, so observability scripts must be injected
+    # through the Starlight `head` option — a custom layout is never rendered.
+    assert "/_vercel/insights/script.js" in config_text
+    assert "/_vercel/speed-insights/script.js" in config_text
+    assert "window.speedInsightsBeforeSend" in config_text
+    assert 'u.search = ""' in config_text
+    assert 'u.hash = ""' in config_text
+    assert not (DOCS_SITE / "src/layouts/Base.astro").exists()
 
 
 def test_operations_docs_separate_server_and_docs_site_observability() -> None:
@@ -384,7 +381,7 @@ def test_operations_docs_separate_server_and_docs_site_observability() -> None:
 
     assert "## Server observability" in operations_text
     assert "## Documentation-site observability" in operations_text
-    assert "Vercel Analytics" in operations_text
+    assert "Vercel Web Analytics" in operations_text
     assert "Speed Insights" in operations_text
     assert "does not measure MCP data reliability" in operations_text
     assert "query strings and fragments" in operations_text

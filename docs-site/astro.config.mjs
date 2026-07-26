@@ -17,6 +17,21 @@ export default defineConfig({
       editLink: {
         baseUrl: 'https://github.com/AnthonyPuggs/ausecon-mcp-server/edit/main/docs-site/',
       },
+      head: [
+        // Vercel Web Analytics + Speed Insights. Starlight owns the page layout,
+        // so the plain script tags are injected here rather than via the
+        // @vercel/analytics Astro components (which only work in a custom layout).
+        {
+          tag: 'script',
+          content:
+            'window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };' +
+            'window.speedInsightsBeforeSend = function (payload) {' +
+            ' try { if (payload && payload.url) { var u = new URL(payload.url); u.search = ""; u.hash = ""; payload.url = u.toString(); } } catch (e) {}' +
+            ' return payload; };',
+        },
+        { tag: 'script', attrs: { defer: true, src: '/_vercel/insights/script.js' } },
+        { tag: 'script', attrs: { defer: true, src: '/_vercel/speed-insights/script.js' } },
+      ],
       social: [
         {
           icon: 'github',
