@@ -93,7 +93,7 @@ def test_project_metadata_includes_http_container_entrypoint_dependencies() -> N
 
 def test_project_metadata_declares_yaml_test_dependency_explicitly() -> None:
     pyproject = tomllib.loads(PYPROJECT.read_text(encoding="utf-8"))
-    dev_dependencies = pyproject["project"]["optional-dependencies"]["dev"]
+    dev_dependencies = pyproject["dependency-groups"]["dev"]
 
     assert any(dependency.lower().startswith("pyyaml") for dependency in dev_dependencies)
 
@@ -187,7 +187,7 @@ def test_ci_workflow_exists_with_quality_checks_and_hygiene_guard() -> None:
     assert "actions/setup-python@" in workflow_text
     assert "astral-sh/setup-uv@" in workflow_text
     assert "python-version: ['3.10', '3.11', '3.12', '3.13']" in workflow_text
-    assert "uv sync --python ${{ matrix.python-version }} --extra dev" in workflow_text
+    assert "uv sync --python ${{ matrix.python-version }}" in workflow_text
     assert "uv run ruff check src tests scripts" in workflow_text
     assert "uv run pytest" in workflow_text
     assert "test -f LICENSE" in workflow_text

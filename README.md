@@ -261,7 +261,7 @@ get_derived_series(concept="real_cash_rate", last_n=12)
 Python 3.12 is recommended; the CI matrix supports 3.10+.
 
 ```bash
-uv sync --python 3.12 --extra dev
+uv sync --python 3.12
 uv run pytest
 uv run ruff check src tests scripts
 ```
