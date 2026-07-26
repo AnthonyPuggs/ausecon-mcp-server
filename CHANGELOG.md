@@ -6,6 +6,61 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.14.0] - 2026-07-26
+
+A housing-coverage and infrastructure release. ausecon gains its first housing-price concepts
+from the ABS Total Value of Dwellings release, moves the hosted MCP endpoint to a permanent
+branded domain, and hardens CI and the docs toolchain underneath. The response contract
+`{metadata, series, observations}` and all tool signatures are unchanged.
+
+### Added
+
+- Three new `get_economic_series` housing-price concepts from the ABS Total Value of Dwellings
+  release (dataflow `RES_DWELL_ST`), taking the semantic catalogue from 81 to 84 concepts:
+  - `mean_dwelling_price` — mean price of residential dwellings, national, quarterly.
+  - `dwelling_stock_value` — value of the residential dwelling stock owned by all sectors.
+  - `residential_dwellings` — number of residential dwellings.
+
+  All three resolve through the existing curated shortcut path against verified national
+  (`AUS`) quarterly keys and are validated end-to-end against the live ABS SDMX API by new
+  integration tests. Upstream values are scaled ($ millions for stock value, $ thousands for
+  mean price, thousands for dwelling counts); the catalogue description states the scales
+  explicitly and a test enforces that wording. The neighbouring `RES_DWELL` medians dataflow
+  was evaluated and excluded because its data carries no national aggregate (GCCSA regions
+  only).
+
+### Changed
+
+- The canonical hosted MCP endpoint is now `https://mcp.auseconmcp.com/mcp`, a branded
+  subdomain under the project's own domain that survives any future hosting change.
+  `server.json`, the README, and the docs-site "try it instantly" path all advertise it; the
+  previous `https://ausecon-mcp-server.onrender.com/mcp` URL continues to work and points at
+  the same instance.
+- The docs site now builds on Astro 7 and Starlight 0.41 (from Astro 6 / Starlight 0.40),
+  replacing three interlocked dependabot PRs that could not upgrade the pair one package at a
+  time. The obsolete `vite` and `esbuild` npm overrides were removed (Astro 7 bundles
+  rolldown-based Vite 8, which no longer uses esbuild). TypeScript stays at 6.x until
+  `@astrojs/check` supports TS 7, with a dependabot ignore rule so major TS bumps stop
+  recurring.
+
+### Fixed
+
+- CI's Docker smoke build repeatedly failed on `registry-1.docker.io` metadata timeouts from
+  GitHub-hosted runners. The build step now retries transient failures (3 attempts, 30s apart),
+  and the Dockerfile base image is pulled from Docker Hub's official ECR Public mirror
+  (`public.ecr.aws/docker/library/python:3.12-slim`) — identical image, no dependency on
+  Docker Hub availability. `Dockerfile.smithery` intentionally stays on Docker Hub because
+  Smithery builds on its own infrastructure.
+
+### Security
+
+- Dependency updates via dependabot: `mcp` 1.27.0 → 1.28.1 and `pydantic-settings` in the uv
+  group; `astro`, `fast-uri`, `js-yaml`, `postcss`, `sharp`, and `svgo` in the docs toolchain
+  (folded into the Astro 7 lockfile regeneration, `npm audit` clean); and GitHub Actions bumps
+  (`actions/checkout` 7, `actions/setup-python` 7, `actions/setup-node` 7, `astral-sh/setup-uv`
+  9, `docker/login-action`, `docker/build-push-action`, `docker/setup-buildx-action`,
+  `docker/metadata-action`, `pypa/gh-action-pypi-publish`).
+
 ## [1.13.0] - 2026-06-18
 
 A correctness-and-coverage release. ausecon now continuously validates its own output against
@@ -774,7 +829,8 @@ Initial public release.
 - Initial curated catalogues for ABS and RBA, plus a four-concept
   `CURATED_SERIES` semantic shortcut map.
 
-[Unreleased]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.13.0...HEAD
+[Unreleased]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.14.0...HEAD
+[1.14.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.13.0...v1.14.0
 [1.13.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.12.1...v1.13.0
 [1.12.1]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.12.0...v1.12.1
 [1.12.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.11.0...v1.12.0
