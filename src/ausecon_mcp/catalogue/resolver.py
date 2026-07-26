@@ -326,6 +326,22 @@ CURATED_SHORTCUTS: dict[str, dict[str, Any]] = {
     },
     "exports": {"source": "abs", "dataset_id": "ANA_EXP", "variant": "exports"},
     "imports": {"source": "abs", "dataset_id": "ANA_EXP", "variant": "imports"},
+    # Tranche I — housing prices (ABS Total Value of Dwellings, national headline series)
+    "mean_dwelling_price": {
+        "source": "abs",
+        "dataset_id": "RES_DWELL_ST",
+        "variant": "mean_dwelling_price",
+    },
+    "dwelling_stock_value": {
+        "source": "abs",
+        "dataset_id": "RES_DWELL_ST",
+        "variant": "dwelling_stock_value",
+    },
+    "residential_dwellings": {
+        "source": "abs",
+        "dataset_id": "RES_DWELL_ST",
+        "variant": "residential_dwellings",
+    },
 }
 
 

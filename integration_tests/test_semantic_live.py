@@ -274,3 +274,22 @@ async def test_live_semantic_tranche_h_concepts(concept: str, dataset_id: str) -
     assert result["metadata"]["source"] == "abs"
     assert result["metadata"]["dataset_id"] == dataset_id
     assert result["observations"], f"expected observations for {concept}"
+
+
+# Tranche I live coverage — housing prices (Total Value of Dwellings)
+
+
+@pytest.mark.parametrize(
+    "concept",
+    [
+        "mean_dwelling_price",
+        "dwelling_stock_value",
+        "residential_dwellings",
+    ],
+)
+async def test_live_semantic_tranche_i_housing_price_concepts(concept: str) -> None:
+    result = await _call(concept)
+
+    assert result["metadata"]["source"] == "abs"
+    assert result["metadata"]["dataset_id"] == "RES_DWELL_ST"
+    assert result["observations"], f"expected observations for {concept}"

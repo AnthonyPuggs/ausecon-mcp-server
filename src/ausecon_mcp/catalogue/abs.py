@@ -1101,6 +1101,66 @@ _RAW_ABS_CATALOGUE = {
             ),
         },
     },
+    "RES_DWELL_ST": {
+        "id": "RES_DWELL_ST",
+        "source": "abs",
+        "name": "Total Value of Dwellings",
+        "description": (
+            "Quarterly national dwelling-stock values, mean dwelling price, and dwelling counts "
+            "from the ABS Total Value of Dwellings release. Values are scaled: stock value in "
+            "$ millions, mean price in $ thousands, dwelling counts in thousands."
+        ),
+        "frequency": "Quarterly",
+        "category": "housing_construction",
+        "aliases": [
+            "total value of dwellings",
+            "dwelling stock value",
+            "mean dwelling price",
+            "house prices",
+        ],
+        "tags": [
+            "housing prices",
+            "dwelling stock",
+            "property values",
+        ],
+        "frequencies": ["Q"],
+        "geographies": ["national", "state"],
+        "variants": [
+            {
+                "name": "mean_dwelling_price",
+                "aliases": [
+                    "mean dwelling price",
+                    "average dwelling price",
+                    "average house price",
+                ],
+                "abs_key": "5.AUS.Q",
+            },
+            {
+                "name": "dwelling_stock_value",
+                "aliases": [
+                    "value of dwelling stock",
+                    "total value of residential dwellings",
+                ],
+                "abs_key": "1.AUS.Q",
+            },
+            {
+                "name": "residential_dwellings",
+                "aliases": [
+                    "number of residential dwellings",
+                    "dwelling count",
+                    "dwelling stock",
+                ],
+                "abs_key": "4.AUS.Q",
+            },
+        ],
+        "audit": {
+            "last_audited": "2026-07-26",
+            "upstream_url": "https://data.api.abs.gov.au/rest/dataflow/ABS/RES_DWELL_ST/latest",
+            "upstream_title": (
+                "Residential Dwellings: Values, Mean Price and Number by State and Territories"
+            ),
+        },
+    },
     "CWD": {
         "id": "CWD",
         "source": "abs",
