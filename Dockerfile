@@ -1,4 +1,6 @@
-FROM python:3.12-slim
+# Docker Hub's official image via its ECR Public mirror: identical content, but
+# avoids the registry-1.docker.io metadata timeouts that flake CI on hosted runners.
+FROM public.ecr.aws/docker/library/python:3.12-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
