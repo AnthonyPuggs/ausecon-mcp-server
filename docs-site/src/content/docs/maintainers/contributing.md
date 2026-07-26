@@ -11,7 +11,7 @@ HTTP transport, and small curated semantic and derived layers over source-native
 Use Python 3.12 for local development:
 
 ```bash
-env UV_CACHE_DIR=.uv-cache uv sync --python 3.12 --extra dev
+env UV_CACHE_DIR=.uv-cache uv sync --python 3.12
 ```
 
 ## Standard verification

@@ -28,7 +28,7 @@ Documentation = "https://auseconmcp.com/"
 Repository = "https://github.com/AnthonyPuggs/ausecon-mcp-server"
 Issues = "https://github.com/AnthonyPuggs/ausecon-mcp-server/issues"
 
-[project.optional-dependencies]
+[dependency-groups]
 dev = [
   "jsonschema>=4.26,<5",
   "pytest>=9.0.3,<10",

@@ -65,7 +65,7 @@ dependencies = [
     { name = "uvicorn" },
 ]
 
-[package.optional-dependencies]
+[package.dev-dependencies]
 dev = [
     { name = "jsonschema" },
     { name = "pytest" },
@@ -80,20 +80,23 @@ dev = [
 requires-dist = [
     { name = "fastmcp", specifier = ">=3.2.4" },
     { name = "httpx", specifier = ">=0.27,<1" },
-    { name = "jsonschema", marker = "extra == 'dev'", specifier = ">=4.26,<5" },
     { name = "openpyxl", specifier = ">=3.1,<4" },
     { name = "platformdirs", specifier = ">=4.0,<5" },
     { name = "pydantic", specifier = ">=2,<3" },
-    { name = "pytest", marker = "extra == 'dev'", specifier = ">=9.0.3,<10" },
-    { name = "pytest-asyncio", marker = "extra == 'dev'", specifier = ">=0.24,<2" },
-    { name = "pyyaml", marker = "extra == 'dev'", specifier = ">=6.0,<7" },
-    { name = "respx", marker = "extra == 'dev'", specifier = ">=0.22,<1" },
-    { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.9,<1" },
     { name = "starlette", specifier = ">=0.27,<2" },
-    { name = "tomli", marker = "python_full_version < '3.11' and extra == 'dev'", specifier = ">=2.0" },
     { name = "uvicorn", specifier = ">=0.35,<1" },
 ]
-provides-extras = ["dev"]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "jsonschema", specifier = ">=4.26,<5" },
+    { name = "pytest", specifier = ">=9.0.3,<10" },
+    { name = "pytest-asyncio", specifier = ">=0.24,<2" },
+    { name = "pyyaml", specifier = ">=6.0,<7" },
+    { name = "respx", specifier = ">=0.22,<1" },
+    { name = "ruff", specifier = ">=0.9,<1" },
+    { name = "tomli", marker = "python_full_version < '3.11'", specifier = ">=2.0" },
+]
 
 [[package]]
 name = "authlib"
