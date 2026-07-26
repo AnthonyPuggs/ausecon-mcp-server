@@ -606,6 +606,17 @@ def test_release_workflow_builds_container_from_pypi_release_artifact() -> None:
     assert "AUSECON_VERSION=${{ steps.version.outputs.value }}" in workflow_text
 
 
+def test_release_workflow_publishes_to_mcp_registry() -> None:
+    workflow_text = RELEASE_WORKFLOW.read_text(encoding="utf-8")
+
+    assert "mcp-publisher login github-oidc" in workflow_text
+    assert "./mcp-publisher publish" in workflow_text
+    # The registry entry must carry the released version, not whatever is
+    # checked in, and must only publish once the PyPI package is live.
+    assert ".version = $v | .packages[].version = $v" in workflow_text
+    assert workflow_text.count("Wait for PyPI to publish the release") == 2
+
+
 def test_ci_workflow_runs_local_docker_smoke_build() -> None:
     workflow_text = CI_WORKFLOW.read_text(encoding="utf-8")
 
