@@ -9,7 +9,7 @@ description: Curated concepts accepted by get_economic_series.
 source-native ABS, RBA, or APRA target and can be discovered at runtime with
 `list_economic_concepts` or the `ausecon://concepts` resource.
 
-Total concepts: `81`.
+Total concepts: `84`.
 
 ## Activity
 
@@ -75,6 +75,9 @@ Total concepts: `81`.
 | Concept | Source | Dataset | Variant | Frequency | Recommended call |
 | --- | --- | --- | --- | --- | --- |
 | `dwelling_approvals` | ABS | `BUILDING_APPROVALS` | `headline_approvals` | Monthly | `get_economic_series(concept="dwelling_approvals")` |
+| `dwelling_stock_value` | ABS | `RES_DWELL_ST` | `dwelling_stock_value` | Quarterly | `get_economic_series(concept="dwelling_stock_value")` |
+| `mean_dwelling_price` | ABS | `RES_DWELL_ST` | `mean_dwelling_price` | Quarterly | `get_economic_series(concept="mean_dwelling_price")` |
+| `residential_dwellings` | ABS | `RES_DWELL_ST` | `residential_dwellings` | Quarterly | `get_economic_series(concept="residential_dwellings")` |
 
 ## Inflation
 
