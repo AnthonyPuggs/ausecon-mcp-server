@@ -27,8 +27,9 @@ health, cache state, or hosted MCP tool-call success.
 
 ## Documentation-site observability
 
-The documentation site includes Vercel Analytics and Speed Insights so maintainers can understand
-documentation usage and page performance. The integration lives in `docs-site/src/layouts/Base.astro`.
+The documentation site includes Vercel Web Analytics and Speed Insights so maintainers can understand
+documentation usage and page performance. The scripts are injected on every page through the
+Starlight `head` option in `docs-site/astro.config.mjs`.
 
 Speed Insights receives a sanitised URL. The `speedInsightsBeforeSend` hook strips query strings and
 fragments before forwarding the payload, which avoids sending accidental local search terms or
