@@ -389,6 +389,10 @@ def test_curated_shortcuts_cover_current_semantic_concepts() -> None:
         "government_consumption",
         "exports",
         "imports",
+        # Tranche I — housing prices
+        "mean_dwelling_price",
+        "dwelling_stock_value",
+        "residential_dwellings",
     }
 
 
