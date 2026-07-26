@@ -66,6 +66,59 @@ jobs:
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@ba38be9e461d3875417946c167d0b5f3d385a247 # v1.14.1
 
+  mcp-registry:
+    needs: publish
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      MCP_PUBLISHER_VERSION: v1.8.0
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Derive package version
+        id: version
+        env:
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          echo "value=${REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Wait for PyPI to publish the release
+        env:
+          PKG_VERSION: ${{ steps.version.outputs.value }}
+        run: |
+          for attempt in 1 2 3 4 5 6 7 8 9 10; do
+            if curl -fsSL "https://pypi.org/pypi/ausecon-mcp-server/${PKG_VERSION}/json" > /dev/null; then
+              echo "ausecon-mcp-server==${PKG_VERSION} available on PyPI"
+              exit 0
+            fi
+            echo "Attempt ${attempt}: not available yet, sleeping"
+            sleep 15
+          done
+          echo "Timed out waiting for PyPI availability"
+          exit 1
+
+      - name: Stamp release version into server.json
+        env:
+          PKG_VERSION: ${{ steps.version.outputs.value }}
+        run: |
+          jq --arg v "$PKG_VERSION" '.version = $v | .packages[].version = $v' server.json > server.json.tmp
+          mv server.json.tmp server.json
+          cat server.json
+
+      - name: Install mcp-publisher
+        run: |
+          curl -fsSL -o mcp-publisher.tar.gz \
+            "https://github.com/modelcontextprotocol/registry/releases/download/${MCP_PUBLISHER_VERSION}/mcp-publisher_linux_amd64.tar.gz"
+          tar -xzf mcp-publisher.tar.gz mcp-publisher
+
+      - name: Publish to the MCP registry
+        run: |
+          ./mcp-publisher login github-oidc
+          ./mcp-publisher publish
+
   docker:
     needs: publish
     runs-on: ubuntu-latest
