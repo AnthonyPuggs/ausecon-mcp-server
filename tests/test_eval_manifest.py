@@ -14,9 +14,22 @@ from evals.manifest import load_questions  # noqa: E402
 
 def test_manifest_loads_and_ids_are_unique() -> None:
     questions = load_questions()
-    assert len(questions) >= 12
+    assert len(questions) >= 50
     ids = [q.id for q in questions]
     assert len(ids) == len(set(ids))
+
+
+def test_manifest_meets_quotas() -> None:
+    questions = load_questions()
+    assert len(questions) >= 50
+    pinned = [q for q in questions if q.answer_type == "pinned"]
+    live = [q for q in questions if q.answer_type == "live"]
+    assert len(pinned) >= 18
+    assert len(live) >= 28
+    sources = {q.source for q in questions}
+    assert {"abs", "rba", "apra", "derived"} <= sources
+    derived = [q for q in questions if q.source == "derived"]
+    assert len(derived) >= 5
 
 
 def test_pinned_questions_carry_expected_values() -> None:

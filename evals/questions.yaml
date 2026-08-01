@@ -116,12 +116,444 @@
   unit: "percentage points"
   note: "Transparent derived indicator; resolved at run time."
 
-- id: live_super_total_assets_latest
-  question: "What is the most recent total value of assets held by Australian superannuation funds, according to APRA?"
+# NOTE: live_super_total_assets_latest (superannuation_total_assets) and a planned
+# superannuation_member_accounts question were dropped during Task 7 authoring. Both
+# CURATED_SHORTCUTS variants point to apra_series_ids
+# ("APRA_SUPER_INDUSTRY:table_2:total_rse_member_assets" /
+# "...total_rse_member_accounts") that do not match the series IDs the APRA XLSX
+# parser actually produces for that workbook
+# ("APRA_SUPER_INDUSTRY:table_2:members_with_100_per_cent_mysuper_interest:total_rse_member_assets"),
+# so get_economic_series("superannuation_total_assets") returns zero observations
+# against the live workbook (verified 2026-08-02 via local AuseconService; confirmed
+# both through get_apra_data with explicit series_ids and through resolve_ground_truth
+# raising "resolver returned no observations"). This is a catalogue bug in
+# src/ausecon_mcp/catalogue/apra.py, out of scope for this data-authoring task — see
+# task-7-report.md for details. Banking/superannuation category coverage is instead
+# provided by the ADI capital ratio / liquidity coverage ratio / commercial property
+# exposure questions below plus the pinned ADI total-assets entries.
+
+- id: live_monthly_cpi_index_latest
+  question: "What is the value of the ABS monthly CPI indicator index in the most recently published month?"
   answer_type: live
-  category: superannuation
-  source: apra
-  resolver: {kind: economic, concept: superannuation_total_assets}
+  category: prices_inflation
+  source: abs
+  resolver: {kind: economic, concept: monthly_cpi_index}
+  tolerance: 0.05
+  unit: "index points"
+  note: "Latest monthly CPI indicator index level; resolved at run time."
+
+- id: live_trimmed_mean_inflation_latest
+  question: "What is the Reserve Bank of Australia's most recently published trimmed mean measure of underlying inflation, expressed as a year-ended percentage?"
+  answer_type: live
+  category: prices_inflation
+  source: rba
+  resolver: {kind: economic, concept: trimmed_mean_inflation}
+  tolerance: 0.05
+  unit: "per cent"
+  note: "Latest published RBA trimmed mean inflation reading; resolved at run time."
+
+- id: live_wage_growth_latest
+  question: "What is the most recent year-ended growth rate of Australia's Wage Price Index, in per cent?"
+  answer_type: live
+  category: prices_inflation
+  source: abs
+  resolver: {kind: economic, concept: wage_growth}
+  tolerance: 0.05
+  unit: "per cent"
+  note: "Latest quarterly Wage Price Index year-ended growth; resolved at run time."
+
+- id: live_participation_rate_latest
+  question: "What is Australia's most recently published seasonally adjusted labour force participation rate, in per cent?"
+  answer_type: live
+  category: labour
+  source: abs
+  resolver: {kind: economic, concept: participation_rate}
+  tolerance: 0.05
+  unit: "per cent"
+  note: "Latest monthly labour force release; resolved at run time."
+
+- id: live_job_vacancies_latest
+  question: "How many job vacancies were there in Australia in the most recent ABS release, in thousands?"
+  answer_type: live
+  category: labour
+  source: abs
+  resolver: {kind: economic, concept: job_vacancies}
+  tolerance: 1.0
+  unit: "thousands"
+  note: "Latest quarterly job vacancies count; resolved at run time. The series' native unit_multiplier scales the raw value to thousands, so the question is phrased in thousands to match the raw resolved figure."
+
+- id: live_real_gdp_latest
+  question: "What was Australia's real GDP (chain volume measure) in the most recent quarter, in millions of Australian dollars?"
+  answer_type: live
+  category: national_accounts
+  source: abs
+  resolver: {kind: economic, concept: real_gdp}
+  tolerance: 1.0
+  unit: "AUD millions"
+  note: "Latest quarterly real GDP level; resolved at run time. Phrased in millions to match the raw resolved figure (the series carries a unit_multiplier of 10^6 against a label of 'Australian Dollars')."
+
+- id: live_nominal_gdp_latest
+  question: "What was Australia's nominal GDP in the most recent quarter, in millions of Australian dollars?"
+  answer_type: live
+  category: national_accounts
+  source: abs
+  resolver: {kind: economic, concept: nominal_gdp}
+  tolerance: 1.0
+  unit: "AUD millions"
+  note: "Latest quarterly nominal GDP level; resolved at run time. Phrased in millions to match the raw resolved figure."
+
+- id: live_household_saving_ratio_latest
+  question: "What is Australia's most recently published seasonally adjusted household saving ratio, in per cent?"
+  answer_type: live
+  category: national_accounts
+  source: abs
+  resolver: {kind: economic, concept: household_saving_ratio}
+  tolerance: 0.1
+  unit: "per cent"
+  note: "Latest quarterly household saving ratio; resolved at run time."
+
+- id: live_3y_yield_latest
+  question: "What is the most recent Australian 3-year government bond yield published by the RBA, in per cent?"
+  answer_type: live
+  category: interest_rates
+  source: rba
+  resolver: {kind: economic, concept: government_bond_yield_3y}
+  tolerance: 0.02
+  unit: "per cent"
+  note: "Latest published 3-year bond yield; resolved at run time."
+
+- id: live_bank_bill_rate_latest
+  question: "What is the most recent 3-month bank bill rate published by the RBA, in per cent?"
+  answer_type: live
+  category: interest_rates
+  source: rba
+  resolver: {kind: economic, concept: bank_bill_rate}
+  tolerance: 0.02
+  unit: "per cent"
+  note: "Latest published 3-month bank bill rate; resolved at run time."
+
+- id: live_mortgage_rate_latest
+  question: "What is the most recent average owner-occupier variable mortgage rate published by the RBA, in per cent?"
+  answer_type: live
+  category: interest_rates
+  source: rba
+  resolver: {kind: economic, concept: mortgage_rate}
+  tolerance: 0.02
+  unit: "per cent"
+  note: "Latest published owner-occupier variable mortgage rate; resolved at run time."
+
+- id: live_new_housing_lending_latest
+  question: "What was the total value of new housing loan commitments in Australia in the most recent quarter, in millions of Australian dollars?"
+  answer_type: live
+  category: credit_finance
+  source: abs
+  resolver: {kind: economic, concept: new_housing_lending}
+  tolerance: 1.0
+  unit: "AUD millions"
+  note: "Latest quarterly new housing lending commitments; resolved at run time. Phrased in millions to match the raw resolved figure."
+
+- id: live_housing_credit_growth_latest
+  question: "What is the most recent year-ended growth rate of housing credit outstanding in Australia, in per cent?"
+  answer_type: live
+  category: credit_finance
+  source: rba
+  resolver: {kind: economic, concept: housing_credit_growth}
+  tolerance: 0.05
+  unit: "per cent"
+  note: "Latest monthly housing credit 12-month growth; resolved at run time."
+
+- id: live_trade_balance_latest
+  question: "What was Australia's balance on goods trade in the most recent month, in millions of Australian dollars? Use a negative number for a deficit."
+  answer_type: live
+  category: external_sector
+  source: abs
+  resolver: {kind: economic, concept: trade_balance}
+  tolerance: 1.0
+  unit: "AUD millions"
+  note: "Latest monthly balance on goods trade; resolved at run time. Phrased in millions to match the raw resolved figure."
+
+- id: live_current_account_balance_latest
+  question: "What was Australia's current account balance in the most recent quarter, in millions of Australian dollars? Use a negative number for a deficit."
+  answer_type: live
+  category: external_sector
+  source: abs
+  resolver: {kind: economic, concept: current_account_balance}
+  tolerance: 1.0
+  unit: "AUD millions"
+  note: "Latest quarterly current account balance; resolved at run time. Phrased in millions to match the raw resolved figure."
+
+- id: live_commodity_prices_latest
+  question: "What is the most recent level of the RBA's Index of Commodity Prices?"
+  answer_type: live
+  category: external_sector
+  source: rba
+  resolver: {kind: economic, concept: commodity_prices}
   tolerance: 0.5
-  unit: "AUD billions"
-  note: "Latest APRA quarterly superannuation statistics; resolved at run time."
+  unit: "index points"
+  note: "Latest published RBA commodity price index level; resolved at run time."
+
+- id: live_dwelling_approvals_latest
+  question: "How many residential dwelling units were approved for construction in Australia in the most recent month?"
+  answer_type: live
+  category: housing
+  source: abs
+  resolver: {kind: economic, concept: dwelling_approvals}
+  tolerance: 5.0
+  unit: "number of dwellings"
+  note: "Latest monthly total residential dwelling approvals; resolved at run time."
+
+- id: live_mean_dwelling_price_latest
+  question: "What was the mean price of a residential dwelling in Australia in the most recent quarter, in thousands of Australian dollars?"
+  answer_type: live
+  category: housing
+  source: abs
+  resolver: {kind: economic, concept: mean_dwelling_price}
+  tolerance: 1.0
+  unit: "AUD thousands"
+  note: "Latest quarterly mean residential dwelling price; resolved at run time. Phrased in thousands to match the raw resolved figure (the series carries a unit_multiplier of 10^3 against a label of 'Australian Dollars')."
+
+- id: live_adi_capital_ratio_latest
+  question: "What was the total capital ratio of Australian authorised deposit-taking institutions in the most recent APRA quarterly statistics, expressed as a ratio (not a percentage)?"
+  answer_type: live
+  category: banking
+  source: apra
+  resolver: {kind: economic, concept: adi_capital_ratio}
+  tolerance: 0.005
+  unit: "ratio"
+  note: "Latest APRA quarterly ADI total capital ratio; resolved at run time."
+
+- id: live_adi_liquidity_coverage_ratio_latest
+  question: "What was the liquidity coverage ratio of Australian authorised deposit-taking institutions in the most recent APRA quarterly statistics, expressed as a ratio (not a percentage)?"
+  answer_type: live
+  category: banking
+  source: apra
+  resolver: {kind: economic, concept: adi_liquidity_coverage_ratio}
+  tolerance: 0.01
+  unit: "ratio"
+  note: "Latest APRA quarterly ADI liquidity coverage ratio; resolved at run time."
+
+- id: live_adi_commercial_property_exposure_latest
+  question: "What was the total commercial property exposure of Australian authorised deposit-taking institutions in the most recent APRA quarterly statistics, in millions of Australian dollars?"
+  answer_type: live
+  category: banking
+  source: apra
+  resolver: {kind: economic, concept: adi_commercial_property_exposure}
+  tolerance: 1.0
+  unit: "AUD millions"
+  note: "Latest APRA quarterly ADI commercial property exposure; resolved at run time."
+
+- id: live_terms_of_trade_latest
+  question: "What is Australia's current terms of trade index, calculated as export prices divided by import prices?"
+  answer_type: live
+  category: derived
+  source: derived
+  resolver: {kind: derived, concept: terms_of_trade}
+  tolerance: 0.5
+  unit: "index points"
+  note: "Transparent derived indicator; resolved at run time via get_derived_series."
+
+- id: live_gdp_per_capita_latest
+  question: "What is Australia's current real GDP per capita, in Australian dollars per person?"
+  answer_type: live
+  category: derived
+  source: derived
+  resolver: {kind: derived, concept: gdp_per_capita}
+  tolerance: 5.0
+  unit: "AUD per person"
+  note: "Transparent derived indicator; resolved at run time via get_derived_series."
+
+- id: live_real_wage_growth_latest
+  question: "What is Australia's current real wage growth — the Wage Price Index year-ended growth rate minus year-ended CPI inflation — in percentage points?"
+  answer_type: live
+  category: derived
+  source: derived
+  resolver: {kind: derived, concept: real_wage_growth}
+  tolerance: 0.05
+  unit: "percentage points"
+  note: "Transparent derived indicator; resolved at run time via get_derived_series."
+
+- id: live_misery_index_latest
+  question: "What is Australia's current misery index — the sum of the unemployment rate and inflation rate — in percentage points?"
+  answer_type: live
+  category: derived
+  source: derived
+  resolver: {kind: derived, concept: misery_index}
+  tolerance: 0.1
+  unit: "percentage points"
+  note: "Transparent derived indicator; resolved at run time via get_derived_series."
+
+- id: pinned_cash_rate_nov_2010
+  question: "What cash rate target did the Reserve Bank of Australia announce at its November 2010 board meeting? Answer in per cent."
+  answer_type: pinned
+  category: monetary_policy
+  source: rba
+  expected_value: 4.75
+  expected_period: "2010-11-03"
+  tolerance: 0.0
+  unit: "per cent"
+  note: "Published RBA policy decision; never revised. Verified 2026-08-02 via local AuseconService (cash_rate_target, 2010-09-01..2010-11-30): 2010-11-03 -> 4.75."
+
+- id: pinned_cash_rate_change_nov_2010
+  question: "By how many percentage points did the RBA change the cash rate target at its November 2010 meeting? Use a positive number for a hike."
+  answer_type: pinned
+  category: monetary_policy
+  source: rba
+  expected_value: 0.25
+  expected_period: "2010-11-03"
+  tolerance: 0.0
+  unit: "percentage points"
+  note: "Published RBA policy decision; never revised. Verified 2026-08-02 via local AuseconService: prior target 2010-05-05 was 4.50, new target 2010-11-03 was 4.75 (+0.25)."
+
+- id: pinned_cash_rate_mar_2020_first_cut
+  question: "What cash rate target did the RBA announce at its regular March 2020 board meeting, before the emergency cut later that month? Answer in per cent."
+  answer_type: pinned
+  category: monetary_policy
+  source: rba
+  expected_value: 0.5
+  expected_period: "2020-03-04"
+  tolerance: 0.0
+  unit: "per cent"
+  note: "Published RBA policy decision; never revised. Verified 2026-08-02 via local AuseconService (cash_rate_target, 2020-01-15..2020-04-01): 2020-03-04 -> 0.5."
+
+- id: pinned_cash_rate_change_mar_2020_first_cut
+  question: "By how many percentage points did the RBA change the cash rate target at its regular March 2020 meeting? Use a negative number for a cut."
+  answer_type: pinned
+  category: monetary_policy
+  source: rba
+  expected_value: -0.25
+  expected_period: "2020-03-04"
+  tolerance: 0.0
+  unit: "percentage points"
+  note: "Published RBA policy decision; never revised. Verified 2026-08-02 via local AuseconService: prior target 2019-10-02 was 0.75, new target 2020-03-04 was 0.5 (-0.25)."
+
+- id: pinned_cash_rate_mar_2020_emergency_cut
+  question: "What cash rate target did the RBA announce at its emergency out-of-cycle meeting later in March 2020? Answer in per cent."
+  answer_type: pinned
+  category: monetary_policy
+  source: rba
+  expected_value: 0.25
+  expected_period: "2020-03-20"
+  tolerance: 0.0
+  unit: "per cent"
+  note: "Published RBA policy decision; never revised. Verified 2026-08-02 via local AuseconService (cash_rate_target, 2020-01-15..2020-04-01): 2020-03-20 -> 0.25."
+
+- id: pinned_cash_rate_change_mar_2020_emergency_cut
+  question: "By how many percentage points did the RBA change the cash rate target at its emergency out-of-cycle meeting in March 2020? Use a negative number for a cut."
+  answer_type: pinned
+  category: monetary_policy
+  source: rba
+  expected_value: -0.25
+  expected_period: "2020-03-20"
+  tolerance: 0.0
+  unit: "percentage points"
+  note: "Published RBA policy decision; never revised. Verified 2026-08-02 via local AuseconService: prior target 2020-03-04 was 0.5, new target 2020-03-20 was 0.25 (-0.25)."
+
+- id: pinned_cash_rate_nov_2020_cut
+  question: "What cash rate target did the RBA announce at its November 2020 board meeting? Answer in per cent."
+  answer_type: pinned
+  category: monetary_policy
+  source: rba
+  expected_value: 0.1
+  expected_period: "2020-11-04"
+  tolerance: 0.0
+  unit: "per cent"
+  note: "Published RBA policy decision; never revised. Verified 2026-08-02 via local AuseconService (cash_rate_target, 2019-01-01..2022-06-01): 2020-11-04 -> 0.1."
+
+- id: pinned_cash_rate_change_nov_2020_cut
+  question: "By how many percentage points did the RBA change the cash rate target at its November 2020 meeting? Use a negative number for a cut."
+  answer_type: pinned
+  category: monetary_policy
+  source: rba
+  expected_value: -0.15
+  expected_period: "2020-11-04"
+  tolerance: 0.0
+  unit: "percentage points"
+  note: "Published RBA policy decision; never revised. Verified 2026-08-02 via local AuseconService: prior target 2020-03-20 was 0.25, new target 2020-11-04 was 0.10 (-0.15)."
+
+- id: pinned_cash_rate_may_2022_hike
+  question: "What cash rate target did the RBA announce at its May 2022 board meeting — the first hike of that tightening cycle? Answer in per cent."
+  answer_type: pinned
+  category: monetary_policy
+  source: rba
+  expected_value: 0.35
+  expected_period: "2022-05-04"
+  tolerance: 0.0
+  unit: "per cent"
+  note: "Published RBA policy decision; never revised. Verified 2026-08-02 via local AuseconService (cash_rate_target, 2019-01-01..2022-06-01): 2022-05-04 -> 0.35."
+
+- id: pinned_cash_rate_change_may_2022_hike
+  question: "By how many percentage points did the RBA change the cash rate target at its May 2022 meeting? Use a positive number for a hike."
+  answer_type: pinned
+  category: monetary_policy
+  source: rba
+  expected_value: 0.25
+  expected_period: "2022-05-04"
+  tolerance: 0.0
+  unit: "percentage points"
+  note: "Published RBA policy decision; never revised. Verified 2026-08-02 via local AuseconService: prior target 2020-11-04 was 0.10, new target 2022-05-04 was 0.35 (+0.25)."
+
+- id: pinned_cpi_index_2000_q1
+  question: "What was the value of the Australian All Groups CPI index (original series, current ABS reference base) in the March quarter of 2000?"
+  answer_type: pinned
+  category: prices_inflation
+  source: abs
+  expected_value: 48.4
+  expected_period: "2000-Q1"
+  tolerance: 0.01
+  unit: "index points"
+  note: "CPI is not revised. Verified 2026-08-02 via local AuseconService (headline_cpi, 2000-Q1): 48.4 on the current ABS reference base (Sep 2025 = 100)."
+
+- id: pinned_cpi_index_2008_q3
+  question: "What was the value of the Australian All Groups CPI index (original series, current ABS reference base) in the September quarter of 2008?"
+  answer_type: pinned
+  category: prices_inflation
+  source: abs
+  expected_value: 64.37
+  expected_period: "2008-Q3"
+  tolerance: 0.01
+  unit: "index points"
+  note: "CPI is not revised. Verified 2026-08-02 via local AuseconService (headline_cpi, 2008-Q3): 64.37 on the current ABS reference base (Sep 2025 = 100)."
+
+- id: pinned_cpi_index_2012_q2
+  question: "What was the value of the Australian All Groups CPI index (original series, current ABS reference base) in the June quarter of 2012?"
+  answer_type: pinned
+  category: prices_inflation
+  source: abs
+  expected_value: 69.74
+  expected_period: "2012-Q2"
+  tolerance: 0.01
+  unit: "index points"
+  note: "CPI is not revised. Verified 2026-08-02 via local AuseconService (headline_cpi, 2012-Q2): 69.74 on the current ABS reference base (Sep 2025 = 100)."
+
+- id: pinned_cpi_index_2020_q2
+  question: "What was the value of the Australian All Groups CPI index (original series, current ABS reference base) in the June quarter of 2020?"
+  answer_type: pinned
+  category: prices_inflation
+  source: abs
+  expected_value: 79.44
+  expected_period: "2020-Q2"
+  tolerance: 0.01
+  unit: "index points"
+  note: "CPI is not revised. Verified 2026-08-02 via local AuseconService (headline_cpi, 2020-Q2): 79.44 on the current ABS reference base (Sep 2025 = 100)."
+
+- id: pinned_adi_total_assets_2015_q2
+  question: "According to APRA's quarterly ADI statistics, what were the total assets of all Australian authorised deposit-taking institutions for the quarter ending 30 June 2015, in millions of Australian dollars?"
+  answer_type: pinned
+  category: banking
+  source: apra
+  expected_value: 4414940.2
+  expected_period: "2015-06-30"
+  tolerance: 0.1
+  unit: "AUD millions"
+  note: "Closed APRA reporting period; restatements of old periods are rare. Verified 2026-08-02 via local AuseconService (get_apra_data, ADI_QUARTERLY_PERFORMANCE:key_stats:key_figures:total_assets_m, 2015-06-30): 4414940.2."
+
+- id: pinned_adi_total_assets_2022_q4
+  question: "According to APRA's quarterly ADI statistics, what were the total assets of all Australian authorised deposit-taking institutions for the quarter ending 31 December 2022, in millions of Australian dollars?"
+  answer_type: pinned
+  category: banking
+  source: apra
+  expected_value: 6089064.5
+  expected_period: "2022-12-31"
+  tolerance: 0.1
+  unit: "AUD millions"
+  note: "Closed APRA reporting period; restatements of old periods are rare. Verified 2026-08-02 via local AuseconService (get_apra_data, ADI_QUARTERLY_PERFORMANCE:key_stats:key_figures:total_assets_m, 2022-12-31): 6089064.5."
