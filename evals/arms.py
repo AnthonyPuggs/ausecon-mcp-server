@@ -57,9 +57,11 @@ class AuseconToolbox:
         await self._client.__aenter__()
         return self
 
-    async def __aexit__(self, *exc_info: Any) -> None:
-        await self._client.__aexit__(*exc_info)
-        await self._service.aclose()
+    async def __aexit__(self, *exc_info: Any) -> bool | None:
+        try:
+            return await self._client.__aexit__(*exc_info)
+        finally:
+            await self._service.aclose()
 
     async def list_anthropic_tools(self) -> list[dict[str, Any]]:
         tools = await self._client.list_tools()

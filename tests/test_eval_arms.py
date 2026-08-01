@@ -100,3 +100,29 @@ async def test_build_arm_tools_ausecon_without_toolbox_raises() -> None:
 async def test_build_arm_tools_unknown_arm_raises() -> None:
     with pytest.raises(ValueError, match="unknown arm"):
         await build_arm_tools("bogus", None)
+
+
+async def test_aexit_closes_service_even_when_client_aexit_raises() -> None:
+    class _FakeService:
+        def __init__(self) -> None:
+            self.aclose_calls = 0
+
+        async def aclose(self) -> None:
+            self.aclose_calls += 1
+
+    class _RaisingClientStub:
+        async def __aenter__(self) -> _RaisingClientStub:
+            return self
+
+        async def __aexit__(self, *exc_info: object) -> None:
+            raise RuntimeError("client cleanup failed")
+
+    fake_service = _FakeService()
+    toolbox = AuseconToolbox(service=fake_service)  # type: ignore[arg-type]
+    toolbox._client = _RaisingClientStub()  # type: ignore[assignment]
+
+    with pytest.raises(RuntimeError, match="client cleanup failed"):
+        async with toolbox:
+            pass
+
+    assert fake_service.aclose_calls == 1
