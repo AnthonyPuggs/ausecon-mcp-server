@@ -15,7 +15,7 @@ in `pyproject.toml` when cutting a release.
 4. Confirm the hygiene test passes; it enforces that `server.json` matches the top changelog entry.
 5. Create a git tag in the repository's `vX.Y.Z` format on the intended release commit.
 6. Push the branch and tag to GitHub.
-7. *(Optional)* Re-run the eval (`uv run --group evals python -m evals.run_eval`), commit `evals/results/`, and regenerate the evaluation page (`scripts/update_docs_eval.py`).
+7. *(Optional)* Re-run the eval (`uv run --group evals python -m evals.run_eval`), commit `evals/results/`, and regenerate the evaluation page (`scripts/update_docs_eval.py`). The first time this page is generated, add a `user-guide/evaluation` entry to the sidebar in `docs-site/astro.config.mjs` — Starlight won't surface the page until it's listed there.
 8. Allow the release workflow to build and publish the tagged version.
 9. Draft GitHub Release notes from that tag.
 10. The release workflow republishes to the MCP registry automatically (its `mcp-registry` job

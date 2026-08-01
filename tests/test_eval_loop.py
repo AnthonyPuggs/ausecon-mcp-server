@@ -97,6 +97,20 @@ async def test_pause_turn_resumes() -> None:
     assert second["messages"][-1]["role"] == "assistant"
 
 
+async def test_max_tokens_stop_reason_records_truncation_immediately() -> None:
+    # A max_tokens stop must be recorded as its own error rather than falling through
+    # to the "no tool_uses -> nudge" path, since a truncated response often has no
+    # complete content blocks to nudge from.
+    client = StubClient(
+        [_response([_block("text", text="partial...")], stop_reason="max_tokens")]
+    )
+    result = await run_cell(client, "Q?", [SUBMIT_ANSWER_TOOL], None)
+    assert result.submitted is None
+    assert result.error == "max_tokens_truncated"
+    # Must not have attempted a second (nudge) request.
+    assert len(client.requests) == 1
+
+
 async def test_iteration_cap_yields_no_answer() -> None:
     responses = [_response([_block("text", text="hmm")], stop_reason="end_turn") for _ in range(12)]
     client = StubClient(responses)
@@ -169,9 +183,11 @@ async def test_text_only_response_nudges_submit_answer() -> None:
     )
     result = await run_cell(client, "Q?", [SUBMIT_ANSWER_TOOL], None)
     assert result.submitted == ANSWER
-    # Check that assistant's response was preserved before nudge
+    # Check that assistant's response was preserved before nudge. response.content is
+    # passed through verbatim (SDK-native pass-through), so this is attribute access on
+    # the stub's SimpleNamespace blocks, not dict access.
     second = client.requests[1]
     assert second["messages"][-2]["role"] == "assistant"
-    assert second["messages"][-2]["content"][0]["type"] == "text"
+    assert second["messages"][-2]["content"][0].type == "text"
     assert second["messages"][-1]["role"] == "user"
     assert second["messages"][-1]["content"] == "Call submit_answer now."

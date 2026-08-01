@@ -33,7 +33,16 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--arms", nargs="+", default=list(ARMS), choices=list(ARMS))
     parser.add_argument("--limit", type=int, default=None, help="Only the first N questions.")
     parser.add_argument("--concurrency", type=int, default=4)
-    parser.add_argument("--max-cost-usd", type=float, default=15.0)
+    parser.add_argument(
+        "--max-cost-usd",
+        type=float,
+        default=15.0,
+        help=(
+            "Abort remaining cells once estimated spend exceeds this ceiling. Checked "
+            "after each completed cell, not before it starts, so with --concurrency N "
+            "the run can overshoot the ceiling by up to N-1 in-flight cells' cost."
+        ),
+    )
     parser.add_argument(
         "--dry-run",
         action="store_true",
@@ -133,13 +142,22 @@ async def main(argv: list[str] | None = None) -> int:
         cell_records=sorted(cell_records, key=lambda c: (c["question_id"], c["arm"])),
     )
 
+    # A pilot run (--limit and/or a subset of --arms) is not representative of the
+    # published benchmark, so it must never overwrite latest.json — only a full run
+    # (all arms, no --limit) does. The stamped file is always written, and carries a
+    # time component so pilot and full runs on the same day don't collide.
+    is_full_run = args.limit is None and set(args.arms) == set(ARMS)
+
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
-    stamped = RESULTS_DIR / (f"{timestamp.date().isoformat()}-v{resolve_version()}.json")
+    stamped = RESULTS_DIR / (f"{timestamp.strftime('%Y-%m-%dT%H%M%S')}-v{resolve_version()}.json")
     stamped.write_text(json.dumps(document, indent=2) + "\n", encoding="utf-8")
-    (RESULTS_DIR / "latest.json").write_text(
-        json.dumps(document, indent=2) + "\n", encoding="utf-8"
-    )
     print(f"\nWrote {stamped}")
+    if is_full_run:
+        (RESULTS_DIR / "latest.json").write_text(
+            json.dumps(document, indent=2) + "\n", encoding="utf-8"
+        )
+    else:
+        print("partial run — latest.json not updated")
     for arm, agg in document["aggregates"].items():
         print(
             f"{arm:8s} accuracy={agg['accuracy']:.0%} freshness={agg['freshness']:.0%} "

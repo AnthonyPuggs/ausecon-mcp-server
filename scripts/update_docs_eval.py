@@ -80,6 +80,10 @@ def render(document: dict[str, Any]) -> str:
         "([evals/results](https://github.com/AnthonyPuggs/ausecon-mcp-server/tree/main/evals/results))",
         "for direct spot-checking against the primary sources.",
         "",
+        "Costs are estimated at standard list rates ($3/$15 per MTok) and exclude",
+        "server-side web-search fees, so the reported figure may differ from billed",
+        "spend.",
+        "",
         "## Limitations",
         "",
         "- Single run per release; no variance bars.",
@@ -120,6 +124,12 @@ def main() -> int:
 
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
     OUTPUT.write_text(rendered, encoding="utf-8")
+    print(
+        f"Wrote {OUTPUT.relative_to(ROOT)}. If the sidebar doesn't already list it, add "
+        "a { label: 'Evaluation', slug: 'user-guide/evaluation' } entry to the "
+        "user-guide section of docs-site/astro.config.mjs — Starlight won't surface "
+        "the page until it's in the sidebar."
+    )
     return 0
 
 

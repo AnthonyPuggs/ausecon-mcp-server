@@ -6,7 +6,9 @@ from typing import Any
 
 MODEL = "claude-sonnet-5"
 MAX_ITERATIONS = 10
-MAX_TOKENS = 4096
+# Sonnet 5 runs adaptive thinking by default and MAX_TOKENS caps thinking + response
+# text together, so this needs real headroom to avoid truncating mid-answer.
+MAX_TOKENS = 16000
 
 SYSTEM_PROMPT = (
     "You are answering a factual question about the Australian economy. "
@@ -44,21 +46,30 @@ async def run_cell(client, question_text: str, tools: list[dict], dispatch) -> C
                 system=SYSTEM_PROMPT,
                 tools=tools,
                 messages=messages,
+                thinking={"type": "adaptive"},
+                output_config={"effort": "medium"},
+                cache_control={"type": "ephemeral"},
             )
             input_tokens += response.usage.input_tokens
             output_tokens += response.usage.output_tokens
 
-            if response.stop_reason == "pause_turn":
-                messages.append(
-                    {"role": "assistant", "content": _serialise_content(response.content)}
+            if response.stop_reason == "max_tokens":
+                return CellResult(
+                    submitted=None,
+                    tool_calls=tool_calls,
+                    input_tokens=input_tokens,
+                    output_tokens=output_tokens,
+                    latency_s=time.monotonic() - started,
+                    error="max_tokens_truncated",
                 )
+
+            if response.stop_reason == "pause_turn":
+                messages.append({"role": "assistant", "content": response.content})
                 continue
 
             tool_uses = [b for b in response.content if b.type == "tool_use"]
             if not tool_uses:
-                messages.append(
-                    {"role": "assistant", "content": _serialise_content(response.content)}
-                )
+                messages.append({"role": "assistant", "content": response.content})
                 messages.append({"role": "user", "content": "Call submit_answer now."})
                 continue
 
@@ -74,7 +85,7 @@ async def run_cell(client, question_text: str, tools: list[dict], dispatch) -> C
                         error=None,
                     )
 
-            messages.append({"role": "assistant", "content": _serialise_content(response.content)})
+            messages.append({"role": "assistant", "content": response.content})
             results = []
             for block in tool_uses:
                 if dispatch is None:
@@ -99,20 +110,3 @@ async def run_cell(client, question_text: str, tools: list[dict], dispatch) -> C
         latency_s=time.monotonic() - started,
         error=error,
     )
-
-
-def _serialise_content(content: list[Any]) -> list[dict[str, Any]]:
-    blocks = []
-    for block in content:
-        if block.type == "text":
-            blocks.append({"type": "text", "text": block.text})
-        elif block.type == "tool_use":
-            blocks.append(
-                {"type": "tool_use", "id": block.id, "name": block.name, "input": block.input}
-            )
-        else:
-            # Unknown block types without model_dump are intentionally dropped (stub tolerance).
-            dump = getattr(block, "model_dump", None)
-            if dump is not None:
-                blocks.append(dump())
-    return blocks

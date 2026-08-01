@@ -31,6 +31,7 @@ uv run --group evals python -m evals.run_eval --dry-run   # free: resolve ground
 uv run --group evals python -m evals.run_eval             # full three-arm run
 
 # Regenerate the evaluation docs page after a run
+# (first time only: add a `user-guide/evaluation` sidebar entry to docs-site/astro.config.mjs)
 uv run python scripts/update_docs_eval.py
 ```
 
