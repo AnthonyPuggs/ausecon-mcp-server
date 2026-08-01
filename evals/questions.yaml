@@ -349,18 +349,18 @@
   source: derived
   resolver: {kind: derived, concept: terms_of_trade}
   tolerance: 0.5
-  unit: "index points"
-  note: "Transparent derived indicator; resolved at run time via get_derived_series."
+  unit: "index"
+  note: "Transparent derived indicator; resolved at run time via get_derived_series. Unit matches the DerivedSpec's declared unit ('index')."
 
 - id: live_gdp_per_capita_latest
-  question: "What is Australia's current real GDP per capita, in Australian dollars per person?"
+  question: "What is Australia's most recent QUARTERLY real GDP per person — chain volume GDP for the quarter divided by population — in Australian dollars per person (not annualized)?"
   answer_type: live
   category: derived
   source: derived
   resolver: {kind: derived, concept: gdp_per_capita}
   tolerance: 5.0
-  unit: "AUD per person"
-  note: "Transparent derived indicator; resolved at run time via get_derived_series."
+  unit: "real AUD per person"
+  note: "Transparent derived indicator; resolved at run time via get_derived_series. The concept yields a QUARTERLY per-capita figure (~$25k), not the conventional annual GDP-per-capita figure (~$65k+); the question is phrased explicitly to avoid a cadence mismatch. Unit matches the DerivedSpec's declared unit ('real AUD per person')."
 
 - id: live_real_wage_growth_latest
   question: "What is Australia's current real wage growth — the Wage Price Index year-ended growth rate minus year-ended CPI inflation — in percentage points?"
@@ -427,7 +427,7 @@
   note: "Published RBA policy decision; never revised. Verified 2026-08-02 via local AuseconService: prior target 2019-10-02 was 0.75, new target 2020-03-04 was 0.5 (-0.25)."
 
 - id: pinned_cash_rate_mar_2020_emergency_cut
-  question: "What cash rate target did the RBA announce at its emergency out-of-cycle meeting later in March 2020? Answer in per cent."
+  question: "What cash rate target did the RBA announce at its emergency meeting in March 2020? Answer in per cent."
   answer_type: pinned
   category: monetary_policy
   source: rba
@@ -435,10 +435,10 @@
   expected_period: "2020-03-20"
   tolerance: 0.0
   unit: "per cent"
-  note: "Published RBA policy decision; never revised. Verified 2026-08-02 via local AuseconService (cash_rate_target, 2020-01-15..2020-04-01): 2020-03-20 -> 0.25."
+  note: "Published RBA policy decision; never revised. Verified 2026-08-02 via local AuseconService (cash_rate_target, 2020-01-15..2020-04-01): 2020-03-20 -> 0.25. Re-checked 2026-08-02: the RBA's public statement announced this cut on 19 March 2020, but the A2 statistical table (ARBAMPCNCRT/ARBAMPCCCR) dates the observation 2020-03-20 (effective date, one day after the announcement) — expected_period is pinned to exactly what the A2 source publishes, per this project's convention (see pinned_cash_rate_aug_2016). The question is phrased at month granularity, without stating a day, so a model that (correctly, from public knowledge) associates this decision with '19 March 2020' is not penalized on the value_ok grading outcome, which depends only on the numeric answer; only the separate, non-blocking freshness diagnostic could differ by a day."
 
 - id: pinned_cash_rate_change_mar_2020_emergency_cut
-  question: "By how many percentage points did the RBA change the cash rate target at its emergency out-of-cycle meeting in March 2020? Use a negative number for a cut."
+  question: "By how many percentage points did the RBA change the cash rate target at its emergency meeting in March 2020? Use a negative number for a cut."
   answer_type: pinned
   category: monetary_policy
   source: rba
@@ -446,7 +446,7 @@
   expected_period: "2020-03-20"
   tolerance: 0.0
   unit: "percentage points"
-  note: "Published RBA policy decision; never revised. Verified 2026-08-02 via local AuseconService: prior target 2020-03-04 was 0.5, new target 2020-03-20 was 0.25 (-0.25)."
+  note: "Published RBA policy decision; never revised. Verified 2026-08-02 via local AuseconService: prior target 2020-03-04 was 0.5, new target 2020-03-20 was 0.25 (-0.25). Re-checked 2026-08-02: same source-dating caveat as pinned_cash_rate_mar_2020_emergency_cut — the A2 table dates this observation 2020-03-20 though the public announcement was 19 March 2020; expected_period matches the A2 source exactly, and the question avoids stating a day."
 
 - id: pinned_cash_rate_nov_2020_cut
   question: "What cash rate target did the RBA announce at its November 2020 board meeting? Answer in per cent."
@@ -545,7 +545,7 @@
   expected_period: "2015-06-30"
   tolerance: 0.1
   unit: "AUD millions"
-  note: "Closed APRA reporting period; restatements of old periods are rare. Verified 2026-08-02 via local AuseconService (get_apra_data, ADI_QUARTERLY_PERFORMANCE:key_stats:key_figures:total_assets_m, 2015-06-30): 4414940.2."
+  note: "Quarter ending 2015-06-30 is a closed APRA reporting period, so restatements of this old period are rare. Fetched live via local AuseconService 2026-08-02 (get_apra_data, ADI_QUARTERLY_PERFORMANCE:key_stats:key_figures:total_assets_m, 2015-06-30): 4414940.2."
 
 - id: pinned_adi_total_assets_2022_q4
   question: "According to APRA's quarterly ADI statistics, what were the total assets of all Australian authorised deposit-taking institutions for the quarter ending 31 December 2022, in millions of Australian dollars?"
@@ -556,4 +556,4 @@
   expected_period: "2022-12-31"
   tolerance: 0.1
   unit: "AUD millions"
-  note: "Closed APRA reporting period; restatements of old periods are rare. Verified 2026-08-02 via local AuseconService (get_apra_data, ADI_QUARTERLY_PERFORMANCE:key_stats:key_figures:total_assets_m, 2022-12-31): 6089064.5."
+  note: "Quarter ending 2022-12-31 is a closed APRA reporting period, so restatements of this old period are rare. Fetched live via local AuseconService 2026-08-02 (get_apra_data, ADI_QUARTERLY_PERFORMANCE:key_stats:key_figures:total_assets_m, 2022-12-31): 6089064.5."
