@@ -92,6 +92,9 @@ async def test_pause_turn_resumes() -> None:
     )
     result = await run_cell(client, "Q?", [SUBMIT_ANSWER_TOOL], None)
     assert result.submitted == ANSWER
+    # Verify pause_turn response was echoed in second request
+    second = client.requests[1]
+    assert second["messages"][-1]["role"] == "assistant"
 
 
 async def test_iteration_cap_yields_no_answer() -> None:
@@ -166,6 +169,9 @@ async def test_text_only_response_nudges_submit_answer() -> None:
     )
     result = await run_cell(client, "Q?", [SUBMIT_ANSWER_TOOL], None)
     assert result.submitted == ANSWER
-    # Check that nudge was added to messages
+    # Check that assistant's response was preserved before nudge
     second = client.requests[1]
+    assert second["messages"][-2]["role"] == "assistant"
+    assert second["messages"][-2]["content"][0]["type"] == "text"
+    assert second["messages"][-1]["role"] == "user"
     assert second["messages"][-1]["content"] == "Call submit_answer now."

@@ -56,6 +56,9 @@ async def run_cell(client, question_text: str, tools: list[dict], dispatch) -> C
 
             tool_uses = [b for b in response.content if b.type == "tool_use"]
             if not tool_uses:
+                messages.append(
+                    {"role": "assistant", "content": _serialise_content(response.content)}
+                )
                 messages.append({"role": "user", "content": "Call submit_answer now."})
                 continue
 
@@ -108,6 +111,7 @@ def _serialise_content(content: list[Any]) -> list[dict[str, Any]]:
                 {"type": "tool_use", "id": block.id, "name": block.name, "input": block.input}
             )
         else:
+            # Unknown block types without model_dump are intentionally dropped (stub tolerance).
             dump = getattr(block, "model_dump", None)
             if dump is not None:
                 blocks.append(dump())
