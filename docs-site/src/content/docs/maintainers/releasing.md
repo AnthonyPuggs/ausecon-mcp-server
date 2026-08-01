@@ -15,12 +15,13 @@ in `pyproject.toml` when cutting a release.
 4. Confirm the hygiene test passes; it enforces that `server.json` matches the top changelog entry.
 5. Create a git tag in the repository's `vX.Y.Z` format on the intended release commit.
 6. Push the branch and tag to GitHub.
-7. Allow the release workflow to build and publish the tagged version.
-8. Draft GitHub Release notes from that tag.
-9. The release workflow republishes to the MCP registry automatically (its `mcp-registry` job
-   stamps the tag version into `server.json` and publishes via GitHub OIDC). Verify the new
-   version appears in the registry; `mcp-publisher publish` remains available as a manual
-   fallback if that job fails.
+7. *(Optional)* Re-run the eval (`uv run --group evals python -m evals.run_eval`), commit `evals/results/`, and regenerate the evaluation page (`scripts/update_docs_eval.py`).
+8. Allow the release workflow to build and publish the tagged version.
+9. Draft GitHub Release notes from that tag.
+10. The release workflow republishes to the MCP registry automatically (its `mcp-registry` job
+    stamps the tag version into `server.json` and publishes via GitHub OIDC). Verify the new
+    version appears in the registry; `mcp-publisher publish` remains available as a manual
+    fallback if that job fails.
 
 This repository's existing releases use lightweight tags:
 

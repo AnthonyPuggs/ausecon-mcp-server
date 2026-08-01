@@ -25,6 +25,13 @@ uv run ruff format src tests
 
 # Run the MCP server (stdio mode)
 uv run ausecon-mcp-server
+
+# Run the eval benchmark (manual; needs ANTHROPIC_API_KEY; ~$10-15 per full run)
+uv run --group evals python -m evals.run_eval --dry-run   # free: resolve ground truth only
+uv run --group evals python -m evals.run_eval             # full three-arm run
+
+# Regenerate the evaluation docs page after a run
+uv run python scripts/update_docs_eval.py
 ```
 
 ## Architecture

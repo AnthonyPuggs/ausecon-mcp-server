@@ -188,7 +188,7 @@ def test_ci_workflow_exists_with_quality_checks_and_hygiene_guard() -> None:
     assert "astral-sh/setup-uv@" in workflow_text
     assert "python-version: ['3.10', '3.11', '3.12', '3.13']" in workflow_text
     assert "uv sync --python ${{ matrix.python-version }}" in workflow_text
-    assert "uv run ruff check src tests scripts" in workflow_text
+    assert "uv run ruff check src tests evals scripts" in workflow_text
     assert "uv run pytest" in workflow_text
     assert "test -f LICENSE" in workflow_text
     assert "command -v rg >/dev/null 2>&1" in workflow_text

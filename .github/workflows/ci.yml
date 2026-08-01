@@ -45,7 +45,7 @@ jobs:
         run: uv sync --python ${{ matrix.python-version }}
 
       - name: Lint
-        run: uv run ruff check src tests scripts
+        run: uv run ruff check src tests evals scripts
 
       - name: Test
         run: uv run pytest
