@@ -33,13 +33,17 @@ def build_cell_record(question, arm: str, truth, cell, verdict) -> dict[str, Any
     }
 
 
+def _is_error_cell(cell: dict[str, Any]) -> bool:
+    return bool(cell["error"]) and cell["outcome"] == "no_answer"
+
+
 def aggregate(cell_records: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
     arms = sorted({cell["arm"] for cell in cell_records})
     out: dict[str, dict[str, Any]] = {}
     for arm in arms:
         cells = [c for c in cell_records if c["arm"] == arm]
-        errors = [c for c in cells if c["error"] and c["outcome"] == "no_answer"]
-        graded = [c for c in cells if c not in errors]
+        errors = [c for c in cells if _is_error_cell(c)]
+        graded = [c for c in cells if not _is_error_cell(c)]
         correct = [c for c in graded if c["outcome"] == "correct"]
         abstained = [c for c in graded if c["outcome"] == "abstain"]
         live_graded = [c for c in graded if c["answer_type"] == "live"]

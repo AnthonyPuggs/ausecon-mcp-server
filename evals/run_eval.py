@@ -88,13 +88,37 @@ async def main(argv: list[str] | None = None) -> int:
                     spent["output"] += cell.output_tokens
                     if estimate_cost_usd(spent["input"], spent["output"]) > args.max_cost_usd:
                         budget_blown.set()
-            verdict = grade(cell.submitted, truths[question.id], question.tolerance)
-            record = build_cell_record(question, arm, truths[question.id], cell, verdict)
+
+            # A failure past this point (grading, record-building, a missing truth) must not
+            # abort the whole gather()/paid run — record a fallback cell and move on.
+            try:
+                verdict = grade(cell.submitted, truths[question.id], question.tolerance)
+                record = build_cell_record(question, arm, truths[question.id], cell, verdict)
+                outcome = verdict.outcome
+                error = cell.error
+            except Exception as exc:  # noqa: BLE001 - must never abort the run
+                record = {
+                    "question_id": question.id,
+                    "arm": arm,
+                    "answer_type": question.answer_type,
+                    "outcome": "no_answer",
+                    "value_ok": False,
+                    "fresh": False,
+                    "unit_flag": False,
+                    "submitted": None,
+                    "expected_value": None,
+                    "expected_period": None,
+                    "tool_calls": cell.tool_calls,
+                    "input_tokens": cell.input_tokens,
+                    "output_tokens": cell.output_tokens,
+                    "latency_s": round(cell.latency_s, 2),
+                    "error": f"record_failure:{type(exc).__name__}: {exc}",
+                }
+                outcome = record["outcome"]
+                error = record["error"]
+
             cell_records.append(record)
-            print(
-                f"{question.id} [{arm}]: {verdict.outcome}"
-                + (f" ({cell.error})" if cell.error else "")
-            )
+            print(f"{question.id} [{arm}]: {outcome}" + (f" ({error})" if error else ""))
 
         await asyncio.gather(*(run_one(q, arm) for q in questions for arm in args.arms))
 
