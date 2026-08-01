@@ -208,7 +208,7 @@ def test_readme_is_rich_landing_page_for_current_release_state() -> None:
 
     assert '<img src="assets/banner.svg"' in readme_text
     assert "Australian economic data is authoritative but awkward to reach" in readme_text
-    assert "Version `1.14.0` is the current release line." in docs_home_text
+    assert "Version `1.14.1` is the current release line." in docs_home_text
     assert "Version `1.12.1` is the current release line." not in readme_text
     assert "Version `1.12.1` is the current release line." not in docs_home_text
 
@@ -261,7 +261,7 @@ def test_docs_landing_leads_with_open_free_correctness_value_props() -> None:
     assert "never a stale cache" not in docs_home
     assert "ausdata" not in docs_home.lower()
     # Release-line marker preserved (asserted elsewhere too).
-    assert "Version `1.14.0` is the current release line." in docs_home
+    assert "Version `1.14.1` is the current release line." in docs_home
 
 
 def test_readme_documents_local_client_install_configs() -> None:
@@ -288,9 +288,9 @@ def test_readme_documents_local_client_install_configs() -> None:
 
 
 def test_docs_site_getting_started_documents_client_install_configs() -> None:
-    getting_started = (
-        DOCS_SITE / "src/content/docs/getting-started/index.md"
-    ).read_text(encoding="utf-8")
+    getting_started = (DOCS_SITE / "src/content/docs/getting-started/index.md").read_text(
+        encoding="utf-8"
+    )
 
     # Same three new clients as the README, with the docs-site (real HTML) using
     # the directly-clickable URI-scheme one-click links.
@@ -413,7 +413,7 @@ def test_post_v11_roadmap_is_documented_and_contract_preserving() -> None:
     assert "v1.5" in docs_roadmap_text
     assert "v1.6" in docs_roadmap_text
     assert "v2.0" in docs_roadmap_text
-    assert "current v1.14.0 release line" in docs_roadmap_text
+    assert "current v1.14.1 release line" in docs_roadmap_text
     assert "APRA" in docs_roadmap_text
     assert "APRA source-native foundation" in docs_roadmap_text
     assert "{metadata, series, observations}" in docs_roadmap_text
@@ -655,19 +655,26 @@ def test_codeql_and_dependabot_are_configured_for_visible_security_automation() 
     assert "advanced CodeQL workflow" in releasing_text
 
 
-def test_changelog_promotes_v1140_and_keeps_fresh_unreleased_section() -> None:
+def test_changelog_promotes_v1141_and_keeps_fresh_unreleased_section() -> None:
     changelog_text = CHANGELOG.read_text(encoding="utf-8")
     unreleased_index = changelog_text.index("## [Unreleased]")
+    v1141_index = changelog_text.index("## [1.14.1] - 2026-08-01")
     v1140_index = changelog_text.index("## [1.14.0] - 2026-07-26")
 
-    assert unreleased_index < v1140_index
-    unreleased_section = changelog_text[unreleased_index:v1140_index]
+    assert unreleased_index < v1141_index < v1140_index
+    unreleased_section = changelog_text[unreleased_index:v1141_index]
+    v1141_section = changelog_text[v1141_index:v1140_index]
     v1140_section = changelog_text[v1140_index : changelog_text.index("## [1.13.0]")]
 
-    assert "mean_dwelling_price" not in unreleased_section
+    assert "getting-started tutorial" not in unreleased_section
+    assert "getting-started tutorial" in v1141_section
+    assert "official MCP registry" in v1141_section
     assert "mean_dwelling_price" in v1140_section
     assert (
-        "[Unreleased]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.14.0...HEAD"
+        "[Unreleased]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.14.1...HEAD"
+    ) in changelog_text
+    assert (
+        "[1.14.1]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.14.0...v1.14.1"
     ) in changelog_text
     assert (
         "[1.14.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.13.0...v1.14.0"
@@ -704,8 +711,8 @@ def test_changelog_promotes_v1140_and_keeps_fresh_unreleased_section() -> None:
 def test_smithery_deployment_docs_match_current_release_state() -> None:
     smithery_text = (ROOT / "docs" / "smithery-deployment.md").read_text(encoding="utf-8")
 
-    assert "v1.14.0" in smithery_text
-    assert "1.14.0" in smithery_text
+    assert "v1.14.1" in smithery_text
+    assert "1.14.1" in smithery_text
     assert "fourteen tools" in smithery_text
     assert "get_latest_observations" in smithery_text
     assert "list_release_events" in smithery_text
@@ -757,16 +764,13 @@ def test_readme_advertises_hosted_try_instantly_path() -> None:
 
     assert "Try it instantly" in readme_text
     assert "https://mcp.auseconmcp.com/mcp" in readme_text
-    assert (
-        "claude mcp add --transport http ausecon "
-        "https://mcp.auseconmcp.com/mcp" in readme_text
-    )
+    assert "claude mcp add --transport http ausecon https://mcp.auseconmcp.com/mcp" in readme_text
 
 
 def test_docs_site_getting_started_advertises_hosted_try_instantly_path() -> None:
-    getting_started = (
-        DOCS_SITE / "src/content/docs/getting-started/index.md"
-    ).read_text(encoding="utf-8")
+    getting_started = (DOCS_SITE / "src/content/docs/getting-started/index.md").read_text(
+        encoding="utf-8"
+    )
 
     assert "Try it instantly" in getting_started
     assert "https://mcp.auseconmcp.com/mcp" in getting_started

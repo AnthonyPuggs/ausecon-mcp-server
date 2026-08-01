@@ -6,6 +6,33 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.14.1] - 2026-08-01
+
+A documentation and release-infrastructure patch. Nothing in the server's runtime behaviour
+changes; the response contract `{metadata, series, observations}` and all tool signatures are
+unchanged.
+
+### Added
+
+- A 2-minute getting-started tutorial on the docs site, walking from install to a first
+  answer with the `real_cash_rate` derived series as the worked example.
+
+### Changed
+
+- The release workflow now publishes each tagged release to the official MCP registry
+  automatically (GitHub OIDC login via a pinned `mcp-publisher` CLI, with the tag version
+  stamped into `server.json` at publish time), so registry listings can no longer drift
+  behind PyPI releases. A hygiene test locks the job's shape in place.
+- Development tooling (pytest, ruff, respx, and friends) moved from a `dev` extra to
+  PEP 735 `dependency-groups`, so a plain `uv sync` installs the full development
+  environment without needing `--extra dev`.
+
+### Fixed
+
+- The docs site collected no analytics at all: `@vercel/analytics` lived in a layout that no
+  page imported, so the deployed site never loaded the script. Analytics are now injected
+  through the Starlight `head` configuration on every page.
+
 ## [1.14.0] - 2026-07-26
 
 A housing-coverage and infrastructure release. ausecon gains its first housing-price concepts
@@ -829,7 +856,8 @@ Initial public release.
 - Initial curated catalogues for ABS and RBA, plus a four-concept
   `CURATED_SERIES` semantic shortcut map.
 
-[Unreleased]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.14.0...HEAD
+[Unreleased]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.14.1...HEAD
+[1.14.1]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.14.0...v1.14.1
 [1.14.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.13.0...v1.14.0
 [1.13.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.12.1...v1.13.0
 [1.12.1]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.12.0...v1.12.1

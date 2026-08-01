@@ -17,7 +17,10 @@ in `pyproject.toml` when cutting a release.
 6. Push the branch and tag to GitHub.
 7. Allow the release workflow to build and publish the tagged version.
 8. Draft GitHub Release notes from that tag.
-9. Republish `server.json` to the MCP registry with `mcp-publisher publish`.
+9. The release workflow republishes to the MCP registry automatically (its `mcp-registry` job
+   stamps the tag version into `server.json` and publishes via GitHub OIDC). Verify the new
+   version appears in the registry; `mcp-publisher publish` remains available as a manual
+   fallback if that job fails.
 
 This repository's existing releases use lightweight tags:
 
