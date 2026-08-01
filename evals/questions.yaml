@@ -1,0 +1,127 @@
+# Eval question manifest. Validated per-PR by tests/test_eval_manifest.py.
+# pinned = finalized, never-revising answers. live = resolved at run time
+# against the local AuseconService (see evals/resolve.py).
+
+- id: pinned_cash_rate_aug_2016
+  question: "What cash rate target did the Reserve Bank of Australia announce at its August 2016 board meeting? Answer in per cent."
+  answer_type: pinned
+  category: monetary_policy
+  source: rba
+  expected_value: 1.5
+  expected_period: "2016-08-03"
+  tolerance: 0.0
+  unit: "per cent"
+  note: "Published RBA policy decision; never revised. Matches golden rba_new_cash_rate_target_2016_08_03."
+
+- id: pinned_cash_rate_change_aug_2016
+  question: "By how many percentage points did the RBA change the cash rate target at its August 2016 meeting? Use a negative number for a cut."
+  answer_type: pinned
+  category: monetary_policy
+  source: rba
+  expected_value: -0.25
+  expected_period: "2016-08-03"
+  tolerance: 0.0
+  unit: "percentage points"
+  note: "Published RBA policy decision; never revised. Matches golden rba_change_in_cash_rate_target_2016_08_03."
+
+- id: pinned_cpi_index_2015_q1
+  question: "What was the value of the Australian All Groups CPI index (original series, current ABS reference base) in the March quarter of 2015?"
+  answer_type: pinned
+  category: prices_inflation
+  source: abs
+  expected_value: 74.16
+  expected_period: "2015-Q1"
+  tolerance: 0.01
+  unit: "index points"
+  note: "CPI is not revised. Matches golden abs_cpi_all_groups_australia_2015_q1 (Sep 2025 = 100 base)."
+
+- id: pinned_adi_total_assets_2019_q2
+  question: "According to APRA's quarterly ADI statistics, what were the total assets of all Australian authorised deposit-taking institutions for the quarter ending 30 June 2019, in millions of Australian dollars?"
+  answer_type: pinned
+  category: banking
+  source: apra
+  expected_value: 4891150.8
+  expected_period: "2019-06-30"
+  tolerance: 0.1
+  unit: "AUD millions"
+  note: "Closed APRA reporting period; restatements of old periods are rare. Matches golden apra_adi_quarterly_performance_total_assets_2019_q2."
+
+- id: live_cash_rate_latest
+  question: "What is the Reserve Bank of Australia's current cash rate target, in per cent?"
+  answer_type: live
+  category: monetary_policy
+  source: rba
+  resolver: {kind: economic, concept: cash_rate_target}
+  tolerance: 0.0
+  unit: "per cent"
+  note: "Latest published cash rate target; resolved at run time."
+
+- id: live_headline_cpi_latest
+  question: "What was Australia's headline CPI index value in the most recent quarter published by the ABS?"
+  answer_type: live
+  category: prices_inflation
+  source: abs
+  resolver: {kind: economic, concept: headline_cpi}
+  tolerance: 0.01
+  unit: "index points"
+  note: "Latest quarterly All Groups CPI index level; resolved at run time."
+
+- id: live_unemployment_rate_latest
+  question: "What is Australia's most recently published seasonally adjusted unemployment rate, in per cent?"
+  answer_type: live
+  category: labour
+  source: abs
+  resolver: {kind: economic, concept: unemployment_rate}
+  tolerance: 0.05
+  unit: "per cent"
+  note: "Latest monthly labour force release; resolved at run time."
+
+- id: live_aud_usd_latest
+  question: "What is the most recent AUD/USD exchange rate published by the Reserve Bank of Australia?"
+  answer_type: live
+  category: external_sector
+  source: rba
+  resolver: {kind: economic, concept: aud_usd}
+  tolerance: 0.005
+  unit: "USD per AUD"
+  note: "Latest RBA published AUD/USD rate; resolved at run time. Concept renamed from aud_usd_exchange_rate to aud_usd to match CURATED_SHORTCUTS registry key (verified in Step 6)."
+
+- id: live_10y_yield_latest
+  question: "What is the most recent Australian 10-year government bond yield published by the RBA, in per cent?"
+  answer_type: live
+  category: interest_rates
+  source: rba
+  resolver: {kind: economic, concept: government_bond_yield_10y}
+  tolerance: 0.02
+  unit: "per cent"
+  note: "Latest published 10-year yield; resolved at run time. Concept renamed from australian_10y_bond_yield to government_bond_yield_10y to match CURATED_SHORTCUTS registry key (verified in Step 6)."
+
+- id: live_real_cash_rate_latest
+  question: "What is Australia's current real cash rate — the cash rate target minus year-ended CPI inflation — in per cent?"
+  answer_type: live
+  category: derived
+  source: derived
+  resolver: {kind: derived, concept: real_cash_rate}
+  tolerance: 0.05
+  unit: "per cent"
+  note: "Transparent derived indicator; resolved at run time via get_derived_series."
+
+- id: live_yield_curve_slope_latest
+  question: "What is the current slope of the Australian yield curve, measured as the 10-year government bond yield minus the 3-month bank bill rate, in percentage points?"
+  answer_type: live
+  category: derived
+  source: derived
+  resolver: {kind: derived, concept: yield_curve_slope}
+  tolerance: 0.05
+  unit: "percentage points"
+  note: "Transparent derived indicator; resolved at run time."
+
+- id: live_super_total_assets_latest
+  question: "What is the most recent total value of assets held by Australian superannuation funds, according to APRA?"
+  answer_type: live
+  category: superannuation
+  source: apra
+  resolver: {kind: economic, concept: superannuation_total_assets}
+  tolerance: 0.5
+  unit: "AUD billions"
+  note: "Latest APRA quarterly superannuation statistics; resolved at run time."
