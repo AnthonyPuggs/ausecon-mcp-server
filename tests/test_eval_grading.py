@@ -90,3 +90,18 @@ def test_percent_unit_aliases_do_not_flag() -> None:
             tolerance=0.05,
         )
         assert verdict.unit_flag is False, alias
+
+
+def test_grade_missing_value_key() -> None:
+    verdict = grade({"unit": "per cent", "period": "2026-Q1", "not_found": False}, TRUTH, 0.05)
+    assert verdict.outcome == "no_answer"
+
+
+def test_grade_none_value() -> None:
+    verdict = grade({"value": None, "unit": "", "period": "", "not_found": False}, TRUTH, 0.05)
+    assert verdict.outcome == "no_answer"
+
+
+def test_grade_non_numeric_value() -> None:
+    verdict = grade({"value": "unknown", "unit": "", "period": "", "not_found": False}, TRUTH, 0.05)
+    assert verdict.outcome == "no_answer"

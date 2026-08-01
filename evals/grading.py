@@ -97,6 +97,7 @@ def grade(submitted: dict | None, truth: GroundTruth, tolerance: float) -> Verdi
     except (KeyError, TypeError, ValueError):
         return Verdict(outcome="no_answer", value_ok=False, fresh=False, unit_flag=False)
 
+    # Add epsilon to tolerance to absorb float representation error at inclusive boundary
     value_ok = abs(value - truth.value) <= tolerance + 1e-10
     submitted_period = normalize_period(str(submitted.get("period", "")))
     truth_period = normalize_period(truth.period)
