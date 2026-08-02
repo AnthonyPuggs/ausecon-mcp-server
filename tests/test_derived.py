@@ -355,7 +355,16 @@ def test_real_mortgage_rate_subtracts_monthly_inflation() -> None:
     assert payload["observations"][0]["value"] == pytest.approx(2.1)
 
 
-def test_credit_to_gdp_aligns_latest_monthly_credit_to_quarterly_nominal_gdp() -> None:
+def test_credit_to_gdp_reconciles_units_and_uses_trailing_four_quarter_gdp() -> None:
+    """total_credit (RBA d2) is $ billion; nominal_gdp (ABS ANA_AGG) raw values are
+    $ million (unit_multiplier=6) — the ratio must scale credit by 1000 before
+    dividing. It must also divide by the *trailing four-quarter* GDP sum (BIS
+    credit-to-GDP convention), not a single quarter's flow, and must drop any
+    period that doesn't have a full four-quarter GDP window available.
+
+    Hand-checkable: 100 * (2938.6 * 1000) / (1_950_000 + 1_980_000 + 1_996_000 +
+    2_000_000) = 100 * 2_938_600 / 7_926_000 ~= 37.0754%.
+    """
     payload = derive_series(
         "credit_to_gdp",
         {
@@ -363,18 +372,33 @@ def test_credit_to_gdp_aligns_latest_monthly_credit_to_quarterly_nominal_gdp() -
                 concept="total_credit",
                 source="rba",
                 dataset_id="d2",
-                series_id="DLCACS",
-                observations=[("2024-02", 3900.0), ("2024-03", 4000.0)],
+                series_id="DLCACSFS",
+                observations=[
+                    ("2023-06-30", 2895.0),
+                    ("2023-09-30", 2910.0),
+                    ("2023-12-31", 2935.0),
+                    ("2024-01-31", 2938.6),
+                ],
                 frequency="Monthly",
-                rba_series_ids=["DLCACS"],
+                unit="$ billion",
+                rba_series_ids=["DLCACSFS"],
             ),
             "nominal_gdp": _payload(
                 concept="nominal_gdp",
                 source="abs",
                 dataset_id="ANA_AGG",
                 series_id="gdp",
-                observations=[("2024-Q1", 2000.0)],
+                # Only four consecutive quarters are supplied (2023-Q2..2024-Q1), so
+                # every earlier quarter lacks a full trailing four-quarter window and
+                # must be dropped, leaving exactly one derived observation.
+                observations=[
+                    ("2023-Q2", 1_950_000.0),
+                    ("2023-Q3", 1_980_000.0),
+                    ("2023-Q4", 1_996_000.0),
+                    ("2024-Q1", 2_000_000.0),
+                ],
                 frequency="Quarterly",
+                unit="Australian Dollars",
                 abs_key="M3.GPM.20.AUS.Q",
             ),
         },
@@ -384,8 +408,11 @@ def test_credit_to_gdp_aligns_latest_monthly_credit_to_quarterly_nominal_gdp() -
         server_version="test",
     )
 
-    assert payload["observations"][0]["date"] == "2024-Q1"
-    assert payload["observations"][0]["value"] == pytest.approx(200.0)
+    assert [(obs["date"], obs["value"]) for obs in payload["observations"]] == [
+        ("2024-Q1", pytest.approx(37.0754478930, abs=1e-6))
+    ]
+    assert payload["metadata"]["derived"]["formula"] == DERIVED_CONCEPTS["credit_to_gdp"].formula
+    assert "trailing four-quarter" in DERIVED_CONCEPTS["credit_to_gdp"].description
 
 
 def test_household_spending_growth_derives_year_ended_growth() -> None:

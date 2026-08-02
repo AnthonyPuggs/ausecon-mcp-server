@@ -216,17 +216,33 @@ def _compute_real_mortgage_rate(values: dict[str, dict[str, float]]) -> list[tup
     return [(period, _round(mortgage_rate[period] - inflation[period])) for period in dates]
 
 
+# RBA total_credit (d2, DLCACSFS) is reported in $ billion; ABS nominal_gdp (ANA_AGG)
+# raw observation values are in $ million (unit_multiplier=6). Scale credit up by
+# 1000 so both operands are on the same $ million footing before dividing.
+_CREDIT_TO_GDP_SCALE_FACTOR = 1000
+
+
 def _compute_credit_to_gdp(values: dict[str, dict[str, float]]) -> list[tuple[str, float]]:
     total_credit = values["total_credit"]
     nominal_gdp = values["nominal_gdp"]
     carried_credit = _carry_forward_to_periods(total_credit, sorted(nominal_gdp))
     results: list[tuple[str, float]] = []
     for period in sorted(nominal_gdp, key=_period_sort_key):
-        gdp_value = nominal_gdp[period]
         credit_value = carried_credit.get(period)
-        if credit_value is None or gdp_value in (None, 0):
+        if credit_value is None:
             continue
-        results.append((period, _round(100 * credit_value / gdp_value)))
+        # BIS credit-to-GDP convention: divide the credit stock by trailing
+        # four-quarter (annualised) nominal GDP rather than a single quarter's
+        # flow. Using one quarter alone inflates the ratio roughly fourfold.
+        trailing_quarters = [shift_quarter(period, -offset) for offset in range(4)]
+        trailing_gdp_values = [nominal_gdp.get(quarter) for quarter in trailing_quarters]
+        if any(value is None for value in trailing_gdp_values):
+            continue
+        trailing_gdp = sum(trailing_gdp_values)  # type: ignore[arg-type]
+        if trailing_gdp == 0:
+            continue
+        scaled_credit = credit_value * _CREDIT_TO_GDP_SCALE_FACTOR
+        results.append((period, _round(100 * scaled_credit / trailing_gdp)))
     return results
 
 
@@ -376,10 +392,13 @@ DERIVED_CONCEPTS: dict[str, DerivedSpec] = {
     "credit_to_gdp": DerivedSpec(
         concept="credit_to_gdp",
         label="Credit-to-GDP ratio",
-        description="Total credit as a percentage of quarterly nominal GDP.",
+        description=(
+            "Total credit level as a percentage of trailing four-quarter "
+            "(annualised) nominal GDP, following the BIS credit-to-GDP convention."
+        ),
         frequency="Quarterly",
         unit="percent",
-        formula="100 * total_credit / nominal_gdp",
+        formula="100 * (total_credit * 1000) / sum(nominal_gdp, trailing 4 quarters)",
         alignment_method="locf",
         operands=(
             OperandSpec("total_credit", "total_credit"),
@@ -571,6 +590,10 @@ def operand_request_bounds(
         and normalised_start
     ):
         normalised_start = shift_quarter(normalised_start, -4)
+    elif concept == "credit_to_gdp" and operand_name == "nominal_gdp" and normalised_start:
+        # Trailing four-quarter GDP sum needs three quarters of history before the
+        # requested start.
+        normalised_start = shift_quarter(normalised_start, -3)
     elif concept == "real_cash_rate" and operand_name == "cash_rate":
         normalised_start = None
     elif concept == "real_10y_bond_yield" and operand_name == "bond_yield":
