@@ -92,6 +92,43 @@ def test_percent_unit_aliases_do_not_flag() -> None:
         assert verdict.unit_flag is False, alias
 
 
+def test_composed_abs_dollar_unit_aliases_do_not_flag() -> None:
+    # After the ABS parser folds UNIT_MULT into `unit` (e.g. "Australian
+    # Dollars, millions"), that live-resolved ground-truth unit must still
+    # normalize alongside submitted answers phrased as "AUD millions" /
+    # "$ millions" per the eval manifest's own unit wording.
+    millions_truth = GroundTruth(
+        value=736601.0, period="2026-Q1", unit="Australian Dollars, millions"
+    )
+    for alias in ("AUD millions", "$ millions", "millions of dollars", "aud millions"):
+        verdict = grade(
+            {"value": 736601.0, "unit": alias, "period": "2026-Q1", "not_found": False},
+            millions_truth,
+            tolerance=1.0,
+        )
+        assert verdict.unit_flag is False, alias
+
+    thousands_truth = GroundTruth(
+        value=1111.1, period="2026-Q1", unit="Australian Dollars, thousands"
+    )
+    for alias in ("AUD thousands", "thousands of dollars", "aud thousands"):
+        verdict = grade(
+            {"value": 1111.1, "unit": alias, "period": "2026-Q1", "not_found": False},
+            thousands_truth,
+            tolerance=1.0,
+        )
+        assert verdict.unit_flag is False, alias
+
+    count_truth = GroundTruth(value=329.5, period="2026-Q1", unit="Number, thousands")
+    for alias in ("thousands", "Number, thousands"):
+        verdict = grade(
+            {"value": 329.5, "unit": alias, "period": "2026-Q1", "not_found": False},
+            count_truth,
+            tolerance=1.0,
+        )
+        assert verdict.unit_flag is False, alias
+
+
 def test_grade_missing_value_key() -> None:
     verdict = grade({"unit": "per cent", "period": "2026-Q1", "not_found": False}, TRUTH, 0.05)
     assert verdict.outcome == "no_answer"

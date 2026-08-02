@@ -183,7 +183,7 @@
   resolver: {kind: economic, concept: job_vacancies}
   tolerance: 1.0
   unit: "thousands"
-  note: "Latest quarterly job vacancies count; resolved at run time. The series' native unit_multiplier scales the raw value to thousands, so the question is phrased in thousands to match the raw resolved figure."
+  note: "Latest quarterly job vacancies count; resolved at run time, phrased in thousands to match the raw resolved figure. The parser now composes the series' unit_multiplier into the resolved unit string (e.g. \"Number, thousands\")."
 
 - id: live_real_gdp_latest
   question: "What was Australia's real GDP (chain volume measure) in the most recent quarter, in millions of Australian dollars?"
@@ -193,7 +193,7 @@
   resolver: {kind: economic, concept: real_gdp}
   tolerance: 1.0
   unit: "AUD millions"
-  note: "Latest quarterly real GDP level; resolved at run time. Phrased in millions to match the raw resolved figure (the series carries a unit_multiplier of 10^6 against a label of 'Australian Dollars')."
+  note: "Latest quarterly real GDP level; resolved at run time, phrased in millions to match the raw resolved figure. The parser now composes the series' unit_multiplier into the resolved unit string (e.g. \"Australian Dollars, millions\")."
 
 - id: live_nominal_gdp_latest
   question: "What was Australia's nominal GDP in the most recent quarter, in millions of Australian dollars?"
@@ -203,7 +203,7 @@
   resolver: {kind: economic, concept: nominal_gdp}
   tolerance: 1.0
   unit: "AUD millions"
-  note: "Latest quarterly nominal GDP level; resolved at run time. Phrased in millions to match the raw resolved figure."
+  note: "Latest quarterly nominal GDP level; resolved at run time, phrased in millions to match the raw resolved figure. The parser now composes the series' unit_multiplier into the resolved unit string (e.g. \"Australian Dollars, millions\")."
 
 - id: live_household_saving_ratio_latest
   question: "What is Australia's most recently published seasonally adjusted household saving ratio, in per cent?"
@@ -253,7 +253,7 @@
   resolver: {kind: economic, concept: new_housing_lending}
   tolerance: 1.0
   unit: "AUD millions"
-  note: "Latest quarterly new housing lending commitments; resolved at run time. Phrased in millions to match the raw resolved figure."
+  note: "Latest quarterly new housing lending commitments; resolved at run time, phrased in millions to match the raw resolved figure. The parser now composes the series' unit_multiplier into the resolved unit string (e.g. \"Australian Dollars, millions\")."
 
 - id: live_housing_credit_growth_latest
   question: "What is the most recent year-ended growth rate of housing credit outstanding in Australia, in per cent?"
@@ -273,7 +273,7 @@
   resolver: {kind: economic, concept: trade_balance}
   tolerance: 1.0
   unit: "AUD millions"
-  note: "Latest monthly balance on goods trade; resolved at run time. Phrased in millions to match the raw resolved figure."
+  note: "Latest monthly balance on goods trade; resolved at run time, phrased in millions to match the raw resolved figure. The parser now composes the series' unit_multiplier into the resolved unit string (e.g. \"Australian Dollars, millions\")."
 
 - id: live_current_account_balance_latest
   question: "What was Australia's current account balance in the most recent quarter, in millions of Australian dollars? Use a negative number for a deficit."
@@ -283,7 +283,7 @@
   resolver: {kind: economic, concept: current_account_balance}
   tolerance: 1.0
   unit: "AUD millions"
-  note: "Latest quarterly current account balance; resolved at run time. Phrased in millions to match the raw resolved figure."
+  note: "Latest quarterly current account balance; resolved at run time, phrased in millions to match the raw resolved figure. The parser now composes the series' unit_multiplier into the resolved unit string (e.g. \"Australian Dollars, millions\")."
 
 - id: live_commodity_prices_latest
   question: "What is the most recent level of the RBA's Index of Commodity Prices?"
@@ -313,7 +313,7 @@
   resolver: {kind: economic, concept: mean_dwelling_price}
   tolerance: 1.0
   unit: "AUD thousands"
-  note: "Latest quarterly mean residential dwelling price; resolved at run time. Phrased in thousands to match the raw resolved figure (the series carries a unit_multiplier of 10^3 against a label of 'Australian Dollars')."
+  note: "Latest quarterly mean residential dwelling price; resolved at run time, phrased in thousands to match the raw resolved figure. The parser now composes the series' unit_multiplier into the resolved unit string (e.g. \"Australian Dollars, thousands\")."
 
 - id: live_adi_capital_ratio_latest
   question: "What was the total capital ratio of Australian authorised deposit-taking institutions in the most recent APRA quarterly statistics, expressed as a ratio (not a percentage)?"

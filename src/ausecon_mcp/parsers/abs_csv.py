@@ -29,6 +29,12 @@ _RESERVED_IDS = {
 
 _SDMX_ID = re.compile(r"^[A-Z][A-Z0-9_]*$")
 
+# SDMX UNIT_MULT power-of-10 exponent -> human-readable scale word. ABS's
+# UNIT_MEASURE label (e.g. "Australian Dollars", "Number") never mentions the
+# scale on its own, so we fold UNIT_MULT into a composed `unit` string for
+# readability. `value` and the numeric `unit_multiplier` field stay untouched.
+_MULTIPLIER_WORDS = {3: "thousands", 6: "millions", 9: "billions"}
+
 
 def parse_abs_csv(csv_text: str) -> dict:
     reader = csv.DictReader(StringIO(csv_text))
@@ -52,16 +58,15 @@ def parse_abs_csv(csv_text: str) -> dict:
             unit = _labelled_value(
                 row, label_columns, "UNIT_MEASURE", "UNIT_MEASURE: Unit of Measure"
             )
+            unit_multiplier = _parse_int(_row_value(row, "UNIT_MULT", "UNIT_MULT: Unit Multiplier"))
             series_index[series_id] = SeriesDescriptor(
                 series_id=series_id,
                 label=" / ".join(value["label"] for value in dimension_values.values()),
-                unit=unit,
+                unit=_compose_unit(unit, unit_multiplier),
                 frequency=dimension_values.get("FREQ", {}).get("label"),
                 dimensions=dimension_values,
                 source_key=_row_value(row, "DATAFLOW", "STRUCTURE_ID"),
-                unit_multiplier=_parse_int(
-                    _row_value(row, "UNIT_MULT", "UNIT_MULT: Unit Multiplier")
-                ),
+                unit_multiplier=unit_multiplier,
                 decimals=_parse_int(_row_value(row, "DECIMALS", "DECIMALS: Decimals")),
                 base_period=_none_if_empty(
                     _labelled_value(
@@ -163,6 +168,23 @@ def _row_value(row: dict[str, str], *candidates: str) -> str:
 def _none_if_empty(value: str) -> str | None:
     text = (value or "").strip()
     return text or None
+
+
+def _compose_unit(unit: str | None, unit_multiplier: int | None) -> str | None:
+    """Fold a non-trivial UNIT_MULT exponent into a human-readable `unit` string.
+
+    Leaves `unit` unchanged when there is no unit, no multiplier, or the
+    multiplier is 0 (the SDMX "as published" case). Guards against
+    double-appending when the label already mentions the scale (e.g. ABS
+    sometimes ships pre-scaled labels like "$ Millions").
+    """
+    if unit is None or not unit_multiplier:
+        return unit
+    word = _MULTIPLIER_WORDS.get(unit_multiplier)
+    suffix = word if word is not None else f"x10^{unit_multiplier}"
+    if suffix.rstrip("s").lower() in unit.lower():
+        return unit
+    return f"{unit}, {suffix}"
 
 
 def _parse_int(value: str) -> int | None:
