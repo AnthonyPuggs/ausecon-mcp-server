@@ -9,7 +9,7 @@ description: Curated concepts accepted by get_economic_series.
 source-native ABS, RBA, or APRA target and can be discovered at runtime with
 `list_economic_concepts` or the `ausecon://concepts` resource.
 
-Total concepts: `84`.
+Total concepts: `83`.
 
 ## Activity
 
@@ -183,7 +183,6 @@ Total concepts: `84`.
 | Concept | Source | Dataset | Variant | Frequency | Recommended call |
 | --- | --- | --- | --- | --- | --- |
 | `superannuation_member_accounts` | APRA | `APRA_SUPER_INDUSTRY` | `total_rse_member_accounts` | Quarterly | `get_economic_series(concept="superannuation_member_accounts")` |
-| `superannuation_total_assets` | APRA | `APRA_SUPER_INDUSTRY` | `total_rse_member_assets` | Quarterly | `get_economic_series(concept="superannuation_total_assets")` |
 
 ## Notes
 

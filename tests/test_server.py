@@ -1005,7 +1005,7 @@ async def test_service_allows_apra_source_filter_with_semantic_concepts() -> Non
     concepts = await service.list_economic_concepts(source="apra")
     assert {row["concept"] for row in concepts} >= {
         "adi_capital_ratio",
-        "superannuation_total_assets",
+        "superannuation_member_accounts",
         "general_insurance_premium_revenue",
         "phi_membership",
     }
@@ -1789,10 +1789,10 @@ TRANCHE_F_APRA_SERVICE = [
         ["ADI_PROPERTY_EXPOSURES:tab_1b:credit_outstanding:total_credit_oustanding"],
     ),
     (
-        "superannuation_total_assets",
+        "superannuation_member_accounts",
         "APRA_SUPER_INDUSTRY",
-        "table_2",
-        ["APRA_SUPER_INDUSTRY:table_2:total_rse_member_assets"],
+        "table_5",
+        ["APRA_SUPER_INDUSTRY:table_5:by_fund_type:total_industry"],
     ),
     (
         "general_insurance_premium_revenue",

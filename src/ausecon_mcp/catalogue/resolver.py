@@ -236,11 +236,14 @@ CURATED_SHORTCUTS: dict[str, dict[str, Any]] = {
         "dataset_id": "ADI_PROPERTY_EXPOSURES",
         "variant": "commercial_property_exposure",
     },
-    "superannuation_total_assets": {
-        "source": "apra",
-        "dataset_id": "APRA_SUPER_INDUSTRY",
-        "variant": "total_rse_member_assets",
-    },
+    # NOTE: "superannuation_total_assets" was removed (2026-08-02). No genuine
+    # whole-of-industry total RSE member *assets* series is parseable from the
+    # Quarterly Superannuation Industry Publication with the current APRA XLSX
+    # parser layouts — see the "NOTE" comment on APRA_SUPER_INDUSTRY in
+    # catalogue/apra.py for the full explanation. The closest whole-of-industry
+    # figure ("Total investments", Table 9) is not currently exposed by any
+    # catalogued table_id, since it is a single-quarter cross-tab incompatible
+    # with the existing "matrix" table layout, not a date-indexed time series.
     "superannuation_member_accounts": {
         "source": "apra",
         "dataset_id": "APRA_SUPER_INDUSTRY",

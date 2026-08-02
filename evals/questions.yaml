@@ -117,20 +117,23 @@
   note: "Transparent derived indicator; resolved at run time."
 
 # NOTE: live_super_total_assets_latest (superannuation_total_assets) and a planned
-# superannuation_member_accounts question were dropped during Task 7 authoring. Both
-# CURATED_SHORTCUTS variants point to apra_series_ids
-# ("APRA_SUPER_INDUSTRY:table_2:total_rse_member_assets" /
-# "...total_rse_member_accounts") that do not match the series IDs the APRA XLSX
-# parser actually produces for that workbook
-# ("APRA_SUPER_INDUSTRY:table_2:members_with_100_per_cent_mysuper_interest:total_rse_member_assets"),
-# so get_economic_series("superannuation_total_assets") returns zero observations
-# against the live workbook (verified 2026-08-02 via local AuseconService; confirmed
-# both through get_apra_data with explicit series_ids and through resolve_ground_truth
-# raising "resolver returned no observations"). This is a catalogue bug in
-# src/ausecon_mcp/catalogue/apra.py, out of scope for this data-authoring task — see
-# task-7-report.md for details. Banking/superannuation category coverage is instead
-# provided by the ADI capital ratio / liquidity coverage ratio / commercial property
-# exposure questions below plus the pinned ADI total-assets entries.
+# superannuation_member_accounts question were dropped during Task 7 authoring, when
+# both CURATED_SHORTCUTS variants pointed at apra_series_ids that did not match the
+# series IDs the APRA XLSX parser actually produces for that workbook, so
+# get_economic_series("superannuation_total_assets") returned zero observations
+# against the live workbook. This was root-caused and fixed 2026-08-02 (see
+# docs/superpowers/plans/2026-08-02-catalogue-bugs-rootcause.md and the corresponding
+# fix report, Bug 3): superannuation_member_accounts now resolves correctly (repointed
+# to APRA_SUPER_INDUSTRY table_5's "By fund type: Total industry" row — a genuine
+# whole-of-industry figure). superannuation_total_assets was removed outright rather
+# than pointed at a wrong-scope substitute, because no whole-of-industry total RSE
+# member *assets* series is parseable from this workbook with the current APRA XLSX
+# parser layouts (the only genuine industry total, Table 9's "Total investments", is a
+# single-quarter cross-tab, not a date-indexed time series). Adding a
+# live_super_member_accounts_latest eval question is a data-authoring task, not
+# attempted here. Banking/superannuation category coverage is instead provided by the
+# ADI capital ratio / liquidity coverage ratio / commercial property exposure
+# questions below plus the pinned ADI total-assets entries.
 
 - id: live_monthly_cpi_index_latest
   question: "What is the value of the ABS monthly CPI indicator index in the most recently published month?"

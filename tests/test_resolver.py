@@ -367,7 +367,6 @@ def test_curated_shortcuts_cover_current_semantic_concepts() -> None:
         "adi_liquidity_coverage_ratio",
         "adi_residential_mortgage_exposure",
         "adi_commercial_property_exposure",
-        "superannuation_total_assets",
         "superannuation_member_accounts",
         "general_insurance_premium_revenue",
         "general_insurance_claims_expense",
@@ -531,18 +530,11 @@ TRANCHE_F_APRA = [
         ],
     ),
     (
-        "superannuation_total_assets",
-        "APRA_SUPER_INDUSTRY",
-        "total_rse_member_assets",
-        "table_2",
-        ["APRA_SUPER_INDUSTRY:table_2:total_rse_member_assets"],
-    ),
-    (
         "superannuation_member_accounts",
         "APRA_SUPER_INDUSTRY",
         "total_rse_member_accounts",
-        "table_2",
-        ["APRA_SUPER_INDUSTRY:table_2:total_rse_member_accounts"],
+        "table_5",
+        ["APRA_SUPER_INDUSTRY:table_5:by_fund_type:total_industry"],
     ),
     (
         "general_insurance_premium_revenue",

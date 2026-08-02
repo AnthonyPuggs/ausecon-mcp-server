@@ -316,6 +316,47 @@ def test_parse_apra_xlsx_supports_super_industry_catalogue_fixture() -> None:
     }
 
 
+def test_parse_apra_xlsx_supports_super_industry_table_5_member_accounts_fixture() -> None:
+    """Regression coverage for Bug 3 (2026-08-02): superannuation_member_accounts was
+    repointed to Table 5's "By fund type: Total industry" row, the genuine
+    whole-of-industry member-account total (as opposed to Table 2's MySuper-only
+    figures). This mirrors the real workbook's layout: a "By fund type" section
+    header (blank-data row) followed by per-fund-type rows and a "Total industry"
+    aggregate row.
+    """
+    workbook = _xlsx_bytes(
+        {
+            "Table 5": [
+                [None],
+                ["Total industry"],
+                [None],
+                [None, "('000)"],
+                [None, datetime(2025, 12, 31), datetime(2026, 3, 31)],
+                ["By fund type"],
+                ["Corporate funds", 125.0, 123.0],
+                ["Industry funds", 14669.0, 14669.0],
+                ["Total industry", 24912.0, 25150.0],
+            ]
+        }
+    )
+
+    payload = parse_apra_xlsx(
+        workbook,
+        publication_id="APRA_SUPER_INDUSTRY",
+        title=APRA_CATALOGUE["APRA_SUPER_INDUSTRY"]["name"],
+        frequency="Quarterly",
+        table_maps=APRA_CATALOGUE["APRA_SUPER_INDUSTRY"]["tables"],
+        table_id="table_5",
+    )
+
+    target = "APRA_SUPER_INDUSTRY:table_5:by_fund_type:total_industry"
+    assert target in {series["series_id"] for series in payload["series"]}
+    observations = {
+        obs["date"]: obs["value"] for obs in payload["observations"] if obs["series_id"] == target
+    }
+    assert observations == {"2025-12-31": 24912.0, "2026-03-31": 25150.0}
+
+
 def test_parse_apra_xlsx_supports_super_fund_level_catalogue_fixture() -> None:
     workbook = _xlsx_bytes(
         {

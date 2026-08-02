@@ -326,20 +326,40 @@ APRA_CATALOGUE: dict[str, dict] = {
                 "date_start_column": 2,
                 "data_start_row": 6,
                 "label_column": 1,
-            }
-        },
-        "variants": [
-            {
-                "name": "total_rse_member_assets",
-                "aliases": ["superannuation total assets", "rse member assets"],
-                "apra_table_id": "table_2",
-                "apra_series_ids": ["APRA_SUPER_INDUSTRY:table_2:total_rse_member_assets"],
             },
+            "table_5": {
+                "sheet": "Table 5",
+                "layout": "matrix",
+                "title": "Member accounts",
+                "unit": "thousand accounts",
+                "frequency": "Quarterly",
+                "date_row": 5,
+                "date_start_column": 2,
+                "data_start_row": 6,
+                "label_column": 1,
+            },
+        },
+        # NOTE: no whole-of-industry total RSE member *assets* series is catalogued
+        # here. Table 9 ("Industry Asset Allocation") has the genuine whole-of-industry
+        # total ("Total investments", ~$2.97tn as at 2026-03-31), but it is a
+        # single-quarter cross-tab (one date, with Corporate/Industry/Public
+        # Sector/Retail/Total as *columns*) rather than a date-indexed time series, so
+        # it cannot be represented with the current "matrix" table layout (which
+        # requires one date per column). See docs/superpowers/plans/
+        # 2026-08-02-catalogue-bugs-rootcause.md (Bug 1) and the corresponding fix
+        # report for the full investigation; the superannuation_total_assets semantic
+        # concept was removed from resolver.py rather than pointed at a wrong-scope
+        # substitute (e.g. the MySuper-only figure in table_2).
+        "variants": [
             {
                 "name": "total_rse_member_accounts",
                 "aliases": ["superannuation member accounts", "rse member accounts"],
-                "apra_table_id": "table_2",
-                "apra_series_ids": ["APRA_SUPER_INDUSTRY:table_2:total_rse_member_accounts"],
+                "apra_table_id": "table_5",
+                # "By fund type" is a breakdown *within* Table 5, not a member-type
+                # scope restriction — its "Total industry" row sums Corporate +
+                # Industry + Public Sector + Retail + Small funds, i.e. the genuine
+                # whole-of-industry member account count (~25.15m as at 2026-03-31).
+                "apra_series_ids": ["APRA_SUPER_INDUSTRY:table_5:by_fund_type:total_industry"],
             },
         ],
         "audit": {
