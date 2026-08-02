@@ -266,6 +266,17 @@ uv run pytest
 uv run ruff check src tests scripts
 ```
 
+The repo also ships a manual benchmark (`evals/`) that measures the server's impact on model
+answers across 52 Australian-economics questions, comparing a bare model, web search, and the
+ausecon tools. Ground-truth resolution is free to check:
+
+```bash
+uv run --group evals python -m evals.run_eval --dry-run
+```
+
+A full run makes paid API calls &mdash; see the
+[evaluation harness guide](https://auseconmcp.com/maintainers/evaluation/) before running one.
+
 ---
 
 <div align="center">

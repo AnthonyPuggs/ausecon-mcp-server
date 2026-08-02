@@ -78,6 +78,7 @@ export default defineConfig({
           label: 'Maintainers',
           items: [
             { label: 'Contributing', slug: 'maintainers/contributing' },
+            { label: 'Evaluation Harness', slug: 'maintainers/evaluation' },
             { label: 'Releasing', slug: 'maintainers/releasing' },
             { label: 'Roadmap', slug: 'maintainers/roadmap' },
           ],
