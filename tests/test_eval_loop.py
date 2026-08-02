@@ -101,9 +101,7 @@ async def test_max_tokens_stop_reason_records_truncation_immediately() -> None:
     # A max_tokens stop must be recorded as its own error rather than falling through
     # to the "no tool_uses -> nudge" path, since a truncated response often has no
     # complete content blocks to nudge from.
-    client = StubClient(
-        [_response([_block("text", text="partial...")], stop_reason="max_tokens")]
-    )
+    client = StubClient([_response([_block("text", text="partial...")], stop_reason="max_tokens")])
     result = await run_cell(client, "Q?", [SUBMIT_ANSWER_TOOL], None)
     assert result.submitted is None
     assert result.error == "max_tokens_truncated"

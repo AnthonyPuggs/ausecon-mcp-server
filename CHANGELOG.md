@@ -6,6 +6,43 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.14.2] - 2026-08-02
+
+A data-correctness patch. The response contract `{metadata, series, observations}` and all tool
+signatures are unchanged; one broken semantic concept is removed.
+
+### Fixed
+
+- Credit concepts (`total_credit`, `business_credit`, `total_credit_growth`,
+  `business_credit_growth`) are repointed from RBA series discontinued at the June 2019
+  credit-aggregates methodology revision to their current successor series. The old series
+  still returned valid CSV rows, so these concepts had been silently frozen at 2019-06-30;
+  they now run through to current data. The nightly live suite gains a freshness guard so a
+  future series discontinuation fails loudly instead of being silently certified.
+- `credit_to_gdp` is corrected on two counts: the credit stock ($ billion) is now
+  unit-reconciled with nominal GDP (reported in $ million), and the denominator is the
+  trailing four-quarter GDP sum per the standard BIS convention rather than a single
+  quarter's flow. The previously published ratio was roughly 1000x too small.
+- `superannuation_member_accounts` is repointed to the whole-of-industry "Total industry"
+  member-accounts series (Quarterly Superannuation Industry Publication, Table 5); the
+  previous mapping never matched the live workbook and silently returned zero observations.
+- `superannuation_total_assets` is removed from the semantic layer (83 concepts, down
+  from 84): the workbook holds no date-indexed whole-of-industry total-assets time series,
+  and the only in-scope alternative would have silently changed the concept's meaning. The
+  publication remains fully available source-native via `get_apra_data`.
+- ABS series unit labels now fold the SDMX unit multiplier into the composed unit string
+  (for example "Australian Dollars, millions"), so a value read together with its unit is no
+  longer off by a power of ten; `unit_multiplier` stays as the untouched machine-readable
+  field, and a guard prevents appending a scale word to already-scaled labels.
+
+### Added
+
+- A manual three-arm evaluation benchmark under `evals/`: the same 52 Australian-economics
+  questions answered by a bare model, a model with web search, and a model with the ausecon
+  tools, graded deterministically against ground truth resolved live from ABS, RBA, and
+  APRA. Development tooling only — nothing ships in the package. A maintainers guide on the
+  docs site covers running and publishing it.
+
 ## [1.14.1] - 2026-08-01
 
 A documentation and release-infrastructure patch. Nothing in the server's runtime behaviour
@@ -856,7 +893,8 @@ Initial public release.
 - Initial curated catalogues for ABS and RBA, plus a four-concept
   `CURATED_SERIES` semantic shortcut map.
 
-[Unreleased]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.14.1...HEAD
+[Unreleased]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.14.2...HEAD
+[1.14.2]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.14.1...v1.14.2
 [1.14.1]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.14.0...v1.14.1
 [1.14.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.13.0...v1.14.0
 [1.13.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.12.1...v1.13.0
