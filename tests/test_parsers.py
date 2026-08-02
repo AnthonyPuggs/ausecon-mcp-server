@@ -104,19 +104,59 @@ def test_parse_abs_csv_missing_multiplier_leaves_unit_unchanged() -> None:
     assert parsed["series"][0]["unit_multiplier"] is None
 
 
-def test_parse_abs_csv_does_not_double_append_already_scaled_unit() -> None:
-    # Some ABS units ship pre-scaled labels (e.g. "$ Millions"); the composer
-    # must not append ", millions" a second time in that case.
-    csv_text = "\n".join(
+def _abs_csv_row(unit_measure: str, unit_mult: str) -> str:
+    return "\n".join(
         [
             "DATAFLOW,MEASURE,DATA_ITEM,TSEST,REGION,FREQ,TIME_PERIOD,OBS_VALUE,"
             "UNIT_MEASURE,UNIT_MULT,OBS_STATUS,OBS_COMMENT",
-            "ABS:ANA_AGG(1.0.0),M2,GNI,20,AUS,Q,2025-Q2,736601.0,$ Millions,6,,",
+            f"ABS:ANA_AGG(1.0.0),M2,GNI,20,AUS,Q,2025-Q2,736601.0,{unit_measure},{unit_mult},,",
         ]
     )
-    parsed = parse_abs_csv(csv_text)
+
+
+def test_parse_abs_csv_does_not_double_append_already_scaled_unit() -> None:
+    # Some ABS units ship pre-scaled labels (e.g. "$ Millions"); the composer
+    # must not append ", millions" a second time in that case.
+    parsed = parse_abs_csv(_abs_csv_row("$ Millions", "6"))
 
     assert parsed["series"][0]["unit"] == "$ Millions"
+
+
+def test_parse_abs_csv_does_not_double_append_dollar_letter_abbreviation() -> None:
+    # "$m"-style abbreviations already encode the scale even though they don't
+    # contain the word "million"; the multiplier word must not be appended.
+    parsed = parse_abs_csv(_abs_csv_row("$m", "6"))
+
+    assert parsed["series"][0]["unit"] == "$m"
+
+
+def test_parse_abs_csv_does_not_double_append_mismatched_scale_word() -> None:
+    # A unit already carrying a scale word (even one that doesn't match the
+    # current multiplier) must not get a second, contradictory scale appended.
+    parsed = parse_abs_csv(_abs_csv_row("$ Millions", "3"))
+
+    assert parsed["series"][0]["unit"] == "$ Millions"
+
+
+def test_parse_abs_csv_does_not_double_append_thousands_convention() -> None:
+    # "'000" is a common pre-scaled convention in published tables.
+    parsed = parse_abs_csv(_abs_csv_row("'000", "3"))
+
+    assert parsed["series"][0]["unit"] == "'000"
+
+
+def test_parse_abs_csv_composes_when_unit_has_no_scale_indicator() -> None:
+    parsed = parse_abs_csv(_abs_csv_row("Number", "3"))
+
+    assert parsed["series"][0]["unit"] == "Number, thousands"
+
+
+def test_parse_abs_csv_composes_for_unit_ending_in_letter_m_but_not_dollar_abbreviation() -> None:
+    # "per annum" ends in the letter "m" but is not a "$m"-style abbreviation,
+    # so the double-append guard must not false-positive on it.
+    parsed = parse_abs_csv(_abs_csv_row("Percent per annum", "3"))
+
+    assert parsed["series"][0]["unit"] == "Percent per annum, thousands"
 
 
 def test_parse_abs_csv_unusual_exponent_uses_power_of_ten_notation() -> None:

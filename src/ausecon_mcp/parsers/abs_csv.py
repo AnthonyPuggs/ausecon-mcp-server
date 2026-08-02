@@ -35,6 +35,23 @@ _SDMX_ID = re.compile(r"^[A-Z][A-Z0-9_]*$")
 # readability. `value` and the numeric `unit_multiplier` field stay untouched.
 _MULTIPLIER_WORDS = {3: "thousands", 6: "millions", 9: "billions"}
 
+# Substrings (case-insensitive) that indicate a unit label already conveys a
+# scale, regardless of which multiplier word we would otherwise append.
+# Covers singular/plural word forms and the "'000" convention.
+_SCALE_WORD_INDICATORS = ("thousand", "million", "billion", "'000")
+
+# Standalone "$m"/"$b"/"$k" style abbreviations at the end of a unit string,
+# e.g. "$m", "$ b". Anchored to a leading "$" so ordinary words ending in the
+# letter m/b/k (e.g. "per annum", "per annum thousand") are never matched.
+_SCALE_ABBR_RE = re.compile(r"(?i)\$\s?[kmb]$")
+
+
+def _unit_already_scaled(unit: str) -> bool:
+    lower = unit.lower()
+    if any(indicator in lower for indicator in _SCALE_WORD_INDICATORS):
+        return True
+    return bool(_SCALE_ABBR_RE.search(unit))
+
 
 def parse_abs_csv(csv_text: str) -> dict:
     reader = csv.DictReader(StringIO(csv_text))
@@ -174,16 +191,19 @@ def _compose_unit(unit: str | None, unit_multiplier: int | None) -> str | None:
     """Fold a non-trivial UNIT_MULT exponent into a human-readable `unit` string.
 
     Leaves `unit` unchanged when there is no unit, no multiplier, or the
-    multiplier is 0 (the SDMX "as published" case). Guards against
-    double-appending when the label already mentions the scale (e.g. ABS
-    sometimes ships pre-scaled labels like "$ Millions").
+    multiplier is 0 (the SDMX "as published" case). Also leaves it unchanged
+    when the label already conveys a scale by any means — a scale word
+    ("thousand"/"million"/"billion", singular or plural), the "'000"
+    convention, or a "$m"/"$b"/"$k" style abbreviation — even if that
+    existing indicator doesn't match the current multiplier, to avoid
+    composing a contradictory result (e.g. "$ Millions" + multiplier 3).
     """
     if unit is None or not unit_multiplier:
         return unit
+    if _unit_already_scaled(unit):
+        return unit
     word = _MULTIPLIER_WORDS.get(unit_multiplier)
     suffix = word if word is not None else f"x10^{unit_multiplier}"
-    if suffix.rstrip("s").lower() in unit.lower():
-        return unit
     return f"{unit}, {suffix}"
 
 
