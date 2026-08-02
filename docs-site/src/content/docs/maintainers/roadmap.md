@@ -1,9 +1,9 @@
 ---
 title: Roadmap
-description: Release priorities for AusEcon MCP.
+description: Current direction and shipped release lines for AusEcon MCP.
 ---
 
-The current v1.14.1 release line includes stable stdio, hosted Streamable HTTP through
+The current v1.14.x release line includes stable stdio, hosted Streamable HTTP through
 Render/Smithery, curated ABS/RBA/APRA retrieval, release-event awareness, convenience observation
 tools, generated documentation, and docs-site Vercel Analytics plus Speed Insights.
 
@@ -11,83 +11,51 @@ The roadmap stays official-source-first, macro-financial, read-only, and Austral
 current response contract, `{metadata, series, observations}`, is protected until a genuinely
 different data model is required.
 
-## v1.1.x
+## Current direction
 
-Operational polish only. No MCP API or response-schema changes.
+The version-numbered release lines below are complete. Work now proceeds on two tracks.
 
-- Keep release wording aligned with current release metadata.
-- Keep hygiene checks around docs-site Vercel Analytics and Speed Insights.
-- Keep hosted checks focused on `/`, `/healthz`, server-card metadata, Smithery listing state, and
-  Render uptime.
-- Keep full hosted MCP tool-call smoke manual unless a stable automated hosted smoke path is
-  deliberately reintroduced.
+### Credibility layer
 
-## v1.2
+Make the server's value measurable and visible rather than asserted:
 
-Deepen ABS/RBA semantic coverage before adding new providers. The first v1.2 tranche adds real and
-nominal GDP levels, household consumption, private investment, retail turnover, broad money, and a
-3-month bank bill rate.
+- A published, reproducible evaluation measuring how much the server improves model answers on
+  Australian-economics questions, built on the existing live golden-value verification.
+- An automated weekly Australian macro briefing page generated deterministically from release
+  events and latest observations — no modelling, no forecasting, facts only.
 
-The second v1.2 tranche adds total credit, credit-growth concepts, M3, money base, currency in
-circulation, and selected monthly AUD exchange rates.
+### Broader Australian coverage
 
-The third v1.2 tranche adds complete ABS Monthly CPI 2.0 headline, monthly-change, trimmed mean,
-and weighted median concepts, plus national quarterly ABS housing-lending commitments for total,
-owner-occupier, and investor lending.
+Additive coverage expansion, in rough order of priority:
 
-Remaining priority areas are ABS housing-price concepts where a clean national or default
-aggregate key is verified.
+- State and capital-city variants of existing ABS dataflows (labour force and CPI first).
+- AOFM debt issuance, tender results, and outstanding-stock data as a new curated source.
+- Jobs and Skills Australia Internet Vacancy Index to complement ABS job vacancies.
+- A feasibility assessment of Treasury/Budget aggregates via PBO historical fiscal data.
 
-Add concepts only when the upstream mapping is verified and the result fits the existing response
-shape.
+Proprietary sources, ASX/market data, and forecasting or modelling remain out of scope.
 
-## v1.3
+## Shipped release lines
 
-The foundation tranche adds a narrow `get_derived_series` tool with transparent formulas and
-explicit provenance. The first derived concepts were `real_cash_rate`, `yield_curve_slope`,
-`real_wage_growth`, `credit_growth`, and `gdp_per_capita`.
-
-Derived responses should preserve `{metadata, series, observations}` and add `metadata.derived`.
-They should not introduce modelling, forecasting, seasonal adjustment, or arbitrary user formulas.
-
-## v1.4
-
-The APRA source-native foundation adds curated official APRA XLSX retrieval through
-`get_apra_data` while preserving `{metadata, series, observations}`. Initial coverage was limited
-to Monthly ADI Statistics, Quarterly ADI Performance, the ADI Centralised Publication, and
-Quarterly ADI Property Exposures.
-
-The v1.4.1 reliability patch keeps hosted health checks responsive during APRA workbook parsing by
-moving XLSX parsing off the event loop and caching requested APRA tables separately.
-
-## v1.5
-
-The v1.5 semantic and source expansion is landed. It adds ABS quarterly household spending,
-selected RBA source-native tables, APRA superannuation and insurance publications, APRA-backed
-semantic concepts, and four additional transparent derived concepts:
-
-- `mortgage_rate_spread`
-- `real_mortgage_rate`
-- `credit_to_gdp`
-- `household_spending_growth`
-
-APRA semantic concepts are exposed only where exact APRA table and series identifiers are
-fixture-backed. The response schema documents APRA semantic targets through `apra_table_id` and
-`apra_series_ids` without changing the top-level response contract.
-
-Treasury and ASX remain deferred. Treasury is not the main statistical system of record for most
-target series, and ASX would shift the product toward market data.
-
-## v1.6
-
-The v1.6 work is landed. It is additive convenience and governance hardening, not a product pivot.
-The surface adds latest/top observation wrappers, source-aware dataset descriptions, release-event
-awareness, APRA URL seed fallback, APRA framework-break warnings, CodeQL, Dependabot, and a broader
-Python CI matrix.
-
-These tools preserve source-native identifiers and the combined ABS/RBA/APRA server shape.
+- **v1.1.x** — operational polish: release-metadata alignment, analytics hygiene checks, and
+  lightweight hosted deployment checks. No MCP API or response-schema changes.
+- **v1.2** — deeper ABS/RBA semantic coverage in three tranches: national accounts, credit and
+  money aggregates, monthly CPI 2.0, and housing-lending commitments.
+- **v1.3** — the narrow `get_derived_series` layer with transparent formulas and explicit
+  provenance; no modelling, forecasting, seasonal adjustment, or arbitrary user formulas.
+- **v1.4** — the APRA source-native foundation: curated official APRA XLSX retrieval through
+  `get_apra_data`, plus the v1.4.1 reliability patch moving XLSX parsing off the event loop.
+- **v1.5** — semantic and source expansion: ABS household spending, additional RBA tables, APRA
+  superannuation and insurance publications, and four more derived concepts.
+- **v1.6** — convenience and governance hardening: latest/top observation wrappers, dataset
+  descriptions, release-event awareness, APRA URL governance, CodeQL, and a broader CI matrix.
+- **v1.12–v1.14** — distribution and trust: hosted no-install path, client install configs,
+  nightly live golden-value validation, housing-price concepts, the branded
+  `mcp.auseconmcp.com` endpoint, and automatic MCP-registry publishing.
 
 ## v2.0
 
 Reserve v2.0 for a second response model: non-time-series panels, distribution tables, or
-multi-dimensional public tables that cannot honestly fit `{metadata, series, observations}`.
+multi-dimensional public tables that cannot honestly fit `{metadata, series, observations}`. The
+trigger would be a new source (for example fiscal tables or institution-level panels) that the
+current contract cannot represent faithfully.
