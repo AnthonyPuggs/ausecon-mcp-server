@@ -1712,7 +1712,7 @@ TRANCHE_B_ABS_SERVICE = [
 ]
 
 TRANCHE_B_RBA_SERVICE = [
-    ("business_credit", "d2", ["DLCACBS"]),
+    ("business_credit", "d2", ["DLCACSFBS"]),
     ("mortgage_rate", "f6", ["FLRHOOVA"]),
     ("business_lending_rate", "f7", ["FLRBFOSBT"]),
     ("inflation_expectations", "g3", ["GCONEXP"]),
@@ -1733,10 +1733,10 @@ TRANCHE_C_RBA_SERVICE = [
 ]
 
 TRANCHE_D_RBA_SERVICE = [
-    ("total_credit", "d2", ["DLCACS"]),
-    ("total_credit_growth", "d1", ["DGFAC12"]),
+    ("total_credit", "d2", ["DLCACSFS"]),
+    ("total_credit_growth", "d1", ["DGFACNW12"]),
     ("housing_credit_growth", "d1", ["DGFACH12"]),
-    ("business_credit_growth", "d1", ["DGFACB12"]),
+    ("business_credit_growth", "d1", ["DGFACBNW12"]),
     ("m3", "d3", ["DMAM3S"]),
     ("money_base", "d3", ["DMAMMB"]),
     ("currency_in_circulation", "d3", ["DMACS"]),

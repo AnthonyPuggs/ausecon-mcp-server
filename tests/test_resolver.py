@@ -417,7 +417,7 @@ TRANCHE_B_ABS = [
 ]
 
 TRANCHE_B_RBA = [
-    ("business_credit", "d2", "business", ["DLCACBS"]),
+    ("business_credit", "d2", "business", ["DLCACSFBS"]),
     ("mortgage_rate", "f6", "owner_occupier_variable", ["FLRHOOVA"]),
     ("business_lending_rate", "f7", "small_business_indicator", ["FLRBFOSBT"]),
     ("inflation_expectations", "g3", "consumer", ["GCONEXP"]),
@@ -438,10 +438,10 @@ TRANCHE_C_RBA = [
 ]
 
 TRANCHE_D_RBA = [
-    ("total_credit", "d2", "total_credit", ["DLCACS"]),
-    ("total_credit_growth", "d1", "total_credit_yoy", ["DGFAC12"]),
+    ("total_credit", "d2", "total_credit", ["DLCACSFS"]),
+    ("total_credit_growth", "d1", "total_credit_yoy", ["DGFACNW12"]),
     ("housing_credit_growth", "d1", "housing_credit_yoy", ["DGFACH12"]),
-    ("business_credit_growth", "d1", "business_credit_yoy", ["DGFACB12"]),
+    ("business_credit_growth", "d1", "business_credit_yoy", ["DGFACBNW12"]),
     ("m3", "d3", "m3", ["DMAM3S"]),
     ("money_base", "d3", "money_base", ["DMAMMB"]),
     ("currency_in_circulation", "d3", "currency", ["DMACS"]),

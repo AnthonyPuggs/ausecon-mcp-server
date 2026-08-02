@@ -1,10 +1,19 @@
 from __future__ import annotations
 
+from datetime import date, timedelta
+
 import pytest
 
+from ausecon_mcp.periods import period_end_date
 from ausecon_mcp.server import AuseconService
 
 pytestmark = pytest.mark.asyncio
+
+# Concepts that were previously repointed away from RBA series discontinued after the
+# June 2019 credit aggregates methodology revision (see docs/superpowers/plans/
+# 2026-08-02-catalogue-bugs-rootcause.md, Bug 2). A future RBA series freeze/discontinuation
+# should fail this nightly check rather than being silently certified by it.
+_CREDIT_FRESHNESS_MAX_AGE_DAYS = 180
 
 
 async def _call(concept: str) -> dict:
@@ -162,10 +171,11 @@ async def test_live_semantic_tranche_c_rba_concepts(
 @pytest.mark.parametrize(
     ("concept", "table_id", "series_id"),
     [
-        ("total_credit", "d2", "DLCACS"),
-        ("total_credit_growth", "d1", "DGFAC12"),
+        ("total_credit", "d2", "DLCACSFS"),
+        ("business_credit", "d2", "DLCACSFBS"),
+        ("total_credit_growth", "d1", "DGFACNW12"),
         ("housing_credit_growth", "d1", "DGFACH12"),
-        ("business_credit_growth", "d1", "DGFACB12"),
+        ("business_credit_growth", "d1", "DGFACBNW12"),
         ("m3", "d3", "DMAM3S"),
         ("money_base", "d3", "DMAMMB"),
         ("currency_in_circulation", "d3", "DMACS"),
@@ -187,6 +197,33 @@ async def test_live_semantic_tranche_d_rba_concepts(
     assert result["metadata"]["dataset_id"] == table_id
     series_ids = {s["series_id"] for s in result["series"]}
     assert series_id in series_ids
+
+
+@pytest.mark.parametrize(
+    "concept",
+    [
+        "total_credit",
+        "business_credit",
+        "total_credit_growth",
+        "business_credit_growth",
+    ],
+)
+async def test_live_semantic_credit_concepts_are_not_stale(concept: str) -> None:
+    """Guard against a repeat of Bug 2 (2026-08-02): these concepts were silently
+    frozen at 2019-06 for ~7 years because their RBA series were discontinued and
+    replaced without any recency check catching it. A future series freeze must fail
+    this test rather than being certified as passing.
+    """
+    result = await _call(concept)
+
+    observations = result["observations"]
+    assert observations, f"expected observations for {concept}"
+    latest_date = max(period_end_date(obs["date"]) for obs in observations)
+    max_age = timedelta(days=_CREDIT_FRESHNESS_MAX_AGE_DAYS)
+    assert date.today() - latest_date <= max_age, (
+        f"{concept} latest observation {latest_date} is older than "
+        f"{_CREDIT_FRESHNESS_MAX_AGE_DAYS} days — series may have been discontinued"
+    )
 
 
 # Tranche E live coverage

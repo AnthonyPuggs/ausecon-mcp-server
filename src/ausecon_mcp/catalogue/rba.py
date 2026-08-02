@@ -642,7 +642,10 @@ _RAW_RBA_CATALOGUE = {
             {
                 "name": "total_credit_yoy",
                 "aliases": ["total credit growth", "credit growth"],
-                "rba_series_ids": ["DGFAC12"],
+                # DGFAC12 ("Credit; Total; 12-month ended growth") was discontinued after
+                # the June 2019 credit aggregates methodology revision (APRA reporting
+                # population change). DGFACNW12 is the current successor series.
+                "rba_series_ids": ["DGFACNW12"],
             },
             {
                 "name": "housing_credit_yoy",
@@ -652,7 +655,9 @@ _RAW_RBA_CATALOGUE = {
             {
                 "name": "business_credit_yoy",
                 "aliases": ["business credit growth"],
-                "rba_series_ids": ["DGFACB12"],
+                # DGFACB12 was discontinued after the June 2019 methodology revision;
+                # DGFACBNW12 is the current successor series.
+                "rba_series_ids": ["DGFACBNW12"],
             },
         ],
         "audit": {
@@ -689,12 +694,20 @@ _RAW_RBA_CATALOGUE = {
             {
                 "name": "business",
                 "aliases": ["business credit"],
-                "rba_series_ids": ["DLCACBS"],
+                # DLCACBS ("Credit; Business; Seasonally adjusted") was discontinued after
+                # the June 2019 credit aggregates methodology revision (APRA reporting
+                # population change added non-ADI lenders). DLCACSFBS is the current
+                # successor series ("Credit; Business including select financial
+                # businesses; Seasonally adjusted").
+                "rba_series_ids": ["DLCACSFBS"],
             },
             {
                 "name": "total_credit",
                 "aliases": ["total credit", "credit total"],
-                "rba_series_ids": ["DLCACS"],
+                # DLCACS was discontinued after the June 2019 methodology revision;
+                # DLCACSFS is the current successor series ("Credit; Total including
+                # select financial businesses; Seasonally adjusted").
+                "rba_series_ids": ["DLCACSFS"],
             },
             {"name": "household", "aliases": ["household credit"], "rba_series_ids": None},
         ],
