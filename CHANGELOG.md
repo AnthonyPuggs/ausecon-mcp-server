@@ -6,6 +6,18 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+
+- APRA `period_rows` tables can declare a `period_marker`; the parser now starts after the
+  matching row instead of a fixed data row. The live PHI membership T1 sheet leads with a
+  "year ended 30 June" annual block before its "Quarter ended" block, so `phi_membership`
+  had been returning every June quarter twice and mislabelling five annual points as
+  quarterly observations.
+- The APRA XLSX parser streams each worksheet once instead of calling `cell()` on an
+  openpyxl read-only sheet, which re-parses the sheet XML from the top on every call. The
+  ADI quarterly performance workbook (64 sheets, 2004 to date) dropped from roughly 97 s to
+  under 1 s to parse; it had been timing out through the hosted server.
+
 ## [1.14.2] - 2026-08-02
 
 A data-correctness patch. The response contract `{metadata, series, observations}` and all tool
