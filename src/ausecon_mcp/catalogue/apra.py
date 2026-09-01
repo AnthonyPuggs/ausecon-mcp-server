@@ -705,6 +705,7 @@ APRA_CATALOGUE: dict[str, dict] = {
                 "frequency": "Quarterly",
                 "header_row": 2,
                 "data_start_row": 3,
+                "period_marker": "Quarter ended",
                 "month_column": 1,
                 "year_column": 2,
                 "metric_column": 3,

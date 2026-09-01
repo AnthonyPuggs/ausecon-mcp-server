@@ -659,3 +659,114 @@ def test_parse_apra_xlsx_selected_table_requires_matching_sheet() -> None:
             table_maps=table_maps,
             table_id="missing",
         )
+
+
+def _phi_workbook_with_year_ended_block() -> bytes:
+    """Mirror the live PHI membership T1 sheet: an annual block, then a quarterly block."""
+    return _xlsx_bytes(
+        {
+            "T1": [
+                [None, "Coverage of hospital treatment tables", None, None, None, None],
+                ["Year ended \n30 June", None, None, None, "NSW", "Aust."],
+                ["Jun", "2024", "Coverage ('000)", None, 3947.3, 12300.1],
+                [None, None, "% Population", None, 0.46, 0.45],
+                ["Jun", "2025", "Coverage ('000)", None, 3990.4, 12531.0],
+                [None, None, "% Population", None, 0.46, 0.45],
+                ["Quarter ended", None, None, None, "NSW", "Aust."],
+                ["Jun", "2025", "Coverage ('000)", None, 3990.4, 12531.0],
+                [None, None, "% Population", None, 0.46, 0.45],
+                ["Sep", "2025", "Coverage ('000)", None, 4010.0, 12633.9],
+                [None, None, "% Population", None, 0.46, 0.45],
+            ]
+        }
+    )
+
+
+def test_parse_apra_xlsx_period_rows_start_after_period_marker() -> None:
+    payload = parse_apra_xlsx(
+        _phi_workbook_with_year_ended_block(),
+        publication_id="TEST_PUBLICATION",
+        title="Test PHI membership publication",
+        frequency="Quarterly",
+        table_maps={
+            "t1": {
+                "sheet": "T1",
+                "layout": "period_rows",
+                "title": "Hospital treatment membership coverage",
+                "frequency": "Quarterly",
+                "header_row": 2,
+                "data_start_row": 3,
+                "period_marker": "Quarter ended",
+                "month_column": 1,
+                "year_column": 2,
+                "metric_column": 3,
+                "series_start_column": 5,
+            }
+        },
+    )
+
+    coverage_dates = [
+        item["date"]
+        for item in payload["observations"]
+        if item["series_id"] == "TEST_PUBLICATION:t1:aust:coverage_000"
+    ]
+
+    assert coverage_dates == ["2025-06-30", "2025-09-30"]
+
+
+def test_phi_membership_catalogue_map_skips_year_ended_block() -> None:
+    payload = parse_apra_xlsx(
+        _phi_workbook_with_year_ended_block(),
+        publication_id="APRA_PHI_MEMBERSHIP",
+        title=APRA_CATALOGUE["APRA_PHI_MEMBERSHIP"]["name"],
+        frequency="Quarterly",
+        table_maps=APRA_CATALOGUE["APRA_PHI_MEMBERSHIP"]["tables"],
+        table_id="t1",
+    )
+
+    keys = [(item["date"], item["series_id"]) for item in payload["observations"]]
+
+    assert len(keys) == len(set(keys)), "duplicate (date, series_id) observations"
+    assert "2024-06-30" not in {date for date, _ in keys}
+
+
+def test_parse_apra_xlsx_streams_each_sheet_once(monkeypatch: pytest.MonkeyPatch) -> None:
+    from openpyxl.worksheet._read_only import ReadOnlyWorksheet
+
+    calls = {"count": 0}
+    original = ReadOnlyWorksheet._cells_by_row
+
+    def counting(self, *args, **kwargs):
+        calls["count"] += 1
+        return original(self, *args, **kwargs)
+
+    monkeypatch.setattr(ReadOnlyWorksheet, "_cells_by_row", counting)
+
+    dates = [datetime(2020 + year, 3, 31) for year in range(5)]
+    rows: list[list[object]] = [
+        ["Key statistics", None, None, None, None, None],
+        ["", *dates],
+        ["Key figures", None, None, None, None, None],
+    ]
+    rows.extend([f"Metric {index}", *[float(index)] * 5] for index in range(30))
+
+    parse_apra_xlsx(
+        _xlsx_bytes({"Key Stats": rows}),
+        publication_id="TEST_PUBLICATION",
+        title="Test matrix publication",
+        frequency="Quarterly",
+        table_maps={
+            "key_stats": {
+                "sheet": "Key Stats",
+                "layout": "matrix",
+                "title": "Key statistics",
+                "frequency": "Quarterly",
+                "date_row": 2,
+                "date_start_column": 2,
+                "data_start_row": 3,
+                "label_column": 1,
+            }
+        },
+    )
+
+    assert calls["count"] <= 2, f"sheet re-read {calls['count']} times"

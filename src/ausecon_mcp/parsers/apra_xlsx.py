@@ -42,24 +42,25 @@ def parse_apra_xlsx(
             raise ValueError(f"APRA workbook did not contain sheet {sheet_name!r}.")
         sheet = workbook[sheet_name]
         _validate_sheet_bounds(sheet, selected_table_id)
+        grid = _load_grid(sheet)
         layout = table_map["layout"]
         if layout == "row_records":
             table_series, table_observations = _parse_row_records(
-                sheet,
+                grid,
                 publication_id=publication_id,
                 table_id=selected_table_id,
                 table_map=table_map,
             )
         elif layout == "matrix":
             table_series, table_observations = _parse_matrix(
-                sheet,
+                grid,
                 publication_id=publication_id,
                 table_id=selected_table_id,
                 table_map=table_map,
             )
         elif layout == "period_rows":
             table_series, table_observations = _parse_period_rows(
-                sheet,
+                grid,
                 publication_id=publication_id,
                 table_id=selected_table_id,
                 table_map=table_map,
@@ -144,8 +145,37 @@ def _validate_sheet_bounds(sheet: Any, table_id: str) -> None:
         )
 
 
+Grid = list[tuple[Any, ...]]
+
+
+def _load_grid(sheet: Any) -> Grid:
+    """Stream a read-only worksheet exactly once.
+
+    ``ReadOnlyWorksheet.cell()`` re-parses the sheet XML from the top on every call,
+    which made large APRA workbooks quadratic to parse.
+    """
+    return [tuple(row) for row in sheet.iter_rows(values_only=True)]
+
+
+def _grid_max_row(grid: Grid) -> int:
+    return len(grid)
+
+
+def _grid_max_column(grid: Grid) -> int:
+    return max((len(row) for row in grid), default=0)
+
+
+def _cell_value(grid: Grid, row: int, column: int) -> Any:
+    if row < 1 or row > len(grid):
+        return None
+    values = grid[row - 1]
+    if column < 1 or column > len(values):
+        return None
+    return values[column - 1]
+
+
 def _parse_row_records(
-    sheet: Any,
+    grid: Grid,
     *,
     publication_id: str,
     table_id: str,
@@ -157,10 +187,10 @@ def _parse_row_records(
     dimension_columns: dict[str, int] = dict(table_map.get("dimension_columns", {}))
     identity_columns: list[str] = list(table_map.get("identity_columns", []))
     series_start_column = int(table_map["series_start_column"])
-    max_column = sheet.max_column or series_start_column
+    max_column = _grid_max_column(grid) or series_start_column
 
     metric_headers = {
-        column: _clean_label(sheet.cell(header_row, column).value)
+        column: _clean_label(_cell_value(grid, header_row, column))
         for column in range(series_start_column, max_column + 1)
     }
     metric_headers = {column: label for column, label in metric_headers.items() if label}
@@ -168,12 +198,12 @@ def _parse_row_records(
     series_by_id: dict[str, dict[str, Any]] = {}
     observations: list[dict[str, Any]] = []
 
-    for row_index in range(data_start_row, (sheet.max_row or data_start_row) + 1):
-        parsed_date = _parse_date(sheet.cell(row_index, date_column).value)
+    for row_index in range(data_start_row, (_grid_max_row(grid) or data_start_row) + 1):
+        parsed_date = _parse_date(_cell_value(grid, row_index, date_column))
         if parsed_date is None:
             continue
         dimension_values = {
-            name: _clean_label(sheet.cell(row_index, column).value)
+            name: _clean_label(_cell_value(grid, row_index, column))
             for name, column in dimension_columns.items()
         }
         dimension_values = {name: value for name, value in dimension_values.items() if value}
@@ -182,7 +212,7 @@ def _parse_row_records(
             identity = f"row_{row_index}"
 
         for column, metric_label in metric_headers.items():
-            value, raw_value = _parse_observation_value(sheet.cell(row_index, column).value)
+            value, raw_value = _parse_observation_value(_cell_value(grid, row_index, column))
             if value is None and raw_value is None:
                 continue
             metric_slug = _slug(metric_label)
@@ -213,7 +243,7 @@ def _parse_row_records(
 
 
 def _parse_matrix(
-    sheet: Any,
+    grid: Grid,
     *,
     publication_id: str,
     table_id: str,
@@ -225,8 +255,8 @@ def _parse_matrix(
     label_column = int(table_map["label_column"])
 
     date_columns: list[tuple[int, str]] = []
-    for column in range(date_start_column, (sheet.max_column or date_start_column) + 1):
-        parsed_date = _parse_date(sheet.cell(date_row, column).value)
+    for column in range(date_start_column, (_grid_max_column(grid) or date_start_column) + 1):
+        parsed_date = _parse_date(_cell_value(grid, date_row, column))
         if parsed_date is not None:
             date_columns.append((column, parsed_date))
     if not date_columns:
@@ -236,12 +266,12 @@ def _parse_matrix(
     observations: list[dict[str, Any]] = []
     section_label: str | None = None
 
-    for row_index in range(data_start_row, (sheet.max_row or data_start_row) + 1):
-        row_label = _clean_label(sheet.cell(row_index, label_column).value)
+    for row_index in range(data_start_row, (_grid_max_row(grid) or data_start_row) + 1):
+        row_label = _clean_label(_cell_value(grid, row_index, label_column))
         if not row_label:
             continue
         values = [
-            _parse_observation_value(sheet.cell(row_index, column).value)
+            _parse_observation_value(_cell_value(grid, row_index, column))
             for column, _ in date_columns
         ]
         has_observations = any(value is not None or raw is not None for value, raw in values)
@@ -286,7 +316,7 @@ def _parse_matrix(
 
 
 def _parse_period_rows(
-    sheet: Any,
+    grid: Grid,
     *,
     publication_id: str,
     table_id: str,
@@ -300,21 +330,32 @@ def _parse_period_rows(
     series_start_column = int(table_map["series_start_column"])
 
     region_headers = {
-        column: _clean_label(sheet.cell(header_row, column).value)
-        for column in range(series_start_column, (sheet.max_column or series_start_column) + 1)
+        column: _clean_label(_cell_value(grid, header_row, column))
+        for column in range(
+            series_start_column, (_grid_max_column(grid) or series_start_column) + 1
+        )
     }
     region_headers = {column: label for column, label in region_headers.items() if label}
     if not region_headers:
         raise ValueError(f"APRA period-row table {table_id!r} did not contain region columns.")
+
+    period_marker = _clean_label(table_map.get("period_marker"))
+    if period_marker:
+        marker = period_marker.lower()
+        for row_index in range(header_row, _grid_max_row(grid) + 1):
+            text = _clean_label(_cell_value(grid, row_index, month_column))
+            if text and text.lower().startswith(marker):
+                data_start_row = row_index + 1
+                break
 
     series_by_id: dict[str, dict[str, Any]] = {}
     observations: list[dict[str, Any]] = []
     current_month: str | None = None
     current_year: str | None = None
 
-    for row_index in range(data_start_row, (sheet.max_row or data_start_row) + 1):
-        month_text = _clean_label(sheet.cell(row_index, month_column).value)
-        year_text = _clean_label(sheet.cell(row_index, year_column).value)
+    for row_index in range(data_start_row, (_grid_max_row(grid) or data_start_row) + 1):
+        month_text = _clean_label(_cell_value(grid, row_index, month_column))
+        year_text = _clean_label(_cell_value(grid, row_index, year_column))
         if month_text:
             current_month = month_text
         if year_text:
@@ -323,13 +364,13 @@ def _parse_period_rows(
         parsed_date = _parse_period_row_date(current_month, current_year)
         if parsed_date is None:
             continue
-        metric_label = _clean_label(sheet.cell(row_index, metric_column).value)
+        metric_label = _clean_label(_cell_value(grid, row_index, metric_column))
         if not metric_label:
             continue
 
         metric_slug = _slug(metric_label)
         for column, region_label in region_headers.items():
-            value, raw_value = _parse_observation_value(sheet.cell(row_index, column).value)
+            value, raw_value = _parse_observation_value(_cell_value(grid, row_index, column))
             if value is None and raw_value is None:
                 continue
             region_slug = _slug(region_label)
