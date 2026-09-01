@@ -208,7 +208,7 @@ def test_readme_is_rich_landing_page_for_current_release_state() -> None:
 
     assert '<img src="assets/banner.svg"' in readme_text
     assert "Australian economic data is authoritative but awkward to reach" in readme_text
-    assert "Version `1.14.2` is the current release line." in docs_home_text
+    assert "Version `1.14.3` is the current release line." in docs_home_text
     assert "Version `1.12.1` is the current release line." not in readme_text
     assert "Version `1.12.1` is the current release line." not in docs_home_text
 
@@ -261,7 +261,7 @@ def test_docs_landing_leads_with_open_free_correctness_value_props() -> None:
     assert "never a stale cache" not in docs_home
     assert "ausdata" not in docs_home.lower()
     # Release-line marker preserved (asserted elsewhere too).
-    assert "Version `1.14.2` is the current release line." in docs_home
+    assert "Version `1.14.3` is the current release line." in docs_home
 
 
 def test_readme_documents_local_client_install_configs() -> None:
@@ -671,7 +671,7 @@ def test_changelog_promotes_v1141_and_keeps_fresh_unreleased_section() -> None:
     assert "official MCP registry" in v1141_section
     assert "mean_dwelling_price" in v1140_section
     assert (
-        "[Unreleased]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.14.2...HEAD"
+        "[Unreleased]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.14.3...HEAD"
     ) in changelog_text
     assert (
         "[1.14.1]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.14.0...v1.14.1"

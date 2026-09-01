@@ -6,6 +6,12 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.14.3] - 2026-09-02
+
+An APRA parser patch. The response contract `{metadata, series, observations}` and all tool
+signatures are unchanged; one optional `period_marker` key is added to the APRA catalogue
+table-map format.
+
 ### Fixed
 
 - APRA `period_rows` tables can declare a `period_marker`; the parser now starts after the
@@ -905,7 +911,8 @@ Initial public release.
 - Initial curated catalogues for ABS and RBA, plus a four-concept
   `CURATED_SERIES` semantic shortcut map.
 
-[Unreleased]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.14.2...HEAD
+[Unreleased]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.14.3...HEAD
+[1.14.3]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.14.2...v1.14.3
 [1.14.2]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.14.1...v1.14.2
 [1.14.1]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.14.0...v1.14.1
 [1.14.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.13.0...v1.14.0
