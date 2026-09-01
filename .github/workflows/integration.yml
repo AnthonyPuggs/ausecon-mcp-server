@@ -75,6 +75,18 @@ jobs:
             printf '%s\n' "$body" | gh issue create --title "$TITLE" --label "$LABEL" --body-file -
           fi
 
+      - name: Close drift issue on recovery
+        if: steps.run_tests.outcome == 'success' && steps.run_audit.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          existing=$(gh issue list --label "upstream-drift" --state open --json number --jq '.[0].number' || echo "")
+          if [ -n "$existing" ]; then
+            gh issue close "$existing" --comment "The nightly integration suite passed on $(date -u +%FT%TZ); closing as recovered. Run: $RUN_URL"
+          fi
+
       - name: Fail the job if tests or audit failed
         if: steps.run_tests.outcome == 'failure' || steps.run_audit.outcome == 'failure'
         run: exit 1
