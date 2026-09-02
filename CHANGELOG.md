@@ -6,6 +6,11 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.14.5] - 2026-09-02
+
+An APRA data-correctness patch. The response contract `{metadata, series, observations}` and all
+tool signatures are unchanged.
+
 ### Fixed
 
 - `phi_premium_revenue` and `phi_claims_expense` parse again. APRA's June 2026 private health
@@ -940,7 +945,8 @@ Initial public release.
 - Initial curated catalogues for ABS and RBA, plus a four-concept
   `CURATED_SERIES` semantic shortcut map.
 
-[Unreleased]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.14.4...HEAD
+[Unreleased]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.14.5...HEAD
+[1.14.5]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.14.4...v1.14.5
 [1.14.4]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.14.3...v1.14.4
 [1.14.3]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.14.2...v1.14.3
 [1.14.2]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.14.1...v1.14.2
