@@ -8,6 +8,13 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- `phi_premium_revenue` and `phi_claims_expense` parse again. APRA's June 2026 private health
+  insurance performance workbook renamed its data sheet from `Database` to `Database ` (trailing
+  space) with the layout otherwise unchanged; APRA sheet lookup now matches on stripped names.
+  The bundled APRA URL seed manifest is refreshed to the current editions of all ten
+  publications (every seed had moved from `/sites/default/files/` to `/system/files/`), and the
+  PHI performance fallback URL points at the June 2026 file.
+
 - APRA series units now follow the workbook. Cells carrying an Excel percent number format
   are returned as percentages with unit `Per cent` and `decimals` taken from the format, so
   `adi_capital_ratio` reads 20.3 rather than 0.203 and `adi_liquidity_coverage_ratio` 137.8
