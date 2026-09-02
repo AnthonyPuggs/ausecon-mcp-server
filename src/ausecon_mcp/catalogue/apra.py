@@ -617,9 +617,9 @@ APRA_CATALOGUE: dict[str, dict] = {
             r"Quarterly private health insurance performance statistics database.*XLSX"
         ],
         "fallback_url": (
-            "https://www.apra.gov.au/sites/default/files/2026-05/"
+            "https://www.apra.gov.au/system/files/2026-08/"
             "Quarterly%20private%20health%20insurance%20performance%20statistics%20"
-            "database%20-%20September%202023%20to%20March%202026.xlsx"
+            "database%20-%20September%202023%20to%20June%202026.xlsx"
         ),
         "tables": {
             "database": {

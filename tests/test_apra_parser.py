@@ -938,3 +938,58 @@ def test_parse_apra_xlsx_period_rows_percent_formatted_metric_overrides_table_un
         if item["series_id"] == "APRA_PHI_MEMBERSHIP:t1:aust:population"
     ]
     assert population == [45.83]
+
+
+def test_parse_apra_xlsx_matches_sheet_names_ignoring_surrounding_whitespace() -> None:
+    # The June 2026 PHI performance workbook renamed its data sheet to "Database " with
+    # a trailing space; the layout is unchanged, so the lookup must not be exact.
+    workbook = _xlsx_bytes(
+        {
+            "Database ": [
+                ["Period End", "Data item", "Subject", "Category", "Stock or flow", "Value"],
+                [
+                    datetime(2026, 6, 30),
+                    "HIB premium revenue",
+                    "Financial performance (supplementary)",
+                    "Revenue",
+                    "Flow",
+                    6118000000.0,
+                ],
+            ]
+        }
+    )
+
+    payload = parse_apra_xlsx(
+        workbook,
+        publication_id="APRA_PHI_PERFORMANCE",
+        title=APRA_CATALOGUE["APRA_PHI_PERFORMANCE"]["name"],
+        frequency="Quarterly",
+        table_maps=APRA_CATALOGUE["APRA_PHI_PERFORMANCE"]["tables"],
+        table_id="database",
+    )
+
+    assert payload["observations"] == [
+        {
+            "date": "2026-06-30",
+            "series_id": (
+                "APRA_PHI_PERFORMANCE:database:"
+                "hib_premium_revenue:financial_performance_supplementary:revenue:flow:value"
+            ),
+            "value": 6118000000.0,
+            "dimensions": {
+                "table": {
+                    "code": "database",
+                    "label": "Private health insurance performance database",
+                },
+                "data_item": {"code": "HIB premium revenue", "label": "HIB premium revenue"},
+                "subject": {
+                    "code": "Financial performance (supplementary)",
+                    "label": "Financial performance (supplementary)",
+                },
+                "category": {"code": "Revenue", "label": "Revenue"},
+                "stock_or_flow": {"code": "Flow", "label": "Flow"},
+            },
+            "status": None,
+            "comment": None,
+        }
+    ]

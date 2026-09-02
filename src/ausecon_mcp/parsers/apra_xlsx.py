@@ -39,11 +39,14 @@ def parse_apra_xlsx(
     series_by_id: dict[str, dict[str, Any]] = {}
     observations: list[dict[str, Any]] = []
 
+    # APRA has renamed sheets by whitespace alone ("Database" -> "Database "), so match
+    # on stripped names rather than exactly.
+    sheets_by_name = {str(name).strip(): name for name in workbook.sheetnames}
     for selected_table_id, table_map in selected_maps.items():
-        sheet_name = str(table_map["sheet"])
-        if sheet_name not in workbook.sheetnames:
+        sheet_name = str(table_map["sheet"]).strip()
+        if sheet_name not in sheets_by_name:
             raise ValueError(f"APRA workbook did not contain sheet {sheet_name!r}.")
-        sheet = workbook[sheet_name]
+        sheet = workbook[sheets_by_name[sheet_name]]
         _validate_sheet_bounds(sheet, selected_table_id)
         grid = _load_grid(sheet)
         layout = table_map["layout"]
