@@ -32,7 +32,9 @@ def parse_apra_xlsx(
     """Parse a curated APRA XLSX workbook into the normal retrieval response shape."""
     selected_maps = _select_table_maps(table_maps, table_id)
     _validate_xlsx_container(content)
-    workbook = load_workbook(BytesIO(content), read_only=True, data_only=True)
+    # keep_links=False: APRA workbooks can carry tens of MB of external-link cache XML
+    # that openpyxl would otherwise parse into memory; cached values live in the sheets.
+    workbook = load_workbook(BytesIO(content), read_only=True, data_only=True, keep_links=False)
     series_by_id: dict[str, dict[str, Any]] = {}
     observations: list[dict[str, Any]] = []
 
