@@ -6,6 +6,14 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+
+- APRA series units now follow the workbook. Cells carrying an Excel percent number format
+  are returned as percentages with unit `Per cent` and `decimals` taken from the format, so
+  `adi_capital_ratio` reads 20.3 rather than 0.203 and `adi_liquidity_coverage_ratio` 137.8
+  rather than 1.378, matching the published tables. Rows whose label ends in `($m)` in a
+  table with no declared unit are labelled `$ million`. Applies to all three APRA layouts.
+
 ## [1.14.4] - 2026-09-02
 
 A hosted-stability patch. The response contract `{metadata, series, observations}` and all

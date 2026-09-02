@@ -810,3 +810,131 @@ def test_parse_apra_xlsx_does_not_load_external_link_caches(
 
     assert seen.get("read_only") is True
     assert seen.get("keep_links") is False
+
+
+def _xlsx_bytes_with_formats(
+    rows_by_sheet: dict[str, list[list[object]]],
+    number_formats: dict[tuple[str, int, int], str],
+) -> bytes:
+    """Like _xlsx_bytes, but applies Excel number formats keyed by (sheet, row, column)."""
+    workbook = Workbook()
+    first = True
+    sheets = {}
+    for title, rows in rows_by_sheet.items():
+        sheet = workbook.active if first else workbook.create_sheet()
+        first = False
+        sheet.title = title
+        for row in rows:
+            sheet.append(row)
+        sheets[title] = sheet
+    for (title, row, column), number_format in number_formats.items():
+        sheets[title].cell(row, column).number_format = number_format
+    buffer = BytesIO()
+    workbook.save(buffer)
+    return buffer.getvalue()
+
+
+def _key_stats_table_map() -> dict:
+    return {
+        "key_stats": {
+            "sheet": "Key Stats",
+            "layout": "matrix",
+            "title": "Key statistics",
+            "unit": None,
+            "frequency": "Quarterly",
+            "date_row": 2,
+            "date_start_column": 2,
+            "data_start_row": 3,
+            "label_column": 1,
+        }
+    }
+
+
+def test_parse_apra_xlsx_matrix_percent_formatted_rows_become_per_cent() -> None:
+    workbook = _xlsx_bytes_with_formats(
+        {
+            "Key Stats": [
+                ["Key figures", None, None],
+                ["", datetime(2025, 12, 31), datetime(2026, 3, 31)],
+                ["Key figures", None, None],
+                ["Total capital base ($m)", 460000.0, 472998.4],
+                ["Total capital ratio", 0.203, 0.203],
+            ]
+        },
+        {("Key Stats", 5, 2): "0.0%", ("Key Stats", 5, 3): "0.0%"},
+    )
+
+    payload = parse_apra_xlsx(
+        workbook,
+        publication_id="ADI_QUARTERLY_PERFORMANCE",
+        title="Test",
+        frequency="Quarterly",
+        table_maps=_key_stats_table_map(),
+    )
+
+    series = {item["series_id"]: item for item in payload["series"]}
+    ratio = series["ADI_QUARTERLY_PERFORMANCE:key_stats:key_figures:total_capital_ratio"]
+    assert ratio["unit"] == "Per cent"
+    assert ratio["decimals"] == 1
+    ratio_values = [
+        item["value"] for item in payload["observations"] if item["series_id"] == ratio["series_id"]
+    ]
+    assert ratio_values == [20.3, 20.3]
+
+
+def test_parse_apra_xlsx_matrix_dollar_million_label_sets_unit_when_table_has_none() -> None:
+    workbook = _xlsx_bytes_with_formats(
+        {
+            "Key Stats": [
+                ["Key figures", None, None],
+                ["", datetime(2025, 12, 31), datetime(2026, 3, 31)],
+                ["Key figures", None, None],
+                ["Total capital base ($m)", 460000.0, 472998.4],
+            ]
+        },
+        {},
+    )
+
+    payload = parse_apra_xlsx(
+        workbook,
+        publication_id="ADI_QUARTERLY_PERFORMANCE",
+        title="Test",
+        frequency="Quarterly",
+        table_maps=_key_stats_table_map(),
+    )
+
+    assert payload["series"][0]["unit"] == "$ million"
+    assert payload["observations"][1]["value"] == 472998.4
+
+
+def test_parse_apra_xlsx_period_rows_percent_formatted_metric_overrides_table_unit() -> None:
+    workbook = _xlsx_bytes_with_formats(
+        {
+            "T1": [
+                [None, "Coverage of hospital treatment tables", None, None, None, None],
+                ["Quarter ended", None, None, None, "NSW", "Aust."],
+                ["Jun", "2026", "Coverage ('000)", None, 4100.0, 12823.752],
+                [None, None, "% Population", None, 0.462, 0.4583],
+            ]
+        },
+        {("T1", 4, 5): "0.0%", ("T1", 4, 6): "0.0%"},
+    )
+
+    payload = parse_apra_xlsx(
+        workbook,
+        publication_id="APRA_PHI_MEMBERSHIP",
+        title=APRA_CATALOGUE["APRA_PHI_MEMBERSHIP"]["name"],
+        frequency="Quarterly",
+        table_maps=APRA_CATALOGUE["APRA_PHI_MEMBERSHIP"]["tables"],
+        table_id="t1",
+    )
+
+    series = {item["series_id"]: item for item in payload["series"]}
+    assert series["APRA_PHI_MEMBERSHIP:t1:aust:coverage_000"]["unit"] == "000 persons"
+    assert series["APRA_PHI_MEMBERSHIP:t1:aust:population"]["unit"] == "Per cent"
+    population = [
+        item["value"]
+        for item in payload["observations"]
+        if item["series_id"] == "APRA_PHI_MEMBERSHIP:t1:aust:population"
+    ]
+    assert population == [45.83]

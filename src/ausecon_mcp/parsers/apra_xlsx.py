@@ -4,6 +4,7 @@ import calendar
 import re
 import zipfile
 from datetime import date, datetime
+from decimal import Decimal
 from io import BytesIO
 from typing import Any
 
@@ -147,33 +148,89 @@ def _validate_sheet_bounds(sheet: Any, table_id: str) -> None:
         )
 
 
-Grid = list[tuple[Any, ...]]
-
-
-def _load_grid(sheet: Any) -> Grid:
-    """Stream a read-only worksheet exactly once.
+class Grid:
+    """A read-only worksheet streamed exactly once into value and number-format grids.
 
     ``ReadOnlyWorksheet.cell()`` re-parses the sheet XML from the top on every call,
-    which made large APRA workbooks quadratic to parse.
+    which made large APRA workbooks quadratic to parse. Number formats are kept because
+    APRA stores ratios as fractions displayed with an Excel percent format.
     """
-    return [tuple(row) for row in sheet.iter_rows(values_only=True)]
+
+    def __init__(self, sheet: Any) -> None:
+        values: list[tuple[Any, ...]] = []
+        formats: list[tuple[str | None, ...]] = []
+        for row in sheet.iter_rows():
+            values.append(tuple(cell.value for cell in row))
+            formats.append(tuple(getattr(cell, "number_format", None) for cell in row))
+        self._values = values
+        self._formats = formats
+        self.max_row = len(values)
+        self.max_column = max((len(row) for row in values), default=0)
+
+    def value(self, row: int, column: int) -> Any:
+        return _lookup(self._values, row, column)
+
+    def number_format(self, row: int, column: int) -> str | None:
+        return _lookup(self._formats, row, column)
 
 
-def _grid_max_row(grid: Grid) -> int:
-    return len(grid)
-
-
-def _grid_max_column(grid: Grid) -> int:
-    return max((len(row) for row in grid), default=0)
-
-
-def _cell_value(grid: Grid, row: int, column: int) -> Any:
-    if row < 1 or row > len(grid):
+def _lookup(rows: list[tuple[Any, ...]], row: int, column: int) -> Any:
+    if row < 1 or row > len(rows):
         return None
-    values = grid[row - 1]
+    values = rows[row - 1]
     if column < 1 or column > len(values):
         return None
     return values[column - 1]
+
+
+def _load_grid(sheet: Any) -> Grid:
+    return Grid(sheet)
+
+
+def _grid_max_row(grid: Grid) -> int:
+    return grid.max_row
+
+
+def _grid_max_column(grid: Grid) -> int:
+    return grid.max_column
+
+
+def _cell_value(grid: Grid, row: int, column: int) -> Any:
+    return grid.value(row, column)
+
+
+def _cell_format(grid: Grid, row: int, column: int) -> str | None:
+    return grid.number_format(row, column)
+
+
+_PERCENT_DECIMALS_RE = re.compile(r"\.(0+)\s*%")
+_DOLLAR_MILLION_LABEL_RE = re.compile(r"\(\$m\)\s*$", re.IGNORECASE)
+
+
+def _is_percent_format(number_format: str | None) -> bool:
+    return bool(number_format) and "%" in str(number_format)
+
+
+def _apply_number_format(value: float | None, number_format: str | None) -> float | None:
+    """Return the value as displayed: percent-formatted fractions become percentages."""
+    if value is None or not _is_percent_format(number_format):
+        return value
+    return float(Decimal(str(value)) * 100)
+
+
+def _series_unit(table_unit: Any, label: str, number_format: str | None) -> str | None:
+    if _is_percent_format(number_format):
+        return "Per cent"
+    if table_unit is None and _DOLLAR_MILLION_LABEL_RE.search(label):
+        return "$ million"
+    return table_unit
+
+
+def _series_decimals(number_format: str | None) -> int | None:
+    if not _is_percent_format(number_format):
+        return None
+    match = _PERCENT_DECIMALS_RE.search(str(number_format))
+    return len(match.group(1)) if match else 0
 
 
 def _parse_row_records(
@@ -217,6 +274,8 @@ def _parse_row_records(
             value, raw_value = _parse_observation_value(_cell_value(grid, row_index, column))
             if value is None and raw_value is None:
                 continue
+            number_format = _cell_format(grid, row_index, column)
+            value = _apply_number_format(value, number_format)
             metric_slug = _slug(metric_label)
             series_id = f"{publication_id}:{table_id}:{identity}:{metric_slug}"
             dimensions = _row_dimensions(table_id, table_map, dimension_values)
@@ -226,10 +285,11 @@ def _parse_row_records(
                 series_by_id[series_id] = SeriesDescriptor(
                     series_id=series_id,
                     label=label,
-                    unit=table_map.get("unit"),
+                    unit=_series_unit(table_map.get("unit"), metric_label, number_format),
                     frequency=table_map.get("frequency"),
                     dimensions=dimensions,
                     source_key=metric_label,
+                    decimals=_series_decimals(number_format),
                 ).to_dict()
             observations.append(
                 Observation(
@@ -276,6 +336,7 @@ def _parse_matrix(
             _parse_observation_value(_cell_value(grid, row_index, column))
             for column, _ in date_columns
         ]
+        formats = [_cell_format(grid, row_index, column) for column, _ in date_columns]
         has_observations = any(value is not None or raw is not None for value, raw in values)
         if not has_observations:
             if not row_label.lower().endswith(":"):
@@ -292,23 +353,34 @@ def _parse_matrix(
         dimensions = _matrix_dimensions(table_id, table_map, section_label)
         if series_id not in series_by_id:
             label = f"{section_label}: {row_label}" if section_label else row_label
+            number_format = next(
+                (
+                    fmt
+                    for (value, _raw), fmt in zip(values, formats, strict=True)
+                    if value is not None
+                ),
+                None,
+            )
             series_by_id[series_id] = SeriesDescriptor(
                 series_id=series_id,
                 label=label,
-                unit=table_map.get("unit"),
+                unit=_series_unit(table_map.get("unit"), row_label, number_format),
                 frequency=table_map.get("frequency"),
                 dimensions=dimensions,
                 source_key=row_label,
+                decimals=_series_decimals(number_format),
             ).to_dict()
 
-        for (_column, parsed_date), (value, raw_value) in zip(date_columns, values, strict=False):
+        for (_column, parsed_date), (value, raw_value), number_format in zip(
+            date_columns, values, formats, strict=True
+        ):
             if value is None and raw_value is None:
                 continue
             observations.append(
                 Observation(
                     date=parsed_date,
                     series_id=series_id,
-                    value=value,
+                    value=_apply_number_format(value, number_format),
                     raw_value=raw_value,
                     dimensions=dimensions,
                 ).to_dict()
@@ -375,6 +447,8 @@ def _parse_period_rows(
             value, raw_value = _parse_observation_value(_cell_value(grid, row_index, column))
             if value is None and raw_value is None:
                 continue
+            number_format = _cell_format(grid, row_index, column)
+            value = _apply_number_format(value, number_format)
             region_slug = _slug(region_label)
             series_id = f"{publication_id}:{table_id}:{region_slug}:{metric_slug}"
             dimensions = _period_row_dimensions(table_id, table_map, region_label, metric_label)
@@ -382,10 +456,11 @@ def _parse_period_rows(
                 series_by_id[series_id] = SeriesDescriptor(
                     series_id=series_id,
                     label=f"{region_label} - {metric_label}",
-                    unit=table_map.get("unit"),
+                    unit=_series_unit(table_map.get("unit"), metric_label, number_format),
                     frequency=table_map.get("frequency"),
                     dimensions=dimensions,
                     source_key=metric_label,
+                    decimals=_series_decimals(number_format),
                 ).to_dict()
             observations.append(
                 Observation(
