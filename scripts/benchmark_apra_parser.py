@@ -31,7 +31,7 @@ def _xlsx_bytes(sheet_name: str, rows: list[list[object]]) -> bytes:
 
 
 def _workbook_dimensions(content: bytes) -> tuple[int, int]:
-    workbook = load_workbook(BytesIO(content), read_only=True, data_only=True)
+    workbook = load_workbook(BytesIO(content), read_only=True, data_only=True, keep_links=False)
     sheet = workbook.active
     return int(sheet.max_row or 0), int(sheet.max_column or 0)
 

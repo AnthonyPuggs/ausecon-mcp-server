@@ -6,6 +6,15 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+
+- The APRA XLSX parser opens workbooks with `keep_links=False`. APRA's PHI membership
+  workbook carries five external-link caches (one 29 MB of XML) that openpyxl parses into
+  memory by default even in read-only mode: 482 MB peak and 15 s locally, and an
+  out-of-memory kill on the 512 MB hosted instance, so any `phi_membership` call took the
+  hosted server down. Cached cell values already live in the sheets; the caches are never
+  read. Peak memory for that workbook is now 5 MB and the load takes 0.1 s.
+
 ## [1.14.3] - 2026-09-02
 
 An APRA parser patch. The response contract `{metadata, series, observations}` and all tool

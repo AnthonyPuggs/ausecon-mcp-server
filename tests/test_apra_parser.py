@@ -770,3 +770,43 @@ def test_parse_apra_xlsx_streams_each_sheet_once(monkeypatch: pytest.MonkeyPatch
     )
 
     assert calls["count"] <= 2, f"sheet re-read {calls['count']} times"
+
+
+def test_parse_apra_xlsx_does_not_load_external_link_caches(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # APRA's PHI membership workbook carries ~29 MB of external-link cache XML.
+    # openpyxl parses it into memory by default (482 MB peak on a 512 MB host),
+    # so the parser must opt out; the cached cell values already live in the sheets.
+    seen: dict[str, object] = {}
+    original = apra_parser.load_workbook
+
+    def recording(*args, **kwargs):
+        seen.update(kwargs)
+        return original(*args, **kwargs)
+
+    monkeypatch.setattr(apra_parser, "load_workbook", recording)
+
+    parse_apra_xlsx(
+        _xlsx_bytes({"T1": [[None, "Coverage"], ["Quarter ended", "Aust."], ["Dec", 1.0]]}),
+        publication_id="TEST_PUBLICATION",
+        title="Test",
+        frequency="Quarterly",
+        table_maps={
+            "t1": {
+                "sheet": "T1",
+                "layout": "period_rows",
+                "title": "T1",
+                "frequency": "Quarterly",
+                "header_row": 2,
+                "data_start_row": 3,
+                "month_column": 1,
+                "year_column": 2,
+                "metric_column": 3,
+                "series_start_column": 2,
+            }
+        },
+    )
+
+    assert seen.get("read_only") is True
+    assert seen.get("keep_links") is False
