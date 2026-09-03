@@ -39,8 +39,9 @@
 Australian economic data is authoritative but awkward to reach. It sits behind three different
 portals with three different formats, and each one expects you to already know its identifiers.
 ausecon puts that data in front of an AI assistant with nothing to sign up for and no key to manage.
-Every series is fetched live, stamped with where and when it came from, and returned in the same
-`metadata · series · observations` shape whether it came from the ABS, the RBA, or APRA. Ask for
+Every series is fetched from the source, cached for up to an hour, stamped with when it was actually
+retrieved, and returned in the same `metadata · series · observations` shape whether it came from
+the ABS, the RBA, or APRA. Ask for
 "the cash rate" or "quarterly real GDP growth" and the assistant works out the right call.
 
 <table align="center">
@@ -59,9 +60,10 @@ Every series is fetched live, stamped with where and when it came from, and retu
   <tr>
     <td width="33%" valign="top">
       <h4>Fresh &amp; source-traceable</h4>
-      Every value is fetched live and stamped with its provenance
-      (<code>retrieved_at</code>, <code>source</code>, <code>server_version</code>). If a source is
-      down, the cached fallback is flagged <code>stale</code> and never served silently.
+      Every value is fetched from the source, cached for up to an hour, and stamped with its
+      provenance (<code>retrieved_at</code>, <code>source</code>, <code>server_version</code>). If a
+      source is down after the cache expires, the old copy is returned flagged <code>stale</code>
+      and never served silently.
     </td>
     <td width="33%" valign="top">
       <h4>Three sources, one shape</h4>
