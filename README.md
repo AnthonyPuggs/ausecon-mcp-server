@@ -16,14 +16,13 @@
 
 [![ausecon-mcp-server MCP server](https://glama.ai/mcp/servers/AnthonyPuggs/ausecon-mcp-server/badges/card.svg)](https://glama.ai/mcp/servers/AnthonyPuggs/ausecon-mcp-server)
 <p>
-  <b>ausecon</b> is a Model Context Protocol server that gives any AI assistant clean, structured
-  access to Australia&rsquo;s core economic and financial data &mdash; straight from the
-  <b>ABS</b>, <b>RBA</b>, and <b>APRA</b>.
+  <b>ausecon</b> is a Model Context Protocol server that gives an AI assistant structured access
+  to Australia&rsquo;s official economic and financial data, straight from the ABS, RBA, and APRA.
 </p>
 
 <p>
-  <b>Open</b> &middot; <b>free</b> &middot; <b>no API key</b> &mdash; always
-  <b>fresh &amp; fully source-traceable</b>, three official sources in <b>one shape</b>.
+  Open source, free, and no API key. Every series comes back fresh &amp; fully source-traceable,
+  and all three sources share one response shape.
 </p>
 
 <a href="https://auseconmcp.com"><b>Documentation</b></a> &nbsp;·&nbsp;
@@ -37,13 +36,12 @@
 
 ## Why this exists
 
-Australian economic data is authoritative but awkward to reach &mdash; scattered across portals,
-formats, and identifiers you have to memorise. **ausecon** is the **open, free, no-API-key** way to
-put it in front of any AI assistant: every series comes back **fresh and fully source-traceable**, stamped with its provenance,
-in **one consistent shape**
-(`metadata · series · observations`) across all three regulators. Ask for *&ldquo;the cash
-rate&rdquo;* or *&ldquo;quarterly real GDP growth&rdquo;* and get research-grade data back without
-leaving the conversation.
+Australian economic data is authoritative but awkward to reach. It sits behind three different
+portals with three different formats, and each one expects you to already know its identifiers.
+ausecon puts that data in front of an AI assistant with nothing to sign up for and no key to manage.
+Every series is fetched live, stamped with where and when it came from, and returned in the same
+`metadata · series · observations` shape whether it came from the ABS, the RBA, or APRA. Ask for
+"the cash rate" or "quarterly real GDP growth" and the assistant works out the right call.
 
 <table align="center">
   <tr>
@@ -60,35 +58,35 @@ leaving the conversation.
 <table>
   <tr>
     <td width="33%" valign="top">
-      <h4>🔒 Fresh &amp; source-traceable</h4>
+      <h4>Fresh &amp; source-traceable</h4>
       Every value is fetched live and stamped with its provenance
-      (<code>retrieved_at</code>, <code>source</code>, <code>server_version</code>). On an upstream
-      outage, a cached fallback is always flagged <code>stale</code> &mdash; never served silently.
+      (<code>retrieved_at</code>, <code>source</code>, <code>server_version</code>). If a source is
+      down, the cached fallback is flagged <code>stale</code> and never served silently.
     </td>
     <td width="33%" valign="top">
-      <h4>🧱 Three sources, one shape</h4>
-      ABS, RBA and APRA all return the same tidy
-      <code>metadata · series · observations</code> structure.
+      <h4>Three sources, one shape</h4>
+      ABS, RBA and APRA all return the same
+      <code>metadata · series · observations</code> structure, so anything written against one
+      source works for the other two.
     </td>
     <td width="33%" valign="top">
-      <h4>🧮 Transparent derived series</h4>
-      Formula-based indicators like <code>real_cash_rate</code> &mdash; every calculation is
-      open and inspectable.
+      <h4>Transparent derived series</h4>
+      Formula-based indicators like <code>real_cash_rate</code>, with the formula and its input
+      series returned alongside the numbers.
     </td>
   </tr>
   <tr>
     <td width="33%" valign="top">
-      <h4>🎯 Source-native control</h4>
-      Drop down to raw <code>get_abs_data</code>, <code>get_rba_table</code> or
-      <code>get_apra_data</code> whenever you need exact control.
+      <h4>Source-native control</h4>
+      Drop down to <code>get_abs_data</code>, <code>get_rba_table</code> or
+      <code>get_apra_data</code> when you need a specific dataflow, table, or series ID.
     </td>
     <td width="33%" valign="top">
-      <h4>⚡ Quick-turn helpers</h4>
-      Convenience tools for latest observations, top movers and release events &mdash; analysis in
-      one call.
+      <h4>Convenience tools</h4>
+      Latest observations, top movers, and the release calendar, each in a single call.
     </td>
     <td width="33%" valign="top">
-      <h4>🔌 Plugs into your client</h4>
+      <h4>Works with your client</h4>
       Claude Desktop, Claude Code, Cursor, Windsurf, VS Code, Codex or Smithery.
       stdio locally, Streamable HTTP when hosted.
     </td>
@@ -105,15 +103,13 @@ leaving the conversation.
 
 ## Try it instantly (no install)
 
-Prefer not to install anything? A hosted, **read-only, no-API-key** instance speaks MCP over
-Streamable HTTP at:
+A hosted read-only, no-API-key instance speaks MCP over Streamable HTTP at:
 
 ```text
 https://mcp.auseconmcp.com/mcp
 ```
 
-Point any MCP client that supports remote (Streamable HTTP) servers at that URL — for example, in
-Claude Code:
+Point any MCP client that supports remote servers at that URL. In Claude Code:
 
 ```bash
 claude mcp add --transport http ausecon https://mcp.auseconmcp.com/mcp
@@ -125,15 +121,15 @@ claude mcp add --transport http ausecon https://mcp.auseconmcp.com/mcp
 
 ## Install
 
-The package lives on [PyPI](https://pypi.org/project/ausecon-mcp-server/) and is designed to be
-launched on demand by your MCP client via [`uvx`](https://docs.astral.sh/uv/):
+The package lives on [PyPI](https://pypi.org/project/ausecon-mcp-server/) and is meant to be
+launched on demand by your MCP client through [`uvx`](https://docs.astral.sh/uv/):
 
 ```bash
 uvx ausecon-mcp-server
 ```
 
-The server speaks MCP over standard input/output. Launched on its own, it simply waits for a client
-to connect.
+The server speaks MCP over standard input and output. Run on its own it just sits there waiting
+for a client, so there is nothing to see until one connects.
 
 ## Connect your client
 
@@ -231,7 +227,7 @@ Or add to `.vscode/mcp.json` (workspace) or your user `mcp.json`:
 ```
 </details>
 
-> **Hosting it instead?** `smithery.yaml` and `Dockerfile.smithery` ship a Streamable HTTP
+> To host it yourself, `smithery.yaml` and `Dockerfile.smithery` ship a Streamable HTTP
 > deployment at `/mcp`. See the [Smithery guide](https://auseconmcp.com/smithery).
 
 ## A quick taste
@@ -247,14 +243,14 @@ get_economic_series(
 )
 ```
 
-Need a transparent, formula-based indicator? Call the derived surface directly:
+Derived indicators have their own tool:
 
 ```python
 get_derived_series(concept="real_cash_rate", last_n=12)
 ```
 
-> Connected to an AI agent, you can skip the syntax entirely &mdash; ask for *&ldquo;quarterly real
-> GDP growth&rdquo;* and it maps your request to the right tool calls for you.
+> Connected to an AI agent, you can skip the syntax entirely. Ask for "quarterly real GDP
+> growth" and it works out which tools to call.
 
 ## Develop locally
 
@@ -274,8 +270,8 @@ ausecon tools. Ground-truth resolution is free to check:
 uv run --group evals python -m evals.run_eval --dry-run
 ```
 
-A full run makes paid API calls &mdash; see the
-[evaluation harness guide](https://auseconmcp.com/maintainers/evaluation/) before running one.
+A full run makes paid API calls, so read the
+[evaluation harness guide](https://auseconmcp.com/maintainers/evaluation/) before starting one.
 
 ---
 
@@ -284,7 +280,7 @@ A full run makes paid API calls &mdash; see the
 
 [auseconmcp.com](https://auseconmcp.com) &nbsp;·&nbsp;
 [Issues](https://github.com/AnthonyPuggs/ausecon-mcp-server/issues) &nbsp;·&nbsp;
-MIT Licence &nbsp;·&nbsp; Made for the Australian data community
+MIT Licence
 
 </sub>
 </div>
