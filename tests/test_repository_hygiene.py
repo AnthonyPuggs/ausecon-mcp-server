@@ -624,6 +624,16 @@ def test_ci_workflow_runs_local_docker_smoke_build() -> None:
     assert "docker build ." in workflow_text
 
 
+def test_docker_smoke_build_falls_back_across_base_image_mirrors() -> None:
+    workflow_text = CI_WORKFLOW.read_text(encoding="utf-8")
+    dockerfile_text = DOCKERFILE.read_text(encoding="utf-8")
+
+    assert "ARG BASE_IMAGE=public.ecr.aws/docker/library/python:3.12-slim" in dockerfile_text
+    assert "FROM ${BASE_IMAGE}" in dockerfile_text
+    assert '--build-arg "BASE_IMAGE=${image}"' in workflow_text
+    assert "mirror.gcr.io/library/python:3.12-slim" in workflow_text
+
+
 def test_python_version_story_is_consistent_across_docs_and_ci() -> None:
     readme_text = README.read_text(encoding="utf-8")
     claude_text = (ROOT / "CLAUDE.md").read_text(encoding="utf-8")
