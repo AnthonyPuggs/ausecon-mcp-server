@@ -62,14 +62,23 @@ jobs:
           "$VENV/bin/python" -c 'import ausecon_mcp.server; from ausecon_mcp.contracts import response_schema; print(response_schema()["$id"])'
 
       - name: Docker smoke build
-        # Docker Hub metadata requests intermittently time out on hosted
-        # runners, so retry transient failures before declaring defeat.
+        # The Dockerfile pins its own Python, so one matrix leg is enough. Each
+        # registry fails on hosted runners in its own way (Docker Hub timeouts,
+        # ECR Public per-IP 429s), so each attempt pulls the same official image
+        # from a different mirror.
+        if: matrix.python-version == '3.12'
         run: |
+          images=(
+            public.ecr.aws/docker/library/python:3.12-slim
+            mirror.gcr.io/library/python:3.12-slim
+            docker.io/library/python:3.12-slim
+          )
           for attempt in 1 2 3; do
-            if docker build .; then
+            image="${images[attempt-1]}"
+            if docker build . --build-arg "BASE_IMAGE=${image}"; then
               exit 0
             fi
-            echo "docker build failed (attempt ${attempt}/3); retrying in 30s..."
+            echo "docker build failed from ${image} (attempt ${attempt}/3); retrying in 30s..."
             sleep 30
           done
           echo "docker build failed after 3 attempts"

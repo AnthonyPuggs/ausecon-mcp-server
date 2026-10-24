@@ -1,6 +1,8 @@
 # Docker Hub's official image via its ECR Public mirror: identical content, but
 # avoids the registry-1.docker.io metadata timeouts that flake CI on hosted runners.
-FROM public.ecr.aws/docker/library/python:3.12-slim
+# CI overrides BASE_IMAGE to fall back across mirrors when one is rate-limited.
+ARG BASE_IMAGE=public.ecr.aws/docker/library/python:3.12-slim
+FROM ${BASE_IMAGE}
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
