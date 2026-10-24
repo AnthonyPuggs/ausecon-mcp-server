@@ -62,8 +62,10 @@ jobs:
           "$VENV/bin/python" -c 'import ausecon_mcp.server; from ausecon_mcp.contracts import response_schema; print(response_schema()["$id"])'
 
       - name: Docker smoke build
-        # Docker Hub metadata requests intermittently time out on hosted
-        # runners, so retry transient failures before declaring defeat.
+        # The Dockerfile pins its own Python, so one matrix leg is enough; building
+        # in every leg trips the public.ecr.aws pull rate limit on Dependabot batches.
+        # Registry metadata requests also fail intermittently, so retry before giving up.
+        if: matrix.python-version == '3.12'
         run: |
           for attempt in 1 2 3; do
             if docker build .; then
