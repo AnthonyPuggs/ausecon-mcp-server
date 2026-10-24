@@ -478,7 +478,7 @@ def test_docs_site_scaffold_exists_with_custom_domain_configuration() -> None:
     package_json = json.loads((DOCS_SITE / "package.json").read_text(encoding="utf-8"))
     astro_config = (DOCS_SITE / "astro.config.mjs").read_text(encoding="utf-8")
 
-    assert (DOCS_SITE / ".nvmrc").read_text(encoding="utf-8").strip() == "22.12.0"
+    assert (DOCS_SITE / ".nvmrc").read_text(encoding="utf-8").strip() == "22.22.0"
     assert package_json["scripts"]["check"] == "astro check"
     assert package_json["scripts"]["build"] == "astro build"
     assert package_json["dependencies"]["@astrojs/starlight"].startswith("^")
