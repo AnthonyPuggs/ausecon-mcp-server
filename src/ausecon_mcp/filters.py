@@ -80,3 +80,30 @@ def strip_observation_dimensions(payload: dict[str, Any]) -> dict[str, Any]:
     for observation in payload.get("observations", []):
         observation.pop("dimensions", None)
     return payload
+
+
+def compact_observation_dimensions(payload: dict[str, Any]) -> dict[str, Any]:
+    """Drop observation dimension dicts that equal their series descriptor's.
+
+    Unlike ``strip_observation_dimensions`` this is lossless: observations whose
+    dimensions differ (APRA institutions renamed under the same ABN) keep them, and
+    ``expand_observation_dimensions`` restores the rest. Used to keep large cached
+    payloads small.
+    """
+    series_dimensions = {item["series_id"]: item.get("dimensions") for item in payload["series"]}
+    for observation in payload.get("observations", []):
+        dimensions = observation.get("dimensions")
+        if dimensions is not None and dimensions == series_dimensions.get(observation["series_id"]):
+            del observation["dimensions"]
+    return payload
+
+
+def expand_observation_dimensions(payload: dict[str, Any]) -> dict[str, Any]:
+    """Restore observation dimensions removed by ``compact_observation_dimensions``."""
+    series_dimensions = {item["series_id"]: item.get("dimensions") for item in payload["series"]}
+    for observation in payload.get("observations", []):
+        if "dimensions" not in observation:
+            dimensions = series_dimensions.get(observation["series_id"])
+            if dimensions is not None:
+                observation["dimensions"] = dimensions
+    return payload

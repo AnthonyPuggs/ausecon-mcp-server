@@ -13,7 +13,7 @@ from openpyxl import Workbook
 
 from ausecon_mcp.cache import TTLCache
 from ausecon_mcp.errors import AuseconParseError
-from ausecon_mcp.providers.apra import APRAProvider, resolve_apra_download_url
+from ausecon_mcp.providers.apra import APRAProvider, _cache_key, resolve_apra_download_url
 
 
 def _xlsx_bytes() -> bytes:
@@ -42,6 +42,19 @@ def _two_table_xlsx_bytes() -> bytes:
     second.append(["Period", "ABN", "Institution Name", "Other assets"])
     second.append([datetime(2024, 1, 31), 22222222222, "Second Bank", 200.0])
 
+    buffer = BytesIO()
+    workbook.save(buffer)
+    return buffer.getvalue()
+
+
+def _renamed_institution_xlsx_bytes() -> bytes:
+    workbook = Workbook()
+    sheet = workbook.active
+    sheet.title = "Table 1"
+    sheet.append(["($million)"])
+    sheet.append(["Period", "ABN", "Institution Name", "Total residents assets"])
+    sheet.append([datetime(2024, 1, 31), 11111111111, "Example Bank", 100.5])
+    sheet.append([datetime(2024, 2, 29), 11111111111, "Renamed Bank", 110.0])
     buffer = BytesIO()
     workbook.save(buffer)
     return buffer.getvalue()
@@ -404,6 +417,52 @@ async def test_apra_provider_filters_series_ids_and_dates_after_cache() -> None:
 
     assert [item["date"] for item in result["observations"]] == ["2024-02-29"]
     assert result["series"][0]["series_id"] == series_id
+
+
+@pytest.mark.asyncio
+async def test_apra_provider_returns_full_observation_dimensions_across_renames() -> None:
+    provider = APRAProvider(catalogue=_catalogue())
+    html = '<a href="/sites/default/files/test.xlsx">Test back-series March 2026 XLSX</a>'
+
+    with respx.mock(assert_all_called=True) as router:
+        router.get("https://www.apra.gov.au/test-statistics").mock(
+            return_value=Response(200, text=html)
+        )
+        router.get("https://www.apra.gov.au/sites/default/files/test.xlsx").mock(
+            return_value=Response(200, content=_renamed_institution_xlsx_bytes())
+        )
+
+        first = await provider.get_data("TEST_PUBLICATION", table_id="table_1")
+        cached = await provider.get_data("TEST_PUBLICATION", table_id="table_1")
+
+    for result in (first, cached):
+        assert [item["dimensions"]["institution"]["label"] for item in result["observations"]] == [
+            "Example Bank",
+            "Renamed Bank",
+        ]
+        assert result["series"][0]["dimensions"]["institution"]["label"] == "Example Bank"
+
+
+@pytest.mark.asyncio
+async def test_apra_provider_caches_only_observation_dimensions_that_differ() -> None:
+    # Large APRA tables repeat the series dimensions on every observation; caching
+    # those copies pushed ADI_MONTHLY past the hosted instance's memory.
+    provider = APRAProvider(catalogue=_catalogue())
+    html = '<a href="/sites/default/files/test.xlsx">Test back-series March 2026 XLSX</a>'
+
+    with respx.mock(assert_all_called=True) as router:
+        router.get("https://www.apra.gov.au/test-statistics").mock(
+            return_value=Response(200, text=html)
+        )
+        router.get("https://www.apra.gov.au/sites/default/files/test.xlsx").mock(
+            return_value=Response(200, content=_renamed_institution_xlsx_bytes())
+        )
+
+        await provider.get_data("TEST_PUBLICATION", table_id="table_1")
+
+    stored = provider._cache.get(_cache_key("TEST_PUBLICATION", "table_1"))
+    assert "dimensions" not in stored["observations"][0]
+    assert stored["observations"][1]["dimensions"]["institution"]["label"] == "Renamed Bank"
 
 
 @pytest.mark.asyncio
