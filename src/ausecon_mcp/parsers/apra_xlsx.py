@@ -272,6 +272,10 @@ def _parse_row_records(
         identity = _identity_slug(dimension_values, identity_columns)
         if not identity:
             identity = f"row_{row_index}"
+        # Built once per row and shared by its metrics' observations: a fresh dict per
+        # observation made large tables (ADI_MONTHLY, ~300k observations) several
+        # hundred MB.
+        dimensions = _row_dimensions(table_id, table_map, dimension_values)
 
         for column, metric_label in metric_headers.items():
             value, raw_value = _parse_observation_value(_cell_value(grid, row_index, column))
@@ -281,7 +285,6 @@ def _parse_row_records(
             value = _apply_number_format(value, number_format)
             metric_slug = _slug(metric_label)
             series_id = f"{publication_id}:{table_id}:{identity}:{metric_slug}"
-            dimensions = _row_dimensions(table_id, table_map, dimension_values)
             if series_id not in series_by_id:
                 entity_label = _entity_label(dimension_values)
                 label = f"{entity_label} - {metric_label}" if entity_label else metric_label

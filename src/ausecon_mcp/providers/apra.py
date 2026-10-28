@@ -15,7 +15,11 @@ import httpx
 from ausecon_mcp.cache import TTLCache
 from ausecon_mcp.catalogue.apra import APRA_CATALOGUE
 from ausecon_mcp.errors import AuseconParseError, AuseconUpstreamError, AuseconValidationError
-from ausecon_mcp.filters import filter_payload
+from ausecon_mcp.filters import (
+    compact_observation_dimensions,
+    expand_observation_dimensions,
+    filter_payload,
+)
 from ausecon_mcp.logging import get_logger
 from ausecon_mcp.parsers.apra_xlsx import parse_apra_xlsx
 from ausecon_mcp.providers._http import build_client, resolve_version, utc_now_iso
@@ -89,6 +93,7 @@ class APRAProvider:
             end_date=end_date,
             last_n=last_n,
         )
+        expand_observation_dimensions(payload)
         payload["metadata"]["server_version"] = resolve_version()
         if stale_meta is not None:
             payload["metadata"]["stale"] = True
@@ -126,6 +131,9 @@ class APRAProvider:
                 },
             )
         else:
+            # Repeated series dimensions are ~80% of a large table's size, and the cached
+            # payload is copied on every request; keep only the observations that differ.
+            compact_observation_dimensions(raw_payload)
             raw_payload = await self._cache.aset(cache_key, raw_payload, self._ttl_seconds)
 
         return raw_payload, stale_meta
