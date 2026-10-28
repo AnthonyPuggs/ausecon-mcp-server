@@ -87,7 +87,8 @@ def test_project_metadata_includes_http_container_entrypoint_dependencies() -> N
 
     assert project["scripts"]["ausecon-mcp-server"] == "ausecon_mcp.server:main"
     assert project["scripts"]["ausecon-mcp-http"] == "ausecon_mcp.server:main_http"
-    assert "fastmcp>=3.2.4" in project["dependencies"]
+    # fastmcp 4 (with mcp 2) emits snake_case server-card keys; lift once ported.
+    assert "fastmcp>=3.2.4,<4" in project["dependencies"]
     assert "starlette>=0.27,<2" in project["dependencies"]
 
 
@@ -576,12 +577,23 @@ def test_smithery_dockerfile_uses_multistage_non_root_runtime_without_git_copy()
     assert "SETUPTOOLS_SCM_PRETEND_VERSION_FOR_AUSECON_MCP_SERVER" in dockerfile_text
     assert "apt-get install --yes --no-install-recommends git" in dockerfile_text
     assert "uv build --wheel --out-dir /dist" in dockerfile_text
-    assert "COPY --from=builder /dist/*.whl /tmp/" in dockerfile_text
+    assert "COPY --from=builder /dist/*.whl /dist/requirements.txt /tmp/" in dockerfile_text
     assert "USER ausecon" in dockerfile_text
     assert "EXPOSE 8081" in dockerfile_text
     assert 'ENTRYPOINT ["ausecon-mcp-http"]' in dockerfile_text
     assert "COPY --from=builder /build" not in dockerfile_text
     assert ".git" not in dockerfile_text
+
+
+def test_smithery_dockerfile_installs_locked_dependencies() -> None:
+    dockerfile_text = SMITHERY_DOCKERFILE.read_text(encoding="utf-8")
+
+    # The hosted image must run the dependency versions CI tested, not a fresh resolve.
+    assert "uv export --frozen --no-default-groups --no-emit-project" in dockerfile_text
+    assert "pip install --no-cache-dir --require-hashes -r /tmp/requirements.txt" in (
+        dockerfile_text
+    )
+    assert "pip install --no-cache-dir --no-deps /tmp/*.whl" in dockerfile_text
 
 
 def test_dockerignore_keeps_git_for_smithery_builder_but_excludes_local_state() -> None:

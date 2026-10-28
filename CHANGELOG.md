@@ -6,6 +6,23 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+
+- `adi_monthly` table 1 no longer takes the hosted server down. A single request peaked at
+  about 1.2 GB against the 512 MB hosted instance. The parser now builds each row's dimension
+  dict once and shares it across that row's observations, and the cached payload keeps
+  observation dimensions only where they differ from the series' (institutions renamed under
+  the same ABN), restoring them after filtering. Peak memory is now about 400 MB. Responses
+  are unchanged.
+- The hosted container installs the exact dependency versions from `uv.lock` (hash-checked)
+  instead of resolving fresh at build time. A fresh resolve had pulled in the untested
+  fastmcp 4 / mcp 2, whose server card emits snake_case tool annotation keys
+  (`read_only_hint`) instead of the spec's camelCase.
+
+### Changed
+
+- `fastmcp` is capped below 4 until the server is ported to it.
+
 ## [1.14.5] - 2026-09-02
 
 An APRA data-correctness patch. The response contract `{metadata, series, observations}` and all
