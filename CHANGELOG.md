@@ -8,9 +8,21 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- The server runs on fastmcp 4 / MCP Python SDK v2 and supports the MCP `2026-07-28` protocol
+  revision alongside the original initialize handshake. The version is negotiated per
+  connection, so existing clients are unaffected. New-protocol requests carry no server-side
+  session, so they keep working across a server restart or redeploy. Tool names, parameters,
+  and the `{metadata, series, observations}` response contract are unchanged.
 - The `Dockerfile` pulls its default `python:3.12-slim` base image from `mirror.gcr.io`
   instead of ECR Public, whose per-IP rate limit was failing most CI and release builds. The
   image content is the same official Docker Hub image.
+
+### Removed
+
+- The non-standard `readOnlyHint` annotation on MCP resources and resource templates. MCP
+  resource annotations do not define it, and SDK v2 discards it. The static server card
+  (`/.well-known/mcp/server-card.json`) still marks every resource and template
+  `readOnlyHint: true`.
 
 ## [1.14.6] - 2026-10-29
 
