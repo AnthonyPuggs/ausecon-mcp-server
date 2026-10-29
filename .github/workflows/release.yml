@@ -184,24 +184,10 @@ jobs:
 
       # Each registry fails on hosted runners in its own way (ECR Public per-IP 429s,
       # Docker Hub timeouts), so each attempt pulls the same official base image from a
-      # different mirror, as the CI smoke build does.
+      # different mirror, as the CI smoke build does. mirror.gcr.io goes first because
+      # ECR's per-IP limit hits most runners.
       - name: Build and push image
-        id: build_ecr
-        continue-on-error: true
-        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
-        with:
-          context: .
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          build-args: |
-            BASE_IMAGE=public.ecr.aws/docker/library/python:3.12-slim
-            AUSECON_INSTALL_SOURCE=pypi
-            AUSECON_VERSION=${{ steps.version.outputs.value }}
-
-      - name: Build and push image (mirror.gcr.io fallback)
         id: build_gcr
-        if: steps.build_ecr.outcome == 'failure'
         continue-on-error: true
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
@@ -214,8 +200,23 @@ jobs:
             AUSECON_INSTALL_SOURCE=pypi
             AUSECON_VERSION=${{ steps.version.outputs.value }}
 
-      - name: Build and push image (Docker Hub fallback)
+      - name: Build and push image (ECR Public fallback)
+        id: build_ecr
         if: steps.build_gcr.outcome == 'failure'
+        continue-on-error: true
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            BASE_IMAGE=public.ecr.aws/docker/library/python:3.12-slim
+            AUSECON_INSTALL_SOURCE=pypi
+            AUSECON_VERSION=${{ steps.version.outputs.value }}
+
+      - name: Build and push image (Docker Hub fallback)
+        if: steps.build_ecr.outcome == 'failure'
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           context: .

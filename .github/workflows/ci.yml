@@ -65,12 +65,12 @@ jobs:
         # The Dockerfile pins its own Python, so one matrix leg is enough. Each
         # registry fails on hosted runners in its own way (Docker Hub timeouts,
         # ECR Public per-IP 429s), so each attempt pulls the same official image
-        # from a different mirror.
+        # from a different mirror; mirror.gcr.io first, as ECR's limit hits most runners.
         if: matrix.python-version == '3.12'
         run: |
           images=(
-            public.ecr.aws/docker/library/python:3.12-slim
             mirror.gcr.io/library/python:3.12-slim
+            public.ecr.aws/docker/library/python:3.12-slim
             docker.io/library/python:3.12-slim
           )
           for attempt in 1 2 3; do

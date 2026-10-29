@@ -628,8 +628,8 @@ def test_release_workflow_image_build_falls_back_across_base_image_mirrors() -> 
         for step in builds
     ]
     assert base_images == [
-        "BASE_IMAGE=public.ecr.aws/docker/library/python:3.12-slim",
         "BASE_IMAGE=mirror.gcr.io/library/python:3.12-slim",
+        "BASE_IMAGE=public.ecr.aws/docker/library/python:3.12-slim",
         "BASE_IMAGE=docker.io/library/python:3.12-slim",
     ]
     # Each fallback runs only when the previous attempt failed; the last one fails the job.
@@ -678,10 +678,17 @@ def test_docker_smoke_build_falls_back_across_base_image_mirrors() -> None:
     workflow_text = CI_WORKFLOW.read_text(encoding="utf-8")
     dockerfile_text = DOCKERFILE.read_text(encoding="utf-8")
 
-    assert "ARG BASE_IMAGE=public.ecr.aws/docker/library/python:3.12-slim" in dockerfile_text
+    assert "ARG BASE_IMAGE=mirror.gcr.io/library/python:3.12-slim" in dockerfile_text
     assert "FROM ${BASE_IMAGE}" in dockerfile_text
     assert '--build-arg "BASE_IMAGE=${image}"' in workflow_text
-    assert "mirror.gcr.io/library/python:3.12-slim" in workflow_text
+    # mirror.gcr.io first: ECR Public's per-IP 429s hit most hosted runners.
+    mirrors = [
+        "mirror.gcr.io/library/python:3.12-slim",
+        "public.ecr.aws/docker/library/python:3.12-slim",
+        "docker.io/library/python:3.12-slim",
+    ]
+    positions = [workflow_text.index(mirror) for mirror in mirrors]
+    assert positions == sorted(positions)
 
 
 def test_ci_installs_from_an_up_to_date_lockfile() -> None:
@@ -729,6 +736,24 @@ def test_codeql_and_dependabot_are_configured_for_visible_security_automation() 
     assert 'directory: "/docs-site"' in dependabot_text
     assert "CodeQL default setup is disabled" in releasing_text
     assert "advanced CodeQL workflow" in releasing_text
+
+
+def test_dependabot_groups_minor_and_patch_updates_per_ecosystem() -> None:
+    config = yaml.safe_load(DEPENDABOT.read_text(encoding="utf-8"))
+    updates = {update["package-ecosystem"]: update for update in config["updates"]}
+
+    assert set(updates) == {"uv", "github-actions", "npm"}
+    for ecosystem, update in updates.items():
+        groups = update.get("groups", {})
+        assert len(groups) == 1, ecosystem
+        (group,) = groups.values()
+        # Majors stay separate PRs so a breaking upgrade never hides in a batch.
+        assert group["patterns"] == ["*"], ecosystem
+        assert group["update-types"] == ["minor", "patch"], ecosystem
+        assert "applies-to" not in group, ecosystem
+
+    uv_ignores = {item["dependency-name"]: item for item in updates["uv"].get("ignore", [])}
+    assert uv_ignores["fastmcp"]["update-types"] == ["version-update:semver-major"]
 
 
 def test_changelog_promotes_v1141_and_keeps_fresh_unreleased_section() -> None:

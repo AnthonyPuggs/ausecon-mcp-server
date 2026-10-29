@@ -6,6 +6,12 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed
+
+- The `Dockerfile` pulls its default `python:3.12-slim` base image from `mirror.gcr.io`
+  instead of ECR Public, whose per-IP rate limit was failing most CI and release builds. The
+  image content is the same official Docker Hub image.
+
 ## [1.14.6] - 2026-10-29
 
 A hosted-stability patch. The response contract `{metadata, series, observations}` and all

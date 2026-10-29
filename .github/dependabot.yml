@@ -1,19 +1,39 @@
 version: 2
+# Minor and patch version updates arrive as one weekly PR per ecosystem, so lockfile
+# edits don't conflict across PRs. Major updates and security updates still open
+# their own PRs (groups apply to version updates only).
 updates:
   - package-ecosystem: "uv"
     directory: "/"
     schedule:
       interval: "weekly"
+    groups:
+      python:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+    ignore:
+      # fastmcp 4 (with mcp 2) emits snake_case server-card keys; pyproject caps
+      # fastmcp<4. Drop this once the server is ported to fastmcp 4.
+      - dependency-name: "fastmcp"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
+    groups:
+      actions:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
 
   - package-ecosystem: "npm"
     directory: "/docs-site"
     schedule:
       interval: "weekly"
+    groups:
+      docs-site:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
     ignore:
       # TypeScript 7 is blocked by @astrojs/check / @astrojs/language-server
       # peer ranges; drop this once the Astro toolchain supports TS 7.
