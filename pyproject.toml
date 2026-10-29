@@ -39,7 +39,7 @@ dev = [
   "tomli>=2.0; python_version < '3.11'",
 ]
 evals = [
-  "anthropic>=0.79,<2",
+  "anthropic>=0.79,<3",
   "pyyaml>=6.0,<7",
 ]
 
