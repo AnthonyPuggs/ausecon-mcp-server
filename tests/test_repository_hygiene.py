@@ -188,7 +188,7 @@ def test_ci_workflow_exists_with_quality_checks_and_hygiene_guard() -> None:
     assert "actions/setup-python@" in workflow_text
     assert "astral-sh/setup-uv@" in workflow_text
     assert "python-version: ['3.10', '3.11', '3.12', '3.13']" in workflow_text
-    assert "uv sync --python ${{ matrix.python-version }}" in workflow_text
+    assert "uv sync --locked --python ${{ matrix.python-version }}" in workflow_text
     assert "uv run ruff check src tests evals scripts" in workflow_text
     assert "uv run pytest" in workflow_text
     assert "test -f LICENSE" in workflow_text
@@ -684,6 +684,20 @@ def test_docker_smoke_build_falls_back_across_base_image_mirrors() -> None:
     assert "mirror.gcr.io/library/python:3.12-slim" in workflow_text
 
 
+def test_ci_installs_from_an_up_to_date_lockfile() -> None:
+    workflows = [CI_WORKFLOW, CI_WORKFLOW.with_name("integration.yml")]
+
+    # --locked fails when uv.lock no longer matches pyproject.toml instead of re-locking.
+    for workflow in workflows:
+        sync_lines = [
+            line.strip()
+            for line in workflow.read_text(encoding="utf-8").splitlines()
+            if "uv sync" in line
+        ]
+        assert sync_lines, workflow.name
+        assert all("--locked" in line for line in sync_lines), (workflow.name, sync_lines)
+
+
 def test_python_version_story_is_consistent_across_docs_and_ci() -> None:
     readme_text = README.read_text(encoding="utf-8")
     claude_text = (ROOT / "CLAUDE.md").read_text(encoding="utf-8")
@@ -707,7 +721,9 @@ def test_codeql_and_dependabot_are_configured_for_visible_security_automation() 
     assert "github/codeql-action/init@" in codeql_text
     assert "security-extended" in codeql_text
     assert "github/codeql-action/analyze@" in codeql_text
-    assert 'package-ecosystem: "pip"' in dependabot_text
+    # The uv ecosystem updates pyproject.toml and uv.lock together; pip left the lock stale.
+    assert 'package-ecosystem: "uv"' in dependabot_text
+    assert 'package-ecosystem: "pip"' not in dependabot_text
     assert 'package-ecosystem: "github-actions"' in dependabot_text
     assert 'package-ecosystem: "npm"' in dependabot_text
     assert 'directory: "/docs-site"' in dependabot_text
