@@ -618,6 +618,44 @@ def test_release_workflow_builds_container_from_pypi_release_artifact() -> None:
     assert "AUSECON_VERSION=${{ steps.version.outputs.value }}" in workflow_text
 
 
+def test_release_workflow_image_build_falls_back_across_base_image_mirrors() -> None:
+    workflow = yaml.safe_load(RELEASE_WORKFLOW.read_text(encoding="utf-8"))
+    steps = workflow["jobs"]["docker"]["steps"]
+    builds = [s for s in steps if s.get("uses", "").startswith("docker/build-push-action@")]
+
+    base_images = [
+        next(a for a in step["with"]["build-args"].splitlines() if a.startswith("BASE_IMAGE="))
+        for step in builds
+    ]
+    assert base_images == [
+        "BASE_IMAGE=public.ecr.aws/docker/library/python:3.12-slim",
+        "BASE_IMAGE=mirror.gcr.io/library/python:3.12-slim",
+        "BASE_IMAGE=docker.io/library/python:3.12-slim",
+    ]
+    # Each fallback runs only when the previous attempt failed; the last one fails the job.
+    assert [step.get("continue-on-error", False) for step in builds] == [True, True, False]
+    assert builds[1]["if"] == f"steps.{builds[0]['id']}.outcome == 'failure'"
+    assert builds[2]["if"] == f"steps.{builds[1]['id']}.outcome == 'failure'"
+
+
+def test_release_workflow_can_rebuild_image_for_published_version() -> None:
+    workflow = yaml.safe_load(RELEASE_WORKFLOW.read_text(encoding="utf-8"))
+    # PyYAML reads the bare `on:` key as boolean True.
+    dispatch = workflow[True]["workflow_dispatch"]
+    jobs = workflow["jobs"]
+
+    assert "image_version" in dispatch["inputs"]
+    # An image-only run must never reach PyPI: skipping build skips publish and the registry.
+    assert jobs["build"]["if"] == "inputs.image_version == ''"
+    assert jobs["publish"]["needs"] == "build"
+    assert "inputs.image_version != ''" in jobs["docker"]["if"]
+    assert "needs.publish.result == 'success'" in jobs["docker"]["if"]
+    assert "${{ inputs.image_version || github.ref_name }}" in str(jobs["docker"]["steps"])
+    # Semver tags must come from the version, not the ref, so dispatches from main get them.
+    tags = next(s for s in jobs["docker"]["steps"] if s.get("id") == "meta")["with"]["tags"]
+    assert "value=${{ steps.version.outputs.value }}" in tags
+
+
 def test_release_workflow_publishes_to_mcp_registry() -> None:
     workflow_text = RELEASE_WORKFLOW.read_text(encoding="utf-8")
 

@@ -5,12 +5,21 @@ on:
     tags:
       - 'v*'
   workflow_dispatch:
+    inputs:
+      image_version:
+        description: >-
+          Only rebuild and push the GHCR image for this already-published PyPI version
+          (e.g. 1.14.6), skipping the build, PyPI and registry jobs. Also moves `latest`.
+        required: false
+        default: ''
 
 permissions:
   contents: read
 
 jobs:
   build:
+    # An image-only rebuild skips this, and with it publish and mcp-registry.
+    if: inputs.image_version == ''
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -121,6 +130,7 @@ jobs:
 
   docker:
     needs: publish
+    if: ${{ !cancelled() && (needs.publish.result == 'success' || inputs.image_version != '') }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -134,7 +144,7 @@ jobs:
       - name: Derive package version
         id: version
         env:
-          REF_NAME: ${{ github.ref_name }}
+          REF_NAME: ${{ inputs.image_version || github.ref_name }}
         run: |
           echo "value=${REF_NAME#v}" >> "$GITHUB_OUTPUT"
 
@@ -166,13 +176,18 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{version}},value=${{ steps.version.outputs.value }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ steps.version.outputs.value }}
             type=raw,value=latest
 
       - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
 
+      # Each registry fails on hosted runners in its own way (ECR Public per-IP 429s,
+      # Docker Hub timeouts), so each attempt pulls the same official base image from a
+      # different mirror, as the CI smoke build does.
       - name: Build and push image
+        id: build_ecr
+        continue-on-error: true
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           context: .
@@ -180,5 +195,34 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
+            BASE_IMAGE=public.ecr.aws/docker/library/python:3.12-slim
+            AUSECON_INSTALL_SOURCE=pypi
+            AUSECON_VERSION=${{ steps.version.outputs.value }}
+
+      - name: Build and push image (mirror.gcr.io fallback)
+        id: build_gcr
+        if: steps.build_ecr.outcome == 'failure'
+        continue-on-error: true
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            BASE_IMAGE=mirror.gcr.io/library/python:3.12-slim
+            AUSECON_INSTALL_SOURCE=pypi
+            AUSECON_VERSION=${{ steps.version.outputs.value }}
+
+      - name: Build and push image (Docker Hub fallback)
+        if: steps.build_gcr.outcome == 'failure'
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            BASE_IMAGE=docker.io/library/python:3.12-slim
             AUSECON_INSTALL_SOURCE=pypi
             AUSECON_VERSION=${{ steps.version.outputs.value }}
