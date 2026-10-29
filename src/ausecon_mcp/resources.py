@@ -32,7 +32,6 @@ def register_resources(mcp: FastMCP) -> None:
             "Use this to browse what is available before calling search_datasets."
         ),
         mime_type="application/json",
-        annotations={"readOnlyHint": True},
     )
     def catalogue_index() -> list[dict]:
         return [
@@ -50,7 +49,6 @@ def register_resources(mcp: FastMCP) -> None:
             "resolved target dataset, variant, supported frequencies, and geographies."
         ),
         mime_type="application/json",
-        annotations={"readOnlyHint": True},
     )
     def concepts_index() -> list[dict]:
         return list_economic_concepts()
@@ -60,7 +58,6 @@ def register_resources(mcp: FastMCP) -> None:
         name="ABS catalogue entry",
         description="Curated metadata for a single ABS dataflow.",
         mime_type="application/json",
-        annotations={"readOnlyHint": True},
     )
     def abs_entry(dataflow_id: str) -> dict:
         entry = ABS_CATALOGUE.get(dataflow_id)
@@ -73,7 +70,6 @@ def register_resources(mcp: FastMCP) -> None:
         name="RBA catalogue entry",
         description="Curated metadata for a single RBA statistical table.",
         mime_type="application/json",
-        annotations={"readOnlyHint": True},
     )
     def rba_entry(table_id: str) -> dict:
         entry = RBA_CATALOGUE.get(table_id)
@@ -86,7 +82,6 @@ def register_resources(mcp: FastMCP) -> None:
         name="APRA catalogue entry",
         description="Curated metadata for a single APRA publication.",
         mime_type="application/json",
-        annotations={"readOnlyHint": True},
     )
     def apra_entry(publication_id: str) -> dict:
         entry = APRA_CATALOGUE.get(publication_id)

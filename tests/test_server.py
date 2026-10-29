@@ -1989,10 +1989,10 @@ async def test_registered_tools_carry_readonly_and_openworld_annotations() -> No
         annotations = tool.annotations
         assert annotations is not None, f"{tool.name} has no annotations"
         assert annotations.title, f"{tool.name} missing human-readable title"
-        assert annotations.readOnlyHint is True, f"{tool.name} missing readOnlyHint"
-        assert annotations.destructiveHint is False, f"{tool.name} missing destructiveHint"
-        assert annotations.idempotentHint is True, f"{tool.name} missing idempotentHint"
-        assert annotations.openWorldHint is True, f"{tool.name} missing openWorldHint"
+        assert annotations.read_only_hint is True, f"{tool.name} missing readOnlyHint"
+        assert annotations.destructive_hint is False, f"{tool.name} missing destructiveHint"
+        assert annotations.idempotent_hint is True, f"{tool.name} missing idempotentHint"
+        assert annotations.open_world_hint is True, f"{tool.name} missing openWorldHint"
 
 
 async def test_get_latest_observations_abs_requests_lastnobservations() -> None:
@@ -2026,7 +2026,7 @@ def test_server_metadata_is_complete_for_hosted_registries() -> None:
     assert mcp.website_url == server_module.HOMEPAGE_URL
     assert mcp.icons
     assert mcp.icons[0].src == server_module.SERVER_ICON_URL
-    assert mcp.icons[0].mimeType == "image/svg+xml"
+    assert mcp.icons[0].mime_type == "image/svg+xml"
 
 
 async def test_registered_tools_expose_input_schema_constraints_and_descriptions() -> None:
@@ -2035,31 +2035,31 @@ async def test_registered_tools_expose_input_schema_constraints_and_descriptions
     async with Client(mcp) as client:
         tools = {tool.name: tool for tool in await client.list_tools()}
 
-    source_schema = tools["search_datasets"].inputSchema["properties"]["source"]
+    source_schema = tools["search_datasets"].input_schema["properties"]["source"]
     assert _has_string_enum(source_schema, ["abs", "rba", "apra"])
     assert _has_schema_description(source_schema)
 
-    concepts_source_schema = tools["list_economic_concepts"].inputSchema["properties"]["source"]
+    concepts_source_schema = tools["list_economic_concepts"].input_schema["properties"]["source"]
     assert _has_string_enum(concepts_source_schema, ["abs", "rba", "apra"])
     assert "economic concepts" in tools["list_economic_concepts"].description
 
-    last_n_schema = tools["get_abs_data"].inputSchema["properties"]["last_n"]
+    last_n_schema = tools["get_abs_data"].input_schema["properties"]["last_n"]
     assert _has_integer_minimum(last_n_schema, 1)
     assert _has_schema_description(last_n_schema)
 
-    start_period_schema = tools["get_abs_data"].inputSchema["properties"]["start_period"]
+    start_period_schema = tools["get_abs_data"].input_schema["properties"]["start_period"]
     assert _has_schema_property(start_period_schema, "pattern")
     assert "ABS period" in str(start_period_schema)
 
-    start_date_schema = tools["get_rba_table"].inputSchema["properties"]["start_date"]
+    start_date_schema = tools["get_rba_table"].input_schema["properties"]["start_date"]
     assert _has_schema_property(start_date_schema, "format", "date")
     assert "ISO date" in str(start_date_schema)
 
-    apra_start_date_schema = tools["get_apra_data"].inputSchema["properties"]["start_date"]
+    apra_start_date_schema = tools["get_apra_data"].input_schema["properties"]["start_date"]
     assert _has_schema_property(apra_start_date_schema, "format", "date")
     assert "ISO date" in str(apra_start_date_schema)
 
-    category_schema = tools["list_rba_tables"].inputSchema["properties"]["category"]
+    category_schema = tools["list_rba_tables"].input_schema["properties"]["category"]
     expected_categories = [
         "exchange_rates",
         "external_sector",
@@ -2073,14 +2073,14 @@ async def test_registered_tools_expose_input_schema_constraints_and_descriptions
     ]
     assert _has_string_enum(category_schema, expected_categories)
 
-    semantic_start_schema = tools["get_economic_series"].inputSchema["properties"]["start"]
+    semantic_start_schema = tools["get_economic_series"].input_schema["properties"]["start"]
     assert "YYYY-QN" in str(semantic_start_schema)
     assert "YYYY-MM-DD" in str(semantic_start_schema)
 
-    derived_start_schema = tools["get_derived_series"].inputSchema["properties"]["start"]
+    derived_start_schema = tools["get_derived_series"].input_schema["properties"]["start"]
     assert "derived series" in tools["get_derived_series"].description
     assert "YYYY-QN" in str(derived_start_schema)
-    assert _has_integer_minimum(tools["get_derived_series"].inputSchema["properties"]["last_n"], 1)
+    assert _has_integer_minimum(tools["get_derived_series"].input_schema["properties"]["last_n"], 1)
 
 
 async def test_all_registered_tool_parameters_have_top_level_descriptions() -> None:
@@ -2090,7 +2090,7 @@ async def test_all_registered_tool_parameters_have_top_level_descriptions() -> N
         tools = await client.list_tools()
 
     for tool in tools:
-        properties = tool.inputSchema.get("properties", {})
+        properties = tool.input_schema.get("properties", {})
         for parameter, schema in properties.items():
             assert schema.get("description"), f"{tool.name}.{parameter} missing description"
 
@@ -2108,7 +2108,7 @@ async def test_retrieval_tools_expose_response_output_schema() -> None:
         "get_economic_series",
         "get_derived_series",
     ):
-        output_schema = tools[name].outputSchema
+        output_schema = tools[name].output_schema
         assert output_schema["type"] == "object"
         assert output_schema["additionalProperties"] is False
         assert output_schema["required"] == ["metadata", "series", "observations"]
@@ -2121,7 +2121,7 @@ async def test_all_registered_tools_expose_output_schema() -> None:
         tools = await client.list_tools()
 
     for tool in tools:
-        output_schema = tool.outputSchema
+        output_schema = tool.output_schema
         assert output_schema["type"] == "object", f"{tool.name} missing object output schema"
         assert output_schema.get("description") or output_schema.get("title")
 

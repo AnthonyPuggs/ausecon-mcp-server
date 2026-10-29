@@ -6,7 +6,7 @@ from typing import Annotated, Any, Literal
 
 import uvicorn
 from fastmcp import FastMCP
-from mcp.types import Icon
+from mcp.types import Icon, ToolAnnotations
 from pydantic import Field
 from starlette.middleware import Middleware
 from starlette.middleware.cors import CORSMiddleware
@@ -257,14 +257,14 @@ OptionalDerivedStartEnd = Annotated[
 ]
 
 
-def _tool_annotations(title: str) -> dict[str, bool | str]:
-    return {
-        "title": title,
-        "readOnlyHint": True,
-        "destructiveHint": False,
-        "idempotentHint": True,
-        "openWorldHint": True,
-    }
+def _tool_annotations(title: str) -> ToolAnnotations:
+    return ToolAnnotations(
+        title=title,
+        read_only_hint=True,
+        destructive_hint=False,
+        idempotent_hint=True,
+        open_world_hint=True,
+    )
 
 
 class RequestSizeLimitMiddleware:
@@ -929,7 +929,7 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
         "ausecon-mcp-server",
         version=resolve_version(),
         website_url=HOMEPAGE_URL,
-        icons=[Icon(src=SERVER_ICON_URL, mimeType="image/svg+xml", sizes=["64x64"])],
+        icons=[Icon(src=SERVER_ICON_URL, mime_type="image/svg+xml", sizes=["64x64"])],
         instructions=(
             "Australian economic data tools for official ABS, RBA, and APRA datasets. "
             "Use list_economic_concepts before get_economic_series for ordinary analyst "
@@ -1347,10 +1347,17 @@ async def http_healthz(_request: Request) -> JSONResponse:
 
 
 def _json_metadata(value: Any) -> Any:
+    # by_alias: MCP SDK v2 models use snake_case fields with the spec's camelCase as aliases.
     model_dump = getattr(value, "model_dump", None)
     if callable(model_dump):
-        return model_dump(mode="json", exclude_none=True)
+        return model_dump(mode="json", exclude_none=True, by_alias=True)
     return value
+
+
+def _resource_card_annotations(annotations: Any) -> dict[str, Any]:
+    # Every resource is read-only, but MCP resource annotations have no readOnlyHint field
+    # (SDK v2 drops it), so the static card states it explicitly.
+    return {"readOnlyHint": True, **(_json_metadata(annotations) or {})}
 
 
 async def build_server_card_response(server: FastMCP) -> JSONResponse:
@@ -1398,7 +1405,7 @@ async def build_server_card_response(server: FastMCP) -> JSONResponse:
                     "description": resource.description or "",
                     "uri": str(resource.uri),
                     "mimeType": resource.mime_type,
-                    "annotations": _json_metadata(resource.annotations) or {},
+                    "annotations": _resource_card_annotations(resource.annotations),
                 }
                 for resource in resources
             ],
@@ -1409,7 +1416,7 @@ async def build_server_card_response(server: FastMCP) -> JSONResponse:
                     "description": template.description or "",
                     "uriTemplate": template.uri_template,
                     "mimeType": template.mime_type,
-                    "annotations": _json_metadata(template.annotations) or {},
+                    "annotations": _resource_card_annotations(template.annotations),
                 }
                 for template in resource_templates
             ],

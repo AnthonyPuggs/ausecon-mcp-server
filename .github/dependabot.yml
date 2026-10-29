@@ -12,8 +12,7 @@ updates:
         patterns: ["*"]
         update-types: ["minor", "patch"]
     ignore:
-      # fastmcp 4 (with mcp 2) emits snake_case server-card keys; pyproject caps
-      # fastmcp<4. Drop this once the server is ported to fastmcp 4.
+      # fastmcp majors are ported deliberately; bump the pyproject cap with the port.
       - dependency-name: "fastmcp"
         update-types: ["version-update:semver-major"]
 
