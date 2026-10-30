@@ -1446,10 +1446,13 @@ async def http_server_card(_request: Request) -> JSONResponse:
 
 def build_http_app(server: FastMCP | None = None):
     active_server = server or mcp
+    # JSON bodies, not SSE: MCP SDK v2 clients cap one SSE event at 1 MiB by default, and large
+    # APRA tables exceed it. No tool emits progress or log notifications, so SSE carries nothing.
     app = active_server.http_app(
         path="/mcp",
         transport="streamable-http",
         middleware=build_http_middleware(),
+        json_response=True,
     )
     app.add_route("/", http_root, methods=["GET", "HEAD"])
     app.add_route("/healthz", http_healthz, methods=["GET", "HEAD"])

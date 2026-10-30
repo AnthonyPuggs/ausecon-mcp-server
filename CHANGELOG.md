@@ -6,6 +6,15 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+
+- Large results now reach Python clients built on MCP SDK v2 (including fastmcp 4's `Client`).
+  Those clients refuse any single server-sent event over 1 MiB by default, and the hosted server
+  answered over SSE: always for the original handshake, and for `2026-07-28` requests running
+  longer than 15 seconds, such as a cold `adi_monthly` table 1 fetch (about 2.7 MB). The HTTP
+  transport now answers every request with a single JSON body. No tool sends progress or log
+  notifications, so nothing that SSE carried is lost.
+
 ## [1.15.0] - 2026-10-30
 
 Runs on fastmcp 4 / MCP Python SDK v2. Tool names, parameters, and the response contract
