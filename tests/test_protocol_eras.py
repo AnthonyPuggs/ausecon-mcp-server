@@ -7,7 +7,8 @@ import asyncio
 import socket
 import threading
 import time
-from collections.abc import Callable, Iterator
+from collections.abc import AsyncIterator, Callable, Iterator
+from contextlib import asynccontextmanager
 
 import pytest
 import uvicorn
@@ -63,12 +64,15 @@ class _HttpServer:
             port=self.port,
             log_level="error",
             lifespan="on",
+            timeout_graceful_shutdown=1,
         )
         self._server = uvicorn.Server(config)
         self._thread = threading.Thread(target=self._server.run, daemon=True)
         self._thread.start()
         deadline = time.monotonic() + 10
         while not self._server.started:
+            if not self._thread.is_alive():
+                raise RuntimeError("HTTP test server exited before it started")
             if time.monotonic() > deadline:
                 raise RuntimeError("HTTP test server did not start within 10 s")
             time.sleep(0.05)
@@ -77,6 +81,8 @@ class _HttpServer:
         if self._server is not None and self._thread is not None:
             self._server.should_exit = True
             self._thread.join(timeout=10)
+            if self._thread.is_alive():
+                raise RuntimeError("HTTP test server did not stop within 10 s")
         self._server = None
         self._thread = None
 
@@ -84,6 +90,24 @@ class _HttpServer:
         # A fresh server instance stands in for a redeploy: no session state survives.
         self.stop()
         self.start()
+
+
+def _assert_negotiated(client: Client, mode: str) -> None:
+    # Legacy is whichever pre-2026-07-28 revision the SDK's initialize handshake settles on.
+    if mode == "legacy":
+        assert client.protocol_version < "2026-07-28"
+        assert client.initialize_result is not None
+    else:
+        assert client.protocol_version == mode
+
+
+def _server_that_fails_on_startup() -> FastMCP:
+    @asynccontextmanager
+    async def failing_lifespan(_server: FastMCP) -> AsyncIterator[None]:
+        raise RuntimeError("startup failed")
+        yield
+
+    return FastMCP("broken", lifespan=failing_lifespan)
 
 
 @pytest.fixture
@@ -99,6 +123,7 @@ def http_server() -> Iterator[_HttpServer]:
 @pytest.mark.parametrize("mode", ERAS)
 async def test_in_memory_client_works_in_each_protocol_era(mode: str) -> None:
     async with Client(build_server(), mode=mode) as client:
+        _assert_negotiated(client, mode)
         tools = {tool.name: tool for tool in await client.list_tools()}
         assert {"list_economic_concepts", "get_economic_series"} <= set(tools)
         assert all(tool.annotations.read_only_hint is True for tool in tools.values())
@@ -121,6 +146,7 @@ async def test_tool_errors_surface_in_each_protocol_era(mode: str) -> None:
 @pytest.mark.parametrize("mode", ERAS)
 async def test_http_app_serves_each_protocol_era(mode: str, http_server: _HttpServer) -> None:
     async with Client(http_server.url, mode=mode) as client:
+        _assert_negotiated(client, mode)
         assert len(await client.list_tools()) == 14
         await client.call_tool("list_economic_concepts", {"query": "cash rate"})
 
@@ -149,3 +175,13 @@ async def test_http_large_slow_result_reaches_a_default_capped_client(
     finally:
         http_server.stop()
     assert len(result.structured_content["observations"]) == LARGE_TABLE_OBSERVATIONS
+
+
+# uvicorn ends a failed startup with sys.exit(3) inside the server thread.
+@pytest.mark.filterwarnings("ignore::pytest.PytestUnhandledThreadExceptionWarning")
+def test_http_test_server_fails_fast_when_startup_fails() -> None:
+    server = _HttpServer(_server_that_fails_on_startup)
+    began = time.monotonic()
+    with pytest.raises(RuntimeError, match="exited before it started"):
+        server.start()
+    assert time.monotonic() - began < 5

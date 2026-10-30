@@ -9,7 +9,13 @@ SRC = Path(__file__).resolve().parents[1] / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
+import fastmcp  # noqa: E402
+
 import ausecon_mcp.cache as cache_module  # noqa: E402
+
+# MCP SDK v2 models are snake_case. With fastmcp's camelCase bridge off, a stale camelCase read
+# raises AttributeError every time, instead of warning only once per field per process.
+fastmcp.settings.mcp_camelcase_compat = False
 
 
 @pytest.fixture(autouse=True)
