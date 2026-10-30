@@ -6,6 +6,11 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.15.0] - 2026-10-30
+
+Runs on fastmcp 4 / MCP Python SDK v2. Tool names, parameters, and the response contract
+`{metadata, series, observations}` are unchanged.
+
 ### Changed
 
 - The server runs on fastmcp 4 / MCP Python SDK v2 and supports the MCP `2026-07-28` protocol
@@ -985,7 +990,8 @@ Initial public release.
 - Initial curated catalogues for ABS and RBA, plus a four-concept
   `CURATED_SERIES` semantic shortcut map.
 
-[Unreleased]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.14.6...HEAD
+[Unreleased]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.15.0...HEAD
+[1.15.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.14.6...v1.15.0
 [1.14.6]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.14.5...v1.14.6
 [1.14.5]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.14.4...v1.14.5
 [1.14.4]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.14.3...v1.14.4
