@@ -87,8 +87,8 @@ def test_project_metadata_includes_http_container_entrypoint_dependencies() -> N
 
     assert project["scripts"]["ausecon-mcp-server"] == "ausecon_mcp.server:main"
     assert project["scripts"]["ausecon-mcp-http"] == "ausecon_mcp.server:main_http"
-    # fastmcp 4 (with mcp 2) emits snake_case server-card keys; lift once ported.
-    assert "fastmcp>=3.2.4,<4" in project["dependencies"]
+    # fastmcp majors are ported deliberately (see dependabot.yml ignore).
+    assert "fastmcp>=4.1.4,<5" in project["dependencies"]
     assert "starlette>=0.27,<2" in project["dependencies"]
 
 

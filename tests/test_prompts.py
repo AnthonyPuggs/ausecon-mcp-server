@@ -181,7 +181,7 @@ async def test_prompt_tool_call_snippets_match_registered_tool_contracts() -> No
         assert calls, f"{prompt_name} did not expose executable tool call snippets"
         for tool_name, kwargs in calls:
             assert tool_name in tools
-            properties = tools[tool_name].inputSchema["properties"]
+            properties = tools[tool_name].input_schema["properties"]
             assert set(kwargs) <= set(properties)
             if "last_n" in kwargs:
                 assert isinstance(kwargs["last_n"], int)

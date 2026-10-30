@@ -71,7 +71,7 @@ class AuseconToolbox:
                 {
                     "name": tool.name,
                     "description": tool.description or tool.name,
-                    "input_schema": tool.inputSchema,
+                    "input_schema": tool.input_schema,
                 }
             )
         return converted
