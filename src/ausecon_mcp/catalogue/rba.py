@@ -1646,9 +1646,28 @@ _RAW_RBA_CATALOGUE = {
                 "aliases": ["weighted median inflation"],
                 "rba_series_ids": ["GCPIOCPMWMYP"],
             },
+            {
+                "name": "headline_quarterly",
+                "aliases": [
+                    "quarterly inflation",
+                    "quarterly headline inflation",
+                    "quarterly cpi change",
+                ],
+                "rba_series_ids": ["GCPIAGSAQP"],
+            },
+            {
+                "name": "trimmed_mean_quarterly",
+                "aliases": ["quarterly trimmed mean", "quarterly trimmed mean inflation"],
+                "rba_series_ids": ["GCPIOCPMTMQP"],
+            },
+            {
+                "name": "weighted_median_quarterly",
+                "aliases": ["quarterly weighted median", "quarterly weighted median inflation"],
+                "rba_series_ids": ["GCPIOCPMWMQP"],
+            },
         ],
         "audit": {
-            "last_audited": "2026-04-18",
+            "last_audited": "2026-11-09",
             "upstream_url": "https://www.rba.gov.au/statistics/tables/csv/g1-data.csv",
             "upstream_title": "Consumer Price Inflation",
         },

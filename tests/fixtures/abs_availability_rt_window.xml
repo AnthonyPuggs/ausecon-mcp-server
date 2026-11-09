@@ -1,0 +1,862 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--NSI Web Service v8.19.9.0-->
+<message:Structure xmlns:message="http://www.sdmx.org/resources/sdmxml/schemas/v2_1/message" xmlns:structure="http://www.sdmx.org/resources/sdmxml/schemas/v2_1/structure" xmlns:common="http://www.sdmx.org/resources/sdmxml/schemas/v2_1/common">
+  <message:Header>
+    <message:ID>IDREF5394</message:ID>
+    <message:Test>false</message:Test>
+    <message:Prepared>2026-11-09T07:17:34.0399306+00:00</message:Prepared>
+    <message:Sender id="Unknown" />
+    <message:Receiver id="Unknown" />
+  </message:Header>
+  <message:Structures>
+    <structure:Dataflows>
+      <structure:Dataflow id="RT" agencyID="ABS" version="1.0.0" isFinal="true">
+        <common:Annotations>
+          <common:Annotation>
+            <common:AnnotationType>NonProductionDataflow</common:AnnotationType>
+            <common:AnnotationText xml:lang="en">true</common:AnnotationText>
+          </common:Annotation>
+          <common:Annotation>
+            <common:AnnotationTitle>INDUSTRY</common:AnnotationTitle>
+            <common:AnnotationType>LAYOUT_COLUMN</common:AnnotationType>
+          </common:Annotation>
+          <common:Annotation>
+            <common:AnnotationTitle>TIME_PERIOD</common:AnnotationTitle>
+            <common:AnnotationType>LAYOUT_ROW</common:AnnotationType>
+          </common:Annotation>
+          <common:Annotation>
+            <common:AnnotationTitle>MEASURE,TSEST</common:AnnotationTitle>
+            <common:AnnotationType>LAYOUT_ROW_SECTION</common:AnnotationType>
+          </common:Annotation>
+          <common:Annotation>
+            <common:AnnotationTitle>REGION=AUS,INDUSTRY=41+42+43+44+45+46+20,FREQ=M,TIME_PERIOD_START=2023-01</common:AnnotationTitle>
+            <common:AnnotationType>DEFAULT</common:AnnotationType>
+          </common:Annotation>
+          <common:Annotation>
+            <common:AnnotationType>EXT_RESOURCE</common:AnnotationType>
+            <common:AnnotationText xml:lang="en">Methodology|https://www.abs.gov.au/statistics/industry/retail-and-wholesale-trade/retail-trade-australia/latest-release#methodology|https://www.abs.gov.au/ausstats/wmdata.nsf/activeimages/methodology/$File/methodology.png</common:AnnotationText>
+          </common:Annotation>
+        </common:Annotations>
+        <common:Name xml:lang="en">Retail Trade</common:Name>
+        <common:Description xml:lang="en">CEASED - Dataset: RT. This dataset has been discontinued. Estimates of the value of turnover of retail trade for Australian businesses classified by industry, and by state and territory. Unit of measure: AUD/Percent. Geographic coverage: Australia/State. Catalogue number: 8501.0</common:Description>
+        <structure:Structure>
+          <Ref id="RT" version="1.0.0" agencyID="ABS" package="datastructure" class="DataStructure" />
+        </structure:Structure>
+      </structure:Dataflow>
+    </structure:Dataflows>
+    <structure:Codelists>
+      <structure:Codelist isPartial="true" id="CL_FREQ" agencyID="ABS" version="1.0.0" isFinal="true">
+        <common:Name xml:lang="en">Frequency</common:Name>
+        <structure:Code id="M">
+          <common:Name xml:lang="en">Monthly</common:Name>
+          <common:Description xml:lang="en">To be used for data collected or disseminated every month.</common:Description>
+        </structure:Code>
+      </structure:Codelist>
+      <structure:Codelist id="CL_RT_IND" agencyID="ABS" version="1.0.0" isFinal="true">
+        <common:Name xml:lang="en">Retail Sales Industry (Introduction of ANZSIC 2006 - July 2009 redesign)</common:Name>
+        <structure:Code id="20">
+          <common:Annotations>
+            <common:Annotation>
+              <common:AnnotationType>ORDER</common:AnnotationType>
+              <common:AnnotationText xml:lang="en">220</common:AnnotationText>
+            </common:Annotation>
+            <common:Annotation>
+              <common:AnnotationType>FULL_NAME</common:AnnotationType>
+              <common:AnnotationText xml:lang="en">Total</common:AnnotationText>
+            </common:Annotation>
+          </common:Annotations>
+          <common:Name xml:lang="en">Total</common:Name>
+          <common:Description xml:lang="en">Total</common:Description>
+        </structure:Code>
+        <structure:Code id="41">
+          <common:Annotations>
+            <common:Annotation>
+              <common:AnnotationType>ORDER</common:AnnotationType>
+              <common:AnnotationText xml:lang="en">40</common:AnnotationText>
+            </common:Annotation>
+            <common:Annotation>
+              <common:AnnotationType>FULL_NAME</common:AnnotationType>
+              <common:AnnotationText xml:lang="en">Food retailing</common:AnnotationText>
+            </common:Annotation>
+          </common:Annotations>
+          <common:Name xml:lang="en">Food retailing</common:Name>
+          <common:Description xml:lang="en">Food retailing</common:Description>
+          <structure:Parent>
+            <Ref id="20" />
+          </structure:Parent>
+        </structure:Code>
+        <structure:Code id="01">
+          <common:Annotations>
+            <common:Annotation>
+              <common:AnnotationType>ORDER</common:AnnotationType>
+              <common:AnnotationText xml:lang="en">10</common:AnnotationText>
+            </common:Annotation>
+            <common:Annotation>
+              <common:AnnotationType>FULL_NAME</common:AnnotationType>
+              <common:AnnotationText xml:lang="en">Supermarket and grocery stores</common:AnnotationText>
+            </common:Annotation>
+          </common:Annotations>
+          <common:Name xml:lang="en">Supermarket and grocery stores</common:Name>
+          <common:Description xml:lang="en">Supermarket and grocery stores</common:Description>
+          <structure:Parent>
+            <Ref id="41" />
+          </structure:Parent>
+        </structure:Code>
+        <structure:Code id="02">
+          <common:Annotations>
+            <common:Annotation>
+              <common:AnnotationType>ORDER</common:AnnotationType>
+              <common:AnnotationText xml:lang="en">20</common:AnnotationText>
+            </common:Annotation>
+            <common:Annotation>
+              <common:AnnotationType>FULL_NAME</common:AnnotationType>
+              <common:AnnotationText xml:lang="en">Liquor retailing</common:AnnotationText>
+            </common:Annotation>
+          </common:Annotations>
+          <common:Name xml:lang="en">Liquor retailing</common:Name>
+          <common:Description xml:lang="en">Liquor retailing</common:Description>
+          <structure:Parent>
+            <Ref id="41" />
+          </structure:Parent>
+        </structure:Code>
+        <structure:Code id="03">
+          <common:Annotations>
+            <common:Annotation>
+              <common:AnnotationType>ORDER</common:AnnotationType>
+              <common:AnnotationText xml:lang="en">30</common:AnnotationText>
+            </common:Annotation>
+            <common:Annotation>
+              <common:AnnotationType>FULL_NAME</common:AnnotationType>
+              <common:AnnotationText xml:lang="en">Other specialised food retailing</common:AnnotationText>
+            </common:Annotation>
+          </common:Annotations>
+          <common:Name xml:lang="en">Other specialised food retailing</common:Name>
+          <common:Description xml:lang="en">Other specialised food retailing</common:Description>
+          <structure:Parent>
+            <Ref id="41" />
+          </structure:Parent>
+        </structure:Code>
+        <structure:Code id="42">
+          <common:Annotations>
+            <common:Annotation>
+              <common:AnnotationType>ORDER</common:AnnotationType>
+              <common:AnnotationText xml:lang="en">80</common:AnnotationText>
+            </common:Annotation>
+            <common:Annotation>
+              <common:AnnotationType>FULL_NAME</common:AnnotationType>
+              <common:AnnotationText xml:lang="en">Household goods retailing</common:AnnotationText>
+            </common:Annotation>
+          </common:Annotations>
+          <common:Name xml:lang="en">Household goods retailing</common:Name>
+          <common:Description xml:lang="en">Household goods retailing</common:Description>
+          <structure:Parent>
+            <Ref id="20" />
+          </structure:Parent>
+        </structure:Code>
+        <structure:Code id="04">
+          <common:Annotations>
+            <common:Annotation>
+              <common:AnnotationType>ORDER</common:AnnotationType>
+              <common:AnnotationText xml:lang="en">50</common:AnnotationText>
+            </common:Annotation>
+            <common:Annotation>
+              <common:AnnotationType>FULL_NAME</common:AnnotationType>
+              <common:AnnotationText xml:lang="en">Furniture, floor coverings, houseware and textile goods retailing</common:AnnotationText>
+            </common:Annotation>
+          </common:Annotations>
+          <common:Name xml:lang="en">Furniture, floor coverings, houseware and textile goods retailing</common:Name>
+          <common:Description xml:lang="en">Furniture, floor coverings, houseware and textile goods retailing</common:Description>
+          <structure:Parent>
+            <Ref id="42" />
+          </structure:Parent>
+        </structure:Code>
+        <structure:Code id="05">
+          <common:Annotations>
+            <common:Annotation>
+              <common:AnnotationType>ORDER</common:AnnotationType>
+              <common:AnnotationText xml:lang="en">60</common:AnnotationText>
+            </common:Annotation>
+            <common:Annotation>
+              <common:AnnotationType>FULL_NAME</common:AnnotationType>
+              <common:AnnotationText xml:lang="en">Electrical and electronic goods retailing</common:AnnotationText>
+            </common:Annotation>
+          </common:Annotations>
+          <common:Name xml:lang="en">Electrical and electronic goods retailing</common:Name>
+          <common:Description xml:lang="en">Electrical and electronic goods retailing</common:Description>
+          <structure:Parent>
+            <Ref id="42" />
+          </structure:Parent>
+        </structure:Code>
+        <structure:Code id="06">
+          <common:Annotations>
+            <common:Annotation>
+              <common:AnnotationType>ORDER</common:AnnotationType>
+              <common:AnnotationText xml:lang="en">70</common:AnnotationText>
+            </common:Annotation>
+            <common:Annotation>
+              <common:AnnotationType>FULL_NAME</common:AnnotationType>
+              <common:AnnotationText xml:lang="en">Hardware, building and garden supplies retailing</common:AnnotationText>
+            </common:Annotation>
+          </common:Annotations>
+          <common:Name xml:lang="en">Hardware, building and garden supplies retailing</common:Name>
+          <common:Description xml:lang="en">Hardware, building and garden supplies retailing</common:Description>
+          <structure:Parent>
+            <Ref id="42" />
+          </structure:Parent>
+        </structure:Code>
+        <structure:Code id="43">
+          <common:Annotations>
+            <common:Annotation>
+              <common:AnnotationType>ORDER</common:AnnotationType>
+              <common:AnnotationText xml:lang="en">110</common:AnnotationText>
+            </common:Annotation>
+            <common:Annotation>
+              <common:AnnotationType>FULL_NAME</common:AnnotationType>
+              <common:AnnotationText xml:lang="en">Clothing, footwear and personal accessory retailing</common:AnnotationText>
+            </common:Annotation>
+          </common:Annotations>
+          <common:Name xml:lang="en">Clothing, footwear and personal accessory retailing</common:Name>
+          <common:Description xml:lang="en">Clothing, footwear and personal accessory retailing</common:Description>
+          <structure:Parent>
+            <Ref id="20" />
+          </structure:Parent>
+        </structure:Code>
+        <structure:Code id="07">
+          <common:Annotations>
+            <common:Annotation>
+              <common:AnnotationType>ORDER</common:AnnotationType>
+              <common:AnnotationText xml:lang="en">90</common:AnnotationText>
+            </common:Annotation>
+            <common:Annotation>
+              <common:AnnotationType>FULL_NAME</common:AnnotationType>
+              <common:AnnotationText xml:lang="en">Clothing retailing</common:AnnotationText>
+            </common:Annotation>
+          </common:Annotations>
+          <common:Name xml:lang="en">Clothing retailing</common:Name>
+          <common:Description xml:lang="en">Clothing retailing</common:Description>
+          <structure:Parent>
+            <Ref id="43" />
+          </structure:Parent>
+        </structure:Code>
+        <structure:Code id="08">
+          <common:Annotations>
+            <common:Annotation>
+              <common:AnnotationType>ORDER</common:AnnotationType>
+              <common:AnnotationText xml:lang="en">100</common:AnnotationText>
+            </common:Annotation>
+            <common:Annotation>
+              <common:AnnotationType>FULL_NAME</common:AnnotationType>
+              <common:AnnotationText xml:lang="en">Footwear and other personal accessory retailing</common:AnnotationText>
+            </common:Annotation>
+          </common:Annotations>
+          <common:Name xml:lang="en">Footwear and other personal accessory retailing</common:Name>
+          <common:Description xml:lang="en">Footwear and other personal accessory retailing</common:Description>
+          <structure:Parent>
+            <Ref id="43" />
+          </structure:Parent>
+        </structure:Code>
+        <structure:Code id="44">
+          <common:Annotations>
+            <common:Annotation>
+              <common:AnnotationType>ORDER</common:AnnotationType>
+              <common:AnnotationText xml:lang="en">130</common:AnnotationText>
+            </common:Annotation>
+            <common:Annotation>
+              <common:AnnotationType>FULL_NAME</common:AnnotationType>
+              <common:AnnotationText xml:lang="en">Department stores</common:AnnotationText>
+            </common:Annotation>
+          </common:Annotations>
+          <common:Name xml:lang="en">Department stores</common:Name>
+          <common:Description xml:lang="en">Department stores</common:Description>
+          <structure:Parent>
+            <Ref id="20" />
+          </structure:Parent>
+        </structure:Code>
+        <structure:Code id="09">
+          <common:Annotations>
+            <common:Annotation>
+              <common:AnnotationType>ORDER</common:AnnotationType>
+              <common:AnnotationText xml:lang="en">120</common:AnnotationText>
+            </common:Annotation>
+            <common:Annotation>
+              <common:AnnotationType>FULL_NAME</common:AnnotationType>
+              <common:AnnotationText xml:lang="en">Department stores</common:AnnotationText>
+            </common:Annotation>
+          </common:Annotations>
+          <common:Name xml:lang="en">Department stores</common:Name>
+          <common:Description xml:lang="en">Department stores</common:Description>
+          <structure:Parent>
+            <Ref id="44" />
+          </structure:Parent>
+        </structure:Code>
+        <structure:Code id="45">
+          <common:Annotations>
+            <common:Annotation>
+              <common:AnnotationType>ORDER</common:AnnotationType>
+              <common:AnnotationText xml:lang="en">180</common:AnnotationText>
+            </common:Annotation>
+            <common:Annotation>
+              <common:AnnotationType>FULL_NAME</common:AnnotationType>
+              <common:AnnotationText xml:lang="en">Other retailing</common:AnnotationText>
+            </common:Annotation>
+          </common:Annotations>
+          <common:Name xml:lang="en">Other retailing</common:Name>
+          <common:Description xml:lang="en">Other retailing</common:Description>
+          <structure:Parent>
+            <Ref id="20" />
+          </structure:Parent>
+        </structure:Code>
+        <structure:Code id="10">
+          <common:Annotations>
+            <common:Annotation>
+              <common:AnnotationType>ORDER</common:AnnotationType>
+              <common:AnnotationText xml:lang="en">140</common:AnnotationText>
+            </common:Annotation>
+            <common:Annotation>
+              <common:AnnotationType>FULL_NAME</common:AnnotationType>
+              <common:AnnotationText xml:lang="en">Newspaper and book retailing</common:AnnotationText>
+            </common:Annotation>
+          </common:Annotations>
+          <common:Name xml:lang="en">Newspaper and book retailing</common:Name>
+          <common:Description xml:lang="en">Newspaper and book retailing</common:Description>
+          <structure:Parent>
+            <Ref id="45" />
+          </structure:Parent>
+        </structure:Code>
+        <structure:Code id="11">
+          <common:Annotations>
+            <common:Annotation>
+              <common:AnnotationType>ORDER</common:AnnotationType>
+              <common:AnnotationText xml:lang="en">150</common:AnnotationText>
+            </common:Annotation>
+            <common:Annotation>
+              <common:AnnotationType>FULL_NAME</common:AnnotationType>
+              <common:AnnotationText xml:lang="en">Other recreational goods retailing</common:AnnotationText>
+            </common:Annotation>
+          </common:Annotations>
+          <common:Name xml:lang="en">Other recreational goods retailing</common:Name>
+          <common:Description xml:lang="en">Other recreational goods retailing</common:Description>
+          <structure:Parent>
+            <Ref id="45" />
+          </structure:Parent>
+        </structure:Code>
+        <structure:Code id="12">
+          <common:Annotations>
+            <common:Annotation>
+              <common:AnnotationType>ORDER</common:AnnotationType>
+              <common:AnnotationText xml:lang="en">160</common:AnnotationText>
+            </common:Annotation>
+            <common:Annotation>
+              <common:AnnotationType>FULL_NAME</common:AnnotationType>
+              <common:AnnotationText xml:lang="en">Pharmaceutical, cosmetic and toiletry goods retailing</common:AnnotationText>
+            </common:Annotation>
+          </common:Annotations>
+          <common:Name xml:lang="en">Pharmaceutical, cosmetic and toiletry goods retailing</common:Name>
+          <common:Description xml:lang="en">Pharmaceutical, cosmetic and toiletry goods retailing</common:Description>
+          <structure:Parent>
+            <Ref id="45" />
+          </structure:Parent>
+        </structure:Code>
+        <structure:Code id="13">
+          <common:Annotations>
+            <common:Annotation>
+              <common:AnnotationType>ORDER</common:AnnotationType>
+              <common:AnnotationText xml:lang="en">170</common:AnnotationText>
+            </common:Annotation>
+            <common:Annotation>
+              <common:AnnotationType>FULL_NAME</common:AnnotationType>
+              <common:AnnotationText xml:lang="en">Other retailing n.e.c.</common:AnnotationText>
+            </common:Annotation>
+          </common:Annotations>
+          <common:Name xml:lang="en">Other retailing n.e.c.</common:Name>
+          <common:Description xml:lang="en">Other retailing n.e.c.</common:Description>
+          <structure:Parent>
+            <Ref id="45" />
+          </structure:Parent>
+        </structure:Code>
+        <structure:Code id="46">
+          <common:Annotations>
+            <common:Annotation>
+              <common:AnnotationType>ORDER</common:AnnotationType>
+              <common:AnnotationText xml:lang="en">210</common:AnnotationText>
+            </common:Annotation>
+            <common:Annotation>
+              <common:AnnotationType>FULL_NAME</common:AnnotationType>
+              <common:AnnotationText xml:lang="en">Cafes, restaurants and takeaway food services</common:AnnotationText>
+            </common:Annotation>
+          </common:Annotations>
+          <common:Name xml:lang="en">Cafes, restaurants and takeaway food services</common:Name>
+          <common:Description xml:lang="en">Cafes, restaurants and takeaway food services</common:Description>
+          <structure:Parent>
+            <Ref id="20" />
+          </structure:Parent>
+        </structure:Code>
+        <structure:Code id="14">
+          <common:Annotations>
+            <common:Annotation>
+              <common:AnnotationType>ORDER</common:AnnotationType>
+              <common:AnnotationText xml:lang="en">190</common:AnnotationText>
+            </common:Annotation>
+            <common:Annotation>
+              <common:AnnotationType>FULL_NAME</common:AnnotationType>
+              <common:AnnotationText xml:lang="en">Cafes, restaurants and catering services</common:AnnotationText>
+            </common:Annotation>
+          </common:Annotations>
+          <common:Name xml:lang="en">Cafes, restaurants and catering services</common:Name>
+          <common:Description xml:lang="en">Cafes, restaurants and catering services</common:Description>
+          <structure:Parent>
+            <Ref id="46" />
+          </structure:Parent>
+        </structure:Code>
+        <structure:Code id="15">
+          <common:Annotations>
+            <common:Annotation>
+              <common:AnnotationType>ORDER</common:AnnotationType>
+              <common:AnnotationText xml:lang="en">200</common:AnnotationText>
+            </common:Annotation>
+            <common:Annotation>
+              <common:AnnotationType>FULL_NAME</common:AnnotationType>
+              <common:AnnotationText xml:lang="en">Takeaway food services</common:AnnotationText>
+            </common:Annotation>
+          </common:Annotations>
+          <common:Name xml:lang="en">Takeaway food services</common:Name>
+          <common:Description xml:lang="en">Takeaway food services</common:Description>
+          <structure:Parent>
+            <Ref id="46" />
+          </structure:Parent>
+        </structure:Code>
+      </structure:Codelist>
+      <structure:Codelist isPartial="true" id="CL_RT_MEASURE" agencyID="ABS" version="1.0.0" isFinal="true">
+        <common:Name xml:lang="en">Retail Trade Measures</common:Name>
+        <structure:Code id="M1">
+          <common:Annotations>
+            <common:Annotation>
+              <common:AnnotationType>ORDER</common:AnnotationType>
+              <common:AnnotationText xml:lang="en">10</common:AnnotationText>
+            </common:Annotation>
+          </common:Annotations>
+          <common:Name xml:lang="en">Current Prices</common:Name>
+        </structure:Code>
+        <structure:Code id="M2">
+          <common:Annotations>
+            <common:Annotation>
+              <common:AnnotationType>ORDER</common:AnnotationType>
+              <common:AnnotationText xml:lang="en">20</common:AnnotationText>
+            </common:Annotation>
+          </common:Annotations>
+          <common:Name xml:lang="en">Current Prices Percentage Change from Previous Period</common:Name>
+        </structure:Code>
+      </structure:Codelist>
+      <structure:Codelist isPartial="true" id="CL_STATE" agencyID="ABS" version="1.0.0" isFinal="true">
+        <common:Name xml:lang="en">State</common:Name>
+        <structure:Code id="AUS">
+          <common:Annotations>
+            <common:Annotation>
+              <common:AnnotationType>ORDER</common:AnnotationType>
+              <common:AnnotationText xml:lang="en">10</common:AnnotationText>
+            </common:Annotation>
+          </common:Annotations>
+          <common:Name xml:lang="en">Australia</common:Name>
+        </structure:Code>
+        <structure:Code id="1">
+          <common:Annotations>
+            <common:Annotation>
+              <common:AnnotationType>ORDER</common:AnnotationType>
+              <common:AnnotationText xml:lang="en">20</common:AnnotationText>
+            </common:Annotation>
+          </common:Annotations>
+          <common:Name xml:lang="en">New South Wales</common:Name>
+          <structure:Parent>
+            <Ref id="AUS" />
+          </structure:Parent>
+        </structure:Code>
+        <structure:Code id="2">
+          <common:Annotations>
+            <common:Annotation>
+              <common:AnnotationType>ORDER</common:AnnotationType>
+              <common:AnnotationText xml:lang="en">30</common:AnnotationText>
+            </common:Annotation>
+          </common:Annotations>
+          <common:Name xml:lang="en">Victoria</common:Name>
+          <structure:Parent>
+            <Ref id="AUS" />
+          </structure:Parent>
+        </structure:Code>
+        <structure:Code id="3">
+          <common:Annotations>
+            <common:Annotation>
+              <common:AnnotationType>ORDER</common:AnnotationType>
+              <common:AnnotationText xml:lang="en">40</common:AnnotationText>
+            </common:Annotation>
+          </common:Annotations>
+          <common:Name xml:lang="en">Queensland</common:Name>
+          <structure:Parent>
+            <Ref id="AUS" />
+          </structure:Parent>
+        </structure:Code>
+        <structure:Code id="4">
+          <common:Annotations>
+            <common:Annotation>
+              <common:AnnotationType>ORDER</common:AnnotationType>
+              <common:AnnotationText xml:lang="en">50</common:AnnotationText>
+            </common:Annotation>
+          </common:Annotations>
+          <common:Name xml:lang="en">South Australia</common:Name>
+          <structure:Parent>
+            <Ref id="AUS" />
+          </structure:Parent>
+        </structure:Code>
+        <structure:Code id="5">
+          <common:Annotations>
+            <common:Annotation>
+              <common:AnnotationType>ORDER</common:AnnotationType>
+              <common:AnnotationText xml:lang="en">60</common:AnnotationText>
+            </common:Annotation>
+          </common:Annotations>
+          <common:Name xml:lang="en">Western Australia</common:Name>
+          <structure:Parent>
+            <Ref id="AUS" />
+          </structure:Parent>
+        </structure:Code>
+        <structure:Code id="6">
+          <common:Annotations>
+            <common:Annotation>
+              <common:AnnotationType>ORDER</common:AnnotationType>
+              <common:AnnotationText xml:lang="en">70</common:AnnotationText>
+            </common:Annotation>
+          </common:Annotations>
+          <common:Name xml:lang="en">Tasmania</common:Name>
+          <structure:Parent>
+            <Ref id="AUS" />
+          </structure:Parent>
+        </structure:Code>
+        <structure:Code id="7">
+          <common:Annotations>
+            <common:Annotation>
+              <common:AnnotationType>ORDER</common:AnnotationType>
+              <common:AnnotationText xml:lang="en">80</common:AnnotationText>
+            </common:Annotation>
+          </common:Annotations>
+          <common:Name xml:lang="en">Northern Territory</common:Name>
+          <structure:Parent>
+            <Ref id="AUS" />
+          </structure:Parent>
+        </structure:Code>
+        <structure:Code id="8">
+          <common:Annotations>
+            <common:Annotation>
+              <common:AnnotationType>ORDER</common:AnnotationType>
+              <common:AnnotationText xml:lang="en">90</common:AnnotationText>
+            </common:Annotation>
+          </common:Annotations>
+          <common:Name xml:lang="en">Australian Capital Territory</common:Name>
+          <structure:Parent>
+            <Ref id="AUS" />
+          </structure:Parent>
+        </structure:Code>
+      </structure:Codelist>
+      <structure:Codelist isPartial="true" id="CL_TSEST" agencyID="ABS" version="1.0.0" isFinal="true">
+        <common:Name xml:lang="en">Time Series Estimates</common:Name>
+        <structure:Code id="10">
+          <common:Annotations>
+            <common:Annotation>
+              <common:AnnotationType>ORDER</common:AnnotationType>
+              <common:AnnotationText xml:lang="en">1</common:AnnotationText>
+            </common:Annotation>
+            <common:Annotation>
+              <common:AnnotationType>FULL_NAME</common:AnnotationType>
+              <common:AnnotationText xml:lang="en">Original</common:AnnotationText>
+            </common:Annotation>
+          </common:Annotations>
+          <common:Name xml:lang="en">Original</common:Name>
+          <common:Description xml:lang="en">Original</common:Description>
+        </structure:Code>
+        <structure:Code id="20">
+          <common:Annotations>
+            <common:Annotation>
+              <common:AnnotationType>ORDER</common:AnnotationType>
+              <common:AnnotationText xml:lang="en">2</common:AnnotationText>
+            </common:Annotation>
+            <common:Annotation>
+              <common:AnnotationType>FULL_NAME</common:AnnotationType>
+              <common:AnnotationText xml:lang="en">Seasonally Adjusted</common:AnnotationText>
+            </common:Annotation>
+          </common:Annotations>
+          <common:Name xml:lang="en">Seasonally Adjusted</common:Name>
+          <common:Description xml:lang="en">Seasonally Adjusted</common:Description>
+        </structure:Code>
+        <structure:Code id="30">
+          <common:Annotations>
+            <common:Annotation>
+              <common:AnnotationType>ORDER</common:AnnotationType>
+              <common:AnnotationText xml:lang="en">3</common:AnnotationText>
+            </common:Annotation>
+            <common:Annotation>
+              <common:AnnotationType>FULL_NAME</common:AnnotationType>
+              <common:AnnotationText xml:lang="en">Trend</common:AnnotationText>
+            </common:Annotation>
+          </common:Annotations>
+          <common:Name xml:lang="en">Trend</common:Name>
+          <common:Description xml:lang="en">Trend</common:Description>
+        </structure:Code>
+      </structure:Codelist>
+    </structure:Codelists>
+    <structure:Concepts>
+      <structure:ConceptScheme isPartial="true" id="CS_COMMON" agencyID="ABS" version="1.0.0" isFinal="true">
+        <common:Name xml:lang="en">Common Concepts</common:Name>
+        <structure:Concept id="TIME_PERIOD">
+          <common:Annotations>
+            <common:Annotation>
+              <common:AnnotationType>CONTEXT</common:AnnotationType>
+              <common:AnnotationText xml:lang="en">The measurement represented by each observation corresponds to either a specific point in time (e.g. a single day) or a period (e.g. a month, quarter, financial or calendar year).</common:AnnotationText>
+            </common:Annotation>
+            <common:Annotation>
+              <common:AnnotationType>QUARTER</common:AnnotationType>
+              <common:AnnotationText xml:lang="en">Quarterly data is reported against the calander year. e.g. "YYYY-Q1" represents the quarter ending March.</common:AnnotationText>
+            </common:Annotation>
+            <common:Annotation>
+              <common:AnnotationType>FINANCIAL_YEAR</common:AnnotationType>
+              <common:AnnotationText xml:lang="en">Time periods matching the "YYYY-MM-DD/P1Y" format represent financial years as the start date of the period followed by the duration of 1 year.</common:AnnotationText>
+            </common:Annotation>
+          </common:Annotations>
+          <common:Name xml:lang="en">Time Period</common:Name>
+          <common:Description xml:lang="en">Timespan or point in time for which the observation refers.</common:Description>
+        </structure:Concept>
+        <structure:Concept id="FREQ">
+          <common:Name xml:lang="en">Frequency</common:Name>
+          <common:Description xml:lang="en">Rate at which data is collated.</common:Description>
+        </structure:Concept>
+        <structure:Concept id="MEASURE">
+          <common:Name xml:lang="en">Measure</common:Name>
+        </structure:Concept>
+        <structure:Concept id="TSEST">
+          <common:Annotations>
+            <common:Annotation>
+              <common:AnnotationType>OTHER_LINKS</common:AnnotationType>
+              <common:AnnotationText xml:lang="en">https://www.abs.gov.au/websitedbs/D3310114.nsf/home/Time+Series+Analysis:+The+Basics</common:AnnotationText>
+            </common:Annotation>
+          </common:Annotations>
+          <common:Name xml:lang="en">Adjustment Type</common:Name>
+          <common:Description xml:lang="en">An original time series can be decomposed into three components: the trend (the general direction of the series), the seasonal component (systematic, calendar related movements) and the irregular component (unsystematic, short term fluctuations). Seasonally adjusted series are produced by estimating the seasonal component and removing this from the original series. In most economic data the seasonal component is a combination of seasonal influences (e.g. the effect of the weather or social traditions) plus other kinds of calendar related variations such as Chinese New Year and Christmas. The seasonal adjustment methodology takes into account both seasonal and other calendar related factors that evolve over time to reflect changes in activity patterns.</common:Description>
+        </structure:Concept>
+      </structure:ConceptScheme>
+      <structure:ConceptScheme isPartial="true" id="CS_GEOGRAPHY" agencyID="ABS" version="1.0.0" isFinal="true">
+        <common:Name xml:lang="en">Geography Concepts</common:Name>
+        <structure:Concept id="REGION">
+          <common:Name xml:lang="en">Region</common:Name>
+        </structure:Concept>
+      </structure:ConceptScheme>
+      <structure:ConceptScheme isPartial="true" id="CS_INDUSTRY" agencyID="ABS" version="1.0.0" isFinal="true">
+        <common:Name xml:lang="en">Industry Concepts</common:Name>
+        <structure:Concept id="INDUSTRY">
+          <common:Name xml:lang="en">Industry</common:Name>
+        </structure:Concept>
+      </structure:ConceptScheme>
+    </structure:Concepts>
+    <structure:DataStructures>
+      <structure:DataStructure id="RT" agencyID="ABS" version="1.0.0" isFinal="true">
+        <common:Name xml:lang="en">Retail Trade Datastructure</common:Name>
+        <structure:DataStructureComponents>
+          <structure:DimensionList id="DimensionDescriptor">
+            <structure:Dimension id="MEASURE" position="1">
+              <structure:ConceptIdentity>
+                <Ref id="MEASURE" maintainableParentID="CS_COMMON" maintainableParentVersion="1.0.0" agencyID="ABS" package="conceptscheme" class="Concept" />
+              </structure:ConceptIdentity>
+              <structure:LocalRepresentation>
+                <structure:Enumeration>
+                  <Ref id="CL_RT_MEASURE" version="1.0.0" agencyID="ABS" package="codelist" class="Codelist" />
+                </structure:Enumeration>
+              </structure:LocalRepresentation>
+            </structure:Dimension>
+            <structure:Dimension id="INDUSTRY" position="2">
+              <structure:ConceptIdentity>
+                <Ref id="INDUSTRY" maintainableParentID="CS_INDUSTRY" maintainableParentVersion="1.0.0" agencyID="ABS" package="conceptscheme" class="Concept" />
+              </structure:ConceptIdentity>
+              <structure:LocalRepresentation>
+                <structure:Enumeration>
+                  <Ref id="CL_RT_IND" version="1.0.0" agencyID="ABS" package="codelist" class="Codelist" />
+                </structure:Enumeration>
+              </structure:LocalRepresentation>
+            </structure:Dimension>
+            <structure:Dimension id="TSEST" position="3">
+              <structure:ConceptIdentity>
+                <Ref id="TSEST" maintainableParentID="CS_COMMON" maintainableParentVersion="1.0.0" agencyID="ABS" package="conceptscheme" class="Concept" />
+              </structure:ConceptIdentity>
+              <structure:LocalRepresentation>
+                <structure:Enumeration>
+                  <Ref id="CL_TSEST" version="1.0.0" agencyID="ABS" package="codelist" class="Codelist" />
+                </structure:Enumeration>
+              </structure:LocalRepresentation>
+            </structure:Dimension>
+            <structure:Dimension id="REGION" position="4">
+              <structure:ConceptIdentity>
+                <Ref id="REGION" maintainableParentID="CS_GEOGRAPHY" maintainableParentVersion="1.0.0" agencyID="ABS" package="conceptscheme" class="Concept" />
+              </structure:ConceptIdentity>
+              <structure:LocalRepresentation>
+                <structure:Enumeration>
+                  <Ref id="CL_STATE" version="1.0.0" agencyID="ABS" package="codelist" class="Codelist" />
+                </structure:Enumeration>
+              </structure:LocalRepresentation>
+            </structure:Dimension>
+            <structure:Dimension id="FREQ" position="5">
+              <structure:ConceptIdentity>
+                <Ref id="FREQ" maintainableParentID="CS_COMMON" maintainableParentVersion="1.0.0" agencyID="ABS" package="conceptscheme" class="Concept" />
+              </structure:ConceptIdentity>
+              <structure:LocalRepresentation>
+                <structure:Enumeration>
+                  <Ref id="CL_FREQ" version="1.0.0" agencyID="ABS" package="codelist" class="Codelist" />
+                </structure:Enumeration>
+              </structure:LocalRepresentation>
+            </structure:Dimension>
+            <structure:TimeDimension id="TIME_PERIOD" position="6">
+              <structure:ConceptIdentity>
+                <Ref id="TIME_PERIOD" maintainableParentID="CS_COMMON" maintainableParentVersion="1.0.0" agencyID="ABS" package="conceptscheme" class="Concept" />
+              </structure:ConceptIdentity>
+              <structure:LocalRepresentation>
+                <structure:TextFormat textType="ObservationalTimePeriod" />
+              </structure:LocalRepresentation>
+            </structure:TimeDimension>
+          </structure:DimensionList>
+          <structure:AttributeList id="AttributeDescriptor">
+            <structure:Attribute id="UNIT_MEASURE" assignmentStatus="Mandatory">
+              <structure:ConceptIdentity>
+                <Ref id="UNIT_MEASURE" maintainableParentID="CS_ATTRIBUTE" maintainableParentVersion="1.0.0" agencyID="ABS" package="conceptscheme" class="Concept" />
+              </structure:ConceptIdentity>
+              <structure:LocalRepresentation>
+                <structure:Enumeration>
+                  <Ref id="CL_UNIT_MEASURE" version="1.0.0" agencyID="ABS" package="codelist" class="Codelist" />
+                </structure:Enumeration>
+              </structure:LocalRepresentation>
+              <structure:AttributeRelationship>
+                <structure:Dimension>
+                  <Ref id="MEASURE" />
+                </structure:Dimension>
+              </structure:AttributeRelationship>
+            </structure:Attribute>
+            <structure:Attribute id="UNIT_MULT" assignmentStatus="Conditional">
+              <structure:ConceptIdentity>
+                <Ref id="UNIT_MULT" maintainableParentID="CS_ATTRIBUTE" maintainableParentVersion="1.0.0" agencyID="ABS" package="conceptscheme" class="Concept" />
+              </structure:ConceptIdentity>
+              <structure:LocalRepresentation>
+                <structure:Enumeration>
+                  <Ref id="CL_UNIT_MULT" version="1.0.0" agencyID="ABS" package="codelist" class="Codelist" />
+                </structure:Enumeration>
+              </structure:LocalRepresentation>
+              <structure:AttributeRelationship>
+                <structure:Dimension>
+                  <Ref id="MEASURE" />
+                </structure:Dimension>
+              </structure:AttributeRelationship>
+            </structure:Attribute>
+            <structure:Attribute id="OBS_STATUS" assignmentStatus="Conditional">
+              <structure:ConceptIdentity>
+                <Ref id="OBS_STATUS" maintainableParentID="CS_ATTRIBUTE" maintainableParentVersion="1.0.0" agencyID="ABS" package="conceptscheme" class="Concept" />
+              </structure:ConceptIdentity>
+              <structure:LocalRepresentation>
+                <structure:Enumeration>
+                  <Ref id="CL_OBS_STATUS" version="1.0.0" agencyID="ABS" package="codelist" class="Codelist" />
+                </structure:Enumeration>
+              </structure:LocalRepresentation>
+              <structure:AttributeRelationship>
+                <structure:PrimaryMeasure>
+                  <Ref id="OBS_VALUE" />
+                </structure:PrimaryMeasure>
+              </structure:AttributeRelationship>
+            </structure:Attribute>
+            <structure:Attribute id="OBS_COMMENT" assignmentStatus="Conditional">
+              <structure:ConceptIdentity>
+                <Ref id="OBS_COMMENT" maintainableParentID="CS_ATTRIBUTE" maintainableParentVersion="1.0.0" agencyID="ABS" package="conceptscheme" class="Concept" />
+              </structure:ConceptIdentity>
+              <structure:AttributeRelationship>
+                <structure:PrimaryMeasure>
+                  <Ref id="OBS_VALUE" />
+                </structure:PrimaryMeasure>
+              </structure:AttributeRelationship>
+            </structure:Attribute>
+          </structure:AttributeList>
+          <structure:MeasureList id="MeasureDescriptor">
+            <structure:PrimaryMeasure id="OBS_VALUE">
+              <structure:ConceptIdentity>
+                <Ref id="OBS_VALUE" maintainableParentID="CS_COMMON" maintainableParentVersion="1.0.0" agencyID="ABS" package="conceptscheme" class="Concept" />
+              </structure:ConceptIdentity>
+              <structure:LocalRepresentation>
+                <structure:TextFormat textType="Double" />
+              </structure:LocalRepresentation>
+            </structure:PrimaryMeasure>
+          </structure:MeasureList>
+        </structure:DataStructureComponents>
+      </structure:DataStructure>
+    </structure:DataStructures>
+    <structure:Constraints>
+      <structure:ContentConstraint id="CC" agencyID="SDMX" version="1.0" type="Actual">
+        <common:Annotations>
+          <common:Annotation id="obs_count">
+            <common:AnnotationTitle>519</common:AnnotationTitle>
+            <common:AnnotationType>sdmx_metrics</common:AnnotationType>
+          </common:Annotation>
+        </common:Annotations>
+        <common:Name xml:lang="en">Autogenerated content constraint</common:Name>
+        <structure:ConstraintAttachment>
+          <structure:Dataflow>
+            <Ref id="RT" version="1.0.0" agencyID="ABS" package="datastructure" class="Dataflow" />
+          </structure:Dataflow>
+        </structure:ConstraintAttachment>
+        <structure:CubeRegion include="true">
+          <common:KeyValue id="MEASURE">
+            <common:Value>M1</common:Value>
+            <common:Value>M2</common:Value>
+          </common:KeyValue>
+          <common:KeyValue id="INDUSTRY">
+            <common:Value>01</common:Value>
+            <common:Value>02</common:Value>
+            <common:Value>03</common:Value>
+            <common:Value>04</common:Value>
+            <common:Value>05</common:Value>
+            <common:Value>06</common:Value>
+            <common:Value>07</common:Value>
+            <common:Value>08</common:Value>
+            <common:Value>09</common:Value>
+            <common:Value>10</common:Value>
+            <common:Value>11</common:Value>
+            <common:Value>12</common:Value>
+            <common:Value>13</common:Value>
+            <common:Value>14</common:Value>
+            <common:Value>15</common:Value>
+            <common:Value>20</common:Value>
+            <common:Value>41</common:Value>
+            <common:Value>42</common:Value>
+            <common:Value>43</common:Value>
+            <common:Value>44</common:Value>
+            <common:Value>45</common:Value>
+            <common:Value>46</common:Value>
+          </common:KeyValue>
+          <common:KeyValue id="TSEST">
+            <common:Value>10</common:Value>
+            <common:Value>20</common:Value>
+            <common:Value>30</common:Value>
+          </common:KeyValue>
+          <common:KeyValue id="REGION">
+            <common:Value>1</common:Value>
+            <common:Value>2</common:Value>
+            <common:Value>3</common:Value>
+            <common:Value>4</common:Value>
+            <common:Value>5</common:Value>
+            <common:Value>6</common:Value>
+            <common:Value>7</common:Value>
+            <common:Value>8</common:Value>
+            <common:Value>AUS</common:Value>
+          </common:KeyValue>
+          <common:KeyValue id="FREQ">
+            <common:Value>M</common:Value>
+          </common:KeyValue>
+          <common:KeyValue id="TIME_PERIOD">
+            <common:TimeRange>
+              <common:StartPeriod isInclusive="true">1982-04-01T00:00:00</common:StartPeriod>
+              <common:EndPeriod isInclusive="true">2025-06-30T00:00:00</common:EndPeriod>
+            </common:TimeRange>
+          </common:KeyValue>
+        </structure:CubeRegion>
+      </structure:ContentConstraint>
+    </structure:Constraints>
+  </message:Structures>
+</message:Structure>

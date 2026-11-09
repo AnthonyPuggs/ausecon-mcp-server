@@ -15,6 +15,7 @@ from starlette.responses import JSONResponse
 from starlette.types import ASGIApp, Receive, Scope, Send
 
 from ausecon_mcp.bounds import NormalisedSemanticBounds, normalise_semantic_bounds
+from ausecon_mcp.catalogue.abs import ABS_CATALOGUE
 from ausecon_mcp.catalogue.resolver import (
     concepts_for_dataset,
     resolve,
@@ -526,6 +527,10 @@ class AuseconService:
             updated_after=validated_updated_after,
             latest_n=latest_n,
         )
+        if not payload.get("observations"):
+            notes = ABS_CATALOGUE.get(validated_dataflow_id, {}).get("notes", [])
+            if notes:
+                payload.setdefault("metadata", {}).setdefault("warnings", []).extend(notes)
         if not include_observation_dimensions:
             strip_observation_dimensions(payload)
         return payload

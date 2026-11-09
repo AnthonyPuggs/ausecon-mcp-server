@@ -119,3 +119,12 @@ def test_describe_dataset_reports_active_datasets_as_not_ceased() -> None:
 
     assert result["ceased"] is False
     assert result["successor"] is None
+
+
+def test_describe_dataset_points_quarterly_cpi_history_at_rba_g1() -> None:
+    result = describe_dataset("abs", "CPI")
+
+    (note,) = result["warnings"]
+    assert "FREQ=M" in note
+    assert "GCPIOCPMTMQP" in note
+    assert "get_rba_table" in note

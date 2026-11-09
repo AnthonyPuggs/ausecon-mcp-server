@@ -1,0 +1,302 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--NSI Web Service v8.19.9.0-->
+<message:Structure xmlns:message="http://www.sdmx.org/resources/sdmxml/schemas/v2_1/message" xmlns:structure="http://www.sdmx.org/resources/sdmxml/schemas/v2_1/structure" xmlns:common="http://www.sdmx.org/resources/sdmxml/schemas/v2_1/common">
+  <message:Header>
+    <message:ID>IDREF5395</message:ID>
+    <message:Test>false</message:Test>
+    <message:Prepared>2026-11-09T07:16:48.8861884+00:00</message:Prepared>
+    <message:Sender id="Unknown" />
+    <message:Receiver id="Unknown" />
+  </message:Header>
+  <message:Structures>
+    <structure:Dataflows>
+      <structure:Dataflow id="CPI" agencyID="ABS" version="2.0.0" isFinal="true">
+        <common:Annotations>
+          <common:Annotation>
+            <common:AnnotationType>NonProductionDataflow</common:AnnotationType>
+            <common:AnnotationText xml:lang="en">true</common:AnnotationText>
+          </common:Annotation>
+          <common:Annotation>
+            <common:AnnotationTitle>TIME_PERIOD</common:AnnotationTitle>
+            <common:AnnotationType>LAYOUT_COLUMN</common:AnnotationType>
+          </common:Annotation>
+          <common:Annotation>
+            <common:AnnotationTitle>INDEX</common:AnnotationTitle>
+            <common:AnnotationType>LAYOUT_ROW</common:AnnotationType>
+          </common:Annotation>
+          <common:Annotation>
+            <common:AnnotationTitle>MEASURE,TSEST,REGION</common:AnnotationTitle>
+            <common:AnnotationType>LAYOUT_ROW_SECTION</common:AnnotationType>
+          </common:Annotation>
+          <common:Annotation>
+            <common:AnnotationTitle>MEASURE=3,REGION=50,FREQ=M,LASTNPERIODS=4</common:AnnotationTitle>
+            <common:AnnotationType>DEFAULT</common:AnnotationType>
+          </common:Annotation>
+          <common:Annotation>
+            <common:AnnotationType>EXT_RESOURCE</common:AnnotationType>
+            <common:AnnotationText xml:lang="en">Methodology|https://www.abs.gov.au/statistics/economy/price-indexes-and-inflation/consumer-price-index-australia/latest-release#methodology|https://www.abs.gov.au/ausstats/wmdata.nsf/activeimages/methodology/$File/methodology.png</common:AnnotationText>
+          </common:Annotation>
+        </common:Annotations>
+        <common:Name xml:lang="en">Consumer Price Index (CPI)</common:Name>
+        <common:Description xml:lang="en">Dataset: CPI. The Consumer Price Index (CPI) measures changes in the price of a 'basket' of goods and services which account for a high proportion of expenditure by the CPI population group (i.e. metropolitan households). Unit of measure: Index. Geographic coverage: Australia/State. Catalogue number: 6401.0</common:Description>
+        <structure:Structure>
+          <Ref id="CPI" version="2.0.0" agencyID="ABS" package="datastructure" class="DataStructure" />
+        </structure:Structure>
+      </structure:Dataflow>
+    </structure:Dataflows>
+    <structure:Codelists>
+      <structure:Codelist isPartial="true" id="CL_CPI_INDEX" agencyID="ABS" version="1.0.0" isFinal="true">
+        <common:Annotations>
+          <common:Annotation>
+            <common:AnnotationType>SOURCE</common:AnnotationType>
+            <common:AnnotationText xml:lang="en">https://www.abs.gov.au/statistics/detailed-methodology-information/concepts-sources-methods/consumer-price-index-concepts-sources-and-methods</common:AnnotationText>
+          </common:Annotation>
+        </common:Annotations>
+        <common:Name xml:lang="en">Consumer Price Index</common:Name>
+        <common:Description xml:lang="en">List of goods and services included in a Consumer Price Index (CPI) - called item coverage, or the CPI basket. In concept, all consumer goods and services are within scope of the index.</common:Description>
+      </structure:Codelist>
+      <structure:Codelist isPartial="true" id="CL_CPI_MEASURES" agencyID="ABS" version="1.1.0" isFinal="true">
+        <common:Name xml:lang="en">CPI Measures</common:Name>
+      </structure:Codelist>
+      <structure:Codelist isPartial="true" id="CL_CPI_REGION" agencyID="ABS" version="1.1.0" isFinal="true">
+        <common:Name xml:lang="en">CPI Regions</common:Name>
+      </structure:Codelist>
+      <structure:Codelist isPartial="true" id="CL_FREQ" agencyID="ABS" version="1.0.0" isFinal="true">
+        <common:Name xml:lang="en">Frequency</common:Name>
+        <structure:Code id="M">
+          <common:Name xml:lang="en">Monthly</common:Name>
+          <common:Description xml:lang="en">To be used for data collected or disseminated every month.</common:Description>
+        </structure:Code>
+      </structure:Codelist>
+      <structure:Codelist isPartial="true" id="CL_TSEST" agencyID="ABS" version="1.0.0" isFinal="true">
+        <common:Name xml:lang="en">Time Series Estimates</common:Name>
+      </structure:Codelist>
+    </structure:Codelists>
+    <structure:Concepts>
+      <structure:ConceptScheme isPartial="true" id="CS_COMMON" agencyID="ABS" version="1.0.0" isFinal="true">
+        <common:Name xml:lang="en">Common Concepts</common:Name>
+        <structure:Concept id="TIME_PERIOD">
+          <common:Annotations>
+            <common:Annotation>
+              <common:AnnotationType>CONTEXT</common:AnnotationType>
+              <common:AnnotationText xml:lang="en">The measurement represented by each observation corresponds to either a specific point in time (e.g. a single day) or a period (e.g. a month, quarter, financial or calendar year).</common:AnnotationText>
+            </common:Annotation>
+            <common:Annotation>
+              <common:AnnotationType>QUARTER</common:AnnotationType>
+              <common:AnnotationText xml:lang="en">Quarterly data is reported against the calander year. e.g. "YYYY-Q1" represents the quarter ending March.</common:AnnotationText>
+            </common:Annotation>
+            <common:Annotation>
+              <common:AnnotationType>FINANCIAL_YEAR</common:AnnotationType>
+              <common:AnnotationText xml:lang="en">Time periods matching the "YYYY-MM-DD/P1Y" format represent financial years as the start date of the period followed by the duration of 1 year.</common:AnnotationText>
+            </common:Annotation>
+          </common:Annotations>
+          <common:Name xml:lang="en">Time Period</common:Name>
+          <common:Description xml:lang="en">Timespan or point in time for which the observation refers.</common:Description>
+        </structure:Concept>
+        <structure:Concept id="FREQ">
+          <common:Name xml:lang="en">Frequency</common:Name>
+          <common:Description xml:lang="en">Rate at which data is collated.</common:Description>
+        </structure:Concept>
+        <structure:Concept id="MEASURE">
+          <common:Name xml:lang="en">Measure</common:Name>
+        </structure:Concept>
+        <structure:Concept id="TSEST">
+          <common:Annotations>
+            <common:Annotation>
+              <common:AnnotationType>OTHER_LINKS</common:AnnotationType>
+              <common:AnnotationText xml:lang="en">https://www.abs.gov.au/websitedbs/D3310114.nsf/home/Time+Series+Analysis:+The+Basics</common:AnnotationText>
+            </common:Annotation>
+          </common:Annotations>
+          <common:Name xml:lang="en">Adjustment Type</common:Name>
+          <common:Description xml:lang="en">An original time series can be decomposed into three components: the trend (the general direction of the series), the seasonal component (systematic, calendar related movements) and the irregular component (unsystematic, short term fluctuations). Seasonally adjusted series are produced by estimating the seasonal component and removing this from the original series. In most economic data the seasonal component is a combination of seasonal influences (e.g. the effect of the weather or social traditions) plus other kinds of calendar related variations such as Chinese New Year and Christmas. The seasonal adjustment methodology takes into account both seasonal and other calendar related factors that evolve over time to reflect changes in activity patterns.</common:Description>
+        </structure:Concept>
+      </structure:ConceptScheme>
+      <structure:ConceptScheme isPartial="true" id="CS_GEOGRAPHY" agencyID="ABS" version="1.0.0" isFinal="true">
+        <common:Name xml:lang="en">Geography Concepts</common:Name>
+        <structure:Concept id="REGION">
+          <common:Name xml:lang="en">Region</common:Name>
+        </structure:Concept>
+      </structure:ConceptScheme>
+      <structure:ConceptScheme isPartial="true" id="CS_INDEX" agencyID="ABS" version="1.0.0" isFinal="true">
+        <common:Name xml:lang="en">Index Concepts</common:Name>
+        <structure:Concept id="INDEX">
+          <common:Name xml:lang="en">Index</common:Name>
+        </structure:Concept>
+      </structure:ConceptScheme>
+    </structure:Concepts>
+    <structure:DataStructures>
+      <structure:DataStructure id="CPI" agencyID="ABS" version="2.0.0" isFinal="true">
+        <common:Name xml:lang="en">Consumer Price Index</common:Name>
+        <structure:DataStructureComponents>
+          <structure:DimensionList id="DimensionDescriptor">
+            <structure:Dimension id="MEASURE" position="1">
+              <structure:ConceptIdentity>
+                <Ref id="MEASURE" maintainableParentID="CS_COMMON" maintainableParentVersion="1.0.0" agencyID="ABS" package="conceptscheme" class="Concept" />
+              </structure:ConceptIdentity>
+              <structure:LocalRepresentation>
+                <structure:Enumeration>
+                  <Ref id="CL_CPI_MEASURES" version="1.1.0" agencyID="ABS" package="codelist" class="Codelist" />
+                </structure:Enumeration>
+              </structure:LocalRepresentation>
+            </structure:Dimension>
+            <structure:Dimension id="INDEX" position="2">
+              <structure:ConceptIdentity>
+                <Ref id="INDEX" maintainableParentID="CS_INDEX" maintainableParentVersion="1.0.0" agencyID="ABS" package="conceptscheme" class="Concept" />
+              </structure:ConceptIdentity>
+              <structure:LocalRepresentation>
+                <structure:Enumeration>
+                  <Ref id="CL_CPI_INDEX" version="1.0.0" agencyID="ABS" package="codelist" class="Codelist" />
+                </structure:Enumeration>
+              </structure:LocalRepresentation>
+            </structure:Dimension>
+            <structure:Dimension id="TSEST" position="3">
+              <structure:ConceptIdentity>
+                <Ref id="TSEST" maintainableParentID="CS_COMMON" maintainableParentVersion="1.0.0" agencyID="ABS" package="conceptscheme" class="Concept" />
+              </structure:ConceptIdentity>
+              <structure:LocalRepresentation>
+                <structure:Enumeration>
+                  <Ref id="CL_TSEST" version="1.0.0" agencyID="ABS" package="codelist" class="Codelist" />
+                </structure:Enumeration>
+              </structure:LocalRepresentation>
+            </structure:Dimension>
+            <structure:Dimension id="REGION" position="4">
+              <structure:ConceptIdentity>
+                <Ref id="REGION" maintainableParentID="CS_GEOGRAPHY" maintainableParentVersion="1.0.0" agencyID="ABS" package="conceptscheme" class="Concept" />
+              </structure:ConceptIdentity>
+              <structure:LocalRepresentation>
+                <structure:Enumeration>
+                  <Ref id="CL_CPI_REGION" version="1.1.0" agencyID="ABS" package="codelist" class="Codelist" />
+                </structure:Enumeration>
+              </structure:LocalRepresentation>
+            </structure:Dimension>
+            <structure:Dimension id="FREQ" position="5">
+              <structure:ConceptIdentity>
+                <Ref id="FREQ" maintainableParentID="CS_COMMON" maintainableParentVersion="1.0.0" agencyID="ABS" package="conceptscheme" class="Concept" />
+              </structure:ConceptIdentity>
+              <structure:LocalRepresentation>
+                <structure:Enumeration>
+                  <Ref id="CL_FREQ" version="1.0.0" agencyID="ABS" package="codelist" class="Codelist" />
+                </structure:Enumeration>
+              </structure:LocalRepresentation>
+            </structure:Dimension>
+            <structure:TimeDimension id="TIME_PERIOD" position="6">
+              <structure:ConceptIdentity>
+                <Ref id="TIME_PERIOD" maintainableParentID="CS_COMMON" maintainableParentVersion="1.0.0" agencyID="ABS" package="conceptscheme" class="Concept" />
+              </structure:ConceptIdentity>
+              <structure:LocalRepresentation>
+                <structure:TextFormat textType="ObservationalTimePeriod" />
+              </structure:LocalRepresentation>
+            </structure:TimeDimension>
+          </structure:DimensionList>
+          <structure:AttributeList id="AttributeDescriptor">
+            <structure:Attribute id="UNIT_MEASURE" assignmentStatus="Mandatory">
+              <structure:ConceptIdentity>
+                <Ref id="UNIT_MEASURE" maintainableParentID="CS_ATTRIBUTE" maintainableParentVersion="1.0.0" agencyID="ABS" package="conceptscheme" class="Concept" />
+              </structure:ConceptIdentity>
+              <structure:LocalRepresentation>
+                <structure:Enumeration>
+                  <Ref id="CL_UNIT_MEASURE" version="1.0.0" agencyID="ABS" package="codelist" class="Codelist" />
+                </structure:Enumeration>
+              </structure:LocalRepresentation>
+              <structure:AttributeRelationship>
+                <structure:Dimension>
+                  <Ref id="MEASURE" />
+                </structure:Dimension>
+              </structure:AttributeRelationship>
+            </structure:Attribute>
+            <structure:Attribute id="OBS_STATUS" assignmentStatus="Conditional">
+              <structure:ConceptIdentity>
+                <Ref id="OBS_STATUS" maintainableParentID="CS_ATTRIBUTE" maintainableParentVersion="1.0.0" agencyID="ABS" package="conceptscheme" class="Concept" />
+              </structure:ConceptIdentity>
+              <structure:LocalRepresentation>
+                <structure:Enumeration>
+                  <Ref id="CL_OBS_STATUS" version="1.0.0" agencyID="ABS" package="codelist" class="Codelist" />
+                </structure:Enumeration>
+              </structure:LocalRepresentation>
+              <structure:AttributeRelationship>
+                <structure:PrimaryMeasure>
+                  <Ref id="OBS_VALUE" />
+                </structure:PrimaryMeasure>
+              </structure:AttributeRelationship>
+            </structure:Attribute>
+            <structure:Attribute id="DECIMALS" assignmentStatus="Conditional">
+              <structure:ConceptIdentity>
+                <Ref id="DECIMALS" maintainableParentID="CS_DECIMALS" maintainableParentVersion="1.0.0" agencyID="ABS" package="conceptscheme" class="Concept" />
+              </structure:ConceptIdentity>
+              <structure:LocalRepresentation>
+                <structure:Enumeration>
+                  <Ref id="CL_DECIMALS" version="1.0.0" agencyID="ABS" package="codelist" class="Codelist" />
+                </structure:Enumeration>
+              </structure:LocalRepresentation>
+              <structure:AttributeRelationship>
+                <structure:PrimaryMeasure>
+                  <Ref id="OBS_VALUE" />
+                </structure:PrimaryMeasure>
+              </structure:AttributeRelationship>
+            </structure:Attribute>
+            <structure:Attribute id="OBS_COMMENT" assignmentStatus="Conditional">
+              <structure:ConceptIdentity>
+                <Ref id="OBS_COMMENT" maintainableParentID="CS_ATTRIBUTE" maintainableParentVersion="1.0.0" agencyID="ABS" package="conceptscheme" class="Concept" />
+              </structure:ConceptIdentity>
+              <structure:AttributeRelationship>
+                <structure:PrimaryMeasure>
+                  <Ref id="OBS_VALUE" />
+                </structure:PrimaryMeasure>
+              </structure:AttributeRelationship>
+            </structure:Attribute>
+            <structure:Attribute id="BASE_PERIOD" assignmentStatus="Conditional">
+              <structure:ConceptIdentity>
+                <Ref id="BASE_PERIOD" maintainableParentID="CS_ATTRIBUTE" maintainableParentVersion="1.0.0" agencyID="ABS" package="conceptscheme" class="Concept" />
+              </structure:ConceptIdentity>
+              <structure:LocalRepresentation>
+                <structure:Enumeration>
+                  <Ref id="CL_BASE_PERIOD" version="1.1.0" agencyID="ABS" package="codelist" class="Codelist" />
+                </structure:Enumeration>
+              </structure:LocalRepresentation>
+              <structure:AttributeRelationship>
+                <structure:None />
+              </structure:AttributeRelationship>
+            </structure:Attribute>
+          </structure:AttributeList>
+          <structure:MeasureList id="MeasureDescriptor">
+            <structure:PrimaryMeasure id="OBS_VALUE">
+              <structure:ConceptIdentity>
+                <Ref id="OBS_VALUE" maintainableParentID="CS_COMMON" maintainableParentVersion="1.0.0" agencyID="ABS" package="conceptscheme" class="Concept" />
+              </structure:ConceptIdentity>
+              <structure:LocalRepresentation>
+                <structure:TextFormat textType="Double" />
+              </structure:LocalRepresentation>
+            </structure:PrimaryMeasure>
+          </structure:MeasureList>
+        </structure:DataStructureComponents>
+      </structure:DataStructure>
+    </structure:DataStructures>
+    <structure:Constraints>
+      <structure:ContentConstraint id="CC" agencyID="SDMX" version="1.0" type="Actual">
+        <common:Annotations>
+          <common:Annotation id="obs_count">
+            <common:AnnotationTitle>0</common:AnnotationTitle>
+            <common:AnnotationType>sdmx_metrics</common:AnnotationType>
+          </common:Annotation>
+        </common:Annotations>
+        <common:Name xml:lang="en">Autogenerated content constraint</common:Name>
+        <structure:ConstraintAttachment>
+          <structure:Dataflow>
+            <Ref id="CPI" version="2.0.0" agencyID="ABS" package="datastructure" class="Dataflow" />
+          </structure:Dataflow>
+        </structure:ConstraintAttachment>
+        <structure:CubeRegion include="true">
+          <common:KeyValue id="FREQ">
+            <common:Value>M</common:Value>
+          </common:KeyValue>
+          <common:KeyValue id="TIME_PERIOD">
+            <common:TimeRange>
+              <common:StartPeriod isInclusive="true">9999-01-01T00:00:00</common:StartPeriod>
+              <common:EndPeriod isInclusive="true">0001-12-31T23:59:59</common:EndPeriod>
+            </common:TimeRange>
+          </common:KeyValue>
+        </structure:CubeRegion>
+      </structure:ContentConstraint>
+    </structure:Constraints>
+  </message:Structures>
+</message:Structure>

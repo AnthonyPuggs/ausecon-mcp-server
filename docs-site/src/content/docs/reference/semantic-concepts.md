@@ -9,7 +9,7 @@ description: Curated concepts accepted by get_economic_series.
 source-native ABS, RBA, or APRA target and can be discovered at runtime with
 `list_economic_concepts` or the `ausecon://concepts` resource.
 
-Total concepts: `83`.
+Total concepts: `86`.
 
 ## Activity
 
@@ -84,6 +84,9 @@ Total concepts: `83`.
 | Concept | Source | Dataset | Variant | Frequency | Recommended call |
 | --- | --- | --- | --- | --- | --- |
 | `inflation_expectations` | RBA | `g3` | `consumer` | Monthly | `get_economic_series(concept="inflation_expectations")` |
+| `quarterly_inflation` | RBA | `g1` | `headline_quarterly` | Quarterly | `get_economic_series(concept="quarterly_inflation")` |
+| `quarterly_trimmed_mean_inflation` | RBA | `g1` | `trimmed_mean_quarterly` | Quarterly | `get_economic_series(concept="quarterly_trimmed_mean_inflation")` |
+| `quarterly_weighted_median_inflation` | RBA | `g1` | `weighted_median_quarterly` | Quarterly | `get_economic_series(concept="quarterly_weighted_median_inflation")` |
 | `trimmed_mean_inflation` | RBA | `g1` | `trimmed_mean` | Quarterly | `get_economic_series(concept="trimmed_mean_inflation")` |
 | `weighted_median_inflation` | RBA | `g1` | `weighted_median` | Quarterly | `get_economic_series(concept="weighted_median_inflation")` |
 

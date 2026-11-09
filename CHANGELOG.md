@@ -6,6 +6,25 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- `quarterly_inflation`, `quarterly_trimmed_mean_inflation` and
+  `quarterly_weighted_median_inflation` concepts. They return quarterly seasonally adjusted
+  change from RBA table G1, with history back to the 1980s. In the ABS CPI(2.0.0) structure
+  these series exist only as short monthly series (#187).
+- When an ABS query returns no observations, `metadata.warnings` now explains why. It names
+  the dimension values that do have data (for example "FREQ=Q has no data; ... FREQ has data
+  for M (Monthly)"), or the date range the key covers. `describe_dataset("abs", "CPI")` and
+  empty CPI results also point quarterly history to RBA G1 (#187).
+
+### Changed
+
+- Upstream requests now retry up to four times with 0.5s/1s/2s backoff (previously three
+  attempts, 0.1s/0.2s). HTTP 429 is retried too, and `Retry-After` is honoured up to 10
+  seconds. When retries run out, the error names the upstream HTTP status. A stale-cache
+  fallback adds a `metadata.warnings` entry giving the failure and when the cached copy was
+  retrieved (#187).
+
 ### Fixed
 
 - Large results now reach Python clients built on MCP SDK v2 (including fastmcp 4's `Client`).

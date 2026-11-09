@@ -74,6 +74,18 @@ _RAW_ABS_CATALOGUE = {
             {"name": "trimmed_mean", "aliases": ["core", "trimmed mean"], "abs_key": None},
             {"name": "weighted_median", "aliases": ["weighted median"], "abs_key": None},
         ],
+        "notes": [
+            (
+                "Under the rebased CPI(2.0.0) structure, the seasonally adjusted all-groups "
+                "(INDEX 999901), trimmed mean (999902) and weighted median (999903) series "
+                "exist only at monthly frequency (FREQ=M), with history starting no earlier "
+                "than 2024. For quarterly history back to the 1980s, use RBA table G1: "
+                "get_rba_table(table_id='g1', "
+                "series_ids=['GCPIAGSAQP', 'GCPIOCPMTMQP', 'GCPIOCPMWMQP']) for quarterly "
+                "change, or the trimmed_mean_inflation and weighted_median_inflation concepts "
+                "for year-ended change."
+            ),
+        ],
         "audit": {
             "last_audited": "2026-05-14",
             "upstream_url": "https://data.api.abs.gov.au/rest/dataflow/ABS/CPI/latest",
