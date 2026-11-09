@@ -107,6 +107,12 @@ async def test_response_schema_validates_abs_no_results_payload() -> None:
         router.get("https://data.api.abs.gov.au/rest/data/RT/all").mock(
             return_value=Response(404, text="NoRecordsFound")
         )
+        router.get("https://data.api.abs.gov.au/rest/availableconstraint/RT/all/all/all").mock(
+            return_value=Response(
+                200,
+                text=(FIXTURES / "abs_availability_rt_window.xml").read_text(encoding="utf-8"),
+            )
+        )
 
         payload = await provider.get_data("RT", start_period="2026-01")
 

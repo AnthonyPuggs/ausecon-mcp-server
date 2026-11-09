@@ -82,10 +82,18 @@ If the disk cache directory is unavailable, the server falls back to in-process 
 the lifetime of the process. Cross-process cache persistence and disk-backed stale reuse are not
 available in that degraded mode.
 
+## Retries
+
+Upstream requests retry timeouts, connection errors, HTTP 5xx and HTTP 429 up to four attempts in
+total, with 0.5s, 1s and 2s backoff. A `Retry-After` header lengthens the wait, capped at 10
+seconds. When the retries run out, the error message names the upstream HTTP status.
+
 ## Stale fallback
 
-If an upstream ABS or RBA request fails and a stale cached payload exists, the server can return the
-cached payload and mark `metadata.stale = true` alongside `cached_at` and `expires_at`.
+If an upstream ABS, RBA or APRA request fails and a stale cached payload exists, the server can
+return the cached payload and mark `metadata.stale = true` alongside `cached_at` and `expires_at`.
+A `metadata.warnings` entry gives the upstream failure (including its HTTP status) and when the
+cached copy was retrieved.
 
 Parse errors are not masked this way. They still raise so upstream shape drift remains visible.
 

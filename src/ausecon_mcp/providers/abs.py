@@ -12,10 +12,11 @@ from ausecon_mcp.cache import TTLCache
 from ausecon_mcp.errors import AuseconNotFoundError, AuseconParseError, AuseconUpstreamError
 from ausecon_mcp.filters import filter_payload
 from ausecon_mcp.logging import get_logger
+from ausecon_mcp.parsers.abs_availability import parse_abs_availability
 from ausecon_mcp.parsers.abs_csv import parse_abs_csv
 from ausecon_mcp.parsers.abs_structure import parse_abs_structure
 from ausecon_mcp.providers._http import build_client, resolve_version, utc_now_iso
-from ausecon_mcp.providers._retry import get_with_retries
+from ausecon_mcp.providers._retry import get_with_retries, stamp_stale_metadata
 from ausecon_mcp.providers._single_flight import SingleFlight
 
 _logger = get_logger("providers.abs")
@@ -51,6 +52,53 @@ def _no_records_payload(
         "series": [],
         "observations": [],
     }
+
+
+def _format_codes(codes: list[dict[str, str]], limit: int = 6) -> str:
+    rendered = [
+        f"{item['code']} ({item['label']})" if item["label"] != item["code"] else item["code"]
+        for item in codes[:limit]
+    ]
+    if len(codes) > limit:
+        rendered.append(f"and {len(codes) - limit} more")
+    return ", ".join(rendered)
+
+
+def _availability_hint(key: str, availability: dict[str, Any]) -> str | None:
+    """Explain an empty ABS result using the ``availableconstraint`` response for its key."""
+    if availability.get("obs_count"):
+        time_range = availability.get("time_range")
+        if time_range is None:
+            return None
+        return (
+            f"Key '{key}' has data from {time_range[0]} to {time_range[1]}; "
+            "widen or move the requested window."
+        )
+
+    dimensions = availability.get("dimensions", [])
+    if key == "all" or not dimensions:
+        return None
+    parts = key.split(".")
+    if len(parts) != len(dimensions):
+        return None
+
+    suggestions = []
+    for part, dimension in zip(parts, dimensions, strict=True):
+        if not part:
+            continue
+        requested = set(part.split("+"))
+        alternatives = [item for item in dimension["available"] if item["code"] not in requested]
+        if alternatives:
+            suggestions.append(
+                f"{dimension['id']}={part} has no data; with the other dimensions unchanged, "
+                f"{dimension['id']} has data for {_format_codes(alternatives)}"
+            )
+    if not suggestions:
+        return (
+            f"Key '{key}' has no data, and changing any one dimension does not help; "
+            "check the codes with get_abs_dataset_structure."
+        )
+    return "; ".join(suggestions) + "."
 
 
 class ABSProvider:
@@ -148,9 +196,7 @@ class ABSProvider:
         payload = filter_payload(raw_payload, last_n=last_n)
         payload["metadata"]["server_version"] = resolve_version()
         if stale_meta is not None:
-            payload["metadata"]["stale"] = True
-            payload["metadata"]["cached_at"] = stale_meta["cached_at"]
-            payload["metadata"]["expires_at"] = stale_meta["expires_at"]
+            stamp_stale_metadata(payload, stale_meta, source="abs")
         return payload
 
     async def _fetch_data(
@@ -206,6 +252,10 @@ class ABSProvider:
                     end_period=end_period,
                     updated_after=updated_after,
                 )
+                if updated_after is None:
+                    hint = await self._no_records_hint(dataflow_id, key)
+                    if hint:
+                        raw_payload["metadata"]["warnings"].append(hint)
             else:
                 raise AuseconNotFoundError(
                     f"ABS request for '{dataflow_id}' failed with HTTP 404: the dataflow "
@@ -215,12 +265,12 @@ class ABSProvider:
                     body=exc.body,
                     url=exc.url,
                 ) from exc
-        except AuseconUpstreamError:
+        except AuseconUpstreamError as exc:
             stale = self._cache.get_stale(cache_key)
             if stale is None:
                 raise
             raw_payload = stale["value"]
-            stale_meta = stale
+            stale_meta = {**stale, "error": str(exc)}
             _logger.warning(
                 "request.stale_fallback",
                 extra={
@@ -257,3 +307,31 @@ class ABSProvider:
             raw_payload = await self._cache.aset(cache_key, raw_payload, self._ttl_seconds)
 
         return raw_payload, stale_meta
+
+    async def _no_records_hint(self, dataflow_id: str, key: str) -> str | None:
+        """Best-effort explanation of an empty result; never fails the data request."""
+        cache_key = "abs-availability:" + json.dumps([dataflow_id, key])
+        availability = await self._cache.aget(cache_key)
+        if availability is None:
+            url = f"{self.BASE_URL}/availableconstraint/{dataflow_id}/{key}/all/all"
+            try:
+                response = await get_with_retries(
+                    self._client,
+                    url,
+                    params={"mode": "available", "references": "all"},
+                    source="abs",
+                    identifier=dataflow_id,
+                    attempts=1,
+                )
+                availability = parse_abs_availability(response.text)
+            except Exception:  # noqa: BLE001 - the hint is best-effort; the empty payload stands
+                _logger.info(
+                    "request.availability_failed",
+                    extra={"source": "abs", "identifier": dataflow_id, "url": url},
+                )
+                return None
+            # JSON round-trips tuples as lists, so store the range as a list throughout.
+            if availability["time_range"] is not None:
+                availability["time_range"] = list(availability["time_range"])
+            availability = await self._cache.aset(cache_key, availability, self._ttl_seconds)
+        return _availability_hint(key, availability)

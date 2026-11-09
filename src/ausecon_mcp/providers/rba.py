@@ -13,7 +13,7 @@ from ausecon_mcp.filters import filter_payload
 from ausecon_mcp.logging import get_logger
 from ausecon_mcp.parsers.rba_csv import parse_rba_csv
 from ausecon_mcp.providers._http import build_client, resolve_version, utc_now_iso
-from ausecon_mcp.providers._retry import get_with_retries
+from ausecon_mcp.providers._retry import get_with_retries, stamp_stale_metadata
 from ausecon_mcp.providers._single_flight import SingleFlight
 
 _logger = get_logger("providers.rba")
@@ -88,9 +88,7 @@ class RBAProvider:
         )
         payload["metadata"]["server_version"] = resolve_version()
         if stale_meta is not None:
-            payload["metadata"]["stale"] = True
-            payload["metadata"]["cached_at"] = stale_meta["cached_at"]
-            payload["metadata"]["expires_at"] = stale_meta["expires_at"]
+            stamp_stale_metadata(payload, stale_meta, source="rba")
         return payload
 
     async def _fetch_table(
@@ -116,12 +114,12 @@ class RBAProvider:
                 source="rba",
                 identifier=table_id,
             )
-        except AuseconUpstreamError:
+        except AuseconUpstreamError as exc:
             stale = self._cache.get_stale(cache_key)
             if stale is None:
                 raise
             raw_payload = stale["value"]
-            stale_meta = stale
+            stale_meta = {**stale, "error": str(exc)}
             _logger.warning(
                 "request.stale_fallback",
                 extra={

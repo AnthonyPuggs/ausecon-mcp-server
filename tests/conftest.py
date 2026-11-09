@@ -12,6 +12,7 @@ if str(SRC) not in sys.path:
 import fastmcp  # noqa: E402
 
 import ausecon_mcp.cache as cache_module  # noqa: E402
+import ausecon_mcp.providers._retry as retry_module  # noqa: E402
 
 # MCP SDK v2 models are snake_case. With fastmcp's camelCase bridge off, a stale camelCase read
 # raises AttributeError every time, instead of warning only once per field per process.
@@ -26,3 +27,9 @@ def _isolated_cache_dir(tmp_path, monkeypatch):
     monkeypatch.delenv("AUSECON_CACHE_DIR", raising=False)
     monkeypatch.delenv("AUSECON_CACHE_DISABLED", raising=False)
     yield cache_dir
+
+
+@pytest.fixture(autouse=True)
+def _no_retry_backoff(monkeypatch):
+    """Keep retry-path tests fast; the attempt count is unchanged."""
+    monkeypatch.setattr(retry_module, "DEFAULT_BASE_DELAY_SECONDS", 0.0)

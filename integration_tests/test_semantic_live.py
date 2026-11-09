@@ -226,6 +226,21 @@ async def test_live_semantic_credit_concepts_are_not_stale(concept: str) -> None
     )
 
 
+@pytest.mark.parametrize(
+    "concept",
+    [
+        "quarterly_inflation",
+        "quarterly_trimmed_mean_inflation",
+        "quarterly_weighted_median_inflation",
+    ],
+)
+async def test_live_quarterly_cpi_concepts_reach_back_to_1990(concept: str) -> None:
+    result = await AuseconService().get_economic_series(concept, start="1990-Q1", end="1990-Q4")
+
+    assert result["metadata"]["dataset_id"] == "g1"
+    assert len(result["observations"]) == 4
+
+
 # Tranche E live coverage
 
 

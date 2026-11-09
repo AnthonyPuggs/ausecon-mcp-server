@@ -23,7 +23,7 @@ from ausecon_mcp.filters import (
 from ausecon_mcp.logging import get_logger
 from ausecon_mcp.parsers.apra_xlsx import parse_apra_xlsx
 from ausecon_mcp.providers._http import build_client, resolve_version, utc_now_iso
-from ausecon_mcp.providers._retry import get_with_retries
+from ausecon_mcp.providers._retry import get_with_retries, stamp_stale_metadata
 from ausecon_mcp.providers._single_flight import SingleFlight
 
 _logger = get_logger("providers.apra")
@@ -96,9 +96,7 @@ class APRAProvider:
         expand_observation_dimensions(payload)
         payload["metadata"]["server_version"] = resolve_version()
         if stale_meta is not None:
-            payload["metadata"]["stale"] = True
-            payload["metadata"]["cached_at"] = stale_meta["cached_at"]
-            payload["metadata"]["expires_at"] = stale_meta["expires_at"]
+            stamp_stale_metadata(payload, stale_meta, source="apra")
         return payload
 
     async def _fetch_publication(
@@ -115,12 +113,12 @@ class APRAProvider:
                 entry,
                 table_id=table_id,
             )
-        except AuseconUpstreamError:
+        except AuseconUpstreamError as exc:
             stale = self._cache.get_stale(cache_key)
             if stale is None:
                 raise
             raw_payload = stale["value"]
-            stale_meta = stale
+            stale_meta = {**stale, "error": str(exc)}
             _logger.warning(
                 "request.stale_fallback",
                 extra={
