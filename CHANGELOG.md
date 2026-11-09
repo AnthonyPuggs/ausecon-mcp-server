@@ -6,6 +6,11 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.16.0] - 2026-11-09
+
+Resilience and discoverability release for ABS CPI (#187). Tool names, parameters, and the
+`{metadata, series, observations}` response contract are unchanged.
+
 ### Added
 
 - `quarterly_inflation`, `quarterly_trimmed_mean_inflation` and
@@ -1018,7 +1023,8 @@ Initial public release.
 - Initial curated catalogues for ABS and RBA, plus a four-concept
   `CURATED_SERIES` semantic shortcut map.
 
-[Unreleased]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.15.0...HEAD
+[Unreleased]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.16.0...HEAD
+[1.16.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.15.0...v1.16.0
 [1.15.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.14.6...v1.15.0
 [1.14.6]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.14.5...v1.14.6
 [1.14.5]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.14.4...v1.14.5
