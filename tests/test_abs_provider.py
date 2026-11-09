@@ -205,6 +205,55 @@ async def test_abs_provider_returns_stale_on_upstream_failure(_isolated_cache_di
     assert "cached_at" in stale["metadata"]
     assert "expires_at" in stale["metadata"]
     assert stale["observations"]
+    (warning,) = stale["metadata"]["warnings"]
+    assert "failed after 4 attempts" in warning
+    assert "Serving cached data retrieved at" in warning
+
+
+@pytest.mark.asyncio
+async def test_abs_provider_retries_502_bursts_then_reports_status() -> None:
+    from ausecon_mcp.errors import AuseconUpstreamError
+
+    provider = ABSProvider()
+
+    with respx.mock(assert_all_called=True) as router:
+        route = router.get("https://data.api.abs.gov.au/rest/data/CPI/all").mock(
+            return_value=Response(502, text="bad gateway")
+        )
+
+        with pytest.raises(AuseconUpstreamError, match="HTTP 502 after 4 attempts") as info:
+            await provider.get_data("CPI")
+
+    assert route.call_count == 4
+    assert info.value.status_code == 502
+
+
+@pytest.mark.asyncio
+async def test_abs_provider_retries_429_and_honours_retry_after(monkeypatch) -> None:
+    import ausecon_mcp.providers._retry as retry_module
+
+    sleeps: list[float] = []
+
+    async def _fake_sleep(seconds: float) -> None:
+        sleeps.append(seconds)
+
+    monkeypatch.setattr(retry_module.asyncio, "sleep", _fake_sleep)
+    provider = ABSProvider()
+    csv_payload = (FIXTURES / "abs_cpi_sample.csv").read_text()
+
+    with respx.mock(assert_all_called=True) as router:
+        router.get("https://data.api.abs.gov.au/rest/data/CPI/all").mock(
+            side_effect=[
+                Response(429, headers={"Retry-After": "3"}, text="slow down"),
+                Response(429, headers={"Retry-After": "600"}, text="slow down"),
+                Response(200, text=csv_payload),
+            ]
+        )
+
+        result = await provider.get_data("CPI")
+
+    assert result["observations"]
+    assert sleeps == [3.0, retry_module.MAX_RETRY_AFTER_SECONDS]
 
 
 @pytest.mark.asyncio
@@ -302,9 +351,14 @@ async def test_abs_provider_cache_key_distinguishes_none_from_literal_none() -> 
 async def test_abs_provider_no_results_404_returns_empty_payload() -> None:
     provider = ABSProvider()
 
+    availability = (FIXTURES / "abs_availability_rt_window.xml").read_text(encoding="utf-8")
+
     with respx.mock(assert_all_called=True) as router:
         router.get("https://data.api.abs.gov.au/rest/data/RT/all").mock(
             return_value=Response(404, text="NoRecordsFound")
+        )
+        router.get("https://data.api.abs.gov.au/rest/availableconstraint/RT/all/all/all").mock(
+            return_value=Response(200, text=availability)
         )
 
         result = await provider.get_data("RT", start_period="2026-01")
@@ -317,6 +371,55 @@ async def test_abs_provider_no_results_404_returns_empty_payload() -> None:
         "no observations" in warning.lower() and "2026-01" in warning
         for warning in result["metadata"]["warnings"]
     )
+    assert any(
+        "has data from 1982-04-01 to 2025-06-30" in warning
+        for warning in result["metadata"]["warnings"]
+    )
+
+
+@pytest.mark.asyncio
+async def test_abs_provider_no_results_names_the_dimension_values_that_have_data() -> None:
+    provider = ABSProvider()
+    key = "3.999902.20.50.Q"
+    availability = (FIXTURES / "abs_availability_cpi_freq_m_only.xml").read_text(encoding="utf-8")
+
+    with respx.mock(assert_all_called=True) as router:
+        router.get(f"https://data.api.abs.gov.au/rest/data/CPI/{key}").mock(
+            return_value=Response(404, text="NoRecordsFound")
+        )
+        availability_route = router.get(
+            f"https://data.api.abs.gov.au/rest/availableconstraint/CPI/{key}/all/all"
+        ).mock(return_value=Response(200, text=availability))
+
+        result = await provider.get_data("CPI", key=key)
+        await provider.get_data("CPI", key=key, start_period="2025-01")
+
+    assert result["observations"] == []
+    assert "FREQ=Q has no data" in result["metadata"]["warnings"][-1]
+    assert "FREQ has data for M (Monthly)" in result["metadata"]["warnings"][-1]
+    assert availability_route.calls[0].request.url.params["mode"] == "available"
+    # The availability lookup is cached per (dataflow, key), independent of the window.
+    assert availability_route.call_count == 1
+
+
+@pytest.mark.asyncio
+async def test_abs_provider_no_results_survives_availability_lookup_failure() -> None:
+    provider = ABSProvider()
+
+    with respx.mock(assert_all_called=True) as router:
+        router.get("https://data.api.abs.gov.au/rest/data/CPI/1.10001.20.50.Q").mock(
+            return_value=Response(404, text="NoRecordsFound")
+        )
+        availability_route = router.get(
+            "https://data.api.abs.gov.au/rest/availableconstraint/CPI/1.10001.20.50.Q/all/all"
+        ).mock(return_value=Response(503, text="unavailable"))
+
+        result = await provider.get_data("CPI", key="1.10001.20.50.Q")
+
+    assert result["observations"] == []
+    assert len(result["metadata"]["warnings"]) == 1
+    # A best-effort hint must not multiply upstream load with retries.
+    assert availability_route.call_count == 1
 
 
 @pytest.mark.asyncio
@@ -364,6 +467,9 @@ async def test_abs_provider_404_does_not_serve_stale(_isolated_cache_dir) -> Non
     with respx.mock(assert_all_called=True) as router:
         router.get("https://data.api.abs.gov.au/rest/data/CPI/all").mock(
             return_value=Response(404, text="NoRecordsFound")
+        )
+        router.get("https://data.api.abs.gov.au/rest/availableconstraint/CPI/all/all/all").mock(
+            return_value=Response(500, text="unavailable")
         )
 
         result = await fresh_provider.get_data("CPI")

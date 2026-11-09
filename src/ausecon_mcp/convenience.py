@@ -174,7 +174,9 @@ def _table_rows(
 
 
 def _warning_rows(entry: dict[str, Any]) -> list[str]:
-    return [_format_framework_break_warning(item) for item in entry.get("framework_breaks", [])]
+    rows = [_format_framework_break_warning(item) for item in entry.get("framework_breaks", [])]
+    rows.extend(entry.get("notes", []))
+    return rows
 
 
 def _format_framework_break_warning(item: dict[str, Any]) -> str:

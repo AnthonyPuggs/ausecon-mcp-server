@@ -101,6 +101,21 @@ CURATED_SHORTCUTS: dict[str, dict[str, Any]] = {
         "dataset_id": "g1",
         "variant": "weighted_median",
     },
+    "quarterly_inflation": {
+        "source": "rba",
+        "dataset_id": "g1",
+        "variant": "headline_quarterly",
+    },
+    "quarterly_trimmed_mean_inflation": {
+        "source": "rba",
+        "dataset_id": "g1",
+        "variant": "trimmed_mean_quarterly",
+    },
+    "quarterly_weighted_median_inflation": {
+        "source": "rba",
+        "dataset_id": "g1",
+        "variant": "weighted_median_quarterly",
+    },
     "monthly_inflation": {
         "source": "abs",
         "dataset_id": "CPI",

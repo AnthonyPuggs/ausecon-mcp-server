@@ -628,6 +628,49 @@ async def test_service_fetches_abs_data() -> None:
     result = await service.get_abs_data("CPI", start_period="2024-Q1")
 
     assert result["metadata"]["dataset_id"] == "CPI"
+    assert "warnings" not in result["metadata"]
+
+
+class EmptyABSProvider(StubABSProvider):
+    async def get_data(self, *args, **kwargs) -> dict:
+        payload = await super().get_data(*args, **kwargs)
+        payload["metadata"]["warnings"] = ["ABS returned no observations for 'CPI'."]
+        payload["series"] = []
+        payload["observations"] = []
+        return payload
+
+
+@pytest.mark.asyncio
+async def test_service_appends_catalogue_notes_to_empty_abs_results() -> None:
+    service = AuseconService(abs_provider=EmptyABSProvider(), rba_provider=StubRBAProvider())
+
+    result = await service.get_abs_data("CPI", key="3.999902.20.50.Q")
+
+    warnings = result["metadata"]["warnings"]
+    assert warnings[0] == "ABS returned no observations for 'CPI'."
+    assert "GCPIOCPMTMQP" in warnings[1]
+
+
+@pytest.mark.parametrize(
+    ("concept", "series_id"),
+    [
+        ("quarterly_inflation", "GCPIAGSAQP"),
+        ("quarterly_trimmed_mean_inflation", "GCPIOCPMTMQP"),
+        ("quarterly_weighted_median_inflation", "GCPIOCPMWMQP"),
+    ],
+)
+@pytest.mark.asyncio
+async def test_service_resolves_quarterly_cpi_concepts_to_rba_g1(
+    concept: str, series_id: str
+) -> None:
+    rba = StubRBAProvider()
+    service = AuseconService(abs_provider=StubABSProvider(), rba_provider=rba)
+
+    await service.get_economic_series(concept)
+
+    assert rba.last_get_table_kwargs is not None
+    assert rba.last_get_table_kwargs["table_id"] == "g1"
+    assert rba.last_get_table_kwargs["series_ids"] == [series_id]
 
 
 class DimensionedABSProvider(StubABSProvider):
