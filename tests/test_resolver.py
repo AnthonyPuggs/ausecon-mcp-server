@@ -47,6 +47,104 @@ async def test_resolve_rejects_ambiguous_alias() -> None:
 
 
 @pytest.mark.asyncio
+async def test_resolve_ambiguous_alias_error_names_usable_concepts() -> None:
+    # "gdp" is an alias on both ABS ANA_AGG and RBA h1; the caller needs concept
+    # names to retry with, not a dataset id that returns every series.
+    with pytest.raises(ValueError, match="ambiguous") as excinfo:
+        await resolve("gdp")
+
+    message = str(excinfo.value)
+    assert "gdp_growth" in message
+    assert "real_gdp" in message
+    assert "nominal_gdp" in message
+
+
+@pytest.mark.parametrize(
+    ("spelling", "source", "dataset_id", "variant"),
+    [
+        ("unemployment rate", "abs", "LF", "unemployment_rate"),
+        ("GDP_GROWTH", "abs", "ANA_AGG", "gdp_growth"),
+        ("Wage Growth", "abs", "WPI", "headline_wpi"),
+        ("aud-usd", "rba", "f11", "aud_usd"),
+        ("  cash rate target ", "rba", "a2", "target"),
+    ],
+)
+@pytest.mark.asyncio
+async def test_resolve_matches_concept_names_regardless_of_case_and_separators(
+    spelling: str, source: str, dataset_id: str, variant: str
+) -> None:
+    result = await resolve(spelling)
+
+    assert result.source == source
+    assert result.dataset_id == dataset_id
+    assert result.variant == variant
+
+
+@pytest.mark.asyncio
+async def test_resolve_variant_alias_selects_one_abs_series_not_the_whole_dataset() -> None:
+    # "jobless rate" is an alias on the LF dataset and on its unemployment_rate variant.
+    result = await resolve("jobless rate")
+
+    assert result.source == "abs"
+    assert result.dataset_id == "LF"
+    assert result.variant == "unemployment_rate"
+    assert result.abs_key == "M13.3.1599.20.AUS.M"
+
+
+@pytest.mark.asyncio
+async def test_resolve_variant_alias_selects_one_rba_series_not_the_whole_table() -> None:
+    # "money supply" is an alias on RBA d3 and on its broad_money variant.
+    result = await resolve("money supply")
+
+    assert result.source == "rba"
+    assert result.dataset_id == "d3"
+    assert result.variant == "broad_money"
+    assert result.rba_series_ids == ["DMABMS"]
+
+
+@pytest.mark.asyncio
+async def test_resolve_variant_alias_resolves_without_a_dataset_alias() -> None:
+    # "chain volume gdp" appears only as an alias on the ANA_AGG real_gdp variant.
+    result = await resolve("chain volume gdp")
+
+    assert result.source == "abs"
+    assert result.dataset_id == "ANA_AGG"
+    assert result.variant == "real_gdp"
+    assert result.abs_key == "M1.GPM.20.AUS.Q"
+
+
+@pytest.mark.asyncio
+async def test_resolve_rejects_variant_alias_shared_by_several_datasets() -> None:
+    # "all groups" is a variant alias on CPI, ITPI_EXP and ITPI_IMP.
+    with pytest.raises(ValueError, match="ambiguous") as excinfo:
+        await resolve("all groups")
+
+    message = str(excinfo.value)
+    assert "export_price_index" in message
+    assert "import_price_index" in message
+
+
+@pytest.mark.asyncio
+async def test_resolve_dataset_alias_is_not_overridden_by_another_datasets_variant() -> None:
+    # "business investment" is a dataset alias on CAPEX and a variant alias on
+    # ANA_EXP private_investment; the dataset the alias names must still win.
+    result = await resolve("business investment")
+
+    assert result.source == "abs"
+    assert result.dataset_id == "CAPEX"
+    assert result.variant is None
+
+
+@pytest.mark.asyncio
+async def test_resolve_explicit_variant_overrides_variant_alias_default() -> None:
+    result = await resolve("jobless rate", variant="participation_rate")
+
+    assert result.dataset_id == "LF"
+    assert result.variant == "participation_rate"
+    assert result.abs_key == "M12.3.1599.20.AUS.M"
+
+
+@pytest.mark.asyncio
 async def test_resolve_does_not_match_ceased_abs_aliases() -> None:
     with pytest.raises(ValueError, match="Unknown concept"):
         await resolve("business turnover")

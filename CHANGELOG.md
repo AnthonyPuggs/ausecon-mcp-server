@@ -6,6 +6,21 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed
+
+- `get_economic_series` matches concept names regardless of case, spaces or hyphens.
+  `unemployment rate`, `GDP_GROWTH` and `aud-usd` now resolve like `unemployment_rate`,
+  `gdp_growth` and `aud_usd`. Previously they were rejected as unknown or ambiguous, or fell
+  through to a dataset alias and returned the whole dataset.
+- A name that matches a variant alias now resolves that one series. `jobless rate` returns the
+  unemployment rate rather than every series in `LF`, and `money supply` returns broad money
+  rather than all of RBA `d3`. Variant-only aliases such as `chain volume gdp` now resolve
+  where they were previously unknown. Pass the dataset id (for example `LF`) to get the whole
+  dataset.
+- The error for a name that matches several datasets, such as `gdp` or `cpi`, now lists
+  specific concepts to use (`gdp_growth`, `nominal_gdp`, `real_gdp`) and the matched dataset
+  ids. It previously suggested an unrelated example id.
+
 ## [1.16.0] - 2026-11-09
 
 Resilience and discoverability release for ABS CPI (#187). Tool names, parameters, and the
