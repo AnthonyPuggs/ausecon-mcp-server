@@ -44,6 +44,9 @@ contract are unchanged, and curated concept names keep returning the same number
   where they apply.
 - `adi_capital_ratio` and `adi_liquidity_coverage_ratio` resolve to the renamed Key Stats
   series (`key_stats:key_figures:adis_excludes_other_adis:...`). Their values are unchanged.
+- APRA cache entries written by earlier versions are ignored, so an upgraded server never
+  serves, or falls back to, a payload with the old ids. The first APRA request after
+  upgrading downloads the workbook again.
 
 ### Added
 
