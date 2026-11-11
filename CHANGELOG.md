@@ -6,6 +6,12 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.17.0] - 2026-11-11
+
+Concept-name matching release for `get_economic_series` (#192). Some names that used to return
+a whole dataset now return one series; pass the dataset id to get every series. Tool names,
+parameters, and the `{metadata, series, observations}` response contract are unchanged.
+
 ### Changed
 
 - `get_economic_series` matches concept names regardless of case, spaces or hyphens.
@@ -1038,7 +1044,8 @@ Initial public release.
 - Initial curated catalogues for ABS and RBA, plus a four-concept
   `CURATED_SERIES` semantic shortcut map.
 
-[Unreleased]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.16.0...HEAD
+[Unreleased]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.17.0...HEAD
+[1.17.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.16.0...v1.17.0
 [1.16.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.15.0...v1.16.0
 [1.15.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.14.6...v1.15.0
 [1.14.6]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.14.5...v1.14.6
