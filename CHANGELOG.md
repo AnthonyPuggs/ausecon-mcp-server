@@ -6,6 +6,52 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+APRA matrix-table release. Series ids change in seven APRA tables, because the old ids merged
+different worksheet rows into one series; see `docs/apra-matrix-series-ids-v1.18.md` for every
+old and new id. Tool names, parameters, and the `{metadata, series, observations}` response
+contract are unchanged, and curated concept names keep returning the same numbers.
+
+### Fixed
+
+- APRA tables laid out as a matrix no longer merge different worksheet rows into one series.
+  In `ADI_QUARTERLY_PERFORMANCE` (`key_stats`, `tab_1a`), `ADI_PROPERTY_EXPOSURES` (`tab_1a`,
+  `tab_1b`, `tab_1c`) and `APRA_SUPER_INDUSTRY` (`table_2`, `table_5`), 76 rows shared an id
+  with another row, so series such as `key_stats:banks:major_banks` returned bank assets and
+  the number of banks for the same date. Each of the 286 data rows now has its own id.
+- Rows are filed under the heading they belong to. `All ADIs` is no longer under `Banks`, and
+  table-level rows such as `Number of entities` no longer sit under the last heading above
+  them.
+- Heading rows that carry only a unit or a repeat of the dates are no longer returned as
+  series with no numbers, and footnote letters no longer leak into ids
+  (`net_profit_loss_after_taxa` is now `net_profit_loss_after_tax`).
+- Units come from the worksheet. Counts are `Number` rather than `$ million`, and series in
+  tables that state their units in headings (`key_stats`, `tab_1c`, `table_2`) now report
+  `$ million`, `$ billion`, `$ thousand`, `thousand` or `Per cent` instead of nothing.
+
+### Changed
+
+- 136 APRA series ids in those seven tables are new. Ids are now
+  `PUBLICATION:table[:block][:section][:parent...]:metric`, where the block is a heading APRA
+  writes in the date columns, the section is the nearest heading in the label column, and a
+  parent row appears only where a label would otherwise repeat. For example
+  `key_stats:banks:major_banks` becomes `key_stats:assets:banks:major_banks` and
+  `key_stats:number_of_entities:banks:major_banks`, and the three `tab_1a:other` rows become
+  `tab_1a:interest_income:loans_and_advances:other`, `tab_1a:other_operating_income:other`
+  and `tab_1a:total_operating_expenses:other`. Old ids are not aliased; a request for one
+  matches nothing. The other 150 ids in those tables are unchanged.
+- Matrix series labels spell out the same path, joined with ` / `
+  (`Assets ($m) / Banks / Major banks`), and series gain `block` and `parent` dimensions
+  where they apply.
+- `adi_capital_ratio` and `adi_liquidity_coverage_ratio` resolve to the renamed Key Stats
+  series (`key_stats:key_figures:adis_excludes_other_adis:...`). Their values are unchanged.
+
+### Added
+
+- The nightly integration run checks every live APRA matrix table for series that return two
+  values for one date and for series ids that have disappeared since the checked-in list
+  (`integration_tests/apra_matrix_series_ids.json`, refreshed with
+  `scripts/refresh_apra_matrix_ids.py`).
+
 ## [1.17.0] - 2026-11-11
 
 Concept-name matching release for `get_economic_series` (#192). Some names that used to return
