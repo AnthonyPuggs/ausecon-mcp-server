@@ -312,3 +312,108 @@ def test_footnote_markers_and_footnote_rows_do_not_reach_ids() -> None:
         "section:small_funds",
     ]
     assert payload["series"][0]["source_key"] == "Net profit (loss) after tax"
+
+
+def test_repeated_labels_take_their_parent_rows() -> None:
+    payload = _parse(
+        [
+            ["Title", None, None],
+            [None, D1, D2],
+            ["Interest income", 10, 11],
+            ["of which:", None, None],
+            ["Loans and advances", 8, 9],
+            ["Housing loans", 5, 6],
+            ["Other", 3, 3],
+            ["Other operating income", 4, 4],
+            ["Other", 1, 1],
+        ],
+        levels={5: 1, 6: 2, 7: 2, 9: 1},
+    )
+
+    assert list(_units(payload)) == [
+        "interest_income",
+        "loans_and_advances",
+        "housing_loans",
+        "interest_income:loans_and_advances:other",
+        "other_operating_income",
+        "other_operating_income:other",
+    ]
+    other = payload["series"][3]
+    assert other["label"] == "Interest income / Loans and advances / Other"
+    assert other["dimensions"]["parent"] == {
+        "code": "interest_income:loans_and_advances",
+        "label": "Interest income / Loans and advances",
+    }
+    assert "parent" not in payload["series"][2]["dimensions"]
+
+
+def test_leading_spaces_count_as_a_level() -> None:
+    payload = _parse(
+        [
+            ["Title", None, None],
+            [None, D1, D2],
+            ["Owner-occupied and investor loans", None, None],
+            ["Debt-to-income ≥ 4x < 6x", 9, 9],
+            ["    Owner-occupied", 5, 5],
+            ["Debt-to-income ≥ 6x", 2, 2],
+            ["    Owner-occupied", 1, 1],
+        ],
+        levels={3: 2, 4: 3, 5: 3, 6: 3, 7: 3},
+    )
+
+    assert list(_units(payload)) == [
+        "owner_occupied_and_investor_loans:debt_to_income_4x_6x",
+        "owner_occupied_and_investor_loans:debt_to_income_4x_6x:owner_occupied",
+        "owner_occupied_and_investor_loans:debt_to_income_6x",
+        "owner_occupied_and_investor_loans:debt_to_income_6x:owner_occupied",
+    ]
+
+
+def test_rows_parents_cannot_separate_take_the_closest_unique_row_above() -> None:
+    payload = _parse(
+        [
+            ["Title", None, None],
+            [None, D1, D2],
+            ["Impaired exposures", 5, 5],
+            ["of which: In Australia", 4, 4],
+            ["Specific provisions", 2, 2],
+            ["of which: In Australia", 1, 1],
+            ["Non-performing exposures", 7, 7],
+            ["of which: In Australia", 6, 6],
+            ["Specific provisions", 3, 3],
+            ["of which: In Australia", 2, 2],
+        ],
+        levels={4: 1, 6: 1, 8: 1, 10: 1},
+    )
+
+    assert list(_units(payload)) == [
+        "impaired_exposures",
+        "impaired_exposures:of_which_in_australia",
+        "impaired_exposures:specific_provisions",
+        "impaired_exposures:specific_provisions:of_which_in_australia",
+        "non_performing_exposures",
+        "non_performing_exposures:of_which_in_australia",
+        "non_performing_exposures:specific_provisions",
+        "non_performing_exposures:specific_provisions:of_which_in_australia",
+    ]
+    assert "warnings" not in payload["metadata"]
+
+
+def test_rows_nothing_can_separate_are_numbered_with_a_warning() -> None:
+    payload = _parse(
+        [
+            ["Title", None, None],
+            [None, D1, D2],
+            ["Other", 1, 1],
+            ["Other", 2, 2],
+            ["—", 3, 3],
+            ["…", 4, 4],
+        ]
+    )
+
+    assert list(_units(payload)) == ["other", "other_2", "unknown", "unknown_2"]
+    numbered = "later rows are numbered _2, _3."
+    assert payload["metadata"]["warnings"] == [
+        f"APRA table 't': 2 rows resolve to series id 'P:t:other'; {numbered}",
+        f"APRA table 't': 2 rows resolve to series id 'P:t:unknown'; {numbered}",
+    ]

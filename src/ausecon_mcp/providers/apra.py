@@ -331,9 +331,10 @@ def _stamp_framework_breaks(payload: dict[str, Any], entry: dict[str, Any]) -> N
     if not framework_breaks:
         return
     payload.setdefault("metadata", {})["framework_breaks"] = framework_breaks
-    payload["metadata"]["warnings"] = [
+    # Extend, never assign: the parser may already have reported warnings of its own.
+    payload["metadata"].setdefault("warnings", []).extend(
         _format_framework_break_warning(item) for item in framework_breaks
-    ]
+    )
 
 
 def _format_framework_break_warning(item: dict[str, Any]) -> str:
