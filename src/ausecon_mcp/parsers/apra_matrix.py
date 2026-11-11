@@ -230,11 +230,13 @@ def _collect_rows(grid: Grid, table_map: dict[str, Any], date_columns: list[int]
             continue
 
         if not label:
-            if has_numbers or filled != 1 or not texts:
+            # APRA writes block headings in the first date column and nowhere else; a
+            # stray note under a later date must not rename every series below it.
+            if has_numbers or filled != 1 or not texts or texts[0][0] != date_columns[0]:
                 continue
             column, _raw = texts[0]
             text = _strip_marks(_clean_label(grid.unmarked_text(row_index, column)))
-            if text.lower() in _IGNORED_COLUMN_TEXT:
+            if not text or text.lower() in _IGNORED_COLUMN_TEXT:
                 continue
             name, unit = _split_unit(text)
             if not name:

@@ -346,10 +346,17 @@ def _format_framework_break_warning(item: dict[str, Any]) -> str:
     return f"{label} on {date}."
 
 
+# Cached values are parsed payloads, so the key carries a version that must change whenever
+# the parser changes the series ids it produces. Otherwise an upgraded server would keep
+# serving (and, when APRA is unreachable, fall back to) payloads with ids that no longer
+# exist. v2: matrix tables take their ids from block and section headings (1.18.0).
+_CACHE_KEY_VERSION = "v2"
+
+
 def _cache_key(publication_id: str, table_id: str | None) -> str:
     if table_id is None:
-        return f"apra-publication:{publication_id}"
-    return f"apra-publication:{publication_id}:table:{table_id}"
+        return f"apra-publication:{_CACHE_KEY_VERSION}:{publication_id}"
+    return f"apra-publication:{_CACHE_KEY_VERSION}:{publication_id}:table:{table_id}"
 
 
 class _LinkExtractor(HTMLParser):

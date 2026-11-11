@@ -333,6 +333,37 @@ async def test_apra_provider_stamps_framework_break_warnings() -> None:
     ]
 
 
+@pytest.mark.asyncio
+async def test_apra_provider_does_not_serve_payloads_cached_before_the_matrix_id_change() -> None:
+    # Up to 1.17 the cache key had no version, and matrix payloads cached under it carry
+    # series ids that no longer exist. Serving one after an upgrade would make concepts
+    # that target the new ids return nothing.
+    provider = APRAProvider(catalogue=_catalogue())
+    provider._cache.set(
+        "apra-publication:TEST_PUBLICATION:table:table_1",
+        {
+            "metadata": {"source": "apra", "dataset_id": "TEST_PUBLICATION"},
+            "series": [{"series_id": "TEST_PUBLICATION:table_1:old_id", "dimensions": {}}],
+            "observations": [],
+        },
+    )
+    html = '<a href="/sites/default/files/test.xlsx">Test back-series March 2026 XLSX</a>'
+
+    with respx.mock(assert_all_called=True) as router:
+        router.get("https://www.apra.gov.au/test-statistics").mock(
+            return_value=Response(200, text=html)
+        )
+        router.get("https://www.apra.gov.au/sites/default/files/test.xlsx").mock(
+            return_value=Response(200, content=_xlsx_bytes())
+        )
+
+        result = await provider.get_data("TEST_PUBLICATION", table_id="table_1")
+
+    assert [series["series_id"] for series in result["series"]] == [
+        "TEST_PUBLICATION:table_1:11111111111:total_residents_assets"
+    ]
+
+
 def _matrix_xlsx_bytes_with_repeated_label() -> bytes:
     workbook = Workbook()
     sheet = workbook.active

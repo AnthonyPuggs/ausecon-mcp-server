@@ -354,15 +354,17 @@ def test_leading_spaces_count_as_a_level() -> None:
             [None, D1, D2],
             ["Owner-occupied and investor loans", None, None],
             ["Debt-to-income ≥ 4x < 6x", 9, 9],
+            ["    Interest-only", 4, 4],
             ["    Owner-occupied", 5, 5],
             ["Debt-to-income ≥ 6x", 2, 2],
             ["    Owner-occupied", 1, 1],
         ],
-        levels={3: 2, 4: 3, 5: 3, 6: 3, 7: 3},
+        levels={3: 2, 4: 3, 5: 3, 6: 3, 7: 3, 8: 3},
     )
 
     assert list(_units(payload)) == [
         "owner_occupied_and_investor_loans:debt_to_income_4x_6x",
+        "owner_occupied_and_investor_loans:interest_only",
         "owner_occupied_and_investor_loans:debt_to_income_4x_6x:owner_occupied",
         "owner_occupied_and_investor_loans:debt_to_income_6x",
         "owner_occupied_and_investor_loans:debt_to_income_6x:owner_occupied",
@@ -513,3 +515,187 @@ def test_catalogue_unit_beats_a_bare_unit_above_the_date_header() -> None:
 
     assert _units(_parse(rows, unit="thousand accounts")) == {"industry_funds": "thousand accounts"}
     assert _units(_parse(rows)) == {"industry_funds": "thousand"}
+
+
+def test_text_outside_the_first_date_column_is_not_a_block_heading() -> None:
+    payload = _parse(
+        [
+            [None, "Assets ($m)", None],
+            [None, D1, D2],
+            ["Major banks", 1, 2],
+            [None, None, "revised"],
+            ["Other banks", 3, 4],
+            [None, "note", "note"],
+            ["All banks", 5, 6],
+        ]
+    )
+
+    assert _units(payload) == {
+        "assets:major_banks": "$ million",
+        "assets:other_banks": "$ million",
+        "assets:all_banks": "$ million",
+    }
+
+
+def test_a_lone_mark_under_the_dates_does_not_clear_the_header_unit() -> None:
+    payload = _parse(
+        [
+            [None, "('000)", None],
+            [None, D1, D2],
+            ["Industry funds", 1, 2],
+            [None, "*", None],
+            ["Retail funds", 3, 4],
+        ]
+    )
+
+    assert _units(payload) == {"industry_funds": "thousand", "retail_funds": "thousand"}
+
+
+def test_a_new_block_clears_the_section_written_under_the_old_block() -> None:
+    payload = _parse(
+        [
+            [None, "Assets ($m)", None],
+            [None, D1, D2],
+            ["Banks", None, None],
+            ["Major banks", 1, 2],
+            [None, "Liabilities ($m)", None],
+            ["Major banks", 3, 4],
+        ],
+        levels={4: 1, 6: 1},
+    )
+
+    assert list(_units(payload)) == ["assets:banks:major_banks", "liabilities:major_banks"]
+
+
+def test_a_first_row_shallower_than_its_heading_is_not_in_that_section() -> None:
+    payload = _parse(
+        [
+            ["Title", None, None],
+            [None, D1, D2],
+            ["Selected characteristics", None, None],
+            ["Number of entities", 68, 68],
+        ],
+        levels={3: 2},
+    )
+
+    assert list(_units(payload)) == ["number_of_entities"]
+
+
+def test_a_single_date_cell_is_not_a_date_header() -> None:
+    payload = _parse(
+        [
+            ["Title", None, None],
+            [None, D1, D2],
+            ["Banks", None, None],
+            ["Major banks", 1, 2],
+            [None, "Jun 2026", None],
+            ["Other banks", 3, 4],
+        ],
+        levels={4: 1, 6: 1},
+    )
+
+    assert list(_units(payload)) == ["banks:major_banks", "banks:other_banks"]
+
+
+def test_a_row_that_looks_like_a_footnote_but_holds_numbers_is_a_series() -> None:
+    payload = _parse(
+        [
+            ["Title", None, None],
+            [None, D1, D2],
+            ["a loans to households", 1, 2],
+        ]
+    )
+
+    assert list(_units(payload)) == ["a_loans_to_households"]
+
+
+def test_parent_rows_do_not_carry_across_a_heading() -> None:
+    payload = _parse(
+        [
+            ["Title", None, None],
+            [None, D1, D2],
+            ["Grand total", 9, 9],
+            ["By purpose", None, None],
+            ["Housing", 5, 5],
+            ["Other", 1, 1],
+            ["Business", 4, 4],
+            ["Other", 2, 2],
+        ],
+        levels={5: 1, 6: 2, 7: 1, 8: 2},
+    )
+
+    assert list(_units(payload)) == [
+        "grand_total",
+        "by_purpose:housing",
+        "by_purpose:housing:other",
+        "by_purpose:business",
+        "by_purpose:business:other",
+    ]
+
+
+def test_the_closest_unique_row_must_not_be_deeper_than_the_row_it_qualifies() -> None:
+    payload = _parse(
+        [
+            ["Title", None, None],
+            [None, D1, D2],
+            ["Impaired exposures", 5, 5],
+            ["Share impaired", 0.1, 0.1],
+            ["Specific provisions", 2, 2],
+            ["Non-performing exposures", 7, 7],
+            ["Share non-performing", 0.2, 0.2],
+            ["Specific provisions", 3, 3],
+        ],
+        levels={4: 1, 7: 1},
+    )
+
+    assert list(_units(payload)) == [
+        "impaired_exposures",
+        "share_impaired",
+        "impaired_exposures:specific_provisions",
+        "non_performing_exposures",
+        "share_non_performing",
+        "non_performing_exposures:specific_provisions",
+    ]
+
+
+def test_the_closest_unique_row_is_not_taken_from_another_section() -> None:
+    payload = _parse(
+        [
+            ["Title", None, None],
+            [None, D1, D2],
+            ["Loans", None, None],
+            ["Other", 1, 1],
+            ["Deposits", None, None],
+            ["Term", 2, 2],
+            ["Loans", None, None],
+            ["Other", 3, 3],
+        ],
+        levels={4: 1, 6: 1, 8: 1},
+    )
+
+    assert list(_units(payload)) == ["loans:other", "deposits:term", "loans:other_2"]
+    assert len(payload["metadata"]["warnings"]) == 1
+
+
+def test_a_stated_unit_ends_with_its_panel_or_at_a_block_without_one() -> None:
+    payload = _parse(
+        [
+            [None, "Assets ($m)", None],
+            [None, D1, D2],
+            ["Major banks", 1, 2],
+            ["Key figures", None, None],
+            [None, D1, D2],
+            ["Total assets", 9.0, 9.5],
+            [None, "Liabilities ($m)", None],
+            ["Deposits", 1, 2],
+            [None, "Banks", None],
+            ["Total equity", 3, 4],
+        ]
+    )
+
+    assert _units(payload) == {
+        "assets:major_banks": "$ million",
+        "key_figures:total_assets": None,
+        "key_figures:liabilities:deposits": "$ million",
+        "key_figures:banks:total_equity": None,
+    }
