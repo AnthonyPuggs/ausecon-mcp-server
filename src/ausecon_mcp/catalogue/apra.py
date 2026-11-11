@@ -113,7 +113,7 @@ APRA_CATALOGUE: dict[str, dict] = {
                 "aliases": ["adi capital ratio", "total capital ratio"],
                 "apra_table_id": "key_stats",
                 "apra_series_ids": [
-                    "ADI_QUARTERLY_PERFORMANCE:key_stats:key_figures:total_capital_ratio"
+                    "ADI_QUARTERLY_PERFORMANCE:key_stats:key_figures:adis_excludes_other_adis:total_capital_ratio"
                 ],
             },
             {
@@ -121,7 +121,7 @@ APRA_CATALOGUE: dict[str, dict] = {
                 "aliases": ["adi liquidity coverage ratio", "lcr"],
                 "apra_table_id": "key_stats",
                 "apra_series_ids": [
-                    "ADI_QUARTERLY_PERFORMANCE:key_stats:key_figures:liquidity_coverage_ratio_lcr"
+                    "ADI_QUARTERLY_PERFORMANCE:key_stats:key_figures:adis_excludes_other_adis:liquidity_coverage_ratio_lcr"
                 ],
             },
         ],

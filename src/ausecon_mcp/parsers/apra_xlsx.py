@@ -9,6 +9,7 @@ from io import BytesIO
 from typing import Any
 
 from openpyxl import load_workbook
+from openpyxl.cell.rich_text import CellRichText, TextBlock
 
 from ausecon_mcp.errors import AuseconValidationError
 from ausecon_mcp.models import Observation, SeriesDescriptor, parse_float
@@ -35,9 +36,18 @@ def parse_apra_xlsx(
     _validate_xlsx_container(content)
     # keep_links=False: APRA workbooks can carry tens of MB of external-link cache XML
     # that openpyxl would otherwise parse into memory; cached values live in the sheets.
-    workbook = load_workbook(BytesIO(content), read_only=True, data_only=True, keep_links=False)
+    # rich_text: matrix sheets mark footnotes with superscript runs inside the label cell,
+    # which only survive when the workbook is loaded with rich text.
+    workbook = load_workbook(
+        BytesIO(content),
+        read_only=True,
+        data_only=True,
+        keep_links=False,
+        rich_text=any(table_map["layout"] == "matrix" for table_map in selected_maps.values()),
+    )
     series_by_id: dict[str, dict[str, Any]] = {}
     observations: list[dict[str, Any]] = []
+    warnings: list[str] = []
 
     # APRA has renamed sheets by whitespace alone ("Database" -> "Database "), so match
     # on stripped names rather than exactly.
@@ -48,8 +58,11 @@ def parse_apra_xlsx(
             raise ValueError(f"APRA workbook did not contain sheet {sheet_name!r}.")
         sheet = workbook[sheets_by_name[sheet_name]]
         _validate_sheet_bounds(sheet, selected_table_id)
-        grid = _load_grid(sheet)
         layout = table_map["layout"]
+        grid = _load_grid(
+            sheet,
+            style_column=int(table_map["label_column"]) if layout == "matrix" else None,
+        )
         if layout == "row_records":
             table_series, table_observations = _parse_row_records(
                 grid,
@@ -58,12 +71,16 @@ def parse_apra_xlsx(
                 table_map=table_map,
             )
         elif layout == "matrix":
-            table_series, table_observations = _parse_matrix(
+            # Imported here because apra_matrix builds on this module's helpers.
+            from ausecon_mcp.parsers.apra_matrix import parse_matrix
+
+            table_series, table_observations, table_warnings = parse_matrix(
                 grid,
                 publication_id=publication_id,
                 table_id=selected_table_id,
                 table_map=table_map,
             )
+            warnings.extend(table_warnings)
         elif layout == "period_rows":
             table_series, table_observations = _parse_period_rows(
                 grid,
@@ -79,13 +96,16 @@ def parse_apra_xlsx(
         observations.extend(table_observations)
 
     series_order = {series_id: index for index, series_id in enumerate(series_by_id)}
+    metadata: dict[str, Any] = {
+        "source": "apra",
+        "dataset_id": publication_id,
+        "frequency": frequency,
+        "title": title,
+    }
+    if warnings:
+        metadata["warnings"] = warnings
     return {
-        "metadata": {
-            "source": "apra",
-            "dataset_id": publication_id,
-            "frequency": frequency,
-            "title": title,
-        },
+        "metadata": metadata,
         "series": list(series_by_id.values()),
         "observations": sorted(
             observations,
@@ -157,16 +177,39 @@ class Grid:
     ``ReadOnlyWorksheet.cell()`` re-parses the sheet XML from the top on every call,
     which made large APRA workbooks quadratic to parse. Number formats are kept because
     APRA stores ratios as fractions displayed with an Excel percent format.
+
+    Rich-text cells are flattened to plain strings; their text without superscript runs
+    (APRA's footnote markers) is kept separately. ``style_column`` names the one column
+    whose Excel indent is recorded: matrix sheets express their row hierarchy with it,
+    and reading cell styles for every column of a large sheet would be wasted work.
     """
 
-    def __init__(self, sheet: Any) -> None:
+    def __init__(self, sheet: Any, *, style_column: int | None = None) -> None:
         values: list[tuple[Any, ...]] = []
         formats: list[tuple[str | None, ...]] = []
-        for row in sheet.iter_rows():
-            values.append(tuple(cell.value for cell in row))
+        unmarked: dict[tuple[int, int], str] = {}
+        indents: dict[int, float] = {}
+        for row_index, row in enumerate(sheet.iter_rows(), start=1):
+            row_values = tuple(cell.value for cell in row)
+            if CellRichText in map(type, row_values):
+                flattened = list(row_values)
+                for column_index, value in enumerate(row_values, start=1):
+                    if type(value) is CellRichText:
+                        text, without_markers = _rich_text_parts(value)
+                        flattened[column_index - 1] = text
+                        unmarked[(row_index, column_index)] = without_markers
+                row_values = tuple(flattened)
+            values.append(row_values)
             formats.append(tuple(getattr(cell, "number_format", None) for cell in row))
+            if style_column is not None and 1 <= style_column <= len(row):
+                style_cell = row[style_column - 1]
+                alignment = getattr(style_cell, "alignment", None)
+                if style_cell.value is not None and alignment is not None and alignment.indent:
+                    indents[row_index] = float(alignment.indent)
         self._values = values
         self._formats = formats
+        self._unmarked = unmarked
+        self._indents = indents
         self.max_row = len(values)
         self.max_column = max((len(row) for row in values), default=0)
 
@@ -175,6 +218,33 @@ class Grid:
 
     def number_format(self, row: int, column: int) -> str | None:
         return _lookup(self._formats, row, column)
+
+    def unmarked_text(self, row: int, column: int) -> str:
+        """The cell's text with superscript footnote markers removed ("" when empty)."""
+        found = self._unmarked.get((row, column))
+        if found is not None:
+            return found
+        value = self.value(row, column)
+        return "" if value is None else str(value)
+
+    def indent(self, row: int) -> float:
+        """Excel indent of the row's ``style_column`` cell (0.0 when unset or not recorded)."""
+        return self._indents.get(row, 0.0)
+
+
+def _rich_text_parts(value: CellRichText) -> tuple[str, str]:
+    """Return (all text, text without superscript runs) for a rich-text cell."""
+    full: list[str] = []
+    without_markers: list[str] = []
+    for part in value:
+        if isinstance(part, TextBlock):
+            full.append(part.text)
+            if part.font is None or part.font.vertAlign != "superscript":
+                without_markers.append(part.text)
+        else:
+            full.append(str(part))
+            without_markers.append(str(part))
+    return "".join(full), "".join(without_markers)
 
 
 def _lookup(rows: list[tuple[Any, ...]], row: int, column: int) -> Any:
@@ -186,8 +256,8 @@ def _lookup(rows: list[tuple[Any, ...]], row: int, column: int) -> Any:
     return values[column - 1]
 
 
-def _load_grid(sheet: Any) -> Grid:
-    return Grid(sheet)
+def _load_grid(sheet: Any, *, style_column: int | None = None) -> Grid:
+    return Grid(sheet, style_column=style_column)
 
 
 def _grid_max_row(grid: Grid) -> int:
@@ -310,91 +380,6 @@ def _parse_row_records(
     return list(series_by_id.values()), observations
 
 
-def _parse_matrix(
-    grid: Grid,
-    *,
-    publication_id: str,
-    table_id: str,
-    table_map: dict[str, Any],
-) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
-    date_row = int(table_map["date_row"])
-    date_start_column = int(table_map["date_start_column"])
-    data_start_row = int(table_map["data_start_row"])
-    label_column = int(table_map["label_column"])
-
-    date_columns: list[tuple[int, str]] = []
-    for column in range(date_start_column, (_grid_max_column(grid) or date_start_column) + 1):
-        parsed_date = _parse_date(_cell_value(grid, date_row, column))
-        if parsed_date is not None:
-            date_columns.append((column, parsed_date))
-    if not date_columns:
-        raise ValueError(f"APRA matrix table {table_id!r} did not contain date columns.")
-
-    series_by_id: dict[str, dict[str, Any]] = {}
-    observations: list[dict[str, Any]] = []
-    section_label: str | None = None
-
-    for row_index in range(data_start_row, (_grid_max_row(grid) or data_start_row) + 1):
-        row_label = _clean_label(_cell_value(grid, row_index, label_column))
-        if not row_label:
-            continue
-        values = [
-            _parse_observation_value(_cell_value(grid, row_index, column))
-            for column, _ in date_columns
-        ]
-        formats = [_cell_format(grid, row_index, column) for column, _ in date_columns]
-        has_observations = any(value is not None or raw is not None for value, raw in values)
-        if not has_observations:
-            if not row_label.lower().endswith(":"):
-                section_label = row_label
-            continue
-
-        metric_slug = _slug(row_label)
-        section_slug = _slug(section_label) if section_label else None
-        series_id = (
-            f"{publication_id}:{table_id}:{section_slug}:{metric_slug}"
-            if section_slug
-            else f"{publication_id}:{table_id}:{metric_slug}"
-        )
-        dimensions = _matrix_dimensions(table_id, table_map, section_label)
-        if series_id not in series_by_id:
-            label = f"{section_label}: {row_label}" if section_label else row_label
-            number_format = next(
-                (
-                    fmt
-                    for (value, _raw), fmt in zip(values, formats, strict=True)
-                    if value is not None
-                ),
-                None,
-            )
-            series_by_id[series_id] = SeriesDescriptor(
-                series_id=series_id,
-                label=label,
-                unit=_series_unit(table_map.get("unit"), row_label, number_format),
-                frequency=table_map.get("frequency"),
-                dimensions=dimensions,
-                source_key=row_label,
-                decimals=_series_decimals(number_format),
-            ).to_dict()
-
-        for (_column, parsed_date), (value, raw_value), number_format in zip(
-            date_columns, values, formats, strict=True
-        ):
-            if value is None and raw_value is None:
-                continue
-            observations.append(
-                Observation(
-                    date=parsed_date,
-                    series_id=series_id,
-                    value=_apply_number_format(value, number_format),
-                    raw_value=raw_value,
-                    dimensions=dimensions,
-                ).to_dict()
-            )
-
-    return list(series_by_id.values()), observations
-
-
 def _parse_period_rows(
     grid: Grid,
     *,
@@ -494,22 +479,6 @@ def _row_dimensions(
     }
     for name, value in dimension_values.items():
         dimensions[name] = {"code": value, "label": value}
-    return dimensions
-
-
-def _matrix_dimensions(
-    table_id: str,
-    table_map: dict[str, Any],
-    section_label: str | None,
-) -> dict[str, dict[str, str]]:
-    dimensions = {
-        "table": {
-            "code": table_id,
-            "label": str(table_map.get("title") or table_id),
-        }
-    }
-    if section_label:
-        dimensions["section"] = {"code": _slug(section_label), "label": section_label}
     return dimensions
 
 

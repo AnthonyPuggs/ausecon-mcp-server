@@ -44,7 +44,7 @@
 - id: apra_adi_quarterly_performance_total_assets_2019_q2
   source: apra
   identifier: ADI_QUARTERLY_PERFORMANCE
-  key: ADI_QUARTERLY_PERFORMANCE:key_stats:key_figures:total_assets_m
+  key: ADI_QUARTERLY_PERFORMANCE:key_stats:key_figures:adis_excludes_other_adis:total_assets_m
   table_id: key_stats
   start: "2019-06-30"
   end: "2019-06-30"

@@ -823,7 +823,9 @@ async def test_service_get_latest_observations_suppresses_guidance_when_narrowed
     result = await service.get_latest_observations(
         source="apra",
         identifier="ADI_QUARTERLY_PERFORMANCE",
-        series_ids=["ADI_QUARTERLY_PERFORMANCE:key_stats:key_figures:total_capital_ratio"],
+        series_ids=[
+            "ADI_QUARTERLY_PERFORMANCE:key_stats:key_figures:adis_excludes_other_adis:total_capital_ratio"
+        ],
         count=1,
     )
 
@@ -1823,7 +1825,9 @@ TRANCHE_F_APRA_SERVICE = [
         "adi_capital_ratio",
         "ADI_QUARTERLY_PERFORMANCE",
         "key_stats",
-        ["ADI_QUARTERLY_PERFORMANCE:key_stats:key_figures:total_capital_ratio"],
+        [
+            "ADI_QUARTERLY_PERFORMANCE:key_stats:key_figures:adis_excludes_other_adis:total_capital_ratio"
+        ],
     ),
     (
         "adi_residential_mortgage_exposure",

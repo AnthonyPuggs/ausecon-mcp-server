@@ -334,6 +334,89 @@ async def test_apra_provider_stamps_framework_break_warnings() -> None:
 
 
 @pytest.mark.asyncio
+async def test_apra_provider_does_not_serve_payloads_cached_before_the_matrix_id_change() -> None:
+    # Up to 1.17 the cache key had no version, and matrix payloads cached under it carry
+    # series ids that no longer exist. Serving one after an upgrade would make concepts
+    # that target the new ids return nothing.
+    provider = APRAProvider(catalogue=_catalogue())
+    provider._cache.set(
+        "apra-publication:TEST_PUBLICATION:table:table_1",
+        {
+            "metadata": {"source": "apra", "dataset_id": "TEST_PUBLICATION"},
+            "series": [{"series_id": "TEST_PUBLICATION:table_1:old_id", "dimensions": {}}],
+            "observations": [],
+        },
+    )
+    html = '<a href="/sites/default/files/test.xlsx">Test back-series March 2026 XLSX</a>'
+
+    with respx.mock(assert_all_called=True) as router:
+        router.get("https://www.apra.gov.au/test-statistics").mock(
+            return_value=Response(200, text=html)
+        )
+        router.get("https://www.apra.gov.au/sites/default/files/test.xlsx").mock(
+            return_value=Response(200, content=_xlsx_bytes())
+        )
+
+        result = await provider.get_data("TEST_PUBLICATION", table_id="table_1")
+
+    assert [series["series_id"] for series in result["series"]] == [
+        "TEST_PUBLICATION:table_1:11111111111:total_residents_assets"
+    ]
+
+
+def _matrix_xlsx_bytes_with_repeated_label() -> bytes:
+    workbook = Workbook()
+    sheet = workbook.active
+    sheet.title = "Matrix"
+    sheet.append(["Title", None, None])
+    sheet.append([None, datetime(2026, 3, 31), datetime(2026, 6, 30)])
+    sheet.append(["Other", 1.0, 2.0])
+    sheet.append(["Other", 3.0, 4.0])
+    buffer = BytesIO()
+    workbook.save(buffer)
+    return buffer.getvalue()
+
+
+@pytest.mark.asyncio
+async def test_apra_provider_keeps_parser_warnings_alongside_framework_breaks() -> None:
+    catalogue = _seed_catalogue()
+    catalogue["TEST_PUBLICATION"]["tables"] = {
+        "matrix": {
+            "sheet": "Matrix",
+            "layout": "matrix",
+            "title": "Matrix",
+            "unit": "$ million",
+            "frequency": "Quarterly",
+            "date_row": 2,
+            "date_start_column": 2,
+            "data_start_row": 3,
+            "label_column": 1,
+        }
+    }
+    provider = APRAProvider(catalogue=catalogue)
+    html = '<a href="/sites/default/files/test.xlsx">Test back-series March 2026 XLSX</a>'
+
+    with respx.mock(assert_all_called=True) as router:
+        router.get("https://www.apra.gov.au/test-statistics").mock(
+            return_value=Response(200, text=html)
+        )
+        router.get("https://www.apra.gov.au/sites/default/files/test.xlsx").mock(
+            return_value=Response(200, content=_matrix_xlsx_bytes_with_repeated_label())
+        )
+
+        result = await provider.get_data("TEST_PUBLICATION", table_id="matrix")
+
+    warnings = result["metadata"]["warnings"]
+    assert len(warnings) == 2
+    assert any(warning.startswith("APRA table 'matrix': 2 rows") for warning in warnings)
+    assert any(warning.startswith("AASB 17 transition on 2023-07-01") for warning in warnings)
+    assert sorted(series["series_id"] for series in result["series"]) == [
+        "TEST_PUBLICATION:matrix:other",
+        "TEST_PUBLICATION:matrix:other_2",
+    ]
+
+
+@pytest.mark.asyncio
 async def test_apra_provider_passes_requested_table_id_to_parser(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
