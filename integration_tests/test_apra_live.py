@@ -67,3 +67,38 @@ async def test_live_every_apra_concept_resolves_with_recent_data(concept: str) -
     assert date.today() - latest <= timedelta(days=_APRA_CONCEPT_MAX_AGE_DAYS), (
         f"{concept} latest observation {latest} is stale"
     )
+
+
+# Matrix tables take their series ids from worksheet headings and indentation, so a
+# formatting change at APRA can rename or merge series without any error. The checked-in
+# list (scripts/refresh_apra_matrix_ids.py) turns that into a failed nightly run.
+def _matrix_tables() -> list[tuple[str, str]]:
+    from ausecon_mcp.catalogue.apra import APRA_CATALOGUE
+
+    return [
+        (publication_id, table_id)
+        for publication_id, entry in APRA_CATALOGUE.items()
+        for table_id, table_map in entry["tables"].items()
+        if table_map["layout"] == "matrix"
+    ]
+
+
+@pytest.mark.parametrize(("publication_id", "table_id"), _matrix_tables())
+async def test_live_apra_matrix_series_ids_are_unique_and_known(
+    publication_id: str, table_id: str
+) -> None:
+    import json
+    from pathlib import Path
+
+    known = json.loads(
+        (Path(__file__).parent / "apra_matrix_series_ids.json").read_text(encoding="utf-8")
+    )[f"{publication_id}:{table_id}"]
+
+    result = await APRAProvider().get_data(publication_id, table_id=table_id)
+
+    keys = [(obs["series_id"], obs["date"]) for obs in result["observations"]]
+    assert len(keys) == len(set(keys)), "a series returned two values for one date"
+    numbered = [w for w in result["metadata"].get("warnings", []) if w.startswith("APRA table")]
+    assert not numbered, numbered
+    missing = sorted(set(known) - {series["series_id"] for series in result["series"]})
+    assert not missing, f"series ids no longer produced (renamed or removed by APRA): {missing}"
