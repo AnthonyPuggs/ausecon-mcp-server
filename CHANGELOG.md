@@ -6,7 +6,9 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-APRA matrix-table release. Series ids change in seven APRA tables, because the old ids merged
+## [1.18.0] - 2026-11-12
+
+APRA matrix-table release (#193). Series ids change in seven APRA tables, because the old ids merged
 different worksheet rows into one series; see `docs/apra-matrix-series-ids-v1.18.md` for every
 old and new id. Tool names, parameters, and the `{metadata, series, observations}` response
 contract are unchanged, and curated concept names keep returning the same numbers.
@@ -1093,7 +1095,8 @@ Initial public release.
 - Initial curated catalogues for ABS and RBA, plus a four-concept
   `CURATED_SERIES` semantic shortcut map.
 
-[Unreleased]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.17.0...HEAD
+[Unreleased]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.18.0...HEAD
+[1.18.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.17.0...v1.18.0
 [1.17.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.16.0...v1.17.0
 [1.16.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.15.0...v1.16.0
 [1.15.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.14.6...v1.15.0
