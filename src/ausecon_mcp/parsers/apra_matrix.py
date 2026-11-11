@@ -27,10 +27,10 @@ from ausecon_mcp.parsers.apra_xlsx import (
     Grid,
     _apply_number_format,
     _clean_label,
+    _is_percent_format,
     _parse_date,
     _parse_observation_value,
     _series_decimals,
-    _series_unit,
     _slug,
 )
 
@@ -41,6 +41,7 @@ _FOOTNOTE_ROW_RE = re.compile(rf"^(?:[a-z]|[{_SUPERSCRIPT_CLASS}]|\*)\s+\S")
 _TRAILING_MARK_RE = re.compile(rf"[\s*{_SUPERSCRIPT_CLASS}]+$")
 _TRAILING_PARENTHESES_RE = re.compile(r"\s*\(([^()]*)\)\s*$")
 _IGNORED_COLUMN_TEXT = frozenset({"quarter end"})
+_COUNT_LABEL_RE = re.compile(r"(?:total )?number of\b", re.IGNORECASE)
 _UNIT_TEXTS: tuple[tuple[re.Pattern[str], str], ...] = (
     (re.compile(r"\$\s*m(?:illions?)?", re.IGNORECASE), "$ million"),
     (re.compile(r"\$\s*billions?", re.IGNORECASE), "$ billion"),
@@ -74,6 +75,9 @@ class _DataRow:
     run: int
     # Data rows above this one at shallower levels within the run, outermost first.
     parents: tuple[_DataRow, ...]
+    # The unit the nearest heading states, and the bare unit above the first date header.
+    stated_unit: str | None = None
+    header_unit: str | None = None
     # Rows whose metric goes in front of this row's metric to tell repeated labels apart.
     qualifiers: tuple[_DataRow, ...] = ()
     ordinal: int = 0
@@ -130,7 +134,7 @@ def parse_matrix(
                         row.label,
                     ]
                 ),
-                unit=_series_unit(table_map.get("unit"), row.label, number_format),
+                unit=_row_unit(row, table_map.get("unit"), number_format),
                 frequency=table_map.get("frequency"),
                 dimensions=dimensions,
                 source_key=row.label,
@@ -167,6 +171,11 @@ def _collect_rows(grid: Grid, table_map: dict[str, Any], date_columns: list[int]
     rows: list[_DataRow] = []
     last_data_row = 0
     run = 0
+    # The unit a heading states applies to the rows below it until another heading states
+    # one; ``stated_unit_row`` lets a date header tell an old panel's unit from its own.
+    stated_unit: str | None = None
+    stated_unit_row = 0
+    header_unit: str | None = None
 
     def new_run() -> None:
         nonlocal run
@@ -213,6 +222,8 @@ def _collect_rows(grid: Grid, table_map: dict[str, Any], date_columns: list[int]
             # A date header starts a new panel: only headings written since the last data
             # row (the new panel's own) carry over.
             headings[:] = [heading for heading in headings if heading.row > last_data_row]
+            if stated_unit_row <= last_data_row:
+                stated_unit = None
             new_run()
             if labelled and not is_footnote:
                 open_heading(_Heading("section", _slug(label), label, row_index, level))
@@ -225,9 +236,15 @@ def _collect_rows(grid: Grid, table_map: dict[str, Any], date_columns: list[int]
             text = _strip_marks(_clean_label(grid.unmarked_text(row_index, column)))
             if text.lower() in _IGNORED_COLUMN_TEXT:
                 continue
-            name, _unit = _split_unit(text)
-            if name:
-                open_heading(_Heading("block", _slug(name), text, row_index))
+            name, unit = _split_unit(text)
+            if not name:
+                # A bare unit, such as ('000) above the date header, is only a fallback.
+                header_unit = unit
+                continue
+            if unit is None and _COUNT_LABEL_RE.match(name):
+                unit = "Number"
+            open_heading(_Heading("block", _slug(name), text, row_index))
+            stated_unit, stated_unit_row = unit, row_index
             continue
 
         if not labelled or is_footnote:
@@ -239,6 +256,8 @@ def _collect_rows(grid: Grid, table_map: dict[str, Any], date_columns: list[int]
                 if not texts and label.lower().startswith("of which"):
                     continue
                 open_heading(_Heading("section", _slug(label), label, row_index, level))
+                if states_unit:
+                    stated_unit, stated_unit_row = _split_unit(texts[0][1])[1], row_index
                 continue
 
         section = next((heading for heading in headings if heading.kind == "section"), None)
@@ -264,6 +283,8 @@ def _collect_rows(grid: Grid, table_map: dict[str, Any], date_columns: list[int]
             headings=tuple(headings),
             run=run,
             parents=tuple(parents),
+            stated_unit=stated_unit,
+            header_unit=header_unit,
         )
         rows.append(row)
         parents.append(row)
@@ -336,6 +357,18 @@ def _separate_repeated_labels(
             row.ordinal += 1
         taken.add(series_id(row))
     return warnings
+
+
+def _row_unit(row: _DataRow, table_unit: Any, number_format: str | None) -> str | None:
+    """Pick a row's unit: its own evidence first, then its headings, then the catalogue."""
+    if _is_percent_format(number_format):
+        return "Per cent"
+    _name, label_unit = _split_unit(row.label)
+    if label_unit is not None:
+        return label_unit
+    if _COUNT_LABEL_RE.match(row.label):
+        return "Number"
+    return row.stated_unit or table_unit or row.header_unit
 
 
 def _strip_marks(text: str) -> str:

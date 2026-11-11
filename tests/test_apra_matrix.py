@@ -417,3 +417,99 @@ def test_rows_nothing_can_separate_are_numbered_with_a_warning() -> None:
         f"APRA table 't': 2 rows resolve to series id 'P:t:other'; {numbered}",
         f"APRA table 't': 2 rows resolve to series id 'P:t:unknown'; {numbered}",
     ]
+
+
+def test_units_follow_block_and_section_headings() -> None:
+    payload = _parse(
+        [
+            [None, "Assets ($m)", None],
+            [None, D1, D2],
+            ["Major banks", 100.0, 110.0],
+            [None, "Number of entities", None],
+            [None, D1, D2],
+            ["Major banks", 4, 4],
+            ["Key figures", None, None],
+            [None, D1, D2],
+            [None, "ADIs (excludes 'other ADIs')", None],
+            ["Net interest income ($m)", 1.0, 2.0],
+            ["Total capital ratio", 0.2, 0.21],
+            ["Total assets", 9.0, 9.5],
+            ["Number of entities", 116, 116],
+        ],
+        formats={(11, 2): "0.0%", (11, 3): "0.0%"},
+    )
+
+    assert _units(payload) == {
+        "assets:major_banks": "$ million",
+        "number_of_entities:major_banks": "Number",
+        "key_figures:adis_excludes_other_adis:net_interest_income_m": "$ million",
+        "key_figures:adis_excludes_other_adis:total_capital_ratio": "Per cent",
+        "key_figures:adis_excludes_other_adis:total_assets": None,
+        "key_figures:adis_excludes_other_adis:number_of_entities": "Number",
+    }
+
+
+def test_a_section_unit_lasts_until_the_next_stated_unit() -> None:
+    payload = _parse(
+        [
+            ["Title", None, None],
+            [None, D1, D2],
+            ["New loans funded - total", "($ millions)", None],
+            ["New loans funded", 100, 110],
+            ["Selected characteristics", None, None],
+            ["Externally refinanced", 70, 75],
+            ["Interest rates", "per cent", None],
+            [None, "Mar 2026", "Jun 2026"],
+            ["Variable rate", 6.1, 6.2],
+            ["Number of entities", 68, 68],
+        ],
+        levels={3: 1, 4: 1, 5: 1, 6: 2, 7: 1, 9: 2, 10: 1},
+    )
+
+    assert _units(payload) == {
+        "new_loans_funded_total:new_loans_funded": "$ million",
+        "selected_characteristics:externally_refinanced": "$ million",
+        "interest_rates:variable_rate": "Per cent",
+        "number_of_entities": "Number",
+    }
+    rates = [o for o in payload["observations"] if o["series_id"].endswith("variable_rate")]
+    assert [o["value"] for o in rates] == [6.1, 6.2]
+
+
+def test_block_units_cover_billions_and_thousands() -> None:
+    payload = _parse(
+        [
+            [None, "MySuper products", None],
+            [None, D1, D2],
+            ["MySuper products - generic", 38, 38],
+            ["Total number of MySuper products", 50, 50],
+            [None, "MySuper member assets ($ billion)", None],
+            [None, D1, D2],
+            ["Total member assets", 1243.4, 1250.0],
+            [None, "Number of member accounts ('000)", None],
+            ["Members with 100 per cent MySuper interest", D1, D2],
+            ["Total members", 14917.2, 15000.0],
+            ["Proportion of members", 0.632, 0.64],
+            [None, "Average member account balance ($ '000)", None],
+            [None, D1, D2],
+            ["All MySuper products", 83, 84],
+        ],
+        levels={10: 1, 11: 1},
+        formats={(11, 2): "0%", (11, 3): "0%"},
+    )
+
+    assert list(_units(payload).values()) == [
+        None,
+        "Number",
+        "$ billion",
+        "thousand",
+        "Per cent",
+        "$ thousand",
+    ]
+
+
+def test_catalogue_unit_beats_a_bare_unit_above_the_date_header() -> None:
+    rows = [[None, "('000)", None], [None, D1, D2], ["Industry funds", 14684, 14700]]
+
+    assert _units(_parse(rows, unit="thousand accounts")) == {"industry_funds": "thousand accounts"}
+    assert _units(_parse(rows)) == {"industry_funds": "thousand"}
