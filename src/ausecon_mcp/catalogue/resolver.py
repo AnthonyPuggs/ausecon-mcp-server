@@ -481,8 +481,8 @@ async def resolve(
         raise AuseconValidationError("concept must be a non-empty string.")
     concept_text = concept.strip()
 
-    source, dataset_id, entry = _match_concept(concept_text)
-    applied_variant = _match_variant(entry, _pick_variant(concept_text, variant))
+    source, dataset_id, entry, default_variant = _match_concept(concept_text)
+    applied_variant = _match_variant(entry, variant or default_variant)
     canonical_geography = normalise_geography(geography)
 
     _validate_frequency(entry, frequency)
@@ -538,25 +538,25 @@ async def resolve(
     )
 
 
-def _pick_variant(concept: str, user_variant: str | None) -> str | None:
-    shortcut = CURATED_SHORTCUTS.get(concept)
-    if shortcut is None:
-        return user_variant
-    return user_variant or shortcut.get("variant")
+_Match = tuple[str, str, dict[str, Any], str | None]
 
 
-def _match_concept(concept: str) -> tuple[str, str, dict[str, Any]]:
+def _concept_key(value: str) -> str:
+    """Fold case, spacing and punctuation so ``"GDP growth"`` equals ``gdp_growth``."""
+    return "_".join(_tokens(value))
+
+
+def _match_concept(concept: str) -> _Match:
+    """Resolve caller text to ``(source, dataset_id, entry, default_variant)``.
+
+    Tried in order: an exact concept name, an exact dataset id, a concept name
+    after folding case and separators, then catalogue aliases. A dataset alias
+    names a whole dataset; a variant alias narrows that dataset to one series,
+    but never overrides a dataset alias that points somewhere else.
+    """
     shortcut = CURATED_SHORTCUTS.get(concept)
     if shortcut is not None:
-        source = shortcut["source"]
-        dataset_id = shortcut["dataset_id"]
-        catalogue = _catalogue_for_source(source)
-        entry = catalogue.get(dataset_id)
-        if entry is None:
-            raise AuseconValidationError(
-                f"Curated shortcut {concept!r} points at unknown {source} dataset {dataset_id!r}."
-            )
-        return source, dataset_id, entry
+        return _shortcut_match(concept, shortcut)
 
     direct_matches = [
         (source, entry["id"], entry)
@@ -573,10 +573,15 @@ def _match_concept(concept: str) -> tuple[str, str, dict[str, Any]]:
             "Pass a curated shortcut instead."
         )
     if direct_matches:
-        return direct_matches[0]
+        return (*direct_matches[0], None)
 
-    candidates: list[tuple[str, str, dict[str, Any]]] = []
-    lowered = concept.lower()
+    key = _concept_key(concept)
+    shortcut = CURATED_SHORTCUTS.get(key)
+    if shortcut is not None:
+        return _shortcut_match(key, shortcut)
+
+    dataset_matches: list[tuple[str, str, dict[str, Any]]] = []
+    variant_matches: list[_Match] = []
     for src, collection in (
         ("abs", ABS_CATALOGUE),
         ("rba", RBA_CATALOGUE),
@@ -585,24 +590,81 @@ def _match_concept(concept: str) -> tuple[str, str, dict[str, Any]]:
         for entry in collection.values():
             if entry.get("discontinued", False) or entry.get("ceased", False):
                 continue
-            aliases = [alias.strip().lower() for alias in entry.get("aliases", [])]
-            if lowered in aliases:
-                candidates.append((src, entry["id"], entry))
+            if key in {_concept_key(alias) for alias in entry.get("aliases", [])}:
+                dataset_matches.append((src, entry["id"], entry))
+            for candidate in entry.get("variants", []):
+                if key in {_concept_key(alias) for alias in candidate.get("aliases", [])}:
+                    variant_matches.append((src, entry["id"], entry, candidate["name"]))
 
-    if not candidates:
+    if len(dataset_matches) == 1:
+        src, id_, entry = dataset_matches[0]
+        own_variants = [m[3] for m in variant_matches if (m[0], m[1]) == (src, id_)]
+        return src, id_, entry, own_variants[0] if len(own_variants) == 1 else None
+    if not dataset_matches and len(variant_matches) == 1:
+        return variant_matches[0]
+    if not dataset_matches and not variant_matches:
         supported = ", ".join(sorted(CURATED_SHORTCUTS))
         raise AuseconValidationError(
             f"Unknown concept {concept!r}. Try search_datasets for discovery, "
             f"or use one of the curated shortcuts: {supported}."
         )
-    if len(candidates) > 1:
-        matches = ", ".join(f"{src}/{id_}" for src, id_, _ in candidates)
+    raise AuseconValidationError(_ambiguous_message(concept, key, dataset_matches, variant_matches))
+
+
+def _shortcut_match(concept: str, shortcut: dict[str, Any]) -> _Match:
+    source = shortcut["source"]
+    dataset_id = shortcut["dataset_id"]
+    entry = _catalogue_for_source(source).get(dataset_id)
+    if entry is None:
         raise AuseconValidationError(
-            f"Concept {concept!r} is ambiguous; it matches: {matches}. "
-            "Pass a dataset id directly (for example 'CPI' or 'g1')."
+            f"Curated shortcut {concept!r} points at unknown {source} dataset {dataset_id!r}."
         )
-    src, id_, entry = candidates[0]
-    return src, id_, entry
+    return source, dataset_id, entry, shortcut.get("variant")
+
+
+def _ambiguous_message(
+    concept: str,
+    key: str,
+    dataset_matches: list[tuple[str, str, dict[str, Any]]],
+    variant_matches: list[_Match],
+) -> str:
+    """Explain an ambiguous name and point at concepts that resolve one series."""
+    if dataset_matches:
+        datasets = [(src, id_) for src, id_, _ in dataset_matches]
+        matches = ", ".join(f"{src}/{id_}" for src, id_ in datasets)
+    else:
+        datasets = list(dict.fromkeys((m[0], m[1]) for m in variant_matches))
+        matches = ", ".join(f"{m[0]}/{m[1]} ({m[3]})" for m in variant_matches)
+
+    matched_variants = {(m[0], m[1], m[3]) for m in variant_matches}
+    in_datasets = {
+        name: shortcut
+        for name, shortcut in CURATED_SHORTCUTS.items()
+        if (shortcut["source"], shortcut["dataset_id"]) in datasets
+    }
+    query_tokens = set(key.split("_"))
+    suggestions = (
+        [
+            name
+            for name, shortcut in in_datasets.items()
+            if (shortcut["source"], shortcut["dataset_id"], shortcut.get("variant"))
+            in matched_variants
+        ]
+        or [name for name in in_datasets if query_tokens <= set(name.split("_"))]
+        or list(in_datasets)
+    )
+
+    dataset_ids = ", ".join(id_ for _, id_ in datasets)
+    whole_dataset = f"pass one dataset id ({dataset_ids}) to get every series in that dataset"
+    if not suggestions:
+        return (
+            f"Concept {concept!r} is ambiguous; it matches: {matches}. "
+            f"Call list_economic_concepts to find a specific concept, or {whole_dataset}."
+        )
+    return (
+        f"Concept {concept!r} is ambiguous; it matches: {matches}. "
+        f"Use a specific concept such as {', '.join(sorted(suggestions))}, or {whole_dataset}."
+    )
 
 
 def _catalogue_for_source(source: str) -> dict[str, dict[str, Any]]:

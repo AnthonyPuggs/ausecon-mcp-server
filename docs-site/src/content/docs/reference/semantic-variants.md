@@ -22,6 +22,13 @@ RBA catalogue variants declare one or more `rba_series_ids`. The resolver passes
 
 ## Resolver rules
 
+- Concept names match regardless of case, spaces or hyphens, so `GDP growth` resolves like
+  `gdp_growth`.
+- A name that is not a concept is matched against catalogue aliases. An alias on one variant
+  (for example `jobless rate`) resolves that single series; an alias on a dataset alone resolves
+  the whole dataset.
+- A name that matches more than one dataset (for example `gdp` or `cpi`) raises a validation error
+  that lists specific concepts to use instead.
 - Unknown concepts and unsupported variants raise explicit validation errors.
 - The runtime catalogue exposes only fully wired variants.
 - Placeholder candidates stay out of the runtime catalogue until they have a real ABS key or RBA
