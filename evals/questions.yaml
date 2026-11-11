@@ -548,7 +548,7 @@
   expected_period: "2015-06-30"
   tolerance: 0.1
   unit: "AUD millions"
-  note: "Quarter ending 2015-06-30 is a closed APRA reporting period, so restatements of this old period are rare. Fetched live via local AuseconService 2026-08-02 (get_apra_data, ADI_QUARTERLY_PERFORMANCE:key_stats:key_figures:total_assets_m, 2015-06-30): 4414940.2."
+  note: "Quarter ending 2015-06-30 is a closed APRA reporting period, so restatements of this old period are rare. Fetched live via local AuseconService 2026-08-02 (get_apra_data, ADI_QUARTERLY_PERFORMANCE:key_stats:key_figures:adis_excludes_other_adis:total_assets_m, 2015-06-30): 4414940.2."
 
 - id: pinned_adi_total_assets_2022_q4
   question: "According to APRA's quarterly ADI statistics, what were the total assets of all Australian authorised deposit-taking institutions for the quarter ending 31 December 2022, in millions of Australian dollars?"
@@ -559,4 +559,4 @@
   expected_period: "2022-12-31"
   tolerance: 0.1
   unit: "AUD millions"
-  note: "Quarter ending 2022-12-31 is a closed APRA reporting period, so restatements of this old period are rare. Fetched live via local AuseconService 2026-08-02 (get_apra_data, ADI_QUARTERLY_PERFORMANCE:key_stats:key_figures:total_assets_m, 2022-12-31): 6089064.5."
+  note: "Quarter ending 2022-12-31 is a closed APRA reporting period, so restatements of this old period are rare. Fetched live via local AuseconService 2026-08-02 (get_apra_data, ADI_QUARTERLY_PERFORMANCE:key_stats:key_figures:adis_excludes_other_adis:total_assets_m, 2022-12-31): 6089064.5."

@@ -604,14 +604,18 @@ TRANCHE_F_APRA = [
         "ADI_QUARTERLY_PERFORMANCE",
         "total_capital_ratio",
         "key_stats",
-        ["ADI_QUARTERLY_PERFORMANCE:key_stats:key_figures:total_capital_ratio"],
+        [
+            "ADI_QUARTERLY_PERFORMANCE:key_stats:key_figures:adis_excludes_other_adis:total_capital_ratio"
+        ],
     ),
     (
         "adi_liquidity_coverage_ratio",
         "ADI_QUARTERLY_PERFORMANCE",
         "liquidity_coverage_ratio",
         "key_stats",
-        ["ADI_QUARTERLY_PERFORMANCE:key_stats:key_figures:liquidity_coverage_ratio_lcr"],
+        [
+            "ADI_QUARTERLY_PERFORMANCE:key_stats:key_figures:adis_excludes_other_adis:liquidity_coverage_ratio_lcr"
+        ],
     ),
     (
         "adi_residential_mortgage_exposure",
