@@ -47,6 +47,7 @@ def parse_apra_xlsx(
     )
     series_by_id: dict[str, dict[str, Any]] = {}
     observations: list[dict[str, Any]] = []
+    warnings: list[str] = []
 
     # APRA has renamed sheets by whitespace alone ("Database" -> "Database "), so match
     # on stripped names rather than exactly.
@@ -70,12 +71,16 @@ def parse_apra_xlsx(
                 table_map=table_map,
             )
         elif layout == "matrix":
-            table_series, table_observations = _parse_matrix(
+            # Imported here because apra_matrix builds on this module's helpers.
+            from ausecon_mcp.parsers.apra_matrix import parse_matrix
+
+            table_series, table_observations, table_warnings = parse_matrix(
                 grid,
                 publication_id=publication_id,
                 table_id=selected_table_id,
                 table_map=table_map,
             )
+            warnings.extend(table_warnings)
         elif layout == "period_rows":
             table_series, table_observations = _parse_period_rows(
                 grid,
@@ -91,13 +96,16 @@ def parse_apra_xlsx(
         observations.extend(table_observations)
 
     series_order = {series_id: index for index, series_id in enumerate(series_by_id)}
+    metadata: dict[str, Any] = {
+        "source": "apra",
+        "dataset_id": publication_id,
+        "frequency": frequency,
+        "title": title,
+    }
+    if warnings:
+        metadata["warnings"] = warnings
     return {
-        "metadata": {
-            "source": "apra",
-            "dataset_id": publication_id,
-            "frequency": frequency,
-            "title": title,
-        },
+        "metadata": metadata,
         "series": list(series_by_id.values()),
         "observations": sorted(
             observations,
@@ -372,91 +380,6 @@ def _parse_row_records(
     return list(series_by_id.values()), observations
 
 
-def _parse_matrix(
-    grid: Grid,
-    *,
-    publication_id: str,
-    table_id: str,
-    table_map: dict[str, Any],
-) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
-    date_row = int(table_map["date_row"])
-    date_start_column = int(table_map["date_start_column"])
-    data_start_row = int(table_map["data_start_row"])
-    label_column = int(table_map["label_column"])
-
-    date_columns: list[tuple[int, str]] = []
-    for column in range(date_start_column, (_grid_max_column(grid) or date_start_column) + 1):
-        parsed_date = _parse_date(_cell_value(grid, date_row, column))
-        if parsed_date is not None:
-            date_columns.append((column, parsed_date))
-    if not date_columns:
-        raise ValueError(f"APRA matrix table {table_id!r} did not contain date columns.")
-
-    series_by_id: dict[str, dict[str, Any]] = {}
-    observations: list[dict[str, Any]] = []
-    section_label: str | None = None
-
-    for row_index in range(data_start_row, (_grid_max_row(grid) or data_start_row) + 1):
-        row_label = _clean_label(_cell_value(grid, row_index, label_column))
-        if not row_label:
-            continue
-        values = [
-            _parse_observation_value(_cell_value(grid, row_index, column))
-            for column, _ in date_columns
-        ]
-        formats = [_cell_format(grid, row_index, column) for column, _ in date_columns]
-        has_observations = any(value is not None or raw is not None for value, raw in values)
-        if not has_observations:
-            if not row_label.lower().endswith(":"):
-                section_label = row_label
-            continue
-
-        metric_slug = _slug(row_label)
-        section_slug = _slug(section_label) if section_label else None
-        series_id = (
-            f"{publication_id}:{table_id}:{section_slug}:{metric_slug}"
-            if section_slug
-            else f"{publication_id}:{table_id}:{metric_slug}"
-        )
-        dimensions = _matrix_dimensions(table_id, table_map, section_label)
-        if series_id not in series_by_id:
-            label = f"{section_label}: {row_label}" if section_label else row_label
-            number_format = next(
-                (
-                    fmt
-                    for (value, _raw), fmt in zip(values, formats, strict=True)
-                    if value is not None
-                ),
-                None,
-            )
-            series_by_id[series_id] = SeriesDescriptor(
-                series_id=series_id,
-                label=label,
-                unit=_series_unit(table_map.get("unit"), row_label, number_format),
-                frequency=table_map.get("frequency"),
-                dimensions=dimensions,
-                source_key=row_label,
-                decimals=_series_decimals(number_format),
-            ).to_dict()
-
-        for (_column, parsed_date), (value, raw_value), number_format in zip(
-            date_columns, values, formats, strict=True
-        ):
-            if value is None and raw_value is None:
-                continue
-            observations.append(
-                Observation(
-                    date=parsed_date,
-                    series_id=series_id,
-                    value=_apply_number_format(value, number_format),
-                    raw_value=raw_value,
-                    dimensions=dimensions,
-                ).to_dict()
-            )
-
-    return list(series_by_id.values()), observations
-
-
 def _parse_period_rows(
     grid: Grid,
     *,
@@ -556,22 +479,6 @@ def _row_dimensions(
     }
     for name, value in dimension_values.items():
         dimensions[name] = {"code": value, "label": value}
-    return dimensions
-
-
-def _matrix_dimensions(
-    table_id: str,
-    table_map: dict[str, Any],
-    section_label: str | None,
-) -> dict[str, dict[str, str]]:
-    dimensions = {
-        "table": {
-            "code": table_id,
-            "label": str(table_map.get("title") or table_id),
-        }
-    }
-    if section_label:
-        dimensions["section"] = {"code": _slug(section_label), "label": section_label}
     return dimensions
 
 

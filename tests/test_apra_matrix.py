@@ -139,3 +139,176 @@ def test_grid_reports_indent_and_label_text_without_superscript_markers() -> Non
     assert grid.unmarked_text(3, 2) == "1.5"
     assert (grid.indent(3), grid.indent(4), grid.indent(5)) == (2.0, 0.0, 0.0)
     assert Grid(workbook["Sheet"]).indent(3) == 0.0
+
+
+def test_stacked_blocks_qualify_repeated_rows_and_sections_end_by_indent() -> None:
+    payload = _parse(
+        [
+            [None, "Assets ($m)", None],
+            [None, D1, D2],
+            ["ADIs", None, None],
+            ["Banks", None, None],
+            ["Major banks", 100.0, 110.0],
+            ["All banks", 150.0, 160.0],
+            ["Other ADIs", 5.0, 6.0],
+            [None, "Number of entities", None],
+            [None, "Mar 2026", "Jun 2026"],
+            ["ADIs", None, None],
+            ["Banks", None, None],
+            ["Major banks", 4, 4],
+            ["Other ADIs", 7, 7],
+        ],
+        levels={4: 1, 5: 2, 6: 2, 7: 1, 11: 1, 12: 2, 13: 1},
+    )
+
+    assert list(_units(payload)) == [
+        "assets:banks:major_banks",
+        "assets:banks:all_banks",
+        "assets:other_adis",
+        "number_of_entities:banks:major_banks",
+        "number_of_entities:other_adis",
+    ]
+    first = payload["series"][0]
+    assert first["label"] == "Assets ($m) / Banks / Major banks"
+    assert first["source_key"] == "Major banks"
+    assert first["dimensions"]["block"] == {"code": "assets", "label": "Assets ($m)"}
+    assert first["dimensions"]["section"] == {"code": "banks", "label": "Banks"}
+    assert "section" not in payload["series"][2]["dimensions"]
+    assert "warnings" not in payload["metadata"]
+
+
+def test_block_under_a_section_keeps_the_section_when_the_block_changes() -> None:
+    payload = _parse(
+        [
+            ["Title", None, None],
+            [None, D1, D2],
+            ["Net interest income ($m)", 1.0, 2.0],
+            ["Key figures", None, None],
+            [None, "Quarter end", None],
+            [None, D1, D2],
+            [None, ("ADIs (excludes 'other ADIs')", "a"), None],
+            ["Total capital ratio", 0.2, 0.21],
+            ["Key figures (banks and CUBS)", None, None],
+            [None, D1, D2],
+            [None, "Banks", None],
+            ["Total capital ratio", 0.2, 0.2],
+            [None, "Credit unions", None],
+            ["Total capital ratio", 0.17, 0.17],
+        ]
+    )
+
+    assert list(_units(payload)) == [
+        "net_interest_income_m",
+        "key_figures:adis_excludes_other_adis:total_capital_ratio",
+        "key_figures_banks_and_cubs:banks:total_capital_ratio",
+        "key_figures_banks_and_cubs:credit_unions:total_capital_ratio",
+    ]
+
+
+def test_total_row_at_heading_level_stays_and_a_later_shallow_row_ends_the_section() -> None:
+    payload = _parse(
+        [
+            ["Title", None, None],
+            [None, D1, D2],
+            ["Exposure limits", None, None],
+            ["Office", 1, 2],
+            ["Retail", 3, 4],
+            ["Total limits", 4, 6],
+            ["of which: In Australia", 3, 5],
+            ["Number of entities", 10, 10],
+        ],
+        levels={4: 1, 5: 1, 7: 1},
+    )
+
+    assert list(_units(payload)) == [
+        "exposure_limits:office",
+        "exposure_limits:retail",
+        "exposure_limits:total_limits",
+        "exposure_limits:of_which_in_australia",
+        "number_of_entities",
+    ]
+
+
+def test_heading_whose_first_row_is_at_its_own_level_keeps_those_rows() -> None:
+    payload = _parse(
+        [
+            ["Title", None, None],
+            [None, D1, D2],
+            ["Loan performance", None, None],
+            ["Past due", 1, 1],
+            ["Non-performing", 2, 2],
+            ["Term loans", 1.5, 1.5],
+            ["By LVR", None, None],
+            ["LVR < 60%", 1, 1],
+            ["Number of entities", 5, 5],
+        ],
+        levels={3: 1, 4: 1, 5: 1, 6: 2, 7: 1, 8: 2, 9: 1},
+    )
+
+    assert list(_units(payload)) == [
+        "loan_performance:past_due",
+        "loan_performance:non_performing",
+        "loan_performance:term_loans",
+        "by_lvr:lvr_60",
+        "number_of_entities",
+    ]
+
+
+def test_headings_with_units_or_dates_are_not_series_and_text_marks_still_are() -> None:
+    payload = _parse(
+        [
+            [None, "MySuper products", None],
+            [None, D1, D2],
+            ["New loans funded - total", "($ millions)", None],
+            ["New loans funded", 100, 110],
+            ["Interest rates", "per cent", None],
+            [None, "Mar 2026", "Jun 2026"],
+            ["Variable rate", 6.1, 6.2],
+            ["Suppressed row", "*", "*"],
+            [None, "Number of member accounts ('000)", None],
+            ["Members with 100 per cent MySuper interest", D1, D2],
+            ["MySuper products - generic", 13322.4, 13400.0],
+            [None, "*", "*"],
+            ["of which: empty row", None, None],
+            ["MySuper products - large employer", 100.9, 101.0],
+        ],
+        levels={3: 1, 4: 1, 5: 1, 7: 2, 8: 2, 11: 1, 14: 1},
+    )
+
+    assert list(_units(payload)) == [
+        "mysuper_products:new_loans_funded_total:new_loans_funded",
+        "interest_rates:variable_rate",
+        "interest_rates:suppressed_row",
+        "number_of_member_accounts:members_with_100_per_cent_mysuper_interest"
+        ":mysuper_products_generic",
+        "number_of_member_accounts:members_with_100_per_cent_mysuper_interest"
+        ":mysuper_products_large_employer",
+    ]
+    suppressed = [o for o in payload["observations"] if o["series_id"].endswith("suppressed_row")]
+    assert [(o["value"], o["raw_value"]) for o in suppressed] == [(None, "*"), (None, "*")]
+
+
+def test_footnote_markers_and_footnote_rows_do_not_reach_ids() -> None:
+    payload = _parse(
+        [
+            ["Title", None, None],
+            [None, D1, D2],
+            ["Section", None, None],
+            [("Net profit (loss) after tax", "a"), 1, 1],
+            ["Liquidity coverage ratio (LCR) ᵇ", 1.3, 1.3],
+            ["Corporate funds*", 3, 3],
+            ["a Profit or loss after goodwill amortisation.", None, None],
+            ["ᵇ For those ADIs subject to LCR requirements.", None, None],
+            ["* From the June 2026 quarter.", None, None],
+            ["Small funds", 9, 9],
+        ],
+        levels={4: 1, 5: 1, 6: 1, 10: 1},
+    )
+
+    assert list(_units(payload)) == [
+        "section:net_profit_loss_after_tax",
+        "section:liquidity_coverage_ratio_lcr",
+        "section:corporate_funds",
+        "section:small_funds",
+    ]
+    assert payload["series"][0]["source_key"] == "Net profit (loss) after tax"

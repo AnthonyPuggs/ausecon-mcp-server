@@ -211,7 +211,7 @@ def test_parse_apra_xlsx_normalises_matrix_tables_with_section_labels() -> None:
     assert payload["series"][0]["series_id"] == (
         "TEST_PUBLICATION:tab_1b:credit_outstanding:total_credit_outstanding"
     )
-    assert payload["series"][0]["label"] == "Credit outstanding: Total credit outstanding"
+    assert payload["series"][0]["label"] == "Credit outstanding / Total credit outstanding"
     assert payload["series"][0]["dimensions"]["section"]["label"] == "Credit outstanding"
     assert payload["observations"][0] == {
         "date": "2024-03-31",
