@@ -37,6 +37,33 @@ _LITERAL_KEY_RE = re.compile(r"^[0-9A-Z_+]+(\.[0-9A-Z_+]+)*$")
 _TOKEN_RE = re.compile(r"[a-z0-9]+")
 
 
+_CATALOGUES_BY_SOURCE: dict[str, dict[str, dict[str, Any]]] = {
+    "abs": ABS_CATALOGUE,
+    "rba": RBA_CATALOGUE,
+    "apra": APRA_CATALOGUE,
+}
+_CANONICAL_KEYS: dict[str, dict[str, str]] = {
+    source: {key.casefold(): key for key in catalogue}
+    for source, catalogue in _CATALOGUES_BY_SOURCE.items()
+}
+
+
+def canonical_source_identifier(source: str, identifier: str) -> str:
+    """Return the catalogue's own spelling of a source identifier, ignoring case.
+
+    Catalogue keys use one case per source (RBA lowercase, ABS and APRA uppercase) and
+    upstream URLs are built from them, but people write ``F2``, ``cpi`` or
+    ``adi_monthly``. Identifiers outside the catalogue are lowercased for the RBA,
+    whose CSV filenames are always lowercase, and otherwise passed through unchanged.
+    """
+    canonical = _CANONICAL_KEYS.get(source, {}).get(identifier.casefold())
+    if canonical is not None:
+        return canonical
+    if source == "rba":
+        return identifier.lower()
+    return identifier
+
+
 def resolve_abs_dataflow_id(dataflow_id: str) -> str:
     """Map a catalogue key to its upstream ABS SDMX dataflow ID.
 

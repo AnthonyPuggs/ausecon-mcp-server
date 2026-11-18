@@ -6,6 +6,16 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+
+- Dataset identifiers are now case-insensitive. RBA table IDs written in capitals, as the RBA
+  writes them (`F2`, `G1`), used to fail with HTTP 404 in `get_rba_table`,
+  `get_latest_observations` and `get_top_observations`, and with "unknown dataset" in
+  `describe_dataset`. Lowercase ABS and APRA IDs (`cpi`, `adi_monthly`) failed the same way in
+  `describe_dataset`, `get_apra_data` and the `ausecon://` catalogue resources. Every entry point
+  now maps an identifier to the catalogue's own spelling before using it. RBA IDs outside the
+  catalogue are lowercased, matching the RBA's CSV filenames.
+
 ### Added
 
 - Inline charts for clients that support MCP Apps (claude.ai, Claude Desktop and other
