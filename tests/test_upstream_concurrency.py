@@ -39,9 +39,7 @@ def _client(counter: _InFlightCounter) -> httpx.AsyncClient:
 
 
 async def _fetch(client: httpx.AsyncClient, name: str, source: str) -> httpx.Response:
-    return await get_with_retries(
-        client, f"/{name}", params=None, source=source, identifier=name
-    )
+    return await get_with_retries(client, f"/{name}", params=None, source=source, identifier=name)
 
 
 async def test_same_source_requests_never_exceed_the_concurrency_limit(monkeypatch) -> None:

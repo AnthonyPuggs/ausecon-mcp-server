@@ -387,9 +387,7 @@ def test_disk_promotion_counts_against_memory_budget(_isolated_cache_dir: Path) 
     assert reader.get("c") == _kb_value("c")
 
 
-def test_memory_budget_defaults_from_environment(
-    _isolated_cache_dir: Path, monkeypatch
-) -> None:
+def test_memory_budget_defaults_from_environment(_isolated_cache_dir: Path, monkeypatch) -> None:
     # 0.002 MB = 2000 bytes: room for one ~1 KB entry, not two.
     monkeypatch.setenv("AUSECON_CACHE_MAX_MEMORY_MB", "0.002")
     cache = TTLCache(ttl_seconds=60)
