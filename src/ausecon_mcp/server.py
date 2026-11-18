@@ -51,6 +51,7 @@ from ausecon_mcp.providers.apra import APRAProvider
 from ausecon_mcp.providers.rba import RBAProvider
 from ausecon_mcp.releases import ReleaseProvider, filter_release_events
 from ausecon_mcp.resources import register_resources
+from ausecon_mcp.ui import chart_app_config, register_chart_resource
 from ausecon_mcp.validation import (
     require_non_empty,
     validate_abs_period_range,
@@ -1210,6 +1211,7 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
         title=TOOL_TITLES["get_economic_series"],
         annotations=_tool_annotations("Get Economic Series"),
         output_schema=response_output_schema(),
+        app=chart_app_config(),
     )
     async def get_economic_series(
         concept: Annotated[str, Field(min_length=1, description="Curated semantic concept name.")],
@@ -1241,6 +1243,7 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
         title=TOOL_TITLES["get_derived_series"],
         annotations=_tool_annotations("Get Derived Series"),
         output_schema=response_output_schema(),
+        app=chart_app_config(),
     )
     async def get_derived_series(
         concept: Annotated[str, Field(min_length=1, description="Derived concept name.")],
@@ -1367,6 +1370,7 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
         )
 
     register_resources(mcp)
+    register_chart_resource(mcp)
     register_prompts(mcp)
     _normalise_registered_tool_parameter_descriptions(mcp)
 
