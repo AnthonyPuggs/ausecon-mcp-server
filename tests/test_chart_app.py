@@ -93,12 +93,15 @@ def test_chart_html_script_parses() -> None:
     node = shutil.which("node")
     if node is None:
         pytest.skip("node is not installed")
-    script = re.search(r"<script>(.*)</script>", load_chart_html(), re.DOTALL)
-    assert script, "inline script missing"
+    # Slice between the tags (no HTML regex): the view has exactly one inline script.
+    html = load_chart_html()
+    start = html.index("<script>") + len("<script>")
+    script = html[start : html.index("</script>", start)]
+    assert script.strip(), "inline script missing"
 
     result = subprocess.run(
         [node, "--check", "-"],
-        input=script.group(1),
+        input=script,
         capture_output=True,
         text=True,
         encoding="utf-8",
