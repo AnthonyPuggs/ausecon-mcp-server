@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import asyncio
+import os
+import weakref
 from datetime import datetime, timezone
 from time import perf_counter
 from typing import Any
@@ -20,6 +22,35 @@ _BODY_PREVIEW_BYTES = 2048
 DEFAULT_ATTEMPTS = 4
 DEFAULT_BASE_DELAY_SECONDS = 0.5
 MAX_RETRY_AFTER_SECONDS = 10.0
+
+# At most this many requests in flight to each upstream source at once, so a burst of distinct
+# tool calls queues here instead of hammering ABS, RBA or APRA (and risking the shared hosted
+# IP being throttled or blocked). Retry backoff happens outside the slot.
+DEFAULT_UPSTREAM_CONCURRENCY = 4
+_UPSTREAM_CONCURRENCY_ENV = "AUSECON_UPSTREAM_CONCURRENCY"
+# Keyed by event loop as well as source: asyncio semaphores must not be shared across loops.
+_upstream_slots: weakref.WeakKeyDictionary[
+    asyncio.AbstractEventLoop, dict[str, asyncio.Semaphore]
+] = weakref.WeakKeyDictionary()
+
+
+def _upstream_concurrency() -> int:
+    raw = os.environ.get(_UPSTREAM_CONCURRENCY_ENV, "").strip()
+    if not raw:
+        return DEFAULT_UPSTREAM_CONCURRENCY
+    try:
+        value = int(raw)
+    except ValueError:
+        return DEFAULT_UPSTREAM_CONCURRENCY
+    return value if value > 0 else DEFAULT_UPSTREAM_CONCURRENCY
+
+
+def _upstream_slot(source: str) -> asyncio.Semaphore:
+    per_loop = _upstream_slots.setdefault(asyncio.get_running_loop(), {})
+    slot = per_loop.get(source)
+    if slot is None:
+        slot = per_loop[source] = asyncio.Semaphore(_upstream_concurrency())
+    return slot
 
 
 def _safe_body(response: httpx.Response) -> str | None:
@@ -81,7 +112,8 @@ async def get_with_retries(
     for attempt_number in range(1, attempts + 1):
         wait = delay
         try:
-            response = await client.get(url, params=params)
+            async with _upstream_slot(source):
+                response = await client.get(url, params=params)
             response.raise_for_status()
             return response
         except httpx.HTTPStatusError as exc:
