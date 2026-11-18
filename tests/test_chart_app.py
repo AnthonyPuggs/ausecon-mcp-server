@@ -9,7 +9,13 @@ from fastmcp.apps import UI_EXTENSION_ID
 from mcp.client import advertise
 
 from ausecon_mcp.server import build_server
-from ausecon_mcp.ui import CHART_RESOURCE_URI, CHART_SHOWN_NOTE, CHART_TOOLS, load_chart_html
+from ausecon_mcp.ui import (
+    CHART_RESOURCE_URI,
+    CHART_SHOWN_NOTE,
+    CHART_TOOLS,
+    MAX_CHART_SERIES,
+    load_chart_html,
+)
 
 UI_MIME_TYPE = "text/html;profile=mcp-app"
 
@@ -130,31 +136,57 @@ async def test_chart_tool_descriptions_discourage_redrawing_the_chart() -> None:
         tools = {tool.name: tool for tool in await client.list_tools()}
 
     for name in CHART_TOOLS:
-        assert "Do not create another chart" in tools[name].description, name
-        assert "annotation" not in tools[name].description, name
+        description = " ".join(tools[name].description.split())
+        assert "Do not create another chart" in description, name
+        assert "up to eight series" in description, name
+        assert "annotation" not in description, name
 
 
-_PAYLOAD = {
-    "metadata": {
-        "source": "rba",
-        "dataset_id": "g1",
-        "server_version": "test",
-        "truncated": False,
-    },
-    "series": [{"series_id": "GCPIOCPMTMYP", "label": "Trimmed mean", "dimensions": {}}],
-    "observations": [{"date": "2026-09-30", "series_id": "GCPIOCPMTMYP", "value": 3.7}],
-}
+def _payload(series_count: int = 1, numeric: bool = True) -> dict:
+    series = [
+        {"series_id": f"S{i}", "label": f"Series {i}", "dimensions": {}}
+        for i in range(series_count)
+    ]
+    observations = [
+        {"date": "2026-09-30", "series_id": f"S{i}", "value": 3.7 if numeric else None}
+        for i in range(series_count)
+    ]
+    return {
+        "metadata": {
+            "source": "rba",
+            "dataset_id": "g1",
+            "server_version": "test",
+            "truncated": False,
+        },
+        "series": series,
+        "observations": observations,
+    }
 
 
 class _FakeService:
-    async def get_economic_series(self, **_: object) -> dict:
-        return json.loads(json.dumps(_PAYLOAD))
+    def __init__(self, payload: dict | None = None) -> None:
+        self.payload = payload or _payload()
 
-    async def get_derived_series(self, **_: object) -> dict:
-        return json.loads(json.dumps(_PAYLOAD))
+    async def _respond(self, **_: object) -> dict:
+        return json.loads(json.dumps(self.payload))
+
+    get_economic_series = _respond
+    get_derived_series = _respond
+    get_rba_table = _respond
+    get_abs_data = _respond
+    get_apra_data = _respond
 
     async def list_economic_concepts(self, **_: object) -> list[dict]:
         return [{"concept": "trimmed_mean_inflation"}]
+
+
+_ARGS = {
+    "get_economic_series": {"concept": "trimmed_mean_inflation"},
+    "get_derived_series": {"concept": "real_cash_rate"},
+    "get_rba_table": {"table_id": "g1"},
+    "get_abs_data": {"dataflow_id": "CPI"},
+    "get_apra_data": {"publication_id": "ADI_MONTHLY"},
+}
 
 
 def _ui_client(mcp) -> Client:
@@ -165,30 +197,72 @@ def _texts(result) -> list[str]:
     return [block.text for block in result.content if getattr(block, "type", None) == "text"]
 
 
+def test_every_normalised_retrieval_tool_has_the_chart() -> None:
+    assert CHART_TOOLS == set(_ARGS)
+
+
 @pytest.mark.parametrize("tool", sorted(CHART_TOOLS))
 async def test_ui_clients_are_told_the_chart_is_already_shown(tool: str) -> None:
-    mcp = build_server(service=_FakeService())
+    payload = _payload()
+    mcp = build_server(service=_FakeService(payload))
 
     async with _ui_client(mcp) as client:
-        result = await client.call_tool(tool, {"concept": "trimmed_mean_inflation"})
+        result = await client.call_tool(tool, _ARGS[tool])
 
     texts = _texts(result)
     assert len(texts) == 2
-    assert json.loads(texts[0]) == _PAYLOAD
+    assert json.loads(texts[0]) == payload
     assert texts[1] == CHART_SHOWN_NOTE
-    assert result.structured_content == _PAYLOAD
+    assert result.structured_content == payload
 
 
 @pytest.mark.parametrize("tool", sorted(CHART_TOOLS))
 async def test_text_only_clients_get_the_unchanged_json(tool: str) -> None:
-    mcp = build_server(service=_FakeService())
+    payload = _payload()
+    mcp = build_server(service=_FakeService(payload))
 
     async with Client(mcp) as client:
-        result = await client.call_tool(tool, {"concept": "trimmed_mean_inflation"})
+        result = await client.call_tool(tool, _ARGS[tool])
 
     texts = _texts(result)
     assert len(texts) == 1
-    assert json.loads(texts[0]) == _PAYLOAD
+    assert json.loads(texts[0]) == payload
+
+
+async def test_results_too_wide_to_chart_get_no_note() -> None:
+    # The view charts at most MAX_CHART_SERIES series; beyond that it shows a short
+    # "ask for specific series" line, so the model must stay free to present the data.
+    mcp = build_server(service=_FakeService(_payload(MAX_CHART_SERIES + 1)))
+
+    async with _ui_client(mcp) as client:
+        result = await client.call_tool("get_rba_table", _ARGS["get_rba_table"])
+
+    assert len(_texts(result)) == 1
+
+
+async def test_results_with_nothing_numeric_get_no_note() -> None:
+    mcp = build_server(service=_FakeService(_payload(2, numeric=False)))
+
+    async with _ui_client(mcp) as client:
+        result = await client.call_tool("get_rba_table", _ARGS["get_rba_table"])
+
+    assert len(_texts(result)) == 1
+
+
+async def test_series_without_numeric_values_do_not_count_towards_the_limit() -> None:
+    payload = _payload(MAX_CHART_SERIES)
+    payload["series"].append({"series_id": "EMPTY", "label": "Empty", "dimensions": {}})
+    payload["observations"].append({"date": "2026-09-30", "series_id": "EMPTY", "value": None})
+    mcp = build_server(service=_FakeService(payload))
+
+    async with _ui_client(mcp) as client:
+        result = await client.call_tool("get_rba_table", _ARGS["get_rba_table"])
+
+    assert _texts(result)[-1] == CHART_SHOWN_NOTE
+
+
+def test_view_and_server_agree_on_the_series_limit() -> None:
+    assert f"const MAX_SERIES = {MAX_CHART_SERIES};" in load_chart_html()
 
 
 async def test_non_chart_tools_never_get_the_chart_note() -> None:
@@ -203,3 +277,7 @@ async def test_non_chart_tools_never_get_the_chart_note() -> None:
 def test_chart_note_leaves_no_room_for_a_second_chart() -> None:
     assert "Do not create another chart" in CHART_SHOWN_NOTE
     assert "annotation" not in CHART_SHOWN_NOTE
+    # The view's own context summary (ui/update-model-context) must say the same thing.
+    html = load_chart_html()
+    assert "Do not create another chart of this data" in html
+    assert "annotation" not in html.lower()

@@ -22,7 +22,20 @@ from mcp.types import CallToolRequestParams, TextContent
 from ausecon_mcp.logging import get_logger
 
 CHART_RESOURCE_URI = "ui://ausecon/series-chart.html"
-CHART_TOOLS = frozenset({"get_economic_series", "get_derived_series"})
+# Every tool that returns the normalised metadata/series/observations response.
+CHART_TOOLS = frozenset(
+    {
+        "get_economic_series",
+        "get_derived_series",
+        "get_rba_table",
+        "get_abs_data",
+        "get_apra_data",
+    }
+)
+# The view charts at most this many series (one per categorical colour). Wider results, such as
+# an unkeyed ABS dataflow with thousands of series, get a one-line "ask for specific series"
+# message instead of a chart. Keep in step with MAX_SERIES in static/series_chart.html.
+MAX_CHART_SERIES = 8
 
 # Appended to chart tool results for clients that render MCP Apps. The tool description
 # alone did not stop claude.ai's Claude drawing its own chart of the same series; the
@@ -49,6 +62,18 @@ def load_chart_html() -> str:
     return (Path(__file__).resolve().parent / _STATIC_DIR / _CHART_FILE).read_text(encoding="utf-8")
 
 
+def chartable_series_count(payload: Any) -> int:
+    """Number of series in a retrieval payload with at least one numeric observation."""
+    if not isinstance(payload, dict):
+        return 0
+    series_ids = set()
+    for observation in payload.get("observations") or ():
+        value = observation.get("value") if isinstance(observation, dict) else None
+        if isinstance(value, int | float) and not isinstance(value, bool):
+            series_ids.add(observation.get("series_id"))
+    return len(series_ids)
+
+
 def chart_app_config() -> AppConfig:
     """Tool-side app metadata pointing a retrieval tool at the chart view."""
     return AppConfig(resource_uri=CHART_RESOURCE_URI)
@@ -59,8 +84,9 @@ def register_chart_resource(mcp: FastMCP) -> None:
         CHART_RESOURCE_URI,
         name="Ausecon series chart",
         description=(
-            "Interactive line chart that MCP Apps hosts render alongside "
-            "get_economic_series and get_derived_series results."
+            "Interactive line chart that MCP Apps hosts render alongside results from "
+            "get_economic_series, get_derived_series, get_rba_table, get_abs_data and "
+            "get_apra_data."
         ),
         # No CSP domains: the view is fully inline and makes no network requests.
         app=AppConfig(prefers_border=False),
@@ -72,7 +98,8 @@ def register_chart_resource(mcp: FastMCP) -> None:
 class ChartShownNoteMiddleware(Middleware):
     """Tell UI-rendering clients that a chart tool's result is already on screen.
 
-    Text-only clients (Claude Code, most IDEs) get the tool's JSON unchanged.
+    Only added when the view will actually chart the result (1 to MAX_CHART_SERIES numeric
+    series). Text-only clients (Claude Code, most IDEs) get the tool's JSON unchanged.
     """
 
     async def on_call_tool(
@@ -90,8 +117,14 @@ class ChartShownNoteMiddleware(Middleware):
             fastmcp_context is not None
             and fastmcp_context.client_supports_extension(UI_EXTENSION_ID)
         )
-        get_logger("ui").info("chart_tool.result", extra={"tool": tool, "renders_ui": renders_ui})
-        if not renders_ui:
+        charted = renders_ui and 0 < chartable_series_count(result.structured_content) <= (
+            MAX_CHART_SERIES
+        )
+        get_logger("ui").info(
+            "chart_tool.result",
+            extra={"tool": tool, "renders_ui": renders_ui, "charted": charted},
+        )
+        if not charted:
             return result
 
         content: list[Any] = [*result.content, TextContent(type="text", text=CHART_SHOWN_NOTE)]

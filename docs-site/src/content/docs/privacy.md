@@ -61,9 +61,10 @@ The server uses each request only to answer it:
 The server writes operational logs so the maintainer can see whether upstream sources are working.
 A log line records the event (for example `request.success`), the source (`abs`, `rba` or `apra`),
 the public dataset identifier, the upstream URL, the HTTP status, the duration and the response size.
-Calls to `get_economic_series` and `get_derived_series` also log the tool name and whether the
-client said it can display [inline charts](/user-guide/inline-charts/). That log line records no
-arguments and nothing about who called.
+Calls to the five retrieval tools (`get_economic_series`, `get_derived_series`, `get_rba_table`,
+`get_abs_data` and `get_apra_data`) also log the tool name, whether the client said it can display
+[inline charts](/user-guide/inline-charts/), and whether the result was charted. That log line
+records no arguments and nothing about who called.
 
 The server does not log:
 

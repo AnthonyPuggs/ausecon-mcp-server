@@ -1120,6 +1120,7 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
         title=TOOL_TITLES["get_abs_data"],
         annotations=_tool_annotations("Get ABS Data"),
         output_schema=response_output_schema(),
+        app=chart_app_config(),
     )
     async def get_abs_data(
         dataflow_id: Identifier,
@@ -1130,7 +1131,12 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
         updated_after: OptionalIsoDateTime = None,
         include_observation_dimensions: IncludeObservationDimensions = False,
     ) -> dict:
-        """Expert/source-native ABS SDMX retrieval in a normalised response shape."""
+        """Expert/source-native ABS SDMX retrieval in a normalised response shape.
+
+        In MCP Apps hosts (claude.ai, Claude Desktop) a result with up to eight series is
+        already shown to the user as an interactive chart with a data table. Do not create
+        another chart of the same data unless the user explicitly asks for a different chart.
+        """
         return await app_service.get_abs_data(
             dataflow_id=dataflow_id,
             key=key,
@@ -1160,6 +1166,7 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
         title=TOOL_TITLES["get_rba_table"],
         annotations=_tool_annotations("Get RBA Table"),
         output_schema=response_output_schema(),
+        app=chart_app_config(),
     )
     async def get_rba_table(
         table_id: Identifier,
@@ -1169,7 +1176,12 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
         last_n: OptionalPositiveInt = None,
         include_observation_dimensions: IncludeObservationDimensions = False,
     ) -> dict:
-        """Expert/source-native RBA statistical table retrieval in a normalised response shape."""
+        """Expert/source-native RBA statistical table retrieval in a normalised response shape.
+
+        In MCP Apps hosts (claude.ai, Claude Desktop) a result with up to eight series is
+        already shown to the user as an interactive chart with a data table. Do not create
+        another chart of the same data unless the user explicitly asks for a different chart.
+        """
         return await app_service.get_rba_table(
             table_id=table_id,
             series_ids=series_ids,
@@ -1183,6 +1195,7 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
         title=TOOL_TITLES["get_apra_data"],
         annotations=_tool_annotations("Get APRA Data"),
         output_schema=response_output_schema(),
+        app=chart_app_config(),
     )
     async def get_apra_data(
         publication_id: Identifier,
@@ -1196,6 +1209,10 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
         """Expert/source-native APRA public XLSX publication retrieval.
 
         Only curated official APRA publication IDs are accepted; arbitrary URLs are not.
+
+        In MCP Apps hosts (claude.ai, Claude Desktop) a result with up to eight series is
+        already shown to the user as an interactive chart with a data table. Do not create
+        another chart of the same data unless the user explicitly asks for a different chart.
         """
         return await app_service.get_apra_data(
             publication_id=publication_id,
@@ -1228,9 +1245,9 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
         Use list_economic_concepts for discovery. Date bounds accept YYYY, YYYY-QN,
         YYYY-SN, YYYY-MM, or YYYY-MM-DD and are normalised to the resolved source.
 
-        In MCP Apps hosts (claude.ai, Claude Desktop) the result is already shown to the
-        user as an interactive chart with a data table. Do not create another chart of the
-        same data unless the user explicitly asks for a different chart.
+        In MCP Apps hosts (claude.ai, Claude Desktop) a result with up to eight series is
+        already shown to the user as an interactive chart with a data table. Do not create
+        another chart of the same data unless the user explicitly asks for a different chart.
         """
         return await app_service.get_economic_series(
             concept=concept,
@@ -1260,9 +1277,9 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
         Date bounds accept YYYY, YYYY-QN, YYYY-SN, YYYY-MM, or YYYY-MM-DD and
         are normalised to the derived series frequency.
 
-        In MCP Apps hosts (claude.ai, Claude Desktop) the result is already shown to the
-        user as an interactive chart with a data table. Do not create another chart of the
-        same data unless the user explicitly asks for a different chart.
+        In MCP Apps hosts (claude.ai, Claude Desktop) a result with up to eight series is
+        already shown to the user as an interactive chart with a data table. Do not create
+        another chart of the same data unless the user explicitly asks for a different chart.
         """
         return await app_service.get_derived_series(
             concept=concept,

@@ -314,13 +314,14 @@
   // doesn't redraw the same series. Only sent when the host accepts context updates.
   function shareViewWithModel() {
     if (contextSent || !hostCapabilities.updateModelContext) return;
-    contextSent = true;
     const model = buildModel(payload);
+    if (!model.plotted.length) return; // nothing was charted, so there is nothing to protect
+    contextSent = true;
     const meta = payload.metadata || {};
     const lines = [
-      "The user is viewing an interactive inline chart of this get_economic_series / get_derived_series result,",
-      "with a hover readout and a data table. Do not redraw the same series as a chart unless the user asks for",
-      "something it does not show (other series, comparisons, annotations or transformations).",
+      "The user is viewing an interactive inline chart of this tool result,",
+      "with a hover readout and a data table. Do not create another chart of this data unless the user",
+      "explicitly asks for a different chart.",
       `Charted: ${model.plotted.map((s) => s.label).join("; ")}`,
     ];
     if (model.plotted.length === 1) {
@@ -519,7 +520,10 @@
       });
     }
 
-    const plotted = all.slice(0, MAX_SERIES);
+    // Wider results (an unkeyed ABS dataflow can return thousands of series) are not charted:
+    // an arbitrary first few series would mislead, and a full data table would be enormous.
+    const wide = all.length > MAX_SERIES;
+    const plotted = wide ? [] : all;
     plotted.forEach((s, i) => { s.color = `var(--series-${i + 1})`; });
 
     // One y-axis per chart: series with different units get their own panel.
@@ -542,7 +546,7 @@
     }
     const retrieved = Date.parse((data.metadata || {}).retrieved_at || "");
     if (plotted.some((s) => s.step) && Number.isFinite(retrieved) && retrieved > t1) t1 = retrieved;
-    return { all, plotted, panels, t0, t1, hidden: all.length - plotted.length };
+    return { all, plotted, panels, t0, t1, wide };
   }
 
   // ------------------------------------------------------------------ render
@@ -595,12 +599,17 @@
       notices.append(el("p", "notice info",
         `Showing the most recent observations; ${meta.observations_dropped.toLocaleString()} earlier observations were not returned.`));
     }
-    if (model.hidden > 0) {
-      notices.append(el("p", "notice info",
-        `Charting the first ${MAX_SERIES} of ${model.all.length} series; all are in the data table.`));
-    }
     if (notices.childElementCount) frag.append(notices);
 
+    if (model.wide) {
+      frag.append(el("p", "status",
+        `This result has ${model.all.length.toLocaleString()} series, more than the ${MAX_SERIES} ` +
+        "this chart can show. Ask for fewer series to see a chart."));
+      frag.append(renderFooter(meta));
+      app.replaceChildren(frag);
+      reportSize();
+      return;
+    }
     if (!model.plotted.length) {
       frag.append(el("p", "status", "No numeric observations to chart."));
       app.replaceChildren(frag);
