@@ -6,6 +6,13 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.21.0] - 2026-11-19
+
+Combined charts: `get_economic_series` takes a list of concepts and returns them in one response,
+shown as one inline chart. Event-driven series such as the cash rate now keep the value in effect
+at the start of a date window. A string `concept` and existing response fields are unchanged; the
+response schema gains `source: "multiple"`, `components` and `date_window`.
+
 ### Added
 
 - `get_economic_series` accepts a list of up to eight concepts and returns them together in one
@@ -15,7 +22,6 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   `concept` behaves as before. `variant`, `geography` and `frequency` apply to a single concept
   only. The combined chart names each source in its header and footer and labels each
   series by its concept, such as "Headline CPI".
-
 - `metadata.date_window` on RBA and APRA responses with date bounds: the applied `start` and
   `end` as ISO dates, and `carried_in`, the event-driven series that kept their last change
   before `start`.
@@ -1229,7 +1235,8 @@ Initial public release.
 - Initial curated catalogues for ABS and RBA, plus a four-concept
   `CURATED_SERIES` semantic shortcut map.
 
-[Unreleased]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.20.1...HEAD
+[Unreleased]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.21.0...HEAD
+[1.21.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.20.1...v1.21.0
 [1.20.1]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.20.0...v1.20.1
 [1.20.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.19.0...v1.20.0
 [1.19.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.18.0...v1.19.0
