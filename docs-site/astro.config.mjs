@@ -8,7 +8,7 @@ export default defineConfig({
   },
   integrations: [
     starlight({
-      title: 'AusEcon MCP Server',
+      title: 'ausecon MCP Server',
       description: 'Documentation for Australian economic data from the ABS and RBA over MCP.',
       logo: {
         src: './src/assets/logo.png',

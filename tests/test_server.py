@@ -496,7 +496,7 @@ def test_http_app_exposes_smithery_static_server_card() -> None:
     payload = response.json()
     assert payload["serverInfo"]["name"] == "ausecon-mcp-server"
     assert payload["serverInfo"]["version"]
-    assert payload["displayName"] == "AusEcon MCP Server"
+    assert payload["displayName"] == "ausecon MCP Server"
     assert "Australian economic data" in payload["description"]
     assert payload["homepage"] == server_module.HOMEPAGE_URL
     assert payload["iconUrl"] == server_module.SERVER_ICON_URL

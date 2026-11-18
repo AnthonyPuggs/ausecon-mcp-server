@@ -1,6 +1,6 @@
 ---
 title: Roadmap
-description: Current direction and shipped release lines for AusEcon MCP.
+description: Current direction and shipped release lines for ausecon MCP.
 ---
 
 The current v1.14.x release line includes stable stdio, hosted Streamable HTTP through

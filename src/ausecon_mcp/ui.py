@@ -82,7 +82,7 @@ def chart_app_config() -> AppConfig:
 def register_chart_resource(mcp: FastMCP) -> None:
     @mcp.resource(
         CHART_RESOURCE_URI,
-        name="Ausecon series chart",
+        name="ausecon series chart",
         description=(
             "Interactive line chart that MCP Apps hosts render alongside results from "
             "get_economic_series, get_derived_series, get_rba_table, get_abs_data and "

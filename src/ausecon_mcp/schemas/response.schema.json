@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/AnthonyPuggs/ausecon-mcp-server/schemas/response.schema.json",
-  "title": "Ausecon Retrieval Response",
+  "title": "ausecon retrieval response",
   "description": "Normalised retrieval response returned by ABS, RBA, APRA, semantic, and derived data tools.",
   "type": "object",
   "required": ["metadata", "series", "observations"],
