@@ -1,0 +1,27 @@
+---
+// Starlight's default footer, followed by an independence disclaimer on every page.
+import Default from '@astrojs/starlight/components/Footer.astro';
+---
+
+<Default><slot /></Default>
+
+<p class="disclaimer">
+  ausecon is an independent open-source project. It is not affiliated with, endorsed by or
+  operated by the Australian Government, the Australian Bureau of Statistics, the Reserve Bank of
+  Australia or the Australian Prudential Regulation Authority. Data is published by those agencies
+  under CC BY 4.0; see <a href="/data-sources/">Data Sources and Licensing</a>.
+</p>
+
+<style>
+  .disclaimer {
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--sl-color-hairline);
+    font-size: var(--sl-text-xs);
+    color: var(--sl-color-gray-3);
+    text-align: center;
+  }
+  .disclaimer a {
+    color: inherit;
+  }
+</style>

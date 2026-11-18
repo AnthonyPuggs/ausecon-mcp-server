@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "ausecon-mcp-server"
 dynamic = ["version"]
-description = "MCP server for Australian economic data from the ABS, RBA, and APRA."
+description = "Independent, unofficial MCP server for Australian economic data from the ABS, RBA, and APRA."
 readme = "README.md"
 requires-python = ">=3.10"
 license = { file = "LICENSE" }

@@ -8,7 +8,8 @@ Last updated: 19 November 2026.
 ausecon does not own or generate any economic data. Every value it returns is fetched from data
 that three Australian government agencies publish openly, and is passed through with its source
 attached. ausecon is an independent, open-source project. It is not operated by, affiliated with,
-or endorsed by any of these agencies.
+or endorsed by the Australian Government or any of these agencies. Their names are used only to
+identify where the data comes from.
 
 ## Sources
 
