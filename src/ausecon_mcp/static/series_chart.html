@@ -462,11 +462,16 @@
       max += pad;
     }
     const step = niceStep(max - min, targetTicks);
-    const lo = Math.floor(min / step) * step;
-    const hi = Math.ceil(max / step) * step;
+    // A value just past a tick (F2's 2-year yield touched -0.001%) stretches the axis to that
+    // value rather than adding a whole empty step (a -2% gridline under data that sits at 0%).
+    const slack = step * 0.05;
+    let tickLo = Math.floor(min / step) * step;
+    let tickHi = Math.ceil(max / step) * step;
+    if (tickLo + step - min <= slack && tickLo + step < tickHi) tickLo += step;
+    if (max - (tickHi - step) <= slack && tickHi - step > tickLo) tickHi -= step;
     const ticks = [];
-    for (let v = lo; v <= hi + step / 2; v += step) ticks.push(+v.toPrecision(12));
-    return { lo, hi, ticks, step };
+    for (let v = tickLo; v <= tickHi + step / 2; v += step) ticks.push(+v.toPrecision(12));
+    return { lo: Math.min(min, tickLo), hi: Math.max(max, tickHi), ticks, step };
   }
 
   function timeTicks(t0, t1, maxTicks) {

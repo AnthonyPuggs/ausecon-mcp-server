@@ -20,6 +20,9 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- The inline chart's y-axis no longer adds a whole empty step for a value just past a gridline.
+  RBA F2's 2-year yield touched -0.001% on 11 June 2021, so a chart of yields since 2020 ran
+  down to -2% under data sitting at 0%. Such a value now stretches the axis slightly instead.
 - Dataset identifiers are now case-insensitive. RBA table IDs written in capitals, as the RBA
   writes them (`F2`, `G1`), used to fail with HTTP 404 in `get_rba_table`,
   `get_latest_observations` and `get_top_observations`, and with "unknown dataset" in
