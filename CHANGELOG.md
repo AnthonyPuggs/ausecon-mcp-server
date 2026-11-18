@@ -6,8 +6,10 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-Hardening for the hosted HTTP server against bursts of traffic. Tool names, parameters and the
-response contract are unchanged.
+## [1.19.0] - 2026-11-18
+
+Hardening for the hosted HTTP server against bursts of traffic (#199). Tool names, parameters and
+the response contract are unchanged.
 
 ### Fixed
 
@@ -24,6 +26,16 @@ response contract are unchanged.
 - The HTTP server answers tool calls beyond 32 concurrent ones with HTTP 503, `server_busy` and
   `Retry-After: 1` (`AUSECON_HTTP_MAX_IN_FLIGHT`). Health checks and other GET requests are never
   limited.
+- A tool call's request body must arrive within 10 seconds (HTTP 408 otherwise) and within 1 MiB,
+  now including chunked bodies with no `Content-Length` (HTTP 413). The body is read before a
+  concurrency slot is taken, so slow clients cannot hold slots and lock out other users.
+
+### Security
+
+- `SECURITY.md` sends vulnerability reports to GitHub private vulnerability reporting rather than
+  public issues, and sets out supported versions, response targets and scope.
+- The documentation site has a privacy policy covering the hosted server, the installable package
+  and the site itself.
 
 ## [1.18.0] - 2026-11-12
 
@@ -1114,7 +1126,8 @@ Initial public release.
 - Initial curated catalogues for ABS and RBA, plus a four-concept
   `CURATED_SERIES` semantic shortcut map.
 
-[Unreleased]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.18.0...HEAD
+[Unreleased]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.19.0...HEAD
+[1.19.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.18.0...v1.19.0
 [1.18.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.17.0...v1.18.0
 [1.17.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.16.0...v1.17.0
 [1.16.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.15.0...v1.16.0
