@@ -1,12 +1,15 @@
+import json
 import re
 import shutil
 import subprocess
 
 import pytest
 from fastmcp import Client
+from fastmcp.apps import UI_EXTENSION_ID
+from mcp.client import advertise
 
 from ausecon_mcp.server import build_server
-from ausecon_mcp.ui import CHART_RESOURCE_URI, CHART_TOOLS, load_chart_html
+from ausecon_mcp.ui import CHART_RESOURCE_URI, CHART_SHOWN_NOTE, CHART_TOOLS, load_chart_html
 
 UI_MIME_TYPE = "text/html;profile=mcp-app"
 
@@ -127,4 +130,76 @@ async def test_chart_tool_descriptions_discourage_redrawing_the_chart() -> None:
         tools = {tool.name: tool for tool in await client.list_tools()}
 
     for name in CHART_TOOLS:
-        assert "do not redraw the same series" in tools[name].description, name
+        assert "Do not create another chart" in tools[name].description, name
+        assert "annotation" not in tools[name].description, name
+
+
+_PAYLOAD = {
+    "metadata": {
+        "source": "rba",
+        "dataset_id": "g1",
+        "server_version": "test",
+        "truncated": False,
+    },
+    "series": [{"series_id": "GCPIOCPMTMYP", "label": "Trimmed mean", "dimensions": {}}],
+    "observations": [{"date": "2026-09-30", "series_id": "GCPIOCPMTMYP", "value": 3.7}],
+}
+
+
+class _FakeService:
+    async def get_economic_series(self, **_: object) -> dict:
+        return json.loads(json.dumps(_PAYLOAD))
+
+    async def get_derived_series(self, **_: object) -> dict:
+        return json.loads(json.dumps(_PAYLOAD))
+
+    async def list_economic_concepts(self, **_: object) -> list[dict]:
+        return [{"concept": "trimmed_mean_inflation"}]
+
+
+def _ui_client(mcp) -> Client:
+    return Client(mcp, extensions=[advertise(UI_EXTENSION_ID, {"mimeTypes": [UI_MIME_TYPE]})])
+
+
+def _texts(result) -> list[str]:
+    return [block.text for block in result.content if getattr(block, "type", None) == "text"]
+
+
+@pytest.mark.parametrize("tool", sorted(CHART_TOOLS))
+async def test_ui_clients_are_told_the_chart_is_already_shown(tool: str) -> None:
+    mcp = build_server(service=_FakeService())
+
+    async with _ui_client(mcp) as client:
+        result = await client.call_tool(tool, {"concept": "trimmed_mean_inflation"})
+
+    texts = _texts(result)
+    assert len(texts) == 2
+    assert json.loads(texts[0]) == _PAYLOAD
+    assert texts[1] == CHART_SHOWN_NOTE
+    assert result.structured_content == _PAYLOAD
+
+
+@pytest.mark.parametrize("tool", sorted(CHART_TOOLS))
+async def test_text_only_clients_get_the_unchanged_json(tool: str) -> None:
+    mcp = build_server(service=_FakeService())
+
+    async with Client(mcp) as client:
+        result = await client.call_tool(tool, {"concept": "trimmed_mean_inflation"})
+
+    texts = _texts(result)
+    assert len(texts) == 1
+    assert json.loads(texts[0]) == _PAYLOAD
+
+
+async def test_non_chart_tools_never_get_the_chart_note() -> None:
+    mcp = build_server(service=_FakeService())
+
+    async with _ui_client(mcp) as client:
+        result = await client.call_tool("list_economic_concepts", {})
+
+    assert CHART_SHOWN_NOTE not in _texts(result)
+
+
+def test_chart_note_leaves_no_room_for_a_second_chart() -> None:
+    assert "Do not create another chart" in CHART_SHOWN_NOTE
+    assert "annotation" not in CHART_SHOWN_NOTE
