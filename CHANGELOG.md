@@ -13,8 +13,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   The response has `metadata.source = "multiple"` and a `metadata.components` list with each
   concept's own metadata (source, retrieval URL, semantic resolution, date window). A string
   `concept` behaves as before. `variant`, `geography` and `frequency` apply to a single concept
-  only. The combined chart names each source in its header and footer and uses short series
-  titles in the legend.
+  only. The combined chart names each source in its header and footer and labels each
+  series by its concept, such as "Headline CPI".
 
 - `metadata.date_window` on RBA and APRA responses with date bounds: the applied `start` and
   `end` as ISO dates, and `carried_in`, the event-driven series that kept their last change

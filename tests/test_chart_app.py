@@ -587,6 +587,7 @@ def _combined(
             "dataset_id": "LF",
             "title": "Labour Force",
             "frequency": "Monthly",
+            "semantic": {"concept": "unemployment_rate"},
             "retrieval_url": "https://data.api.abs.gov.au/rest/data/LF/M13.3.1599.20.AUS.M",
             "retrieved_at": "2026-11-19T01:00:00Z",
             "server_version": "test",
@@ -617,6 +618,7 @@ def _combined(
         "publication_date": "03-Nov-2026",
         "retrieval_url": "https://www.rba.gov.au/statistics/tables/csv/a2-data.csv",
         "retrieved_at": "2026-11-19T00:30:00Z",
+        "semantic": {"concept": "cash_rate_target"},
         "server_version": "test",
         "truncated": False,
     }
@@ -659,15 +661,16 @@ def test_combined_header_names_both_sources_and_short_titles() -> None:
 
     assert header == {
         "eyebrow": "ABS · RBA",
-        "title": "Unemployment rate and New Cash Rate Target",
+        "title": "Unemployment rate and Cash rate target",
         "detail": "",
     }
 
 
 def test_combined_legend_uses_short_titles() -> None:
-    labels = _run_view(f"displayLabels(buildModel({json.dumps(_combined())}).plotted)")
+    payload = json.dumps(_combined())
+    labels = _run_view(f"displayLabels(buildModel({payload}).plotted, {payload}.metadata)")
 
-    assert labels == ["Unemployment rate", "New Cash Rate Target"]
+    assert labels == ["Unemployment rate", "Cash rate target"]
 
 
 def test_combined_footer_has_a_line_per_source() -> None:
@@ -702,9 +705,9 @@ def test_combined_snapshot_lists_both_values() -> None:
     payload = json.dumps(_combined(snapshot=True))
 
     assert _run_view(f"buildModel({payload}).snapshot") is True
-    assert _run_view(f"displayLabels(buildModel({payload}).plotted)") == [
+    assert _run_view(f"displayLabels(buildModel({payload}).plotted, {payload}.metadata)") == [
         "Unemployment rate",
-        "New Cash Rate Target",
+        "Cash rate target",
     ]
 
 
@@ -741,3 +744,68 @@ def test_two_series_with_the_same_short_title_keep_their_full_labels() -> None:
     model = "{plotted: [{label: 'Rate / Persons', desc: {}}, {label: 'Rate / Females', desc: {}}]}"
 
     assert _run_view(f"displayLabels({model}.plotted)") == ["Rate / Persons", "Rate / Females"]
+
+
+def test_combined_labels_name_the_indicator_not_a_generic_measure() -> None:
+    # ABS CPI's measure is "Index numbers": a legend of "Index numbers" and "Unemployment rate"
+    # loses which indicator is which.
+    from ausecon_mcp.combine import merge_concept_payloads
+
+    combined = _combined()
+    unemployment = {
+        "metadata": combined["metadata"]["components"][0]["metadata"],
+        "series": [s for s in combined["series"] if s["series_id"] == "U"],
+        "observations": [o for o in combined["observations"] if o["series_id"] == "U"],
+    }
+    cpi = {
+        "metadata": {
+            "source": "abs",
+            "dataset_id": "CPI",
+            "title": "Consumer Price Index (CPI)",
+            "server_version": "test",
+            "truncated": False,
+            "semantic": {"concept": "headline_cpi"},
+        },
+        "series": [
+            {
+                "series_id": "C",
+                "label": "Index numbers / All groups CPI / Original / Australia / Quarterly",
+                "unit": "Index Numbers",
+                "frequency": "Quarterly",
+                "dimensions": {},
+            }
+        ],
+        "observations": [
+            {"date": "2019-Q1", "series_id": "C", "value": 114.1},
+            {"date": "2019-Q2", "series_id": "C", "value": 114.8},
+        ],
+    }
+    payload = json.dumps(
+        merge_concept_payloads([("headline_cpi", cpi), ("unemployment_rate", unemployment)])
+    )
+
+    assert _run_view(f"displayLabels(buildModel({payload}).plotted, {payload}.metadata)") == [
+        "Headline CPI",
+        "Unemployment rate",
+    ]
+    header = _run_view(f"headerText({payload}.metadata, buildModel({payload}).plotted)")
+    assert header["title"] == "Headline CPI and Unemployment rate"
+
+
+def test_single_source_results_keep_full_series_labels() -> None:
+    # Qualifiers such as sex or series type tell a raw ABS result's series apart.
+    payload = {
+        "metadata": {"source": "abs", "dataset_id": "LF"},
+        "series": [
+            {"series_id": "A", "label": "Employed / Females / Trend", "dimensions": {}},
+            {"series_id": "B", "label": "Unemployment rate / Males / Trend", "dimensions": {}},
+        ],
+        "observations": [{"date": "2019-01", "series_id": sid, "value": 1.0} for sid in ("A", "B")]
+        + [{"date": "2019-02", "series_id": sid, "value": 2.0} for sid in ("A", "B")],
+    }
+    text = json.dumps(payload)
+
+    assert _run_view(f"displayLabels(buildModel({text}).plotted, {text}.metadata)") == [
+        "Employed / Females / Trend",
+        "Unemployment rate / Males / Trend",
+    ]

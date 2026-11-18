@@ -452,11 +452,30 @@
     return meta;
   }
 
-  // Short measure titles ("Unemployment rate") where they tell the series apart; otherwise the
-  // full labels. The full label is always on hover.
-  function displayLabels(series) {
-    const short = series.map((s) => splitLabel(s.label, s.desc && s.desc.frequency).title);
-    return new Set(short).size === short.length ? short : series.map((s) => s.label);
+  // "headline_cpi" -> "Headline CPI": the name of the concept the user asked for.
+  function conceptTitle(concept) {
+    const words = String(concept || "").split("_").filter(Boolean).map((word) =>
+      ACRONYMS.has(word.toLowerCase()) ? word.toUpperCase() : word.toLowerCase());
+    if (!words.length) return "";
+    return words[0].charAt(0).toUpperCase() + words[0].slice(1) + (words.length > 1 ? ` ${words.slice(1).join(" ")}` : "");
+  }
+
+  // A combined (multi-concept) result names each series by its concept ("Headline CPI"), since an
+  // ABS measure alone can be generic ("Index numbers"). A concept that returned several series, and
+  // every single-source result, keeps the full labels. The full label is always on hover.
+  function displayLabels(series, meta) {
+    if (!meta || meta.source !== "multiple") return series.map((s) => s.label);
+    const conceptOf = (m) => (m && m.semantic && m.semantic.concept) || "";
+    const counts = new Map();
+    for (const component of meta.components || []) {
+      const concept = conceptOf(component.metadata);
+      if (concept) counts.set(concept, (component.series_ids || []).length);
+    }
+    const labels = series.map((s) => {
+      const concept = conceptOf(s.meta);
+      return concept && counts.get(concept) === 1 ? conceptTitle(concept) : s.label;
+    });
+    return new Set(labels).size === labels.length ? labels : series.map((s) => s.label);
   }
 
   // "Per cent", "Per cent per annum" -> %; "percentage points" -> pp; anything else has no suffix.
@@ -592,7 +611,7 @@
         step: /announc|event|irregular/i.test(String(desc.frequency || "")),
       });
     }
-    const shown = displayLabels(all);
+    const shown = displayLabels(all, meta);
     all.forEach((s, i) => { s.display = shown[i]; });
 
     // Wider results (an unkeyed ABS dataflow can return thousands of series) are not charted:
@@ -646,7 +665,7 @@
       const sources = (meta.components || [])
         .map((c) => String((c.metadata || {}).source || "").toUpperCase())
         .filter(Boolean);
-      const titles = plotted.map((s) => splitLabel(s.label, s.desc.frequency).title);
+      const titles = displayLabels(plotted, meta);
       const title = titles.length === 2 ? titles.join(" and ") : titles.join(", ");
       const eyebrow = [[...new Set(sources)].join(" · "), meta.frequency].filter(Boolean);
       return { eyebrow: eyebrow.join(" · "), title: title || meta.title || "Series", detail: "" };
