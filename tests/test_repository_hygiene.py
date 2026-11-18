@@ -108,6 +108,7 @@ def test_response_schema_is_packaged_under_project_namespace() -> None:
             "ausecon_mcp/schemas/response.schema.json"
         ),
         "src/ausecon_mcp/data/apra_url_seeds.json": "ausecon_mcp/data/apra_url_seeds.json",
+        "src/ausecon_mcp/static/series_chart.html": "ausecon_mcp/static/series_chart.html",
     }
 
 

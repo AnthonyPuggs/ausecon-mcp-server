@@ -1,0 +1,908 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AusEcon Series Chart</title>
+<style>
+  /* Tokens: host-supplied MCP Apps variables win; the fallbacks are the validated
+     dataviz reference palette, stepped separately for light and dark. */
+  :root {
+    color-scheme: light;
+    --fb-surface: #fcfcfb;
+    --fb-ink-1: #0b0b0b;
+    --fb-ink-2: #52514e;
+    --fb-ink-3: #898781;
+    --fb-border: rgba(11, 11, 11, 0.10);
+    --grid: #e1e0d9;
+    --axis: #c3c2b7;
+    --series-1: #2a78d6;
+    --series-2: #eb6834;
+    --series-3: #1baf7a;
+    --series-4: #eda100;
+    --series-5: #e87ba4;
+    --series-6: #008300;
+    --series-7: #6250d6;
+    --series-8: #e34948;
+    --warn-bg: #fff4d6;
+    --warn-ink: #6b4a00;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:where(:not([data-theme="light"])) {
+      color-scheme: dark;
+      --fb-surface: #1a1a19;
+      --fb-ink-1: #f0efec;
+      --fb-ink-2: #c3c2b7;
+      --fb-ink-3: #898781;
+      --fb-border: rgba(255, 255, 255, 0.10);
+      --grid: #2c2c2a;
+      --axis: #383835;
+      --series-1: #3987e5;
+      --series-2: #d95926;
+      --series-3: #199e70;
+      --series-4: #c98500;
+      --series-5: #d55181;
+      --series-6: #0ca30c;
+      --series-7: #9085e9;
+      --series-8: #e66767;
+      --warn-bg: #3a2e10;
+      --warn-ink: #f5d68a;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --fb-surface: #1a1a19;
+    --fb-ink-1: #f0efec;
+    --fb-ink-2: #c3c2b7;
+    --fb-ink-3: #898781;
+    --fb-border: rgba(255, 255, 255, 0.10);
+    --grid: #2c2c2a;
+    --axis: #383835;
+    --series-1: #3987e5;
+    --series-2: #d95926;
+    --series-3: #199e70;
+    --series-4: #c98500;
+    --series-5: #d55181;
+    --series-6: #0ca30c;
+    --series-7: #9085e9;
+    --series-8: #e66767;
+    --warn-bg: #3a2e10;
+    --warn-ink: #f5d68a;
+  }
+  :root {
+    --surface: var(--color-background-primary, var(--fb-surface));
+    --ink-1: var(--color-text-primary, var(--fb-ink-1));
+    --ink-2: var(--color-text-secondary, var(--fb-ink-2));
+    --ink-3: var(--color-text-tertiary, var(--fb-ink-3));
+    --border: var(--color-border-primary, var(--fb-border));
+    --sans: var(--font-sans, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--surface);
+    color: var(--ink-1);
+    font: 14px/1.4 var(--sans);
+    -webkit-font-smoothing: antialiased;
+  }
+  main { padding: 16px; max-width: 100%; }
+  .eyebrow {
+    margin: 0 0 2px;
+    color: var(--ink-3);
+    font-size: 12px;
+    letter-spacing: 0.02em;
+  }
+  h1 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.3;
+    overflow-wrap: anywhere;
+  }
+  .headline { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-top: 8px; }
+  .headline-value {
+    font-size: 28px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+  }
+  .headline-meta { color: var(--ink-2); font-size: 13px; font-variant-numeric: tabular-nums; }
+  .notices { display: grid; gap: 6px; margin-top: 10px; }
+  .notice {
+    margin: 0;
+    padding: 6px 10px;
+    border-radius: 6px;
+    background: var(--warn-bg);
+    color: var(--warn-ink);
+    font-size: 12px;
+  }
+  .notice.info { background: transparent; color: var(--ink-2); padding: 0; }
+  .panel { margin-top: 14px; }
+  .panel-unit { margin: 0 0 4px; color: var(--ink-2); font-size: 12px; }
+  .chart { position: relative; width: 100%; }
+  svg { display: block; overflow: visible; }
+  svg text { fill: var(--ink-3); font: 11px var(--sans); font-variant-numeric: tabular-nums; }
+  .grid line { stroke: var(--grid); stroke-width: 1; shape-rendering: crispEdges; }
+  .baseline { stroke: var(--axis); stroke-width: 1; shape-rendering: crispEdges; }
+  .zero { stroke: var(--ink-3); stroke-width: 1; shape-rendering: crispEdges; }
+  .series-line { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+  .break-rule { stroke: var(--ink-3); stroke-width: 1; stroke-dasharray: 3 3; }
+  .crosshair { stroke: var(--ink-3); stroke-width: 1; shape-rendering: crispEdges; }
+  .dot { stroke: var(--surface); stroke-width: 2; }
+  .hit { fill: transparent; cursor: crosshair; outline: none; }
+  .hit:focus-visible { stroke: var(--ink-3); stroke-dasharray: 2 2; }
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 16px;
+    margin: 8px 0 0;
+    padding: 0;
+    list-style: none;
+    font-size: 12px;
+    color: var(--ink-2);
+  }
+  .legend li { display: flex; align-items: center; gap: 6px; min-width: 0; max-width: 100%; }
+  .legend span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .key { flex: none; width: 14px; height: 2px; border-radius: 1px; }
+  .tooltip {
+    position: fixed;
+    z-index: 10;
+    pointer-events: none;
+    min-width: 140px;
+    max-width: min(320px, calc(100vw - 16px));
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+    font-size: 12px;
+  }
+  .tooltip[hidden] { display: none; }
+  .tt-date { color: var(--ink-2); margin-bottom: 4px; }
+  .tt-row { display: grid; grid-template-columns: 12px auto 1fr; align-items: center; gap: 6px; }
+  .tt-value { color: var(--ink-1); font-weight: 600; font-variant-numeric: tabular-nums; }
+  .tt-label { color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .tt-break { margin-top: 4px; color: var(--ink-2); }
+  details { margin-top: 14px; }
+  summary { cursor: pointer; color: var(--ink-2); font-size: 12px; }
+  .table-wrap { margin-top: 8px; max-height: 280px; overflow: auto; border: 1px solid var(--border); border-radius: 6px; }
+  table { border-collapse: collapse; width: 100%; font-size: 12px; font-variant-numeric: tabular-nums; }
+  th, td { padding: 4px 8px; text-align: right; white-space: nowrap; border-bottom: 1px solid var(--border); }
+  th:first-child, td:first-child { text-align: left; }
+  th { position: sticky; top: 0; background: var(--surface); color: var(--ink-2); font-weight: 600; }
+  footer { margin-top: 12px; color: var(--ink-3); font-size: 11px; }
+  footer a { color: inherit; }
+  .status { color: var(--ink-2); margin: 0; }
+  @media (forced-colors: active) {
+    .series-line { stroke: CanvasText; }
+  }
+</style>
+</head>
+<body>
+<main id="app" aria-live="polite">
+  <p class="status" id="status">Waiting for data…</p>
+</main>
+<div class="tooltip" id="tooltip" role="status" hidden></div>
+<script>
+(() => {
+  "use strict";
+
+  const PROTOCOL_VERSION = "2026-01-26";
+  const MAX_SERIES = 8;
+  const MAX_TABLE_ROWS = 400;
+  const SVG_NS = "http://www.w3.org/2000/svg";
+  const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+  const app = document.getElementById("app");
+  const tooltip = document.getElementById("tooltip");
+
+  let nextId = 1;
+  const pending = new Map();
+  let payload = null;
+  let lastWidth = 0;
+  let tableOpen = false;
+
+  // ---------------------------------------------------------------- transport
+
+  function post(message) {
+    window.parent.postMessage(Object.assign({ jsonrpc: "2.0" }, message), "*");
+  }
+
+  function request(method, params) {
+    const id = nextId++;
+    post({ id, method, params });
+    return new Promise((resolve, reject) => pending.set(id, { resolve, reject }));
+  }
+
+  function notify(method, params) {
+    post({ method, params: params || {} });
+  }
+
+  window.addEventListener("message", (event) => {
+    if (event.source !== window.parent) return;
+    const msg = event.data;
+    if (!msg || msg.jsonrpc !== "2.0") return;
+
+    if (msg.id !== undefined && msg.method === undefined) {
+      const waiter = pending.get(msg.id);
+      if (!waiter) return;
+      pending.delete(msg.id);
+      if (msg.error) waiter.reject(msg.error);
+      else waiter.resolve(msg.result);
+      return;
+    }
+
+    switch (msg.method) {
+      case "ui/notifications/tool-input":
+        onToolInput((msg.params && msg.params.arguments) || {});
+        break;
+      case "ui/notifications/tool-result":
+        onToolResult(msg.params || {});
+        break;
+      case "ui/notifications/tool-cancelled":
+        setStatus("The request was cancelled.");
+        break;
+      case "ui/notifications/host-context-changed":
+        applyHostContext(msg.params || {});
+        break;
+      case "ui/resource-teardown":
+      case "ping":
+        if (msg.id !== undefined) post({ id: msg.id, result: {} });
+        break;
+      default:
+        if (msg.id !== undefined) {
+          post({ id: msg.id, error: { code: -32601, message: "Method not found" } });
+        }
+    }
+  });
+
+  // ------------------------------------------------------------- host context
+
+  function applyHostContext(ctx) {
+    if (ctx.theme === "light" || ctx.theme === "dark") {
+      document.documentElement.setAttribute("data-theme", ctx.theme);
+    }
+    const vars = ctx.styles && ctx.styles.variables;
+    if (vars && typeof vars === "object") {
+      for (const [key, value] of Object.entries(vars)) {
+        if (key.startsWith("--") && typeof value === "string" && value) {
+          document.documentElement.style.setProperty(key, value);
+        }
+      }
+    }
+    if (payload) render();
+  }
+
+  // -------------------------------------------------------------- tool events
+
+  function onToolInput(args) {
+    if (payload) return;
+    const what = args.concept ? `“${String(args.concept)}”` : "series";
+    setStatus(`Fetching ${what}…`);
+  }
+
+  function onToolResult(result) {
+    if (result.isError) {
+      const text = textContent(result) || "The tool returned an error.";
+      setStatus(text);
+      return;
+    }
+    const data = extractPayload(result);
+    if (!data) {
+      setStatus("No chartable observations in this result.");
+      return;
+    }
+    payload = data;
+    render();
+  }
+
+  function textContent(result) {
+    const parts = (result.content || []).filter((c) => c && c.type === "text").map((c) => c.text);
+    return parts.join("\n").trim();
+  }
+
+  function extractPayload(result) {
+    const sc = result.structuredContent;
+    if (sc && Array.isArray(sc.observations)) return sc;
+    for (const item of result.content || []) {
+      if (!item || item.type !== "text") continue;
+      try {
+        const parsed = JSON.parse(item.text);
+        if (parsed && Array.isArray(parsed.observations)) return parsed;
+      } catch (_) {
+        /* not JSON */
+      }
+    }
+    return null;
+  }
+
+  // ------------------------------------------------------------------ helpers
+
+  function el(tag, className, text) {
+    const node = document.createElement(tag);
+    if (className) node.className = className;
+    if (text !== undefined && text !== null) node.textContent = String(text);
+    return node;
+  }
+
+  function svg(tag, attrs) {
+    const node = document.createElementNS(SVG_NS, tag);
+    for (const [k, v] of Object.entries(attrs || {})) node.setAttribute(k, String(v));
+    return node;
+  }
+
+  function setStatus(text) {
+    app.replaceChildren(el("p", "status", text));
+    reportSize();
+  }
+
+  function parsePeriod(raw) {
+    const s = String(raw);
+    let m;
+    if ((m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s))) return Date.UTC(+m[1], +m[2] - 1, +m[3]);
+    if ((m = /^(\d{4})-Q([1-4])$/.exec(s))) return Date.UTC(+m[1], (+m[2] - 1) * 3, 1);
+    if ((m = /^(\d{4})-S([12])$/.exec(s))) return Date.UTC(+m[1], (+m[2] - 1) * 6, 1);
+    if ((m = /^(\d{4})-(\d{2})$/.exec(s))) return Date.UTC(+m[1], +m[2] - 1, 1);
+    if ((m = /^(\d{4})$/.exec(s))) return Date.UTC(+m[1], 0, 1);
+    return null;
+  }
+
+  function formatPeriod(raw) {
+    const s = String(raw);
+    let m;
+    if ((m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s))) return `${+m[3]} ${MONTHS[+m[2] - 1]} ${m[1]}`;
+    if ((m = /^(\d{4})-Q([1-4])$/.exec(s))) return `Q${m[2]} ${m[1]}`;
+    if ((m = /^(\d{4})-S([12])$/.exec(s))) return `H${m[2]} ${m[1]}`;
+    if ((m = /^(\d{4})-(\d{2})$/.exec(s))) return `${MONTHS[+m[2] - 1]} ${m[1]}`;
+    return s;
+  }
+
+  // "Per cent", "Per cent per annum" -> %; "percentage points" -> pp; anything else has no suffix.
+  function unitSuffix(unit) {
+    const u = String(unit || "").trim();
+    if (/^percentage points?\b/i.test(u)) return " pp";
+    if (/^(per ?cent|%)/i.test(u)) return "%";
+    return "";
+  }
+
+  const MULTIPLIER_WORDS = { 3: "thousands", 6: "millions", 9: "billions" };
+
+  function unitLabel(desc) {
+    const unit = (desc.unit || "").trim();
+    const mult = MULTIPLIER_WORDS[desc.unit_multiplier];
+    if (!unit && !mult) return "";
+    if (mult) return unit ? `${unit} (${mult})` : mult;
+    return unit;
+  }
+
+  function decimalsFor(values, desc) {
+    if (Number.isInteger(desc && desc.decimals) && desc.decimals >= 0 && desc.decimals <= 6) {
+      return desc.decimals;
+    }
+    const max = Math.max(...values.map((v) => Math.abs(v)));
+    if (max >= 1000) return 0;
+    if (max >= 10) return 1;
+    return 2;
+  }
+
+  function formatValue(value, decimals, unit) {
+    if (value === null || value === undefined || !Number.isFinite(value)) return "—";
+    const text = value.toLocaleString(undefined, {
+      minimumFractionDigits: decimals,
+      maximumFractionDigits: decimals,
+    });
+    return text + unitSuffix(unit);
+  }
+
+  function niceStep(span, targetTicks) {
+    const raw = span / Math.max(targetTicks, 1);
+    const pow = Math.pow(10, Math.floor(Math.log10(raw)));
+    const unit = raw / pow;
+    const nice = unit <= 1 ? 1 : unit <= 2 ? 2 : unit <= 2.5 ? 2.5 : unit <= 5 ? 5 : 10;
+    return nice * pow;
+  }
+
+  function yScaleDomain(min, max, targetTicks) {
+    if (min === max) {
+      const pad = Math.abs(min) * 0.05 || 1;
+      min -= pad;
+      max += pad;
+    }
+    const step = niceStep(max - min, targetTicks);
+    const lo = Math.floor(min / step) * step;
+    const hi = Math.ceil(max / step) * step;
+    const ticks = [];
+    for (let v = lo; v <= hi + step / 2; v += step) ticks.push(+v.toPrecision(12));
+    return { lo, hi, ticks, step };
+  }
+
+  function timeTicks(t0, t1, maxTicks) {
+    const year = (t) => new Date(t).getUTCFullYear();
+    const spanYears = (t1 - t0) / (365.25 * 864e5);
+    if (spanYears >= 2) {
+      const steps = [1, 2, 5, 10, 20, 25, 50, 100];
+      const step = steps.find((s) => spanYears / s <= maxTicks) || 100;
+      const ticks = [];
+      for (let y = Math.ceil(year(t0) / step) * step; y <= year(t1); y += step) {
+        const t = Date.UTC(y, 0, 1);
+        if (t >= t0 && t <= t1) ticks.push({ t, label: String(y) });
+      }
+      return ticks;
+    }
+    const months = Math.max(1, Math.round(spanYears * 12));
+    const step = [1, 2, 3, 6].find((s) => months / s <= maxTicks) || 12;
+    const start = new Date(t0);
+    let y = start.getUTCFullYear();
+    let m = Math.ceil(start.getUTCMonth() / step) * step;
+    const ticks = [];
+    for (;;) {
+      while (m >= 12) { m -= 12; y += 1; }
+      const t = Date.UTC(y, m, 1);
+      if (t > t1) break;
+      if (t >= t0) ticks.push({ t, label: `${MONTHS[m]} ${String(y).slice(2)}` });
+      m += step;
+    }
+    return ticks;
+  }
+
+  // ------------------------------------------------------------------- model
+
+  function buildModel(data) {
+    const descriptors = new Map();
+    (data.series || []).forEach((d) => descriptors.set(d.series_id, d));
+
+    const bySeries = new Map();
+    for (const obs of data.observations) {
+      const t = parsePeriod(obs.date);
+      if (t === null) continue;
+      if (!bySeries.has(obs.series_id)) bySeries.set(obs.series_id, []);
+      const value = typeof obs.value === "number" && Number.isFinite(obs.value) ? obs.value : null;
+      bySeries.get(obs.series_id).push({ t, date: obs.date, value });
+    }
+
+    // Stable order: the payload's series list first, then anything only seen in observations.
+    const order = [...descriptors.keys()].filter((id) => bySeries.has(id));
+    for (const id of bySeries.keys()) if (!order.includes(id)) order.push(id);
+
+    const all = [];
+    for (const id of order) {
+      const points = bySeries.get(id).sort((a, b) => a.t - b.t);
+      const numeric = points.filter((p) => p.value !== null);
+      if (!numeric.length) continue;
+      const desc = descriptors.get(id) || { series_id: id, label: id };
+      all.push({
+        id,
+        label: desc.label || id,
+        desc,
+        unit: unitLabel(desc),
+        points,
+        decimals: decimalsFor(numeric.map((p) => p.value), desc),
+        // Event-driven series (e.g. policy rates "as announced") hold their value until the next change.
+        step: /announc|event|irregular/i.test(String(desc.frequency || "")),
+      });
+    }
+
+    const plotted = all.slice(0, MAX_SERIES);
+    plotted.forEach((s, i) => { s.color = `var(--series-${i + 1})`; });
+
+    // One y-axis per chart: series with different units get their own panel.
+    const panels = [];
+    const panelByUnit = new Map();
+    for (const s of plotted) {
+      if (!panelByUnit.has(s.unit)) {
+        const panel = { unit: s.unit, series: [] };
+        panelByUnit.set(s.unit, panel);
+        panels.push(panel);
+      }
+      panelByUnit.get(s.unit).series.push(s);
+    }
+
+    let t0 = Infinity;
+    let t1 = -Infinity;
+    for (const s of plotted) {
+      t0 = Math.min(t0, s.points[0].t);
+      t1 = Math.max(t1, s.points[s.points.length - 1].t);
+    }
+    const retrieved = Date.parse((data.metadata || {}).retrieved_at || "");
+    if (plotted.some((s) => s.step) && Number.isFinite(retrieved) && retrieved > t1) t1 = retrieved;
+    return { all, plotted, panels, t0, t1, hidden: all.length - plotted.length };
+  }
+
+  // ------------------------------------------------------------------ render
+
+  function render() {
+    const data = payload;
+    const meta = data.metadata || {};
+    const model = buildModel(data);
+
+    const frag = document.createDocumentFragment();
+    const header = el("header");
+    const semantic = meta.semantic || {};
+    const derived = meta.derived || {};
+    const single = model.plotted.length === 1 ? model.plotted[0] : null;
+    const datasetTitle = meta.title || derived.description || semantic.concept || derived.concept;
+    const eyebrowParts = [
+      String(meta.source || "").toUpperCase(),
+      single ? datasetTitle || meta.dataset_id : meta.dataset_id,
+      meta.frequency || semantic.frequency || (single && single.desc.frequency),
+    ].filter(Boolean);
+    header.append(el("p", "eyebrow", eyebrowParts.join(" · ")));
+    header.append(el("h1", null, single ? single.label : datasetTitle || "Series"));
+
+    if (model.plotted.length === 1) {
+      const s = model.plotted[0];
+      const numeric = s.points.filter((p) => p.value !== null);
+      const last = numeric[numeric.length - 1];
+      const prev = numeric[numeric.length - 2];
+      const headline = el("div", "headline");
+      headline.append(el("span", "headline-value", formatValue(last.value, s.decimals, s.unit)));
+      let metaText = formatPeriod(last.date);
+      if (prev) {
+        const delta = last.value - prev.value;
+        const sign = delta > 0 ? "+" : delta < 0 ? "−" : "±";
+        const pointsChange = unitSuffix(s.unit) === "%";
+        const deltaText = formatValue(Math.abs(delta), s.decimals, pointsChange ? "" : s.unit);
+        metaText += ` · ${sign}${deltaText}${pointsChange ? " pts" : ""} vs ${formatPeriod(prev.date)}`;
+      }
+      headline.append(el("span", "headline-meta", metaText));
+      header.append(headline);
+    }
+    frag.append(header);
+
+    const notices = el("div", "notices");
+    if (meta.stale) {
+      notices.append(el("p", "notice", "Served from cache — the upstream source was unavailable."));
+    }
+    for (const warning of meta.warnings || []) notices.append(el("p", "notice", warning));
+    if (meta.truncated && meta.observations_dropped) {
+      notices.append(el("p", "notice info",
+        `Showing the most recent observations; ${meta.observations_dropped.toLocaleString()} earlier observations were not returned.`));
+    }
+    if (model.hidden > 0) {
+      notices.append(el("p", "notice info",
+        `Charting the first ${MAX_SERIES} of ${model.all.length} series; all are in the data table.`));
+    }
+    if (notices.childElementCount) frag.append(notices);
+
+    if (!model.plotted.length) {
+      frag.append(el("p", "status", "No numeric observations to chart."));
+      app.replaceChildren(frag);
+      reportSize();
+      return;
+    }
+
+    const width = Math.max(app.clientWidth - 32, 240);
+    lastWidth = app.clientWidth;
+    const panelHeight = model.panels.length > 1 ? 200 : 260;
+    for (const panel of model.panels) {
+      frag.append(renderPanel(panel, model, meta, width, panelHeight));
+    }
+
+    frag.append(renderTable(model));
+    frag.append(renderFooter(meta));
+    app.replaceChildren(frag);
+    reportSize();
+  }
+
+  function renderPanel(panel, model, meta, width, height) {
+    const wrap = el("section", "panel");
+    if (panel.unit || model.panels.length > 1) {
+      wrap.append(el("p", "panel-unit", panel.unit || "No unit"));
+    }
+
+    let min = Infinity;
+    let max = -Infinity;
+    for (const s of panel.series) {
+      for (const p of s.points) {
+        if (p.value === null) continue;
+        if (p.value < min) min = p.value;
+        if (p.value > max) max = p.value;
+      }
+    }
+    const y = yScaleDomain(min, max, height > 220 ? 5 : 4);
+    const decimals = Math.max(0, Math.min(6, -Math.floor(Math.log10(y.step) + 1e-9)));
+    const tickText = (v) => formatValue(v, decimals, panel.series[0].unit);
+    const longest = Math.max(...y.ticks.map((v) => tickText(v).length));
+    const margin = { top: 10, right: 12, bottom: 24, left: Math.min(72, 10 + longest * 6.6) };
+    const plotW = Math.max(width - margin.left - margin.right, 80);
+    const plotH = height - margin.top - margin.bottom;
+
+    const span = Math.max(model.t1 - model.t0, 1);
+    const xOf = (t) => margin.left + ((t - model.t0) / span) * plotW;
+    const yOf = (v) => margin.top + (1 - (v - y.lo) / (y.hi - y.lo)) * plotH;
+
+    const root = svg("svg", {
+      width,
+      height,
+      viewBox: `0 0 ${width} ${height}`,
+      role: "img",
+      "aria-label": panel.series.map((s) => s.label).join("; "),
+    });
+
+    const grid = svg("g", { class: "grid" });
+    for (const v of y.ticks) {
+      const py = Math.round(yOf(v)) + 0.5;
+      grid.append(svg("line", { x1: margin.left, x2: margin.left + plotW, y1: py, y2: py }));
+      const label = svg("text", { x: margin.left - 8, y: py, "text-anchor": "end", "dominant-baseline": "middle" });
+      label.textContent = tickText(v);
+      root.append(label);
+    }
+    root.append(grid);
+    if (y.lo < 0 && y.hi > 0) {
+      const pz = Math.round(yOf(0)) + 0.5;
+      root.append(svg("line", { class: "zero", x1: margin.left, x2: margin.left + plotW, y1: pz, y2: pz }));
+    }
+    const pb = Math.round(margin.top + plotH) + 0.5;
+    root.append(svg("line", { class: "baseline", x1: margin.left, x2: margin.left + plotW, y1: pb, y2: pb }));
+
+    for (const tick of timeTicks(model.t0, model.t1, Math.max(2, Math.floor(plotW / 70)))) {
+      const label = svg("text", { x: xOf(tick.t), y: height - 6, "text-anchor": "middle" });
+      label.textContent = tick.label;
+      root.append(label);
+    }
+
+    const breaks = (meta.framework_breaks || [])
+      .map((b) => ({ ...b, t: parsePeriod(String(b.date).slice(0, 10)) }))
+      .filter((b) => b.t !== null && b.t >= model.t0 && b.t <= model.t1);
+    for (const b of breaks) {
+      const bx = xOf(b.t);
+      root.append(svg("line", { class: "break-rule", x1: bx, x2: bx, y1: margin.top, y2: margin.top + plotH }));
+    }
+
+    for (const s of panel.series) {
+      let d = "";
+      let penDown = false;
+      const singles = [];
+      s.points.forEach((p, i) => {
+        if (p.value === null) { penDown = false; return; }
+        const px = xOf(p.t).toFixed(1);
+        const py = yOf(p.value).toFixed(1);
+        const prevNull = i === 0 || s.points[i - 1].value === null;
+        const nextNull = i === s.points.length - 1 || s.points[i + 1].value === null;
+        if (prevNull && nextNull && !s.step) singles.push(p);
+        if (!penDown) d += `M${px} ${py}`;
+        else if (s.step) d += `H${px}V${py}`;
+        else d += `L${px} ${py}`;
+        penDown = true;
+      });
+      const lastPoint = s.points[s.points.length - 1];
+      if (s.step && lastPoint.value !== null) d += `H${xOf(model.t1).toFixed(1)}`;
+      root.append(svg("path", { class: "series-line", d, stroke: s.color }));
+      for (const p of singles) {
+        root.append(svg("circle", { class: "dot", cx: xOf(p.t), cy: yOf(p.value), r: 4, fill: s.color }));
+      }
+    }
+
+    // Hover layer: crosshair snaps to the nearest observation date across this panel.
+    const times = [...new Set(panel.series.flatMap((s) => s.points.map((p) => p.t)))].sort((a, b) => a - b);
+    const lookup = panel.series.map((s) => new Map(s.points.map((p) => [p.t, p])));
+    const hover = svg("g", { visibility: "hidden" });
+    const cross = svg("line", { class: "crosshair", y1: margin.top, y2: margin.top + plotH });
+    hover.append(cross);
+    const dots = panel.series.map((s) => {
+      const c = svg("circle", { class: "dot", r: 4, fill: s.color });
+      hover.append(c);
+      return c;
+    });
+    root.append(hover);
+
+    const hit = svg("rect", {
+      class: "hit",
+      x: margin.left,
+      y: margin.top,
+      width: plotW,
+      height: plotH,
+      tabindex: 0,
+      "aria-label": "Chart values. Use left and right arrow keys to move between dates.",
+    });
+    root.append(hit);
+
+    let index = -1;
+    const nearest = (t) => {
+      let lo = 0;
+      let hi = times.length - 1;
+      while (lo < hi) {
+        const mid = (lo + hi) >> 1;
+        if (times[mid] < t) lo = mid + 1;
+        else hi = mid;
+      }
+      if (lo > 0 && Math.abs(times[lo - 1] - t) <= Math.abs(times[lo] - t)) lo -= 1;
+      return lo;
+    };
+    const show = (i, anchor) => {
+      index = i;
+      const t = times[i];
+      const cx = xOf(t);
+      cross.setAttribute("x1", cx);
+      cross.setAttribute("x2", cx);
+      const rows = [];
+      let dateRaw = null;
+      panel.series.forEach((s, k) => {
+        const p = lookup[k].get(t);
+        if (p && p.value !== null) {
+          dots[k].setAttribute("cx", cx);
+          dots[k].setAttribute("cy", yOf(p.value));
+          dots[k].setAttribute("visibility", "visible");
+        } else {
+          dots[k].setAttribute("visibility", "hidden");
+        }
+        if (p && !dateRaw) dateRaw = p.date;
+        rows.push({ s, value: p ? p.value : null });
+      });
+      hover.setAttribute("visibility", "visible");
+      fillTooltip(formatPeriod(dateRaw), rows, breaks.filter((b) => Math.abs(xOf(b.t) - cx) < 6));
+      const box = root.getBoundingClientRect();
+      placeTooltip(anchor ? anchor.x : box.left + cx, anchor ? anchor.y : box.top + margin.top);
+    };
+    const hide = () => {
+      index = -1;
+      hover.setAttribute("visibility", "hidden");
+      tooltip.hidden = true;
+    };
+    hit.addEventListener("pointermove", (e) => {
+      const box = root.getBoundingClientRect();
+      const t = model.t0 + ((e.clientX - box.left - margin.left) / plotW) * span;
+      show(nearest(t), { x: e.clientX, y: e.clientY });
+    });
+    hit.addEventListener("pointerleave", hide);
+    hit.addEventListener("blur", hide);
+    hit.addEventListener("focus", () => show(times.length - 1));
+    hit.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+        e.preventDefault();
+        const step = e.key === "ArrowLeft" ? -1 : 1;
+        const start = index < 0 ? times.length - 1 : index;
+        show(Math.max(0, Math.min(times.length - 1, start + step)));
+      } else if (e.key === "Escape") {
+        hide();
+      }
+    });
+
+    const chart = el("div", "chart");
+    chart.append(root);
+    wrap.append(chart);
+
+    if (model.plotted.length > 1) {
+      const legend = el("ul", "legend");
+      for (const s of panel.series) {
+        const item = el("li");
+        item.title = s.label;
+        const key = el("span", "key");
+        key.style.background = s.color;
+        item.append(key, el("span", null, s.label));
+        legend.append(item);
+      }
+      wrap.append(legend);
+    }
+    return wrap;
+  }
+
+  function fillTooltip(dateText, rows, breaks) {
+    const children = [el("div", "tt-date", dateText)];
+    for (const { s, value } of rows) {
+      const row = el("div", "tt-row");
+      const key = el("span", "key");
+      key.style.background = s.color;
+      row.append(key, el("span", "tt-value", formatValue(value, s.decimals, s.unit)));
+      row.append(el("span", "tt-label", rows.length > 1 ? s.label : ""));
+      children.push(row);
+    }
+    for (const b of breaks) children.push(el("div", "tt-break", `Series break: ${b.label}`));
+    tooltip.replaceChildren(...children);
+    tooltip.hidden = false;
+  }
+
+  function placeTooltip(x, y) {
+    const pad = 12;
+    const rect = tooltip.getBoundingClientRect();
+    let left = x + pad;
+    if (left + rect.width > window.innerWidth - 8) left = x - pad - rect.width;
+    let top = y - rect.height - pad;
+    if (top < 8) top = y + pad;
+    tooltip.style.left = `${Math.max(8, left)}px`;
+    tooltip.style.top = `${Math.max(8, top)}px`;
+  }
+
+  function renderTable(model) {
+    const details = el("details");
+    details.append(el("summary", null, "Data table"));
+    const wrap = el("div", "table-wrap");
+    const table = el("table");
+    const head = el("tr");
+    head.append(el("th", null, "Date"));
+    for (const s of model.all) {
+      const th = el("th", null, s.label);
+      th.title = s.label;
+      head.append(th);
+    }
+    const thead = el("thead");
+    thead.append(head);
+
+    const dates = new Map();
+    model.all.forEach((s, k) => {
+      for (const p of s.points) {
+        if (!dates.has(p.t)) dates.set(p.t, { date: p.date, values: new Array(model.all.length).fill(null) });
+        dates.get(p.t).values[k] = p.value;
+      }
+    });
+    const rows = [...dates.entries()].sort((a, b) => b[0] - a[0]).slice(0, MAX_TABLE_ROWS);
+    const tbody = el("tbody");
+    for (const [, row] of rows) {
+      const tr = el("tr");
+      tr.append(el("td", null, formatPeriod(row.date)));
+      row.values.forEach((v, k) => tr.append(el("td", null, formatValue(v, model.all[k].decimals, model.all[k].unit))));
+      tbody.append(tr);
+    }
+    table.append(thead, tbody);
+    wrap.append(table);
+    details.append(wrap);
+    if (dates.size > MAX_TABLE_ROWS) {
+      details.append(el("p", "notice info", `Showing the latest ${MAX_TABLE_ROWS} of ${dates.size} dates.`));
+    }
+    // Re-renders (e.g. on resize) rebuild the table, so carry the reader's open/closed choice over.
+    details.open = tableOpen;
+    details.addEventListener("toggle", () => {
+      tableOpen = details.open;
+      reportSize();
+    });
+    return details;
+  }
+
+  function renderFooter(meta) {
+    const footer = el("footer");
+    const parts = [];
+    if (meta.publication_date) parts.push(`Published ${formatPeriod(meta.publication_date)}`);
+    if (meta.retrieved_at) {
+      const d = new Date(meta.retrieved_at);
+      if (!Number.isNaN(d.getTime())) parts.push(`Retrieved ${d.toLocaleString()}`);
+    }
+    footer.append(document.createTextNode(parts.join(" · ")));
+    if (meta.retrieval_url && /^https:\/\//.test(meta.retrieval_url)) {
+      if (parts.length) footer.append(document.createTextNode(" · "));
+      const link = el("a", null, "Source");
+      link.href = meta.retrieval_url;
+      link.rel = "noopener noreferrer";
+      link.addEventListener("click", (e) => {
+        e.preventDefault();
+        request("ui/open-link", { url: meta.retrieval_url }).catch(() => {});
+      });
+      footer.append(link);
+    }
+    return footer;
+  }
+
+  // -------------------------------------------------------------- sizing
+
+  function reportSize() {
+    const height = Math.ceil(document.documentElement.scrollHeight);
+    const width = Math.ceil(document.documentElement.scrollWidth);
+    notify("ui/notifications/size-changed", { width, height });
+  }
+
+  let resizeFrame = 0;
+  new ResizeObserver(() => {
+    cancelAnimationFrame(resizeFrame);
+    resizeFrame = requestAnimationFrame(() => {
+      if (payload && Math.abs(app.clientWidth - lastWidth) > 1) render();
+      else reportSize();
+    });
+  }).observe(document.body);
+
+  // ---------------------------------------------------------- handshake
+
+  request("ui/initialize", {
+    appInfo: { name: "ausecon-series-chart", version: "1.0.0" },
+    appCapabilities: { availableDisplayModes: ["inline"] },
+    protocolVersion: PROTOCOL_VERSION,
+  })
+    .then((result) => {
+      applyHostContext((result && result.hostContext) || {});
+      notify("ui/notifications/initialized");
+      reportSize();
+    })
+    .catch(() => setStatus("This view needs an MCP Apps host to display data."));
+})();
+</script>
+</body>
+</html>

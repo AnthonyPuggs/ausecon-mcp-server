@@ -522,7 +522,11 @@ def test_http_app_exposes_smithery_static_server_card() -> None:
             assert schema.get("description"), f"{name}.{parameter} missing description"
 
     resource_uris = {resource["uri"] for resource in payload["resources"]}
-    assert resource_uris == {"ausecon://catalogue", "ausecon://concepts"}
+    assert resource_uris == {
+        "ausecon://catalogue",
+        "ausecon://concepts",
+        "ui://ausecon/series-chart.html",
+    }
     template_uris = {template["uriTemplate"] for template in payload["resourceTemplates"]}
     assert template_uris == {
         "ausecon://abs/{dataflow_id}",
@@ -532,7 +536,12 @@ def test_http_app_exposes_smithery_static_server_card() -> None:
     for entry in payload["resources"] + payload["resourceTemplates"]:
         assert entry["name"], f"{entry} missing name"
         assert entry["description"], f"{entry['name']} missing description"
-        assert entry["mimeType"] == "application/json"
+        expected_mime = (
+            "text/html;profile=mcp-app"
+            if entry.get("uri", "").startswith("ui://")
+            else "application/json"
+        )
+        assert entry["mimeType"] == expected_mime
         assert entry["annotations"]["readOnlyHint"] is True
 
     prompts = {prompt["name"]: prompt for prompt in payload["prompts"]}
