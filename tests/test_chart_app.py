@@ -496,3 +496,316 @@ def test_an_end_bound_stops_the_step_line_at_the_window_end() -> None:
 
     # Not carried on to the 2026 retrieval date: the rate changed after the window.
     assert model["t1"] == 1577750400000  # 2019-12-31
+
+
+class _RecordingService(_FakeService):
+    def __init__(self, payload: dict | None = None) -> None:
+        super().__init__(payload)
+        self.calls: list[tuple[str, dict]] = []
+
+    async def get_economic_series(self, **kwargs: object) -> dict:
+        self.calls.append(("single", kwargs))
+        return await self._respond()
+
+    async def get_economic_series_many(self, concepts: list[str], **kwargs: object) -> dict:
+        self.calls.append(("many", {"concepts": concepts, **kwargs}))
+        return await self._respond()
+
+
+async def test_economic_series_tool_accepts_a_list_of_concepts() -> None:
+    service = _RecordingService()
+
+    async with Client(build_server(service=service)) as client:
+        await client.call_tool(
+            "get_economic_series",
+            {"concept": ["unemployment_rate", "cash_rate_target"], "start": "2019"},
+        )
+
+    ((kind, kwargs),) = service.calls
+    assert kind == "many"
+    assert kwargs["concepts"] == ["unemployment_rate", "cash_rate_target"]
+    assert kwargs["start"] == "2019"
+
+
+async def test_economic_series_tool_reads_a_json_encoded_list() -> None:
+    # Some clients send an array argument as its JSON text.
+    service = _RecordingService()
+
+    async with Client(build_server(service=service)) as client:
+        await client.call_tool(
+            "get_economic_series", {"concept": '["unemployment_rate", "cash_rate_target"]'}
+        )
+
+    ((kind, kwargs),) = service.calls
+    assert kind == "many"
+    assert kwargs["concepts"] == ["unemployment_rate", "cash_rate_target"]
+
+
+async def test_economic_series_tool_still_takes_a_plain_concept() -> None:
+    service = _RecordingService()
+
+    async with Client(build_server(service=service)) as client:
+        await client.call_tool("get_economic_series", {"concept": "cash_rate_target"})
+
+    ((kind, kwargs),) = service.calls
+    assert kind == "single"
+    assert kwargs["concept"] == "cash_rate_target"
+
+
+async def test_economic_series_schema_allows_a_list() -> None:
+    async with Client(build_server()) as client:
+        tools = {tool.name: tool for tool in await client.list_tools()}
+
+    concept = tools["get_economic_series"].input_schema["properties"]["concept"]
+    variants = concept["anyOf"]
+    assert {"type": "string", "minLength": 1} in variants
+    (array,) = [v for v in variants if v.get("type") == "array"]
+    assert array["items"]["type"] == "string"
+    assert array["maxItems"] == 8
+    assert array["minItems"] == 1
+
+
+async def test_combined_results_over_eight_series_get_no_note() -> None:
+    mcp = build_server(service=_RecordingService(_payload(MAX_CHART_SERIES + 1)))
+
+    async with _ui_client(mcp) as client:
+        result = await client.call_tool(
+            "get_economic_series", {"concept": ["unemployment_rate", "cash_rate_target"]}
+        )
+
+    assert "chart_note" not in json.loads(_texts(result)[0])["metadata"]
+
+
+def _combined(
+    rba_unit: str = "Per cent", rba_frequency: str = "As announced", snapshot: bool = False
+) -> dict:
+    from ausecon_mcp.combine import merge_concept_payloads
+
+    abs_part = {
+        "metadata": {
+            "source": "abs",
+            "dataset_id": "LF",
+            "title": "Labour Force",
+            "frequency": "Monthly",
+            "semantic": {"concept": "unemployment_rate"},
+            "retrieval_url": "https://data.api.abs.gov.au/rest/data/LF/M13.3.1599.20.AUS.M",
+            "retrieved_at": "2026-11-19T01:00:00Z",
+            "server_version": "test",
+            "truncated": False,
+        },
+        "series": [
+            {
+                "series_id": "U",
+                "label": ABS_UNEMPLOYMENT_LABEL,
+                "unit": "Percent",
+                "frequency": "Monthly",
+                "dimensions": {},
+            }
+        ],
+        "observations": (
+            [{"date": "2026-09", "series_id": "U", "value": 4.7}]
+            if snapshot
+            else [
+                {"date": "2019-01", "series_id": "U", "value": 5.1},
+                {"date": "2019-02", "series_id": "U", "value": 5.0},
+            ]
+        ),
+    }
+    rba_metadata = {
+        "source": "rba",
+        "dataset_id": "a2",
+        "title": "A2 RESERVE BANK OF AUSTRALIA – CHANGES IN MONETARY POLICY AND ADMINISTERED RATES",
+        "publication_date": "03-Nov-2026",
+        "retrieval_url": "https://www.rba.gov.au/statistics/tables/csv/a2-data.csv",
+        "retrieved_at": "2026-11-19T00:30:00Z",
+        "semantic": {"concept": "cash_rate_target"},
+        "server_version": "test",
+        "truncated": False,
+    }
+    if not snapshot:
+        rba_metadata["date_window"] = {"start": "2019-01-01", "end": None, "carried_in": ["R"]}
+    rba_part = {
+        "metadata": rba_metadata,
+        "series": [
+            {
+                "series_id": "R",
+                "label": "New Cash Rate Target",
+                "unit": rba_unit,
+                "frequency": rba_frequency,
+                "dimensions": {},
+            }
+        ],
+        "observations": (
+            [{"date": "2026-11-04", "series_id": "R", "value": 4.85}]
+            if snapshot
+            else [
+                {"date": "2016-08-03", "series_id": "R", "value": 1.5},
+                {"date": "2019-06-05", "series_id": "R", "value": 1.25},
+            ]
+        ),
+    }
+    return merge_concept_payloads([("unemployment_rate", abs_part), ("cash_rate_target", rba_part)])
+
+
+def test_combined_result_shares_one_percent_axis() -> None:
+    assert _run_view(f"buildModel({json.dumps(_combined())}).panels.length") == 1
+
+
+def test_combined_result_starts_at_the_window_despite_a_carried_value() -> None:
+    assert _run_view(f"buildModel({json.dumps(_combined())}).t0") == 1546300800000
+
+
+def test_combined_header_names_both_sources_and_short_titles() -> None:
+    payload = json.dumps(_combined())
+    header = _run_view(f"headerText({payload}.metadata, buildModel({payload}).plotted)")
+
+    assert header == {
+        "eyebrow": "ABS · RBA",
+        "title": "Unemployment rate and Cash rate target",
+        "detail": "",
+    }
+
+
+def test_combined_legend_uses_short_titles() -> None:
+    payload = json.dumps(_combined())
+    labels = _run_view(f"displayLabels(buildModel({payload}).plotted, {payload}.metadata)")
+
+    assert labels == ["Unemployment rate", "Cash rate target"]
+
+
+def test_combined_footer_has_a_line_per_source() -> None:
+    lines = _run_view(f"footerLines({json.dumps(_combined())}.metadata)")
+
+    assert len(lines) == 2
+    assert lines[0]["text"].startswith("ABS Labour Force")
+    assert "A2 Reserve Bank of Australia" in lines[1]["text"]
+    assert "Published" in lines[1]["text"]
+    assert lines[0]["url"].startswith("https://data.api.abs.gov.au/")
+    assert lines[1]["url"] == "https://www.rba.gov.au/statistics/tables/csv/a2-data.csv"
+
+
+def test_single_source_footer_is_one_line_without_a_source_prefix() -> None:
+    payload = _policy_rate_result({"start": None, "end": None, "carried_in": []})
+    payload["metadata"]["retrieval_url"] = "https://www.rba.gov.au/x.csv"
+
+    lines = _run_view(f"footerLines({json.dumps(payload)}.metadata)")
+
+    assert len(lines) == 1
+    assert lines[0]["text"].startswith("Retrieved")
+    assert lines[0]["url"] == "https://www.rba.gov.au/x.csv"
+
+
+def test_mixed_units_get_stacked_panels() -> None:
+    payload = json.dumps(_combined(rba_unit="Number", rba_frequency="Monthly"))
+
+    assert _run_view(f"buildModel({payload}).panels.length") == 2
+
+
+def test_combined_snapshot_lists_both_values() -> None:
+    payload = json.dumps(_combined(snapshot=True))
+
+    assert _run_view(f"buildModel({payload}).snapshot") is True
+    assert _run_view(f"displayLabels(buildModel({payload}).plotted, {payload}.metadata)") == [
+        "Unemployment rate",
+        "Cash rate target",
+    ]
+
+
+def test_single_source_header_is_unchanged() -> None:
+    single = _combined()["metadata"]["components"][0]["metadata"]
+    payload = {
+        "metadata": single,
+        "series": [
+            {
+                "series_id": "U",
+                "label": ABS_UNEMPLOYMENT_LABEL,
+                "unit": "Percent",
+                "frequency": "Monthly",
+                "dimensions": {},
+            }
+        ],
+        "observations": [
+            {"date": "2019-01", "series_id": "U", "value": 5.1},
+            {"date": "2019-02", "series_id": "U", "value": 5.0},
+        ],
+    }
+    text = json.dumps(payload)
+
+    header = _run_view(f"headerText({text}.metadata, buildModel({text}).plotted)")
+
+    assert header == {
+        "eyebrow": "ABS · Labour Force · Monthly",
+        "title": "Unemployment rate",
+        "detail": "Persons · Total (age) · Seasonally Adjusted · Australia",
+    }
+
+
+def test_two_series_with_the_same_short_title_keep_their_full_labels() -> None:
+    model = "{plotted: [{label: 'Rate / Persons', desc: {}}, {label: 'Rate / Females', desc: {}}]}"
+
+    assert _run_view(f"displayLabels({model}.plotted)") == ["Rate / Persons", "Rate / Females"]
+
+
+def test_combined_labels_name_the_indicator_not_a_generic_measure() -> None:
+    # ABS CPI's measure is "Index numbers": a legend of "Index numbers" and "Unemployment rate"
+    # loses which indicator is which.
+    from ausecon_mcp.combine import merge_concept_payloads
+
+    combined = _combined()
+    unemployment = {
+        "metadata": combined["metadata"]["components"][0]["metadata"],
+        "series": [s for s in combined["series"] if s["series_id"] == "U"],
+        "observations": [o for o in combined["observations"] if o["series_id"] == "U"],
+    }
+    cpi = {
+        "metadata": {
+            "source": "abs",
+            "dataset_id": "CPI",
+            "title": "Consumer Price Index (CPI)",
+            "server_version": "test",
+            "truncated": False,
+            "semantic": {"concept": "headline_cpi"},
+        },
+        "series": [
+            {
+                "series_id": "C",
+                "label": "Index numbers / All groups CPI / Original / Australia / Quarterly",
+                "unit": "Index Numbers",
+                "frequency": "Quarterly",
+                "dimensions": {},
+            }
+        ],
+        "observations": [
+            {"date": "2019-Q1", "series_id": "C", "value": 114.1},
+            {"date": "2019-Q2", "series_id": "C", "value": 114.8},
+        ],
+    }
+    payload = json.dumps(
+        merge_concept_payloads([("headline_cpi", cpi), ("unemployment_rate", unemployment)])
+    )
+
+    assert _run_view(f"displayLabels(buildModel({payload}).plotted, {payload}.metadata)") == [
+        "Headline CPI",
+        "Unemployment rate",
+    ]
+    header = _run_view(f"headerText({payload}.metadata, buildModel({payload}).plotted)")
+    assert header["title"] == "Headline CPI and Unemployment rate"
+
+
+def test_single_source_results_keep_full_series_labels() -> None:
+    # Qualifiers such as sex or series type tell a raw ABS result's series apart.
+    payload = {
+        "metadata": {"source": "abs", "dataset_id": "LF"},
+        "series": [
+            {"series_id": "A", "label": "Employed / Females / Trend", "dimensions": {}},
+            {"series_id": "B", "label": "Unemployment rate / Males / Trend", "dimensions": {}},
+        ],
+        "observations": [{"date": "2019-01", "series_id": sid, "value": 1.0} for sid in ("A", "B")]
+        + [{"date": "2019-02", "series_id": sid, "value": 2.0} for sid in ("A", "B")],
+    }
+    text = json.dumps(payload)
+
+    assert _run_view(f"displayLabels(buildModel({text}).plotted, {text}.metadata)") == [
+        "Employed / Females / Trend",
+        "Unemployment rate / Males / Trend",
+    ]

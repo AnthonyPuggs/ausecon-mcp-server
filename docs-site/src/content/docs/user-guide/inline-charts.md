@@ -32,9 +32,20 @@ name the series you want, or ask for a specific RBA series ID, ABS key or APRA t
 Chart the 2-year and 10-year government bond yields from RBA table F2 since 2020.
 ```
 
+To compare indicators from different sources, ask for them together. `get_economic_series` takes a
+list of up to eight concepts and returns them in one result, so they appear on one chart:
+
+```text
+How have unemployment and the RBA cash rate moved since 2019?
+```
+
+Series in the same unit share one axis; series in different units get their own panel within the
+same chart.
+
 ## What the chart shows
 
-- **Header:** the source, dataset and frequency, and the series name.
+- **Header:** the source, dataset and frequency, and the series name. A combined result names
+  each source (for example `ABS · RBA`) and the series it compares.
 - **Headline:** for a single series, the latest value, its date, and the change from the
   previous observation. Changes in a per cent series are given in percentage points (`pts`).
 - **Line chart:** hover over the chart, or focus it and use the arrow keys, to read every series'
@@ -47,7 +58,8 @@ Chart the 2-year and 10-year government bond yields from RBA table F2 since 2020
 - **Data table:** collapsed by default, showing the most recent 400 dates.
 - **Single-date results**, such as the latest value of each series, appear as a list of values
   instead of a chart.
-- **Footer:** publication and retrieval dates and a link to the source file.
+- **Footer:** publication and retrieval dates and a link to the source file, one line per source
+  for a combined result.
 
 The chart follows your client's light or dark theme.
 

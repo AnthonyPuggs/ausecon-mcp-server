@@ -38,7 +38,7 @@
         },
         "source": {
           "type": "string",
-          "enum": ["abs", "rba", "apra", "derived"]
+          "enum": ["abs", "rba", "apra", "derived", "multiple"]
         },
         "dataset_id": {
           "type": "string"
@@ -113,6 +113,19 @@
           "type": "array",
           "items": {
             "type": "string"
+          }
+        },
+        "components": {
+          "description": "Present when source is multiple: one entry per requested concept, in request order, with the series it returned and that concept's own metadata (source, retrieval URL, semantic resolution, date window).",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["series_ids", "metadata"],
+            "additionalProperties": false,
+            "properties": {
+              "series_ids": {"type": "array", "items": {"type": "string"}},
+              "metadata": {"$ref": "#/$defs/metadata"}
+            }
           }
         },
         "date_window": {

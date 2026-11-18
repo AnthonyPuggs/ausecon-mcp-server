@@ -530,3 +530,9 @@ def test_response_schema_accepts_the_chart_note() -> None:
     }
 
     _assert_valid(payload)
+
+
+def test_response_schema_validates_multi_concept_payload() -> None:
+    from test_combine import merged
+
+    _assert_valid(merged())

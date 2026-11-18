@@ -9,6 +9,7 @@ from starlette.middleware.cors import CORSMiddleware
 from starlette.testclient import TestClient
 
 import ausecon_mcp.server as server_module
+from ausecon_mcp.errors import AuseconValidationError
 from ausecon_mcp.providers.abs import ABSProvider
 from ausecon_mcp.providers.rba import RBAProvider
 from ausecon_mcp.server import AuseconService, build_server
@@ -2206,3 +2207,75 @@ async def test_get_derived_series_fetches_operands_concurrently(monkeypatch) -> 
     await service.get_derived_series("misery_index")
 
     assert max_active == 2
+
+
+def _stub_service() -> tuple[AuseconService, StubABSProvider, StubRBAProvider]:
+    abs_provider, rba_provider = StubABSProvider(), StubRBAProvider()
+    return (
+        AuseconService(abs_provider=abs_provider, rba_provider=rba_provider),
+        abs_provider,
+        rba_provider,
+    )
+
+
+async def test_many_concepts_from_two_sources_merge_into_one_response() -> None:
+    service, _, _ = _stub_service()
+
+    result = await service.get_economic_series_many(["unemployment_rate", "cash_rate_target"])
+
+    assert result["metadata"]["source"] == "multiple"
+    assert {s["series_id"] for s in result["series"]} == {"abs-series", "rba-series"}
+    assert len(result["metadata"]["components"]) == 2
+
+
+async def test_a_single_item_list_is_the_single_concept_response() -> None:
+    service, _, _ = _stub_service()
+
+    many = await service.get_economic_series_many(["cash_rate_target"])
+    single = await service.get_economic_series("cash_rate_target")
+
+    assert many == single
+    assert "components" not in many["metadata"]
+
+
+async def test_duplicate_concepts_collapse_to_one() -> None:
+    service, _, _ = _stub_service()
+
+    result = await service.get_economic_series_many(["cash_rate_target", " cash_rate_target "])
+
+    assert "components" not in result["metadata"]
+
+
+async def test_more_than_eight_concepts_are_rejected() -> None:
+    service, _, _ = _stub_service()
+    concepts = [f"concept_{index}" for index in range(9)]
+
+    with pytest.raises(AuseconValidationError, match="8"):
+        await service.get_economic_series_many(concepts)
+
+
+async def test_variant_with_several_concepts_is_rejected() -> None:
+    service, _, _ = _stub_service()
+
+    with pytest.raises(AuseconValidationError, match="variant"):
+        await service.get_economic_series_many(
+            ["unemployment_rate", "cash_rate_target"], variant="headline"
+        )
+
+
+async def test_a_failing_concept_is_named_in_the_error() -> None:
+    service, _, _ = _stub_service()
+
+    with pytest.raises(AuseconValidationError) as excinfo:
+        await service.get_economic_series_many(["cash_rate_target", "not_a_concept"])
+
+    assert "not_a_concept" in str(excinfo.value)
+
+
+async def test_bounds_reach_every_concept() -> None:
+    service, abs_provider, rba_provider = _stub_service()
+
+    await service.get_economic_series_many(["unemployment_rate", "cash_rate_target"], start="2020")
+
+    assert rba_provider.last_get_table_kwargs["start_date"] == "2020-01-01"
+    assert abs_provider.last_get_data_kwargs["start_period"] is not None
