@@ -236,3 +236,15 @@ def test_unknown_series_message_lists_a_bounded_number_of_series() -> None:
     assert "S000 (Series 0)" in message
     assert "S499" not in message
     assert "and 470 more" in message
+
+
+def test_unknown_series_message_bounds_the_work_for_long_lists_of_unknown_ids() -> None:
+    unknown = [f"BOGUS{i:04d}" for i in range(2_000)]
+
+    with pytest.raises(AuseconValidationError) as excinfo:
+        filter_payload(_bond_payload(), series_ids=unknown)
+
+    message = str(excinfo.value)
+    assert "'BOGUS0009'" in message
+    assert "'BOGUS0010'" not in message
+    assert "and 1990 more" in message

@@ -9,6 +9,10 @@ from ausecon_mcp.periods import period_end_date, period_start_date, try_period_s
 
 # How many of a dataset's series an unknown-series_ids message lists.
 MAX_LISTED_SERIES = 30
+# Bounds on the unknown-series_ids message: fuzzy matching runs against every series in the
+# dataset (thousands for APRA), so only the first few unknown IDs get suggestions.
+MAX_QUOTED_UNKNOWN = 10
+MAX_SUGGESTED_UNKNOWN = 5
 
 
 def filter_payload(
@@ -98,9 +102,11 @@ def _check_series_ids(payload: dict[str, Any], series_ids: list[str]) -> None:
         for part in (str(metadata.get("source") or "").upper(), metadata.get("dataset_id"))
         if part
     )
-    quoted = ", ".join(repr(series_id) for series_id in unknown)
+    quoted = ", ".join(repr(series_id) for series_id in unknown[:MAX_QUOTED_UNKNOWN])
+    if len(unknown) > MAX_QUOTED_UNKNOWN:
+        quoted += f" and {len(unknown) - MAX_QUOTED_UNKNOWN} more"
     suggestions = []
-    for series_id in unknown:
+    for series_id in unknown[:MAX_SUGGESTED_UNKNOWN]:
         for match in get_close_matches(series_id, available, n=1, cutoff=0.6):
             if match not in suggestions:
                 suggestions.append(match)
