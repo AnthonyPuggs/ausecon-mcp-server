@@ -1,0 +1,74 @@
+name: Bug report
+description: Something returned an error, wrong data, or did not work as documented.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. Please **don't include anything private**: the tool call and its
+        arguments are enough. Security problems go to
+        [private reporting](https://github.com/AnthonyPuggs/ausecon-mcp-server/security/advisories/new) instead.
+  - type: dropdown
+    id: deployment
+    attributes:
+      label: How are you running ausecon?
+      options:
+        - Hosted server (mcp.auseconmcp.com or ausecon-mcp-server.onrender.com)
+        - Installed locally (uvx / pip)
+        - Container image (GHCR)
+        - Smithery
+        - Not sure
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: >-
+        The `server_version` field in a tool response's `metadata`. Leave blank if you can't find
+        it.
+      placeholder: "1.19.0"
+  - type: dropdown
+    id: client
+    attributes:
+      label: MCP client
+      options:
+        - Claude (claude.ai or Claude Desktop)
+        - Claude Code
+        - Codex
+        - Cursor
+        - VS Code
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: call
+    attributes:
+      label: Tool call
+      description: The tool name and its arguments. Your client usually shows these when it calls a tool.
+      render: json
+      placeholder: |
+        {"name": "get_economic_series", "arguments": {"concept": "headline_cpi", "last_n": 4}}
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: What happened
+      description: The error message, or the part of the response that looks wrong.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+      description: >-
+        For wrong data, the value you expected and where it comes from, such as the agency's own
+        table or release.
+    validations:
+      required: true
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else
+      description: Does it happen every time? Did it work in an earlier version?

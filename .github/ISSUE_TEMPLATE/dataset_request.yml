@@ -1,0 +1,42 @@
+name: Dataset or feature request
+description: Ask for a dataset, table, concept or capability that ausecon does not cover yet.
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ausecon is deliberately selective. A request is most likely to be added when it names an
+        official source and explains what it would be used for.
+  - type: dropdown
+    id: source
+    attributes:
+      label: Source
+      options:
+        - ABS
+        - RBA
+        - APRA
+        - Another official Australian source
+        - Not a dataset (a tool or feature)
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What you would like added
+      description: >-
+        The dataset, table or series, ideally with its official name, id or a link (for example
+        "RBA table F2" or an ABS catalogue number). For a feature, describe what it should do.
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: What it would be used for
+      description: The question or analysis it would help with.
+    validations:
+      required: true
+  - type: textarea
+    id: current
+    attributes:
+      label: What you tried
+      description: Anything you tried with the existing tools (for example `search_datasets`) and what came back.

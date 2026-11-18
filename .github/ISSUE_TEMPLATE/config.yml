@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Report a security vulnerability
+    url: https://github.com/AnthonyPuggs/ausecon-mcp-server/security/advisories/new
+    about: Please report security problems privately, not in a public issue.
+  - name: Ask a question
+    url: https://github.com/AnthonyPuggs/ausecon-mcp-server/discussions
+    about: Usage questions and ideas that are not bugs or dataset requests.
+  - name: Documentation
+    url: https://auseconmcp.com/
+    about: Setup guides for each client, tool reference and examples.
