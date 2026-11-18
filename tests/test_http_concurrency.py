@@ -100,6 +100,99 @@ async def test_non_post_requests_are_not_limited(method: str) -> None:
     assert response.status_code == 200
 
 
+class _BodyReadingApp:
+    """ASGI app that reads the whole request body before responding, as the MCP app does."""
+
+    def __init__(self, received: list[bytes] | None = None) -> None:
+        self.received = received if received is not None else []
+
+    async def __call__(self, scope, receive, send) -> None:
+        body = b""
+        while True:
+            message = await receive()
+            body += message.get("body", b"")
+            if not message.get("more_body"):
+                break
+        self.received.append(body)
+        await send({"type": "http.response.start", "status": 200, "headers": []})
+        await send({"type": "http.response.body", "body": b"ok"})
+
+
+class _StalledBody:
+    """Request body that sends one chunk, then stalls until released."""
+
+    def __init__(self) -> None:
+        self.release = asyncio.Event()
+
+    async def __aiter__(self):
+        yield b"{"
+        await self.release.wait()
+        yield b"}"
+
+
+async def test_slow_request_body_does_not_hold_a_slot() -> None:
+    app = server_module.ConcurrencyLimitMiddleware(_BodyReadingApp(), max_in_flight=1)
+    stalled = _StalledBody()
+    async with _client(app) as client:
+        slow = asyncio.create_task(client.post("/mcp", content=stalled))
+        await asyncio.sleep(0.05)  # the slow client is now mid-body
+
+        fast = await client.post("/mcp", content=b"{}")
+
+        stalled.release.set()
+        slow_response = await slow
+
+    assert fast.status_code == 200
+    assert slow_response.status_code == 200
+
+
+async def test_request_body_that_never_finishes_times_out_with_408() -> None:
+    inner = _GatedApp()
+    inner.gate.set()
+    app = server_module.ConcurrencyLimitMiddleware(
+        inner, max_in_flight=1, body_timeout_seconds=0.05
+    )
+    stalled = _StalledBody()
+    async with _client(app) as client:
+        response = await client.post("/mcp", content=stalled)
+        stalled.release.set()
+
+    assert response.status_code == 408
+    assert inner.started == 0
+
+
+async def test_chunked_body_over_the_size_cap_is_rejected_with_413() -> None:
+    inner = _GatedApp()
+    inner.gate.set()
+    app = server_module.ConcurrencyLimitMiddleware(inner, max_in_flight=1, max_body_bytes=10)
+
+    async def chunks():  # no content-length header, so only the bytes can be counted
+        for _ in range(4):
+            yield b"xxxx"
+
+    async with _client(app) as client:
+        response = await client.post("/mcp", content=chunks())
+
+    assert response.status_code == 413
+    assert inner.started == 0
+
+
+async def test_app_receives_the_full_buffered_body() -> None:
+    received: list[bytes] = []
+    echo = _BodyReadingApp(received)
+
+    async def chunks():
+        yield b'{"a":'
+        yield b"1}"
+
+    app = server_module.ConcurrencyLimitMiddleware(echo, max_in_flight=1)
+    async with _client(app) as client:
+        response = await client.post("/mcp", content=chunks())
+
+    assert response.status_code == 200
+    assert received == [b'{"a":1}']
+
+
 def test_http_app_limit_comes_from_environment(monkeypatch) -> None:
     monkeypatch.setenv("AUSECON_HTTP_MAX_IN_FLIGHT", "7")
 

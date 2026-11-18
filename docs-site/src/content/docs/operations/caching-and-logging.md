@@ -62,6 +62,9 @@ Key safety constraints:
   HTTP 503 with `{"error": "server_busy"}` and `Retry-After: 1` rather than queueing the work.
   GET, HEAD and OPTIONS requests, including `/healthz`, are never limited, so health checks keep
   passing under load. Set `AUSECON_HTTP_MAX_IN_FLIGHT` to change the limit.
+- A tool call's body must arrive in full within 10 seconds (HTTP 408 otherwise) and within 1 MiB,
+  including chunked bodies with no `Content-Length` (HTTP 413). The body is read before a slot is
+  taken, so slow clients cannot hold slots and lock out other users.
 - There is no per-client rate limiting. Hosted clients such as Claude.ai connectors reach the
   server from shared addresses, so a per-IP limit would throttle unrelated users together.
 - Large unauthenticated requests remain the main residual risk, so callers should prefer `last_n`
