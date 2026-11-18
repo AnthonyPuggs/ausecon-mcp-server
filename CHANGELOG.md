@@ -6,6 +6,31 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.20.0] - 2026-11-18
+
+Inline charts in claude.ai, Claude Desktop and other MCP Apps clients (#202-#212), plus two fixes
+to dataset and series lookups. Tool names and parameters are unchanged; the response schema
+gains one optional field, `metadata.chart_note`.
+
+### Added
+
+- Inline charts for clients that support MCP Apps (claude.ai, Claude Desktop and other
+  `io.modelcontextprotocol/ui` hosts). The five retrieval tools (`get_economic_series`,
+  `get_derived_series`, `get_rba_table`, `get_abs_data` and `get_apra_data`) now point at a new
+  `ui://ausecon/series-chart.html` resource. It draws results with up to eight series as an
+  interactive line chart with a latest-value headline, a hover readout, source warnings and a
+  data table. Single-date results, such as a `last_n=1` lookup, show the date and a list of
+  values instead, and wider results show a one-line prompt to ask for fewer series. Tool errors
+  appear in the chart frame as one short sentence; the full message still goes to the model.
+  The page is a single self-contained file that makes no network requests. Other clients,
+  Claude Code among them, ignore it and get the same JSON as before.
+- `metadata.chart_note`: when a client declares MCP Apps support and the result is drawn as a
+  chart, the JSON carries a note that the chart is already on screen (on mobile as well as
+  desktop), so the model summarises the data instead of drawing a second chart. It sits inside
+  the JSON so the result stays one valid document for code execution. The tool descriptions say
+  the same, and the chart tells hosts that accept context updates what it is showing. Text-only
+  clients never receive the field.
+
 ### Changed
 
 - New logo: Australia drawn as a grid of dots, with a gold line of highlighted dots rising from
@@ -20,9 +45,6 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
-- The inline chart's y-axis no longer adds a whole empty step for a value just past a gridline.
-  RBA F2's 2-year yield touched -0.001% on 11 June 2021, so a chart of yields since 2020 ran
-  down to -2% under data sitting at 0%. Such a value now stretches the axis slightly instead.
 - Dataset identifiers are now case-insensitive. RBA table IDs written in capitals, as the RBA
   writes them (`F2`, `G1`), used to fail with HTTP 404 in `get_rba_table`,
   `get_latest_observations` and `get_top_observations`, and with "unknown dataset" in
@@ -35,32 +57,6 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   claude.ai, Claude guessed `FCMYGBAG2` for the F2 2-year yield (the real ID is `FCMYGBAG2D`),
   got nothing back, and needed two more calls to find the codes. When only some IDs match, the
   result keeps the matches and adds a warning about the rest.
-- The inline chart no longer draws a dot chart for single-date results, such as a `last_n=1`
-  lookup. It shows the date and a list of values instead, and the result carries no
-  "already charted" note. Tool errors appear in the chart frame as one short sentence; the full
-  message is still returned to the model.
-- The "already charted" note is now a `metadata.chart_note` field inside the JSON, not a
-  separate text block after it. claude.ai saves a result's text blocks to one file for code
-  execution, so Claude's `json.load` on a charted F2 result failed with "Extra data: line 2
-  column 1". Claude then worked around it and drew its own chart. The response schema gains
-  the optional `chart_note` field, which only clients that display MCP Apps receive.
-- The "already charted" note tells the model that the user's app confirmed it shows the chart,
-  on mobile as well as desktop. On the claude.ai iPhone app, Claude doubted the chart had
-  rendered and offered to draw its own.
-
-### Added
-
-- Inline charts for clients that support MCP Apps (claude.ai, Claude Desktop and other
-  `io.modelcontextprotocol/ui` hosts). The five retrieval tools (`get_economic_series`,
-  `get_derived_series`, `get_rba_table`, `get_abs_data` and `get_apra_data`) now point at a new
-  `ui://ausecon/series-chart.html` resource. It draws results with up to eight series as an
-  interactive line chart with a latest-value headline, a hover readout, source warnings and a
-  data table. Wider results show a one-line prompt to ask for fewer series. The page is a single
-  self-contained file that makes no network requests. Other clients, Claude Code among them,
-  ignore it and get the same JSON as before. For clients that
-  declare MCP Apps support, the tool result also carries a one-line note that the data is already
-  on screen, so the model doesn't draw a second chart of it. The tool descriptions say the same,
-  and the chart tells hosts that accept context updates what it is showing.
 
 ## [1.19.0] - 2026-11-18
 
@@ -1182,7 +1178,8 @@ Initial public release.
 - Initial curated catalogues for ABS and RBA, plus a four-concept
   `CURATED_SERIES` semantic shortcut map.
 
-[Unreleased]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.19.0...HEAD
+[Unreleased]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.20.0...HEAD
+[1.20.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.19.0...v1.20.0
 [1.19.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.18.0...v1.19.0
 [1.18.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.17.0...v1.18.0
 [1.17.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.16.0...v1.17.0
