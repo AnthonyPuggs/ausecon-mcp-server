@@ -13,6 +13,10 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   icon (`ausecon-icon.svg`). The docs site now also serves an SVG favicon, a `favicon.ico`
   fallback and an Apple touch icon. Master SVGs are in `assets/logo.svg` (128 px and up) and
   `assets/logo-small.svg` (a coarser grid for 64 px and below).
+- The project name is now written in lowercase everywhere users see it, matching the logo
+  and the package: "ausecon MCP Server" in the docs-site title, the server card's
+  `displayName` and the MCP icon, and "ausecon" in resource names, the chart page title and
+  the response schema title. Python class names such as `AuseconError` are unchanged.
 
 ### Fixed
 

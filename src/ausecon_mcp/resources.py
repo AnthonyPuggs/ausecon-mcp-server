@@ -26,7 +26,7 @@ def _summarise(entry: dict) -> dict:
 def register_resources(mcp: FastMCP) -> None:
     @mcp.resource(
         "ausecon://catalogue",
-        name="Ausecon catalogue index",
+        name="ausecon catalogue index",
         description=(
             "Flat index of every curated ABS, RBA, and APRA dataset the server exposes. "
             "Use this to browse what is available before calling search_datasets."
@@ -43,7 +43,7 @@ def register_resources(mcp: FastMCP) -> None:
 
     @mcp.resource(
         "ausecon://concepts",
-        name="Ausecon semantic concepts",
+        name="ausecon semantic concepts",
         description=(
             "Every curated semantic shortcut accepted by get_economic_series, with its "
             "resolved target dataset, variant, supported frequencies, and geographies."

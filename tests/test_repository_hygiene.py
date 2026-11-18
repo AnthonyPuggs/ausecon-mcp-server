@@ -64,7 +64,7 @@ def test_docs_site_exposes_public_icon_for_hosted_mcp_metadata() -> None:
     icon_text = DOCS_ICON.read_text(encoding="utf-8")
 
     assert "<svg" in icon_text
-    assert "AusEcon MCP Server" in icon_text
+    assert "ausecon MCP Server" in icon_text
 
 
 def test_project_metadata_points_to_license_file_and_repository_urls() -> None:
