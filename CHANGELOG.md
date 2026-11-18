@@ -6,6 +6,14 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed
+
+- New logo: Australia drawn as a grid of dots, with a gold line of highlighted dots rising from
+  west to east. It replaces the README banner, the docs-site navbar logo and the MCP server
+  icon (`ausecon-icon.svg`). The docs site now also serves an SVG favicon, a `favicon.ico`
+  fallback and an Apple touch icon. Master SVGs are in `assets/logo.svg` (128 px and up) and
+  `assets/logo-small.svg` (a coarser grid for 64 px and below).
+
 ### Fixed
 
 - Dataset identifiers are now case-insensitive. RBA table IDs written in capitals, as the RBA

@@ -14,10 +14,14 @@ export default defineConfig({
         src: './src/assets/logo.png',
         alt: 'ausecon logo',
       },
+      favicon: '/favicon.svg',
       editLink: {
         baseUrl: 'https://github.com/AnthonyPuggs/ausecon-mcp-server/edit/main/docs-site/',
       },
       head: [
+        // Fallback icons for browsers without SVG favicon support, and the iOS home-screen icon.
+        { tag: 'link', attrs: { rel: 'icon', href: '/favicon.ico', sizes: '32x32' } },
+        { tag: 'link', attrs: { rel: 'apple-touch-icon', href: '/apple-touch-icon.png' } },
         // Vercel Web Analytics + Speed Insights. Starlight owns the page layout,
         // so the plain script tags are injected here rather than via the
         // @vercel/analytics Astro components (which only work in a custom layout).
