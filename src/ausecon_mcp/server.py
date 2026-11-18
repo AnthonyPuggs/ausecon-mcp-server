@@ -75,6 +75,9 @@ SERVER_DESCRIPTION = (
 )
 SERVER_LICENSE = "MIT"
 MAX_HTTP_REQUEST_BYTES = 1024 * 1024
+# Concurrent POSTs (tool calls) the HTTP server will work on at once; beyond this it sheds load
+# with a 503 rather than queueing work that could exhaust a small hosted instance.
+DEFAULT_HTTP_MAX_IN_FLIGHT = 32
 TOOL_TITLES = {
     "search_datasets": "Search Datasets",
     "list_catalogue": "List Catalogue",
@@ -291,6 +294,53 @@ class RequestSizeLimitMiddleware:
             status_code=413,
         )
         await response(scope, receive, send)
+
+
+class ConcurrencyLimitMiddleware:
+    """Reject POSTs beyond ``max_in_flight`` concurrent ones with 503 + Retry-After.
+
+    Only POSTs count: they carry tool calls. GET/HEAD/OPTIONS (health checks, server card,
+    CORS preflight, long-lived MCP streams) always pass, so a burst of tool calls can never
+    fail the host's health check. uvicorn's ``limit_concurrency`` is not used because it also
+    counts idle keep-alive connections and rejects health checks.
+    """
+
+    def __init__(self, app: ASGIApp, max_in_flight: int = DEFAULT_HTTP_MAX_IN_FLIGHT) -> None:
+        self.app = app
+        self.max_in_flight = max_in_flight
+        self._in_flight = 0
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if scope["type"] != "http" or scope.get("method") != "POST":
+            await self.app(scope, receive, send)
+            return
+
+        if self._in_flight >= self.max_in_flight:
+            response = JSONResponse(
+                {
+                    "error": "server_busy",
+                    "message": "The server is handling too many requests; retry shortly.",
+                },
+                status_code=503,
+                headers={"Retry-After": "1"},
+            )
+            await response(scope, receive, send)
+            return
+
+        self._in_flight += 1
+        try:
+            await self.app(scope, receive, send)
+        finally:
+            self._in_flight -= 1
+
+
+def resolve_http_max_in_flight() -> int:
+    raw = os.environ.get("AUSECON_HTTP_MAX_IN_FLIGHT", "").strip()
+    try:
+        value = int(raw) if raw else DEFAULT_HTTP_MAX_IN_FLIGHT
+    except ValueError:
+        return DEFAULT_HTTP_MAX_IN_FLIGHT
+    return value if value > 0 else DEFAULT_HTTP_MAX_IN_FLIGHT
 
 
 def _content_length(scope: Scope) -> int | None:
@@ -1327,6 +1377,8 @@ def build_http_middleware() -> list[Middleware]:
             expose_headers=["mcp-session-id", "mcp-protocol-version"],
             max_age=86400,
         ),
+        # Inside CORS so browser clients can read the 503.
+        Middleware(ConcurrencyLimitMiddleware, max_in_flight=resolve_http_max_in_flight()),
     ]
 
 
