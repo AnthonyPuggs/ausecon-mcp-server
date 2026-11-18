@@ -120,6 +120,49 @@ def test_chart_html_script_parses() -> None:
     assert result.returncode == 0, result.stderr
 
 
+def _y_domain(min_value: float, max_value: float, target_ticks: int = 5) -> dict:
+    """Run the view's own yScaleDomain in node and return {lo, hi, ticks, step}."""
+    node = shutil.which("node")
+    if node is None:
+        pytest.skip("node is not installed")
+    html = load_chart_html()
+    start = html.index("  function niceStep(")
+    source = html[start : html.index("  function timeTicks(", start)]
+    script = (
+        f"{source}\nprocess.stdout.write(JSON.stringify("
+        f"yScaleDomain({min_value}, {max_value}, {target_ticks})));"
+    )
+    result = subprocess.run(
+        [node, "-"], input=script, capture_output=True, text=True, encoding="utf-8", check=False
+    )
+    assert result.returncode == 0, result.stderr
+    return json.loads(result.stdout)
+
+
+def test_y_axis_does_not_add_a_whole_step_for_a_tiny_overshoot() -> None:
+    # RBA F2's 2-year yield touched -0.001% on 2021-06-11; the axis ran down to -2%.
+    domain = _y_domain(-0.001, 5.413)
+
+    assert domain["ticks"][0] == 0
+    assert -0.1 < domain["lo"] <= -0.001
+    assert domain["hi"] >= 5.413
+
+
+def test_y_axis_still_extends_a_step_for_a_real_overshoot() -> None:
+    domain = _y_domain(-0.5, 5.413)
+
+    assert domain["ticks"][0] == -2
+    assert domain["lo"] == -2
+
+
+def test_y_axis_ticks_stay_inside_the_domain() -> None:
+    for low, high in ((-0.001, 5.413), (0.02, 6.001), (3.7, 3.7), (-12.5, 40.0)):
+        domain = _y_domain(low, high)
+        assert domain["lo"] <= low and domain["hi"] >= high, (low, high)
+        assert all(domain["lo"] <= t <= domain["hi"] for t in domain["ticks"]), (low, high)
+        assert len(domain["ticks"]) >= 2, (low, high)
+
+
 def test_chart_view_can_shrink_after_content_collapses() -> None:
     # scrollHeight never drops below the iframe's current height, so a view sized from it
     # grows but never shrinks (collapsing the data table left blank space in claude.ai).
