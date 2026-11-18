@@ -398,3 +398,101 @@ async def test_text_only_clients_never_see_a_chart_note() -> None:
         result = await client.call_tool("get_rba_table", _ARGS["get_rba_table"])
 
     assert "chart_note" not in result.structured_content["metadata"]
+
+
+def _run_view(expression: str) -> object:
+    """Evaluate an expression against the view's constants, helpers, and model code in node."""
+    node = shutil.which("node")
+    if node is None:
+        pytest.skip("node is not installed")
+    html = load_chart_html()
+    constants = html[html.index("  const MAX_SERIES") : html.index("  const app =")]
+    start = html.index("  function el(")
+    code = html[start : html.index("  function render()")]
+    script = f"{constants}\n{code}\nprocess.stdout.write(JSON.stringify({expression}));"
+    result = subprocess.run(
+        [node, "-"], input=script, capture_output=True, text=True, encoding="utf-8", check=False
+    )
+    assert result.returncode == 0, result.stderr
+    return json.loads(result.stdout)
+
+
+ABS_UNEMPLOYMENT_LABEL = (
+    "Unemployment rate / Persons / Total (age) / Seasonally Adjusted / Australia / Monthly"
+)
+
+
+def test_abs_labels_split_into_a_measure_title_and_a_detail_line() -> None:
+    parts = _run_view(f"splitLabel({json.dumps(ABS_UNEMPLOYMENT_LABEL)}, 'Monthly')")
+
+    assert parts == {
+        "title": "Unemployment rate",
+        # The frequency is already in the eyebrow, so it is not repeated.
+        "detail": "Persons · Total (age) · Seasonally Adjusted · Australia",
+    }
+
+
+def test_labels_without_dimension_separators_are_left_alone() -> None:
+    parts = _run_view("splitLabel('New Cash Rate Target', 'As announced')")
+
+    assert parts == {"title": "New Cash Rate Target", "detail": ""}
+
+
+@pytest.mark.parametrize(
+    ("raw", "tidy"),
+    [
+        (
+            "A2 RESERVE BANK OF AUSTRALIA – CHANGES IN MONETARY POLICY AND ADMINISTERED RATES",
+            "A2 Reserve Bank of Australia – Changes in Monetary Policy and Administered Rates",
+        ),
+        ("F11 EXCHANGE RATES", "F11 Exchange Rates"),
+        ("G1 CONSUMER PRICE INFLATION", "G1 Consumer Price Inflation"),
+        (
+            "F3 NON-FINANCIAL CORPORATE (NFC) BOND SPREADS – US DOLLAR",
+            "F3 Non-financial Corporate (NFC) Bond Spreads – US Dollar",
+        ),
+        # Titles that already use mixed case are the source's own styling.
+        ("Labour Force", "Labour Force"),
+    ],
+)
+def test_all_caps_source_titles_are_shown_in_title_case(raw: str, tidy: str) -> None:
+    assert _run_view(f"tidyTitle({json.dumps(raw)})") == tidy
+
+
+def test_abs_percent_and_rba_per_cent_share_one_unit() -> None:
+    units = _run_view(
+        "[unitLabel({unit: 'Percent'}), unitLabel({unit: 'Per cent'}),"
+        " unitLabel({unit: 'Per cent per annum'})]"
+    )
+
+    assert units == ["Per cent", "Per cent", "Per cent per annum"]
+
+
+def _policy_rate_result(date_window: dict | None) -> dict:
+    metadata = {"source": "rba", "retrieved_at": "2026-11-19T00:00:00Z"}
+    if date_window is not None:
+        metadata["date_window"] = date_window
+    return {
+        "metadata": metadata,
+        "series": [{"series_id": "R", "label": "Cash rate", "frequency": "As announced"}],
+        "observations": [
+            {"date": "2016-08-03", "series_id": "R", "value": 1.5},
+            {"date": "2019-06-05", "series_id": "R", "value": 1.25},
+        ],
+    }
+
+
+def test_a_carried_in_value_starts_the_chart_at_the_window_start() -> None:
+    window = {"start": "2019-01-01", "end": None, "carried_in": ["R"]}
+    model = _run_view(f"buildModel({json.dumps(_policy_rate_result(window))})")
+
+    assert model["t0"] == 1546300800000  # 2019-01-01, not the 2016 announcement
+    assert model["t1"] == 1795046400000  # held to the 2026-11-19 retrieval date
+
+
+def test_an_end_bound_stops_the_step_line_at_the_window_end() -> None:
+    window = {"start": None, "end": "2019-12-31", "carried_in": []}
+    model = _run_view(f"buildModel({json.dumps(_policy_rate_result(window))})")
+
+    # Not carried on to the 2026 retrieval date: the rate changed after the window.
+    assert model["t1"] == 1577750400000  # 2019-12-31

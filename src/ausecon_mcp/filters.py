@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import re
 from collections import defaultdict
+from datetime import date
 from difflib import get_close_matches
 from typing import Any
 
@@ -13,6 +15,9 @@ MAX_LISTED_SERIES = 30
 # dataset (thousands for APRA), so only the first few unknown IDs get suggestions.
 MAX_QUOTED_UNKNOWN = 10
 MAX_SUGGESTED_UNKNOWN = 5
+# Series whose value holds until the next change (RBA policy rates are "As announced").
+# Matches the chart view's step-line rule, less "irregular", which also covers flows.
+EVENT_DRIVEN_FREQUENCY = re.compile(r"announc|event", re.IGNORECASE)
 
 
 def filter_payload(
@@ -40,9 +45,12 @@ def filter_payload(
                 zip(sort_keys, observations, strict=True), key=lambda pair: pair[0]
             )
         ]
+        carried_in: list[str] = []
         if start_date:
             window_start = period_start_date(start_date)
-            observations = [
+            carried = _carried_in_observations(payload, observations, window_start)
+            carried_in = [item["series_id"] for item in carried]
+            observations = carried + [
                 item for item in observations if period_end_date(item["date"]) >= window_start
             ]
         if end_date:
@@ -50,6 +58,12 @@ def filter_payload(
             observations = [
                 item for item in observations if period_start_date(item["date"]) <= window_end
             ]
+        if start_date or end_date:
+            payload["metadata"]["date_window"] = {
+                "start": period_start_date(start_date).isoformat() if start_date else None,
+                "end": period_end_date(end_date).isoformat() if end_date else None,
+                "carried_in": carried_in,
+            }
     else:
         # Unrecognised period format: keep source order and fall back to string bounds
         # rather than failing the whole retrieval.
@@ -78,6 +92,38 @@ def filter_payload(
     payload["metadata"]["truncated"] = truncated
     payload["metadata"]["observations_dropped"] = dropped
     return payload
+
+
+def _carried_in_observations(
+    payload: dict[str, Any], observations: list[dict[str, Any]], window_start: date
+) -> list[dict[str, Any]]:
+    """The latest pre-window observation of each event-driven series, when the series has no
+    observation on the window start itself.
+
+    An event-driven series (a policy rate "as announced") holds its value until the next
+    change, so the value in effect at the window start is the last change before it. Dropping
+    it made "cash rate since 2019" begin at the June 2019 cut, and a window with no change
+    inside it returned nothing at all. ``observations`` must already be chronological.
+    """
+    event_driven = {
+        item["series_id"]
+        for item in payload.get("series") or []
+        if EVENT_DRIVEN_FREQUENCY.search(str(item.get("frequency") or ""))
+    }
+    if not event_driven:
+        return []
+    latest_before: dict[str, dict[str, Any]] = {}
+    on_start: set[str] = set()
+    for item in observations:
+        series_id = item["series_id"]
+        if series_id not in event_driven or item.get("value") is None:
+            continue
+        start = period_start_date(item["date"])
+        if start < window_start:
+            latest_before[series_id] = item
+        elif start == window_start:
+            on_start.add(series_id)
+    return [item for series_id, item in latest_before.items() if series_id not in on_start]
 
 
 def _check_series_ids(payload: dict[str, Any], series_ids: list[str]) -> None:

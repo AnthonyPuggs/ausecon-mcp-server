@@ -114,6 +114,17 @@
           "items": {
             "type": "string"
           }
+        },
+        "date_window": {
+          "description": "Date bounds applied after download, as ISO dates. Event-driven series listed in carried_in (such as policy rates as announced) also include their latest observation before start: the value still in effect when the window opens.",
+          "type": "object",
+          "required": ["start", "end", "carried_in"],
+          "additionalProperties": false,
+          "properties": {
+            "start": {"type": ["string", "null"], "format": "date"},
+            "end": {"type": ["string", "null"], "format": "date"},
+            "carried_in": {"type": "array", "items": {"type": "string"}}
+          }
         }
       }
     },

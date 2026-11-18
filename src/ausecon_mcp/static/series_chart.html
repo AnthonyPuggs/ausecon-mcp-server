@@ -100,6 +100,7 @@
     line-height: 1.3;
     overflow-wrap: anywhere;
   }
+  .subtitle { margin: 2px 0 0; color: var(--ink-2); font-size: 12px; overflow-wrap: anywhere; }
   .headline { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-top: 8px; }
   .headline-value {
     font-size: 28px;
@@ -410,6 +411,35 @@
     return s;
   }
 
+  // ABS labels join every dimension ("Unemployment rate / Persons / … / Monthly"): the first part
+  // names the measure and the rest qualify it. The frequency is already in the eyebrow.
+  function splitLabel(label, frequency) {
+    const text = String(label);
+    const parts = text.split(" / ").map((p) => p.trim()).filter(Boolean);
+    if (parts.length < 2) return { title: text, detail: "" };
+    const freq = String(frequency || "").trim().toLowerCase();
+    const rest = parts.slice(1).filter((p) => p.toLowerCase() !== freq);
+    return { title: parts[0], detail: rest.join(" · ") };
+  }
+
+  const MINOR_WORDS = new Set(["a", "an", "and", "as", "at", "by", "for", "in", "of", "on", "or", "the", "to"]);
+  const ACRONYMS = new Set([
+    "abs", "adi", "adis", "apra", "aud", "bbsw", "cpi", "gdp", "nfc", "nz", "omo", "rba", "sdr",
+    "twi", "uk", "us", "usd",
+  ]);
+
+  // RBA table titles arrive in capitals ("A2 RESERVE BANK OF AUSTRALIA – CHANGES IN …").
+  function tidyTitle(text) {
+    const s = String(text || "");
+    if (!s || /[a-z]/.test(s)) return s; // already mixed case: the source's own styling
+    return s.toLowerCase().split(" ").map((word, i) => {
+      const bare = word.replace(/[^a-z]/g, "");
+      if (/\d/.test(word) || ACRONYMS.has(bare)) return word.toUpperCase(); // A2, F11, (NFC)
+      if (i > 0 && MINOR_WORDS.has(word)) return word;
+      return word.replace(/[a-z]/, (c) => c.toUpperCase());
+    }).join(" ");
+  }
+
   // "Per cent", "Per cent per annum" -> %; "percentage points" -> pp; anything else has no suffix.
   function unitSuffix(unit) {
     const u = String(unit || "").trim();
@@ -421,7 +451,8 @@
   const MULTIPLIER_WORDS = { 3: "thousands", 6: "millions", 9: "billions" };
 
   function unitLabel(desc) {
-    const unit = (desc.unit || "").trim();
+    // ABS says "Percent" and the RBA "Per cent": one spelling, so they share a y-axis.
+    const unit = (desc.unit || "").trim().replace(/^percent\b/i, "Per cent");
     const mult = MULTIPLIER_WORDS[desc.unit_multiplier];
     if (!unit && !mult) return "";
     if (mult) return unit ? `${unit} (${mult})` : mult;
@@ -564,8 +595,17 @@
       t0 = Math.min(t0, s.points[0].t);
       t1 = Math.max(t1, s.points[s.points.length - 1].t);
     }
-    const retrieved = Date.parse((data.metadata || {}).retrieved_at || "");
-    if (plotted.some((s) => s.step) && Number.isFinite(retrieved) && retrieved > t1) t1 = retrieved;
+    const meta = data.metadata || {};
+    const win = meta.date_window || {};
+    const winStart = win.start ? parsePeriod(win.start) : null;
+    const winEnd = win.end ? parsePeriod(win.end) : null;
+    // An event-driven series carries in the change still in effect at the window start (the
+    // August 2016 cash rate for "since 2019"); the chart starts at the window, not that date.
+    if (winStart !== null && winStart > t0) t0 = winStart;
+    // A step line holds its last value to the retrieval date, or to the window end if earlier.
+    let until = Date.parse(meta.retrieved_at || "");
+    if (winEnd !== null && !(until <= winEnd)) until = winEnd;
+    if (plotted.some((s) => s.step) && Number.isFinite(until) && until > t1) t1 = until;
     // A single date per series (typically a last_n=1 lookup) is a list of values, not a chart.
     const snapshot = plotted.length > 0 &&
       plotted.every((s) => s.points.filter((p) => p.value !== null).length === 1);
@@ -584,14 +624,20 @@
     const semantic = meta.semantic || {};
     const derived = meta.derived || {};
     const single = model.plotted.length === 1 ? model.plotted[0] : null;
-    const datasetTitle = meta.title || derived.description || semantic.concept || derived.concept;
+    const datasetTitle =
+      tidyTitle(meta.title) || derived.description || semantic.concept || derived.concept;
+    const frequency = meta.frequency || semantic.frequency || (single && single.desc.frequency);
     const eyebrowParts = [
       String(meta.source || "").toUpperCase(),
       single ? datasetTitle || meta.dataset_id : meta.dataset_id,
-      meta.frequency || semantic.frequency || (single && single.desc.frequency),
+      frequency,
     ].filter(Boolean);
     header.append(el("p", "eyebrow", eyebrowParts.join(" · ")));
-    header.append(el("h1", null, single ? single.label : datasetTitle || "Series"));
+    const heading = single ? splitLabel(single.label, frequency) : { title: datasetTitle || "Series" };
+    const h1 = el("h1", null, heading.title);
+    if (single) h1.title = single.label;
+    header.append(h1);
+    if (heading.detail) header.append(el("p", "subtitle", heading.detail));
 
     if (model.plotted.length === 1) {
       const s = model.plotted[0];
@@ -703,7 +749,8 @@
     const plotH = height - margin.top - margin.bottom;
 
     const span = Math.max(model.t1 - model.t0, 1);
-    const xOf = (t) => margin.left + ((t - model.t0) / span) * plotW;
+    // A carried-in observation predates t0: pinned to the left edge, where its value applies.
+    const xOf = (t) => margin.left + ((Math.max(t, model.t0) - model.t0) / span) * plotW;
     const yOf = (v) => margin.top + (1 - (v - y.lo) / (y.hi - y.lo)) * plotH;
 
     const root = svg("svg", {
