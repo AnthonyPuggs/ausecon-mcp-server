@@ -1227,6 +1227,10 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
 
         Use list_economic_concepts for discovery. Date bounds accept YYYY, YYYY-QN,
         YYYY-SN, YYYY-MM, or YYYY-MM-DD and are normalised to the resolved source.
+
+        In MCP Apps hosts (claude.ai, Claude Desktop) the result is already shown to the
+        user as an interactive chart with a data table; do not redraw the same series as a
+        chart unless the user asks for something it lacks, such as a comparison or annotation.
         """
         return await app_service.get_economic_series(
             concept=concept,
@@ -1255,6 +1259,10 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
 
         Date bounds accept YYYY, YYYY-QN, YYYY-SN, YYYY-MM, or YYYY-MM-DD and
         are normalised to the derived series frequency.
+
+        In MCP Apps hosts (claude.ai, Claude Desktop) the result is already shown to the
+        user as an interactive chart with a data table; do not redraw the same series as a
+        chart unless the user asks for something it lacks, such as a comparison or annotation.
         """
         return await app_service.get_derived_series(
             concept=concept,

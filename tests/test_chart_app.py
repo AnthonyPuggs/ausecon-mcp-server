@@ -1,5 +1,8 @@
 import re
+import shutil
+import subprocess
 
+import pytest
 from fastmcp import Client
 
 from ausecon_mcp.server import build_server
@@ -84,3 +87,41 @@ def test_chart_html_never_uses_inner_html_for_data() -> None:
     assert "innerHTML" not in html
     assert "insertAdjacentHTML" not in html
     assert "document.write" not in html
+
+
+def test_chart_html_script_parses() -> None:
+    node = shutil.which("node")
+    if node is None:
+        pytest.skip("node is not installed")
+    script = re.search(r"<script>(.*)</script>", load_chart_html(), re.DOTALL)
+    assert script, "inline script missing"
+
+    result = subprocess.run(
+        [node, "--check", "-"],
+        input=script.group(1),
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+
+
+def test_chart_view_can_shrink_after_content_collapses() -> None:
+    # scrollHeight never drops below the iframe's current height, so a view sized from it
+    # grows but never shrinks (collapsing the data table left blank space in claude.ai).
+    html = load_chart_html()
+
+    assert "scrollHeight" not in html
+    assert 'html.style.height = "max-content"' in html
+
+
+async def test_chart_tool_descriptions_discourage_redrawing_the_chart() -> None:
+    mcp = build_server()
+
+    async with Client(mcp) as client:
+        tools = {tool.name: tool for tool in await client.list_tools()}
+
+    for name in CHART_TOOLS:
+        assert "do not redraw the same series" in tools[name].description, name

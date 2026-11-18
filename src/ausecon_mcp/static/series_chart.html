@@ -202,6 +202,8 @@
   let payload = null;
   let lastWidth = 0;
   let tableOpen = false;
+  let hostCapabilities = {};
+  let contextSent = false;
 
   // ---------------------------------------------------------------- transport
 
@@ -263,6 +265,16 @@
     if (ctx.theme === "light" || ctx.theme === "dark") {
       document.documentElement.setAttribute("data-theme", ctx.theme);
     }
+    const fonts = ctx.styles && ctx.styles.css && ctx.styles.css.fonts;
+    if (typeof fonts === "string" && fonts) {
+      let style = document.getElementById("host-fonts");
+      if (!style) {
+        style = document.createElement("style");
+        style.id = "host-fonts";
+        document.head.append(style);
+      }
+      style.textContent = fonts;
+    }
     const vars = ctx.styles && ctx.styles.variables;
     if (vars && typeof vars === "object") {
       for (const [key, value] of Object.entries(vars)) {
@@ -295,6 +307,30 @@
     }
     payload = data;
     render();
+    shareViewWithModel();
+  }
+
+  // Lets the model know (from the next turn on) that the user already has this chart, so it
+  // doesn't redraw the same series. Only sent when the host accepts context updates.
+  function shareViewWithModel() {
+    if (contextSent || !hostCapabilities.updateModelContext) return;
+    contextSent = true;
+    const model = buildModel(payload);
+    const meta = payload.metadata || {};
+    const lines = [
+      "The user is viewing an interactive inline chart of this get_economic_series / get_derived_series result,",
+      "with a hover readout and a data table. Do not redraw the same series as a chart unless the user asks for",
+      "something it does not show (other series, comparisons, annotations or transformations).",
+      `Charted: ${model.plotted.map((s) => s.label).join("; ")}`,
+    ];
+    if (model.plotted.length === 1) {
+      const s = model.plotted[0];
+      const numeric = s.points.filter((p) => p.value !== null);
+      const last = numeric[numeric.length - 1];
+      lines.push(`Headline shown: ${formatValue(last.value, s.decimals, s.unit)} (${formatPeriod(last.date)})`);
+    }
+    if (meta.dataset_id) lines.push(`Source: ${String(meta.source || "").toUpperCase()} ${meta.dataset_id}`);
+    request("ui/update-model-context", { content: [{ type: "text", text: lines.join("\n") }] }).catch(() => {});
   }
 
   function textContent(result) {
@@ -874,20 +910,34 @@
 
   // -------------------------------------------------------------- sizing
 
+  // Measure content, not the viewport: the document scroll height never drops below the iframe's current
+  // height, so the view could grow but never shrink (e.g. after collapsing the data table).
+  // Same approach as the ext-apps SDK's auto-resize.
+  let sentWidth = 0;
+  let sentHeight = 0;
   function reportSize() {
-    const height = Math.ceil(document.documentElement.scrollHeight);
-    const width = Math.ceil(document.documentElement.scrollWidth);
+    const html = document.documentElement;
+    const original = html.style.height;
+    html.style.height = "max-content";
+    const height = Math.ceil(html.getBoundingClientRect().height);
+    html.style.height = original;
+    const width = Math.ceil(window.innerWidth);
+    if (width === sentWidth && height === sentHeight) return;
+    sentWidth = width;
+    sentHeight = height;
     notify("ui/notifications/size-changed", { width, height });
   }
 
   let resizeFrame = 0;
-  new ResizeObserver(() => {
+  const resizeObserver = new ResizeObserver(() => {
     cancelAnimationFrame(resizeFrame);
     resizeFrame = requestAnimationFrame(() => {
       if (payload && Math.abs(app.clientWidth - lastWidth) > 1) render();
       else reportSize();
     });
-  }).observe(document.body);
+  });
+  resizeObserver.observe(document.documentElement);
+  resizeObserver.observe(document.body);
 
   // ---------------------------------------------------------- handshake
 
@@ -897,6 +947,7 @@
     protocolVersion: PROTOCOL_VERSION,
   })
     .then((result) => {
+      hostCapabilities = (result && result.hostCapabilities) || {};
       applyHostContext((result && result.hostContext) || {});
       notify("ui/notifications/initialized");
       reportSize();
