@@ -346,7 +346,11 @@
       const last = numeric[numeric.length - 1];
       lines.push(`Headline shown: ${formatValue(last.value, s.decimals, s.unit)} (${formatPeriod(last.date)})`);
     }
-    if (meta.dataset_id) lines.push(`Source: ${String(meta.source || "").toUpperCase()} ${meta.dataset_id}`);
+    const sources = (meta.components || []).map((c) => c.metadata || {});
+    const named = (sources.length ? sources : [meta]).filter((m) => m.dataset_id);
+    if (named.length) {
+      lines.push(`Source: ${named.map((m) => `${String(m.source || "").toUpperCase()} ${m.dataset_id}`).join("; ")}`);
+    }
     request("ui/update-model-context", { content: [{ type: "text", text: lines.join("\n") }] }).catch(() => {});
   }
 
@@ -438,6 +442,21 @@
       if (i > 0 && MINOR_WORDS.has(word)) return word;
       return word.replace(/[a-z]/, (c) => c.toUpperCase());
     }).join(" ");
+  }
+
+  // A multi-concept result keeps each concept's own metadata in metadata.components.
+  function seriesMeta(meta, seriesId) {
+    for (const component of meta.components || []) {
+      if ((component.series_ids || []).includes(seriesId)) return component.metadata || meta;
+    }
+    return meta;
+  }
+
+  // Short measure titles ("Unemployment rate") where they tell the series apart; otherwise the
+  // full labels. The full label is always on hover.
+  function displayLabels(series) {
+    const short = series.map((s) => splitLabel(s.label, s.desc && s.desc.frequency).title);
+    return new Set(short).size === short.length ? short : series.map((s) => s.label);
   }
 
   // "Per cent", "Per cent per annum" -> %; "percentage points" -> pp; anything else has no suffix.
@@ -537,6 +556,7 @@
   // ------------------------------------------------------------------- model
 
   function buildModel(data) {
+    const meta = data.metadata || {};
     const descriptors = new Map();
     (data.series || []).forEach((d) => descriptors.set(d.series_id, d));
 
@@ -564,12 +584,16 @@
         label: desc.label || id,
         desc,
         unit: unitLabel(desc),
+        // The source this series came from: its component in a multi-concept result.
+        meta: seriesMeta(meta, id),
         points,
         decimals: decimalsFor(numeric.map((p) => p.value), desc),
         // Event-driven series (e.g. policy rates "as announced") hold their value until the next change.
         step: /announc|event|irregular/i.test(String(desc.frequency || "")),
       });
     }
+    const shown = displayLabels(all);
+    all.forEach((s, i) => { s.display = shown[i]; });
 
     // Wider results (an unkeyed ABS dataflow can return thousands of series) are not charted:
     // an arbitrary first few series would mislead, and a full data table would be enormous.
@@ -592,24 +616,72 @@
     let t0 = Infinity;
     let t1 = -Infinity;
     for (const s of plotted) {
-      t0 = Math.min(t0, s.points[0].t);
-      t1 = Math.max(t1, s.points[s.points.length - 1].t);
+      const win = s.meta.date_window || {};
+      const winStart = win.start ? parsePeriod(win.start) : null;
+      const winEnd = win.end ? parsePeriod(win.end) : null;
+      // An event-driven series carries in the change still in effect at the window start (the
+      // August 2016 cash rate for "since 2019"); it is drawn from the window, not that date.
+      s.start = s.points[0].t;
+      if (winStart !== null && winStart > s.start) s.start = winStart;
+      // A step line holds its last value to the retrieval date, or to the window end if earlier.
+      s.end = s.points[s.points.length - 1].t;
+      if (s.step) {
+        let until = Date.parse(s.meta.retrieved_at || "");
+        if (winEnd !== null && !(until <= winEnd)) until = winEnd;
+        if (Number.isFinite(until) && until > s.end) s.end = until;
+      }
+      t0 = Math.min(t0, s.start);
+      t1 = Math.max(t1, s.end);
     }
-    const meta = data.metadata || {};
-    const win = meta.date_window || {};
-    const winStart = win.start ? parsePeriod(win.start) : null;
-    const winEnd = win.end ? parsePeriod(win.end) : null;
-    // An event-driven series carries in the change still in effect at the window start (the
-    // August 2016 cash rate for "since 2019"); the chart starts at the window, not that date.
-    if (winStart !== null && winStart > t0) t0 = winStart;
-    // A step line holds its last value to the retrieval date, or to the window end if earlier.
-    let until = Date.parse(meta.retrieved_at || "");
-    if (winEnd !== null && !(until <= winEnd)) until = winEnd;
-    if (plotted.some((s) => s.step) && Number.isFinite(until) && until > t1) t1 = until;
     // A single date per series (typically a last_n=1 lookup) is a list of values, not a chart.
     const snapshot = plotted.length > 0 &&
       plotted.every((s) => s.points.filter((p) => p.value !== null).length === 1);
     return { all, plotted, panels, t0, t1, wide, snapshot };
+  }
+
+  function headerText(meta, plotted) {
+    const semantic = meta.semantic || {};
+    const derived = meta.derived || {};
+    if (meta.source === "multiple") {
+      const sources = (meta.components || [])
+        .map((c) => String((c.metadata || {}).source || "").toUpperCase())
+        .filter(Boolean);
+      const titles = plotted.map((s) => splitLabel(s.label, s.desc.frequency).title);
+      const title = titles.length === 2 ? titles.join(" and ") : titles.join(", ");
+      const eyebrow = [[...new Set(sources)].join(" · "), meta.frequency].filter(Boolean);
+      return { eyebrow: eyebrow.join(" · "), title: title || meta.title || "Series", detail: "" };
+    }
+    const single = plotted.length === 1 ? plotted[0] : null;
+    const datasetTitle =
+      tidyTitle(meta.title) || derived.description || semantic.concept || derived.concept;
+    const frequency = meta.frequency || semantic.frequency || (single && single.desc.frequency);
+    const eyebrow = [
+      String(meta.source || "").toUpperCase(),
+      single ? datasetTitle || meta.dataset_id : meta.dataset_id,
+      frequency,
+    ].filter(Boolean).join(" · ");
+    if (!single) return { eyebrow, title: datasetTitle || "Series", detail: "" };
+    const parts = splitLabel(single.label, frequency);
+    return { eyebrow, title: parts.title, detail: parts.detail };
+  }
+
+  // One line per source: a multi-concept result names each source on its own line.
+  function footerLines(meta) {
+    const components = meta.components || [];
+    const sources = components.length ? components.map((c) => c.metadata || {}) : [meta];
+    return sources.map((m) => {
+      const parts = [];
+      if (components.length) {
+        parts.push(`${String(m.source || "").toUpperCase()} ${tidyTitle(m.title) || m.dataset_id || ""}`.trim());
+      }
+      if (m.publication_date) parts.push(`Published ${formatPeriod(m.publication_date)}`);
+      if (m.retrieved_at) {
+        const d = new Date(m.retrieved_at);
+        if (!Number.isNaN(d.getTime())) parts.push(`Retrieved ${d.toLocaleString()}`);
+      }
+      const url = m.retrieval_url && /^https:\/\//.test(m.retrieval_url) ? m.retrieval_url : null;
+      return { text: parts.join(" · "), url };
+    });
   }
 
   // ------------------------------------------------------------------ render
@@ -621,21 +693,10 @@
 
     const frag = document.createDocumentFragment();
     const header = el("header");
-    const semantic = meta.semantic || {};
-    const derived = meta.derived || {};
-    const single = model.plotted.length === 1 ? model.plotted[0] : null;
-    const datasetTitle =
-      tidyTitle(meta.title) || derived.description || semantic.concept || derived.concept;
-    const frequency = meta.frequency || semantic.frequency || (single && single.desc.frequency);
-    const eyebrowParts = [
-      String(meta.source || "").toUpperCase(),
-      single ? datasetTitle || meta.dataset_id : meta.dataset_id,
-      frequency,
-    ].filter(Boolean);
-    header.append(el("p", "eyebrow", eyebrowParts.join(" · ")));
-    const heading = single ? splitLabel(single.label, frequency) : { title: datasetTitle || "Series" };
+    const heading = headerText(meta, model.plotted);
+    header.append(el("p", "eyebrow", heading.eyebrow));
     const h1 = el("h1", null, heading.title);
-    if (single) h1.title = single.label;
+    if (model.plotted.length === 1) h1.title = model.plotted[0].label;
     header.append(h1);
     if (heading.detail) header.append(el("p", "subtitle", heading.detail));
 
@@ -717,7 +778,7 @@
       const point = latest[i];
       const item = el("li");
       item.append(el("span", "snap-value", formatValue(point.value, s.decimals, s.unit)));
-      const label = dates.size === 1 ? s.label : `${s.label} (${formatPeriod(point.date)})`;
+      const label = dates.size === 1 ? s.display : `${s.display} (${formatPeriod(point.date)})`;
       item.append(el("span", "snap-label", label));
       list.append(item);
     });
@@ -808,7 +869,7 @@
         penDown = true;
       });
       const lastPoint = s.points[s.points.length - 1];
-      if (s.step && lastPoint.value !== null) d += `H${xOf(model.t1).toFixed(1)}`;
+      if (s.step && lastPoint.value !== null) d += `H${xOf(s.end).toFixed(1)}`;
       root.append(svg("path", { class: "series-line", d, stroke: s.color }));
       for (const p of singles) {
         root.append(svg("circle", { class: "dot", cx: xOf(p.t), cy: yOf(p.value), r: 4, fill: s.color }));
@@ -911,7 +972,7 @@
         item.title = s.label;
         const key = el("span", "key");
         key.style.background = s.color;
-        item.append(key, el("span", null, s.label));
+        item.append(key, el("span", null, s.display));
         legend.append(item);
       }
       wrap.append(legend);
@@ -926,7 +987,9 @@
       const key = el("span", "key");
       key.style.background = s.color;
       row.append(key, el("span", "tt-value", formatValue(value, s.decimals, s.unit)));
-      row.append(el("span", "tt-label", rows.length > 1 ? s.label : ""));
+      const label = el("span", "tt-label", rows.length > 1 ? s.display : "");
+      label.title = s.label;
+      row.append(label);
       children.push(row);
     }
     for (const b of breaks) children.push(el("div", "tt-break", `Series break: ${b.label}`));
@@ -953,7 +1016,7 @@
     const head = el("tr");
     head.append(el("th", null, "Date"));
     for (const s of model.all) {
-      const th = el("th", null, s.label);
+      const th = el("th", null, s.display);
       th.title = s.label;
       head.append(th);
     }
@@ -992,23 +1055,20 @@
 
   function renderFooter(meta) {
     const footer = el("footer");
-    const parts = [];
-    if (meta.publication_date) parts.push(`Published ${formatPeriod(meta.publication_date)}`);
-    if (meta.retrieved_at) {
-      const d = new Date(meta.retrieved_at);
-      if (!Number.isNaN(d.getTime())) parts.push(`Retrieved ${d.toLocaleString()}`);
-    }
-    footer.append(document.createTextNode(parts.join(" · ")));
-    if (meta.retrieval_url && /^https:\/\//.test(meta.retrieval_url)) {
-      if (parts.length) footer.append(document.createTextNode(" · "));
-      const link = el("a", null, "Source");
-      link.href = meta.retrieval_url;
-      link.rel = "noopener noreferrer";
-      link.addEventListener("click", (e) => {
-        e.preventDefault();
-        request("ui/open-link", { url: meta.retrieval_url }).catch(() => {});
-      });
-      footer.append(link);
+    for (const line of footerLines(meta)) {
+      const row = el("div", null, line.text);
+      if (line.url) {
+        if (line.text) row.append(document.createTextNode(" · "));
+        const link = el("a", null, "Source");
+        link.href = line.url;
+        link.rel = "noopener noreferrer";
+        link.addEventListener("click", (e) => {
+          e.preventDefault();
+          request("ui/open-link", { url: line.url }).catch(() => {});
+        });
+        row.append(link);
+      }
+      footer.append(row);
     }
     return footer;
   }

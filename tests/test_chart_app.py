@@ -574,3 +574,170 @@ async def test_combined_results_over_eight_series_get_no_note() -> None:
         )
 
     assert "chart_note" not in json.loads(_texts(result)[0])["metadata"]
+
+
+def _combined(
+    rba_unit: str = "Per cent", rba_frequency: str = "As announced", snapshot: bool = False
+) -> dict:
+    from ausecon_mcp.combine import merge_concept_payloads
+
+    abs_part = {
+        "metadata": {
+            "source": "abs",
+            "dataset_id": "LF",
+            "title": "Labour Force",
+            "frequency": "Monthly",
+            "retrieval_url": "https://data.api.abs.gov.au/rest/data/LF/M13.3.1599.20.AUS.M",
+            "retrieved_at": "2026-11-19T01:00:00Z",
+            "server_version": "test",
+            "truncated": False,
+        },
+        "series": [
+            {
+                "series_id": "U",
+                "label": ABS_UNEMPLOYMENT_LABEL,
+                "unit": "Percent",
+                "frequency": "Monthly",
+                "dimensions": {},
+            }
+        ],
+        "observations": (
+            [{"date": "2026-09", "series_id": "U", "value": 4.7}]
+            if snapshot
+            else [
+                {"date": "2019-01", "series_id": "U", "value": 5.1},
+                {"date": "2019-02", "series_id": "U", "value": 5.0},
+            ]
+        ),
+    }
+    rba_metadata = {
+        "source": "rba",
+        "dataset_id": "a2",
+        "title": "A2 RESERVE BANK OF AUSTRALIA – CHANGES IN MONETARY POLICY AND ADMINISTERED RATES",
+        "publication_date": "03-Nov-2026",
+        "retrieval_url": "https://www.rba.gov.au/statistics/tables/csv/a2-data.csv",
+        "retrieved_at": "2026-11-19T00:30:00Z",
+        "server_version": "test",
+        "truncated": False,
+    }
+    if not snapshot:
+        rba_metadata["date_window"] = {"start": "2019-01-01", "end": None, "carried_in": ["R"]}
+    rba_part = {
+        "metadata": rba_metadata,
+        "series": [
+            {
+                "series_id": "R",
+                "label": "New Cash Rate Target",
+                "unit": rba_unit,
+                "frequency": rba_frequency,
+                "dimensions": {},
+            }
+        ],
+        "observations": (
+            [{"date": "2026-11-04", "series_id": "R", "value": 4.85}]
+            if snapshot
+            else [
+                {"date": "2016-08-03", "series_id": "R", "value": 1.5},
+                {"date": "2019-06-05", "series_id": "R", "value": 1.25},
+            ]
+        ),
+    }
+    return merge_concept_payloads([("unemployment_rate", abs_part), ("cash_rate_target", rba_part)])
+
+
+def test_combined_result_shares_one_percent_axis() -> None:
+    assert _run_view(f"buildModel({json.dumps(_combined())}).panels.length") == 1
+
+
+def test_combined_result_starts_at_the_window_despite_a_carried_value() -> None:
+    assert _run_view(f"buildModel({json.dumps(_combined())}).t0") == 1546300800000
+
+
+def test_combined_header_names_both_sources_and_short_titles() -> None:
+    payload = json.dumps(_combined())
+    header = _run_view(f"headerText({payload}.metadata, buildModel({payload}).plotted)")
+
+    assert header == {
+        "eyebrow": "ABS · RBA",
+        "title": "Unemployment rate and New Cash Rate Target",
+        "detail": "",
+    }
+
+
+def test_combined_legend_uses_short_titles() -> None:
+    labels = _run_view(f"displayLabels(buildModel({json.dumps(_combined())}).plotted)")
+
+    assert labels == ["Unemployment rate", "New Cash Rate Target"]
+
+
+def test_combined_footer_has_a_line_per_source() -> None:
+    lines = _run_view(f"footerLines({json.dumps(_combined())}.metadata)")
+
+    assert len(lines) == 2
+    assert lines[0]["text"].startswith("ABS Labour Force")
+    assert "A2 Reserve Bank of Australia" in lines[1]["text"]
+    assert "Published" in lines[1]["text"]
+    assert lines[0]["url"].startswith("https://data.api.abs.gov.au/")
+    assert lines[1]["url"] == "https://www.rba.gov.au/statistics/tables/csv/a2-data.csv"
+
+
+def test_single_source_footer_is_one_line_without_a_source_prefix() -> None:
+    payload = _policy_rate_result({"start": None, "end": None, "carried_in": []})
+    payload["metadata"]["retrieval_url"] = "https://www.rba.gov.au/x.csv"
+
+    lines = _run_view(f"footerLines({json.dumps(payload)}.metadata)")
+
+    assert len(lines) == 1
+    assert lines[0]["text"].startswith("Retrieved")
+    assert lines[0]["url"] == "https://www.rba.gov.au/x.csv"
+
+
+def test_mixed_units_get_stacked_panels() -> None:
+    payload = json.dumps(_combined(rba_unit="Number", rba_frequency="Monthly"))
+
+    assert _run_view(f"buildModel({payload}).panels.length") == 2
+
+
+def test_combined_snapshot_lists_both_values() -> None:
+    payload = json.dumps(_combined(snapshot=True))
+
+    assert _run_view(f"buildModel({payload}).snapshot") is True
+    assert _run_view(f"displayLabels(buildModel({payload}).plotted)") == [
+        "Unemployment rate",
+        "New Cash Rate Target",
+    ]
+
+
+def test_single_source_header_is_unchanged() -> None:
+    single = _combined()["metadata"]["components"][0]["metadata"]
+    payload = {
+        "metadata": single,
+        "series": [
+            {
+                "series_id": "U",
+                "label": ABS_UNEMPLOYMENT_LABEL,
+                "unit": "Percent",
+                "frequency": "Monthly",
+                "dimensions": {},
+            }
+        ],
+        "observations": [
+            {"date": "2019-01", "series_id": "U", "value": 5.1},
+            {"date": "2019-02", "series_id": "U", "value": 5.0},
+        ],
+    }
+    text = json.dumps(payload)
+
+    header = _run_view(f"headerText({text}.metadata, buildModel({text}).plotted)")
+
+    assert header == {
+        "eyebrow": "ABS · Labour Force · Monthly",
+        "title": "Unemployment rate",
+        "detail": "Persons · Total (age) · Seasonally Adjusted · Australia",
+    }
+
+
+def test_two_series_with_the_same_short_title_keep_their_full_labels() -> None:
+    model = "{plotted: [{label: 'Rate / Persons', desc: {}}, {label: 'Rate / Females', desc: {}}]}"
+
+    assert _run_view(f"displayLabels({model}.plotted)") == ["Rate / Persons", "Rate / Females"]
