@@ -39,6 +39,8 @@ Optional fields appear when relevant:
 - `selection`
 - `apra_url_resolution`
 - `framework_breaks` and `warnings`
+- `chart_note`, only for clients that display [inline charts](/user-guide/inline-charts/), when
+  the result is shown as a chart. It tells the model the chart is already on screen.
 - `stale`, `cached_at`, and `expires_at`
 
 See [Data freshness and provenance](/user-guide/data-freshness-and-provenance/) for how these

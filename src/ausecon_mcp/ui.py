@@ -13,6 +13,7 @@ from importlib import resources
 from pathlib import Path
 from typing import Any
 
+import pydantic_core
 from fastmcp import FastMCP
 from fastmcp.apps import UI_EXTENSION_ID, AppConfig
 from fastmcp.server.middleware import CallNext, Middleware, MiddlewareContext
@@ -37,9 +38,9 @@ CHART_TOOLS = frozenset(
 # message instead of a chart. Keep in step with MAX_SERIES in static/series_chart.html.
 MAX_CHART_SERIES = 8
 
-# Appended to chart tool results for clients that render MCP Apps. The tool description
-# alone did not stop claude.ai's Claude drawing its own chart of the same series; the
-# result is what the model is reading when it decides.
+# Added as metadata.chart_note to chart tool results for clients that render MCP Apps. The
+# tool description alone did not stop claude.ai's Claude drawing its own chart of the same
+# series; the result is what the model is reading when it decides.
 CHART_SHOWN_NOTE = (
     "This result is already displayed to the user as an interactive inline chart with a "
     "data table. The user's app told this server that it displays these charts, so the "
@@ -139,9 +140,21 @@ class ChartShownNoteMiddleware(Middleware):
         if not charted:
             return result
 
-        content: list[Any] = [*result.content, TextContent(type="text", text=CHART_SHOWN_NOTE)]
+        structured = result.structured_content
+        if not isinstance(structured, dict) or not isinstance(structured.get("metadata"), dict):
+            return result
+        # The note goes inside the JSON, not in a text block of its own: claude.ai saves a
+        # result's text blocks to one file for code execution, and a second block after the
+        # JSON broke json.load there. Metadata (with the note first) leads, so the model reads
+        # the note before the data.
+        annotated = {
+            "metadata": {"chart_note": CHART_SHOWN_NOTE, **structured["metadata"]},
+            **{key: value for key, value in structured.items() if key != "metadata"},
+        }
+        text = pydantic_core.to_json(annotated, fallback=str).decode()
+        others = [block for block in result.content if getattr(block, "type", None) != "text"]
         return ToolResult(
-            content=content,
-            structured_content=result.structured_content,
+            content=[TextContent(type="text", text=text), *others],
+            structured_content=annotated,
             meta=result.meta,
         )

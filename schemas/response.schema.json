@@ -32,6 +32,10 @@
       "required": ["source", "dataset_id", "server_version", "truncated"],
       "additionalProperties": false,
       "properties": {
+        "chart_note": {
+          "description": "Present only for clients that display MCP Apps, when the result is shown as an inline chart: tells the model the chart is already on screen.",
+          "type": "string"
+        },
         "source": {
           "type": "string",
           "enum": ["abs", "rba", "apra", "derived"]
