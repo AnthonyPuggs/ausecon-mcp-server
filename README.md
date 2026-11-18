@@ -103,6 +103,8 @@ the ABS, the RBA, or APRA. Ask for
 | **RBA** &nbsp;·&nbsp; Reserve Bank of Australia | Cash rate, monetary & financial aggregates, exchange rates |
 | **APRA** &nbsp;·&nbsp; Aust. Prudential Regulation Authority | ADI & insurer statistics, with release-cadence estimates |
 
+All three agencies publish this data under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). If you republish figures, credit the agency, not ausecon. See [Data Sources and Licensing](https://auseconmcp.com/data-sources/) for the attribution wording and the licences' exceptions.
+
 ## Try it instantly (no install)
 
 A hosted read-only, no-API-key instance speaks MCP over Streamable HTTP at:

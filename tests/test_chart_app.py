@@ -180,7 +180,7 @@ async def test_chart_tool_descriptions_discourage_redrawing_the_chart() -> None:
 
     for name in CHART_TOOLS:
         description = " ".join(tools[name].description.split())
-        assert "Do not create another chart" in description, name
+        assert "would duplicate it" in description, name
         assert "up to eight series" in description, name
         assert "annotation" not in description, name
 
@@ -322,13 +322,35 @@ async def test_non_chart_tools_never_get_the_chart_note() -> None:
     assert all(CHART_SHOWN_NOTE not in text for text in _texts(result))
 
 
-def test_chart_note_leaves_no_room_for_a_second_chart() -> None:
-    assert "Do not create another chart" in CHART_SHOWN_NOTE
+def test_chart_note_says_a_second_chart_would_duplicate_it() -> None:
+    assert "would duplicate what is already on screen" in CHART_SHOWN_NOTE
     assert "annotation" not in CHART_SHOWN_NOTE
     # The view's own context summary (ui/update-model-context) must say the same thing.
     html = load_chart_html()
-    assert "Do not create another chart of this data" in html
+    assert "Another chart of this data would duplicate" in html
     assert "annotation" not in html.lower()
+
+
+# Anthropic's connector directory rejects tool text that tells Claude how to behave or
+# interferes with its other tools, so the chart wording states facts, never commands.
+_IMPERATIVES = ("do not", "don't", "never ", "no need to check", "instead.", "only draw")
+
+
+async def test_chart_wording_has_no_instructions_to_the_model() -> None:
+    mcp = build_server()
+    async with Client(mcp) as client:
+        tools = {tool.name: tool for tool in await client.list_tools()}
+
+    html = load_chart_html()
+    start = html.index("function shareViewWithModel")
+    view_summary = html[start : html.index("];", start)]
+    texts = {"chart_note": CHART_SHOWN_NOTE, "view_summary": view_summary}
+    texts.update({name: tools[name].description for name in CHART_TOOLS})
+
+    for where, text in texts.items():
+        lowered = " ".join(text.lower().split())
+        for phrase in _IMPERATIVES:
+            assert phrase not in lowered, f"{where} contains {phrase!r}"
 
 
 async def test_single_date_results_get_no_note() -> None:
@@ -354,7 +376,7 @@ def test_chart_note_says_the_chart_is_visible_on_mobile_too() -> None:
     # On the claude.ai iPhone app the model doubted the chart had rendered and offered to
     # draw its own; the client only gets the note after declaring it renders MCP Apps.
     assert "mobile" in CHART_SHOWN_NOTE
-    assert "Do not create another chart" in CHART_SHOWN_NOTE
+    assert "already on screen" in CHART_SHOWN_NOTE
 
 
 async def test_charted_results_stay_a_single_json_document() -> None:
