@@ -23,8 +23,9 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   `get_derived_series`, `get_rba_table`, `get_abs_data` and `get_apra_data`) now point at a new
   `ui://ausecon/series-chart.html` resource. It draws results with up to eight series as an
   interactive line chart with a latest-value headline, a hover readout, source warnings and a
-  data table. Wider results show a one-line prompt to ask for fewer series. The page is a single self-contained file that makes no network requests. Other
-  clients, Claude Code among them, ignore it and get the same JSON as before. For clients that
+  data table. Wider results show a one-line prompt to ask for fewer series. The page is a single
+  self-contained file that makes no network requests. Other clients, Claude Code among them,
+  ignore it and get the same JSON as before. For clients that
   declare MCP Apps support, the tool result also carries a one-line note that the data is already
   on screen, so the model doesn't draw a second chart of it. The tool descriptions say the same,
   and the chart tells hosts that accept context updates what it is showing.
