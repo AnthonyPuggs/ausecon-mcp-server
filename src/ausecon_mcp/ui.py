@@ -11,12 +11,27 @@ from __future__ import annotations
 from functools import lru_cache
 from importlib import resources
 from pathlib import Path
+from typing import Any
 
 from fastmcp import FastMCP
-from fastmcp.apps import AppConfig
+from fastmcp.apps import UI_EXTENSION_ID, AppConfig
+from fastmcp.server.middleware import CallNext, Middleware, MiddlewareContext
+from fastmcp.tools import ToolResult
+from mcp.types import CallToolRequestParams, TextContent
+
+from ausecon_mcp.logging import get_logger
 
 CHART_RESOURCE_URI = "ui://ausecon/series-chart.html"
 CHART_TOOLS = frozenset({"get_economic_series", "get_derived_series"})
+
+# Appended to chart tool results for clients that render MCP Apps. The tool description
+# alone did not stop claude.ai's Claude drawing its own chart of the same series; the
+# result is what the model is reading when it decides.
+CHART_SHOWN_NOTE = (
+    "This result is already displayed to the user as an interactive inline chart with a "
+    "data table. Do not create another chart of this data; summarise it in prose instead. "
+    "Only draw a chart yourself if the user explicitly asks for a different chart."
+)
 
 _STATIC_DIR = "static"
 _CHART_FILE = "series_chart.html"
@@ -52,3 +67,36 @@ def register_chart_resource(mcp: FastMCP) -> None:
     )
     def series_chart() -> str:
         return load_chart_html()
+
+
+class ChartShownNoteMiddleware(Middleware):
+    """Tell UI-rendering clients that a chart tool's result is already on screen.
+
+    Text-only clients (Claude Code, most IDEs) get the tool's JSON unchanged.
+    """
+
+    async def on_call_tool(
+        self,
+        context: MiddlewareContext[CallToolRequestParams],
+        call_next: CallNext[CallToolRequestParams, ToolResult],
+    ) -> ToolResult:
+        result = await call_next(context)
+        tool = context.message.name
+        if tool not in CHART_TOOLS or result.is_error:
+            return result
+
+        fastmcp_context = context.fastmcp_context
+        renders_ui = bool(
+            fastmcp_context is not None
+            and fastmcp_context.client_supports_extension(UI_EXTENSION_ID)
+        )
+        get_logger("ui").info("chart_tool.result", extra={"tool": tool, "renders_ui": renders_ui})
+        if not renders_ui:
+            return result
+
+        content: list[Any] = [*result.content, TextContent(type="text", text=CHART_SHOWN_NOTE)]
+        return ToolResult(
+            content=content,
+            structured_content=result.structured_content,
+            meta=result.meta,
+        )

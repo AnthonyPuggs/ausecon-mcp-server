@@ -51,7 +51,7 @@ from ausecon_mcp.providers.apra import APRAProvider
 from ausecon_mcp.providers.rba import RBAProvider
 from ausecon_mcp.releases import ReleaseProvider, filter_release_events
 from ausecon_mcp.resources import register_resources
-from ausecon_mcp.ui import chart_app_config, register_chart_resource
+from ausecon_mcp.ui import ChartShownNoteMiddleware, chart_app_config, register_chart_resource
 from ausecon_mcp.validation import (
     require_non_empty,
     validate_abs_period_range,
@@ -1229,8 +1229,8 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
         YYYY-SN, YYYY-MM, or YYYY-MM-DD and are normalised to the resolved source.
 
         In MCP Apps hosts (claude.ai, Claude Desktop) the result is already shown to the
-        user as an interactive chart with a data table; do not redraw the same series as a
-        chart unless the user asks for something it lacks, such as a comparison or annotation.
+        user as an interactive chart with a data table. Do not create another chart of the
+        same data unless the user explicitly asks for a different chart.
         """
         return await app_service.get_economic_series(
             concept=concept,
@@ -1261,8 +1261,8 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
         are normalised to the derived series frequency.
 
         In MCP Apps hosts (claude.ai, Claude Desktop) the result is already shown to the
-        user as an interactive chart with a data table; do not redraw the same series as a
-        chart unless the user asks for something it lacks, such as a comparison or annotation.
+        user as an interactive chart with a data table. Do not create another chart of the
+        same data unless the user explicitly asks for a different chart.
         """
         return await app_service.get_derived_series(
             concept=concept,
@@ -1379,6 +1379,7 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
 
     register_resources(mcp)
     register_chart_resource(mcp)
+    mcp.add_middleware(ChartShownNoteMiddleware())
     register_prompts(mcp)
     _normalise_registered_tool_parameter_descriptions(mcp)
 
