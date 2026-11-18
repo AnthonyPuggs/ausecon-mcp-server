@@ -36,6 +36,11 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   lookup. It shows the date and a list of values instead, and the result carries no
   "already charted" note. Tool errors appear in the chart frame as one short sentence; the full
   message is still returned to the model.
+- The "already charted" note is now a `metadata.chart_note` field inside the JSON, not a
+  separate text block after it. claude.ai saves a result's text blocks to one file for code
+  execution, so Claude's `json.load` on a charted F2 result failed with "Extra data: line 2
+  column 1". Claude then worked around it and drew its own chart. The response schema gains
+  the optional `chart_note` field, which only clients that display MCP Apps receive.
 - The "already charted" note tells the model that the user's app confirmed it shows the chart,
   on mobile as well as desktop. On the claude.ai iPhone app, Claude doubted the chart had
   rendered and offered to draw its own.

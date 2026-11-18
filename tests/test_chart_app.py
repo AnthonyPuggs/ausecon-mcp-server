@@ -210,11 +210,15 @@ async def test_ui_clients_are_told_the_chart_is_already_shown(tool: str) -> None
     async with _ui_client(mcp) as client:
         result = await client.call_tool(tool, _ARGS[tool])
 
-    texts = _texts(result)
-    assert len(texts) == 2
-    assert json.loads(texts[0]) == payload
-    assert texts[1] == CHART_SHOWN_NOTE
-    assert result.structured_content == payload
+    (text,) = _texts(result)
+    body = json.loads(text)
+    assert body["metadata"]["chart_note"] == CHART_SHOWN_NOTE
+    # Placed first so the model reads it before the data, even in a truncated preview.
+    assert next(iter(body)) == "metadata"
+    assert next(iter(body["metadata"])) == "chart_note"
+    del body["metadata"]["chart_note"]
+    assert body == payload
+    assert result.structured_content["metadata"]["chart_note"] == CHART_SHOWN_NOTE
 
 
 @pytest.mark.parametrize("tool", sorted(CHART_TOOLS))
@@ -238,7 +242,7 @@ async def test_results_too_wide_to_chart_get_no_note() -> None:
     async with _ui_client(mcp) as client:
         result = await client.call_tool("get_rba_table", _ARGS["get_rba_table"])
 
-    assert len(_texts(result)) == 1
+    assert "chart_note" not in json.loads(_texts(result)[0])["metadata"]
 
 
 async def test_results_with_nothing_numeric_get_no_note() -> None:
@@ -247,7 +251,7 @@ async def test_results_with_nothing_numeric_get_no_note() -> None:
     async with _ui_client(mcp) as client:
         result = await client.call_tool("get_rba_table", _ARGS["get_rba_table"])
 
-    assert len(_texts(result)) == 1
+    assert "chart_note" not in json.loads(_texts(result)[0])["metadata"]
 
 
 async def test_series_without_numeric_values_do_not_count_towards_the_limit() -> None:
@@ -259,7 +263,7 @@ async def test_series_without_numeric_values_do_not_count_towards_the_limit() ->
     async with _ui_client(mcp) as client:
         result = await client.call_tool("get_rba_table", _ARGS["get_rba_table"])
 
-    assert _texts(result)[-1] == CHART_SHOWN_NOTE
+    assert json.loads(_texts(result)[0])["metadata"]["chart_note"] == CHART_SHOWN_NOTE
 
 
 def test_view_and_server_agree_on_the_series_limit() -> None:
@@ -272,7 +276,7 @@ async def test_non_chart_tools_never_get_the_chart_note() -> None:
     async with _ui_client(mcp) as client:
         result = await client.call_tool("list_economic_concepts", {})
 
-    assert CHART_SHOWN_NOTE not in _texts(result)
+    assert all(CHART_SHOWN_NOTE not in text for text in _texts(result))
 
 
 def test_chart_note_leaves_no_room_for_a_second_chart() -> None:
@@ -293,7 +297,7 @@ async def test_single_date_results_get_no_note() -> None:
     async with _ui_client(mcp) as client:
         result = await client.call_tool("get_rba_table", _ARGS["get_rba_table"])
 
-    assert len(_texts(result)) == 1
+    assert "chart_note" not in json.loads(_texts(result)[0])["metadata"]
 
 
 def test_view_shows_single_date_results_as_a_list_of_values() -> None:
@@ -308,3 +312,24 @@ def test_chart_note_says_the_chart_is_visible_on_mobile_too() -> None:
     # draw its own; the client only gets the note after declaring it renders MCP Apps.
     assert "mobile" in CHART_SHOWN_NOTE
     assert "Do not create another chart" in CHART_SHOWN_NOTE
+
+
+async def test_charted_results_stay_a_single_json_document() -> None:
+    # claude.ai saves a tool result's text blocks to one file for code execution. A separate
+    # note block after the JSON made json.load fail with "Extra data: line 2 column 1".
+    mcp = build_server(service=_FakeService(_payload(2)))
+
+    async with _ui_client(mcp) as client:
+        result = await client.call_tool("get_rba_table", _ARGS["get_rba_table"])
+
+    joined = "\n".join(_texts(result))
+    assert json.loads(joined)["series"] == _payload(2)["series"]
+
+
+async def test_text_only_clients_never_see_a_chart_note() -> None:
+    mcp = build_server(service=_FakeService(_payload(2)))
+
+    async with Client(mcp) as client:
+        result = await client.call_tool("get_rba_table", _ARGS["get_rba_table"])
+
+    assert "chart_note" not in result.structured_content["metadata"]

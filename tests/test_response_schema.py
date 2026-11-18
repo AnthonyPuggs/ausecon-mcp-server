@@ -514,3 +514,19 @@ def test_response_schema_documents_contract_and_abs_metadata_fields() -> None:
     assert "derived" in schema["$defs"]["metadata"]["properties"]
     assert "derived" in schema["$defs"]["metadata"]["properties"]["source"]["enum"]
     assert "apra" in schema["$defs"]["metadata"]["properties"]["source"]["enum"]
+
+
+def test_response_schema_accepts_the_chart_note() -> None:
+    payload = {
+        "metadata": {
+            "chart_note": "Already shown to the user as a chart.",
+            "source": "rba",
+            "dataset_id": "f2",
+            "server_version": "test",
+            "truncated": False,
+        },
+        "series": [],
+        "observations": [],
+    }
+
+    _assert_valid(payload)

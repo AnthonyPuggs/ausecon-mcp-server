@@ -35,6 +35,8 @@ Optional fields appear when relevant:
 - `stale`, `cached_at`, and `expires_at` when a stale cached payload is returned after an upstream failure
 - `warnings` — plain-English source warnings, including the empty-window notice when ABS
   reports no observations for the requested period
+- `chart_note` — only for clients that display MCP Apps, when the result is shown as an
+  inline chart; tells the model the chart is already on screen
 
 `cached_at` and `expires_at` are Unix timestamps from the cache layer rather than ISO datetimes.
 
