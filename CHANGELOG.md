@@ -27,6 +27,18 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   `describe_dataset`, `get_apra_data` and the `ausecon://` catalogue resources. Every entry point
   now maps an identifier to the catalogue's own spelling before using it. RBA IDs outside the
   catalogue are lowercased, matching the RBA's CSV filenames.
+- `series_ids` that match nothing in an RBA table or APRA publication now return an error
+  naming the closest real IDs and listing the dataset's series, instead of an empty result. In
+  claude.ai, Claude guessed `FCMYGBAG2` for the F2 2-year yield (the real ID is `FCMYGBAG2D`),
+  got nothing back, and needed two more calls to find the codes. When only some IDs match, the
+  result keeps the matches and adds a warning about the rest.
+- The inline chart no longer draws a dot chart for single-date results, such as a `last_n=1`
+  lookup. It shows the date and a list of values instead, and the result carries no
+  "already charted" note. Tool errors appear in the chart frame as one short sentence; the full
+  message is still returned to the model.
+- The "already charted" note tells the model that the user's app confirmed it shows the chart,
+  on mobile as well as desktop. On the claude.ai iPhone app, Claude doubted the chart had
+  rendered and offered to draw its own.
 
 ### Added
 

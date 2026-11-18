@@ -148,8 +148,9 @@ def _payload(series_count: int = 1, numeric: bool = True) -> dict:
         for i in range(series_count)
     ]
     observations = [
-        {"date": "2026-09-30", "series_id": f"S{i}", "value": 3.7 if numeric else None}
+        {"date": date, "series_id": f"S{i}", "value": 3.7 if numeric else None}
         for i in range(series_count)
+        for date in ("2026-08-31", "2026-09-30")
     ]
     return {
         "metadata": {
@@ -281,3 +282,29 @@ def test_chart_note_leaves_no_room_for_a_second_chart() -> None:
     html = load_chart_html()
     assert "Do not create another chart of this data" in html
     assert "annotation" not in html.lower()
+
+
+async def test_single_date_results_get_no_note() -> None:
+    # A last_n=1 lookup (often a model finding series codes) is a list of values, not a chart.
+    payload = _payload(5)
+    payload["observations"] = [o for o in payload["observations"] if o["date"] == "2026-09-30"]
+    mcp = build_server(service=_FakeService(payload))
+
+    async with _ui_client(mcp) as client:
+        result = await client.call_tool("get_rba_table", _ARGS["get_rba_table"])
+
+    assert len(_texts(result)) == 1
+
+
+def test_view_shows_single_date_results_as_a_list_of_values() -> None:
+    html = load_chart_html()
+
+    assert "model.snapshot" in html
+    assert 'el("ul", "snapshot")' in html
+
+
+def test_chart_note_says_the_chart_is_visible_on_mobile_too() -> None:
+    # On the claude.ai iPhone app the model doubted the chart had rendered and offered to
+    # draw its own; the client only gets the note after declaring it renders MCP Apps.
+    assert "mobile" in CHART_SHOWN_NOTE
+    assert "Do not create another chart" in CHART_SHOWN_NOTE

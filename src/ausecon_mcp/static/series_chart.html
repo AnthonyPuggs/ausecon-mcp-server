@@ -174,6 +174,18 @@
   footer { margin-top: 12px; color: var(--ink-3); font-size: 11px; }
   footer a { color: inherit; }
   .status { color: var(--ink-2); margin: 0; }
+  .snapshot {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 4px 12px;
+    align-items: baseline;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .snapshot li { display: contents; }
+  .snap-value { font-weight: 600; font-variant-numeric: tabular-nums; text-align: right; }
+  .snap-label { color: var(--ink-2); overflow-wrap: anywhere; }
   @media (forced-colors: active) {
     .series-line { stroke: CanvasText; }
   }
@@ -296,8 +308,10 @@
 
   function onToolResult(result) {
     if (result.isError) {
+      // Just the first sentence: the full message (e.g. a list of valid series IDs) is for the model.
       const text = textContent(result) || "The tool returned an error.";
-      setStatus(text);
+      const first = text.split(/(?<=[.?!])\s/)[0];
+      setStatus(first.length > 240 ? `${first.slice(0, 239)}…` : first);
       return;
     }
     const data = extractPayload(result);
@@ -315,7 +329,8 @@
   function shareViewWithModel() {
     if (contextSent || !hostCapabilities.updateModelContext) return;
     const model = buildModel(payload);
-    if (!model.plotted.length) return; // nothing was charted, so there is nothing to protect
+    // Nothing was charted (a single-date result is a list of values), so there is nothing to protect.
+    if (!model.plotted.length || model.snapshot) return;
     contextSent = true;
     const meta = payload.metadata || {};
     const lines = [
@@ -546,7 +561,10 @@
     }
     const retrieved = Date.parse((data.metadata || {}).retrieved_at || "");
     if (plotted.some((s) => s.step) && Number.isFinite(retrieved) && retrieved > t1) t1 = retrieved;
-    return { all, plotted, panels, t0, t1, wide };
+    // A single date per series (typically a last_n=1 lookup) is a list of values, not a chart.
+    const snapshot = plotted.length > 0 &&
+      plotted.every((s) => s.points.filter((p) => p.value !== null).length === 1);
+    return { all, plotted, panels, t0, t1, wide, snapshot };
   }
 
   // ------------------------------------------------------------------ render
@@ -595,7 +613,7 @@
       notices.append(el("p", "notice", "Served from cache — the upstream source was unavailable."));
     }
     for (const warning of meta.warnings || []) notices.append(el("p", "notice", warning));
-    if (meta.truncated && meta.observations_dropped) {
+    if (meta.truncated && meta.observations_dropped && !model.snapshot) {
       notices.append(el("p", "notice info",
         `Showing the most recent observations; ${meta.observations_dropped.toLocaleString()} earlier observations were not returned.`));
     }
@@ -616,6 +634,14 @@
       reportSize();
       return;
     }
+    if (model.snapshot) {
+      // One series: the headline already shows its value and date.
+      if (model.plotted.length > 1) frag.append(renderSnapshot(model));
+      frag.append(renderFooter(meta));
+      app.replaceChildren(frag);
+      reportSize();
+      return;
+    }
 
     const width = Math.max(app.clientWidth - 32, 240);
     lastWidth = app.clientWidth;
@@ -628,6 +654,24 @@
     frag.append(renderFooter(meta));
     app.replaceChildren(frag);
     reportSize();
+  }
+
+  function renderSnapshot(model) {
+    const latest = model.plotted.map((s) => s.points.find((p) => p.value !== null));
+    const dates = new Set(latest.map((p) => p.date));
+    const wrap = el("section", "panel");
+    if (dates.size === 1) wrap.append(el("p", "panel-unit", formatPeriod(latest[0].date)));
+    const list = el("ul", "snapshot");
+    model.plotted.forEach((s, i) => {
+      const point = latest[i];
+      const item = el("li");
+      item.append(el("span", "snap-value", formatValue(point.value, s.decimals, s.unit)));
+      const label = dates.size === 1 ? s.label : `${s.label} (${formatPeriod(point.date)})`;
+      item.append(el("span", "snap-label", label));
+      list.append(item);
+    });
+    wrap.append(list);
+    return wrap;
   }
 
   function renderPanel(panel, model, meta, width, height) {

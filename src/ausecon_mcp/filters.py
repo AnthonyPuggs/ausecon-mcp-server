@@ -1,9 +1,18 @@
 from __future__ import annotations
 
 from collections import defaultdict
+from difflib import get_close_matches
 from typing import Any
 
+from ausecon_mcp.errors import AuseconValidationError
 from ausecon_mcp.periods import period_end_date, period_start_date, try_period_sort_key
+
+# How many of a dataset's series an unknown-series_ids message lists.
+MAX_LISTED_SERIES = 30
+# Bounds on the unknown-series_ids message: fuzzy matching runs against every series in the
+# dataset (thousands for APRA), so only the first few unknown IDs get suggestions.
+MAX_QUOTED_UNKNOWN = 10
+MAX_SUGGESTED_UNKNOWN = 5
 
 
 def filter_payload(
@@ -16,6 +25,7 @@ def filter_payload(
 ) -> dict[str, Any]:
     observations = payload["observations"]
     if series_ids:
+        _check_series_ids(payload, series_ids)
         allowed = set(series_ids)
         observations = [item for item in observations if item["series_id"] in allowed]
 
@@ -68,6 +78,57 @@ def filter_payload(
     payload["metadata"]["truncated"] = truncated
     payload["metadata"]["observations_dropped"] = dropped
     return payload
+
+
+def _check_series_ids(payload: dict[str, Any], series_ids: list[str]) -> None:
+    """Reject series_ids that match nothing, and warn about any that match nothing alongside
+    ones that do.
+
+    An unmatched ID used to produce an empty result, leaving the caller (usually a model that
+    guessed an ID such as FCMYGBAG2 for FCMYGBAG2D) with nothing to correct it from.
+    """
+    descriptors = payload.get("series") or []
+    available = [item["series_id"] for item in descriptors]
+    if not available:
+        return
+    known = set(available)
+    unknown = [series_id for series_id in series_ids if series_id not in known]
+    if not unknown:
+        return
+
+    metadata = payload.get("metadata") or {}
+    dataset = " ".join(
+        part
+        for part in (str(metadata.get("source") or "").upper(), metadata.get("dataset_id"))
+        if part
+    )
+    quoted = ", ".join(repr(series_id) for series_id in unknown[:MAX_QUOTED_UNKNOWN])
+    if len(unknown) > MAX_QUOTED_UNKNOWN:
+        quoted += f" and {len(unknown) - MAX_QUOTED_UNKNOWN} more"
+    suggestions = []
+    for series_id in unknown[:MAX_SUGGESTED_UNKNOWN]:
+        for match in get_close_matches(series_id, available, n=1, cutoff=0.6):
+            if match not in suggestions:
+                suggestions.append(match)
+    hint = f" Did you mean {', '.join(suggestions)}?" if suggestions else ""
+
+    if len(unknown) < len(series_ids):
+        payload.setdefault("metadata", {}).setdefault("warnings", []).append(
+            f"series_ids not found in {dataset or 'this dataset'} and ignored: {quoted}.{hint}"
+        )
+        return
+
+    listed = "; ".join(
+        f"{item['series_id']} ({item['label']})" if item.get("label") else item["series_id"]
+        for item in descriptors[:MAX_LISTED_SERIES]
+    )
+    more = len(descriptors) - MAX_LISTED_SERIES
+    if more > 0:
+        listed += f"; and {more} more"
+    raise AuseconValidationError(
+        f"None of the requested series_ids are in {dataset or 'this dataset'}: {quoted}.{hint} "
+        f"Available series: {listed}."
+    )
 
 
 def strip_observation_dimensions(payload: dict[str, Any]) -> dict[str, Any]:

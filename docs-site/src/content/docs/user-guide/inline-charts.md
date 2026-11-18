@@ -45,6 +45,8 @@ Chart the 2-year and 10-year government bond yields from RBA table F2 since 2020
 - **Notices:** cached data served while the source was unavailable, truncated results and source
   warnings appear above the chart. Known series breaks are marked with a dashed vertical line.
 - **Data table:** collapsed by default, showing the most recent 400 dates.
+- **Single-date results**, such as the latest value of each series, appear as a list of values
+  instead of a chart.
 - **Footer:** publication and retrieval dates and a link to the source file.
 
 The chart follows your client's light or dark theme.
