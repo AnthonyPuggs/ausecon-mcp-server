@@ -13,7 +13,14 @@ The server exposes the curated catalogue as MCP resources. These are read-only, 
 | `ausecon://catalogue` | Flat index of every curated ABS, RBA, and APRA entry. |
 | `ausecon://abs/{dataflow_id}` | Full curated catalogue entry for one ABS dataflow. |
 | `ausecon://rba/{table_id}` | Full curated catalogue entry for one RBA statistical table. |
+| `ausecon://apra/{publication_id}` | Full curated catalogue entry for one APRA publication. |
 | `ausecon://concepts` | Every curated semantic shortcut with its resolved target and recommended call. |
+
+The server also publishes one MCP Apps UI resource, served as `text/html;profile=mcp-app`:
+
+| URI | Returns |
+| --- | --- |
+| `ui://ausecon/series-chart.html` | The self-contained chart page that MCP Apps clients render for `get_economic_series` and `get_derived_series` results. See [Inline Charts](/user-guide/inline-charts/). |
 
 ## Prompts
 

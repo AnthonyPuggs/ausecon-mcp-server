@@ -23,6 +23,10 @@ and APRA data.
 | `describe_dataset` | Describe a curated ABS, RBA, or APRA entry in plain English while preserving native IDs. | `source`, `identifier`, `table_id`, `include_structure` |
 | `list_release_events` | List ABS/RBA release-calendar and APRA release-pulse rows. | `source`, `query`, `start_date`, `end_date`, `limit` |
 
+In clients that support MCP Apps, such as claude.ai, `get_economic_series` and
+`get_derived_series` results also appear as an interactive chart. The JSON response is the same
+in every client. See [Inline Charts](/user-guide/inline-charts/).
+
 ## Preferred LLM flow
 
 For LLM-facing integrations, use:
