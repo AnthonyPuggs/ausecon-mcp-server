@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import os
 from typing import Annotated, Any, Literal
 
@@ -121,6 +122,7 @@ AbsKey = Annotated[
     Field(min_length=1, description='ABS SDMX key, or "all" for all series.'),
 ]
 SeriesId = Annotated[str, Field(min_length=1)]
+ConceptName = Annotated[str, Field(min_length=1)]
 OptionalSourceFilter = Annotated[
     Literal["abs", "rba", "apra"] | None,
     Field(
@@ -1318,7 +1320,15 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
         app=chart_app_config(),
     )
     async def get_economic_series(
-        concept: Annotated[str, Field(min_length=1, description="Curated semantic concept name.")],
+        concept: Annotated[
+            ConceptName
+            | Annotated[list[ConceptName], Field(min_length=1, max_length=MAX_CONCEPTS)],
+            Field(
+                description=(
+                    "Curated semantic concept name, or a list of up to eight to retrieve together."
+                )
+            ),
+        ],
         variant: OptionalVariant = None,
         geography: OptionalGeography = None,
         frequency: OptionalFrequency = None,
@@ -1332,10 +1342,25 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
         Use list_economic_concepts for discovery. Date bounds accept YYYY, YYYY-QN,
         YYYY-SN, YYYY-MM, or YYYY-MM-DD and are normalised to the resolved source.
 
+        A list of up to eight concepts returns them together in one result, which MCP Apps
+        hosts display as one chart.
+
         In MCP Apps hosts (claude.ai, Claude Desktop) a result with up to eight series is
         already shown to the user as an interactive chart with a data table, so another chart
         of the same data would duplicate it.
         """
+        concepts = _concept_list(concept)
+        if concepts is not None:
+            return await app_service.get_economic_series_many(
+                concepts,
+                variant=variant,
+                geography=geography,
+                frequency=frequency,
+                start=start,
+                end=end,
+                last_n=last_n,
+                include_observation_dimensions=include_observation_dimensions,
+            )
         return await app_service.get_economic_series(
             concept=concept,
             variant=variant,
@@ -1488,6 +1513,30 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
     _normalise_registered_tool_parameter_descriptions(mcp)
 
     return mcp
+
+
+def _concept_list(concept: str | list[str]) -> list[str] | None:
+    """The concepts to retrieve together, or None for a single concept.
+
+    Some clients send an array argument as its JSON text, so a string that parses as a list of
+    non-empty strings is read as that list.
+    """
+    if isinstance(concept, list):
+        return concept
+    text = concept.strip()
+    if not text.startswith("["):
+        return None
+    try:
+        parsed = json.loads(text)
+    except ValueError:
+        return None
+    if (
+        isinstance(parsed, list)
+        and parsed
+        and all(isinstance(item, str) and item.strip() for item in parsed)
+    ):
+        return parsed
+    return None
 
 
 def _name_failed_concept(concept: str, error: BaseException) -> BaseException:

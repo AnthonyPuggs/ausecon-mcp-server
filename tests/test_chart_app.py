@@ -496,3 +496,81 @@ def test_an_end_bound_stops_the_step_line_at_the_window_end() -> None:
 
     # Not carried on to the 2026 retrieval date: the rate changed after the window.
     assert model["t1"] == 1577750400000  # 2019-12-31
+
+
+class _RecordingService(_FakeService):
+    def __init__(self, payload: dict | None = None) -> None:
+        super().__init__(payload)
+        self.calls: list[tuple[str, dict]] = []
+
+    async def get_economic_series(self, **kwargs: object) -> dict:
+        self.calls.append(("single", kwargs))
+        return await self._respond()
+
+    async def get_economic_series_many(self, concepts: list[str], **kwargs: object) -> dict:
+        self.calls.append(("many", {"concepts": concepts, **kwargs}))
+        return await self._respond()
+
+
+async def test_economic_series_tool_accepts_a_list_of_concepts() -> None:
+    service = _RecordingService()
+
+    async with Client(build_server(service=service)) as client:
+        await client.call_tool(
+            "get_economic_series",
+            {"concept": ["unemployment_rate", "cash_rate_target"], "start": "2019"},
+        )
+
+    ((kind, kwargs),) = service.calls
+    assert kind == "many"
+    assert kwargs["concepts"] == ["unemployment_rate", "cash_rate_target"]
+    assert kwargs["start"] == "2019"
+
+
+async def test_economic_series_tool_reads_a_json_encoded_list() -> None:
+    # Some clients send an array argument as its JSON text.
+    service = _RecordingService()
+
+    async with Client(build_server(service=service)) as client:
+        await client.call_tool(
+            "get_economic_series", {"concept": '["unemployment_rate", "cash_rate_target"]'}
+        )
+
+    ((kind, kwargs),) = service.calls
+    assert kind == "many"
+    assert kwargs["concepts"] == ["unemployment_rate", "cash_rate_target"]
+
+
+async def test_economic_series_tool_still_takes_a_plain_concept() -> None:
+    service = _RecordingService()
+
+    async with Client(build_server(service=service)) as client:
+        await client.call_tool("get_economic_series", {"concept": "cash_rate_target"})
+
+    ((kind, kwargs),) = service.calls
+    assert kind == "single"
+    assert kwargs["concept"] == "cash_rate_target"
+
+
+async def test_economic_series_schema_allows_a_list() -> None:
+    async with Client(build_server()) as client:
+        tools = {tool.name: tool for tool in await client.list_tools()}
+
+    concept = tools["get_economic_series"].input_schema["properties"]["concept"]
+    variants = concept["anyOf"]
+    assert {"type": "string", "minLength": 1} in variants
+    (array,) = [v for v in variants if v.get("type") == "array"]
+    assert array["items"]["type"] == "string"
+    assert array["maxItems"] == 8
+    assert array["minItems"] == 1
+
+
+async def test_combined_results_over_eight_series_get_no_note() -> None:
+    mcp = build_server(service=_RecordingService(_payload(MAX_CHART_SERIES + 1)))
+
+    async with _ui_client(mcp) as client:
+        result = await client.call_tool(
+            "get_economic_series", {"concept": ["unemployment_rate", "cash_rate_target"]}
+        )
+
+    assert "chart_note" not in json.loads(_texts(result)[0])["metadata"]
