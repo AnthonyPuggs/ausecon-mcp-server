@@ -3,7 +3,7 @@ title: Privacy Policy
 description: What the hosted ausecon MCP server, the installable package, and this documentation site collect, and what they do with it.
 ---
 
-Last updated: 12 November 2026.
+Last updated: 18 November 2026.
 
 ausecon is an independent, open-source project. It is not operated by, affiliated with, or endorsed
 by the Australian Bureau of Statistics (ABS), the Reserve Bank of Australia (RBA), or the Australian
@@ -135,8 +135,8 @@ date. The full history is in the
 
 ## Contact
 
-For privacy questions or requests, open an issue at
-[github.com/AnthonyPuggs/ausecon-mcp-server/issues](https://github.com/AnthonyPuggs/ausecon-mcp-server/issues).
+For privacy questions or requests, start a discussion at
+[github.com/AnthonyPuggs/ausecon-mcp-server/discussions](https://github.com/AnthonyPuggs/ausecon-mcp-server/discussions).
 
 To report a security vulnerability, do not open a public issue. Use the private reporting process in
 the project's
