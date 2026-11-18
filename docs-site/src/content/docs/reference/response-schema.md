@@ -39,6 +39,7 @@ Optional fields appear when relevant:
 - `selection`
 - `apra_url_resolution`
 - `framework_breaks` and `warnings`
+- `components`, on multi-concept `get_economic_series` responses (see below)
 - `date_window` — the date bounds applied to an RBA or APRA download. Event-driven series
   listed in `carried_in`, such as the cash rate target, also keep their last change before
   `start`, because that value was still in effect when the window opens.
@@ -54,6 +55,13 @@ concept, resolved variant, requested bounds, resolved source-native bounds, and 
 target. APRA semantic targets include `apra_table_id` and `apra_series_ids`. Raw source-native
 responses from `get_abs_data`, `get_rba_table`, and `get_apra_data` do not include
 `metadata.semantic`.
+
+When `get_economic_series` is given a list of concepts, `source` is `multiple`, `dataset_id`
+joins the component datasets with `+` (for example `LF+a2`), and `components` lists one entry per
+concept in request order: the `series_ids` it returned and that concept's own `metadata`, including
+its `semantic` block, `retrieval_url` and `date_window`. The top-level `retrieved_at` is the oldest
+component's, `truncated` and `stale` are true if any component's is, and component warnings are
+prefixed with their concept.
 
 `derived` appears on responses returned by `get_derived_series`. It records the formula, operands,
 source concepts, alignment frequency, output units, requested and resolved bounds, and
