@@ -29,6 +29,7 @@ from ausecon_mcp.catalogue.resolver import (
 )
 from ausecon_mcp.catalogue.search import list_catalogue as _list_catalogue
 from ausecon_mcp.catalogue.search import search_catalogue
+from ausecon_mcp.combine import MAX_CONCEPTS, merge_concept_payloads
 from ausecon_mcp.contracts import response_output_schema
 from ausecon_mcp.convenience import (
     describe_dataset as describe_catalogue_dataset,
@@ -42,6 +43,12 @@ from ausecon_mcp.derived import (
     get_operand_specs,
     operand_request_bounds,
     validate_derived_bounds,
+)
+from ausecon_mcp.errors import (
+    AuseconError,
+    AuseconNotFoundError,
+    AuseconUpstreamError,
+    AuseconValidationError,
 )
 from ausecon_mcp.filters import strip_observation_dimensions
 from ausecon_mcp.logging import configure_logging, get_logger
@@ -805,6 +812,71 @@ class AuseconService:
         _stamp_semantic_metadata(payload, validated_concept, resolved, bounds)
         return payload
 
+    async def get_economic_series_many(
+        self,
+        concepts: list[str],
+        *,
+        variant: str | None = None,
+        geography: str | None = None,
+        frequency: str | None = None,
+        start: str | None = None,
+        end: str | None = None,
+        last_n: int | None = None,
+        include_observation_dimensions: bool = False,
+    ) -> dict:
+        """Several curated concepts in one response (``metadata.source = "multiple"``).
+
+        A list that dedupes to one concept returns the ordinary single-concept response.
+        """
+        unique = list(dict.fromkeys(str(concept).strip() for concept in concepts))
+        if len(unique) == 1:
+            return await self.get_economic_series(
+                unique[0],
+                variant=variant,
+                geography=geography,
+                frequency=frequency,
+                start=start,
+                end=end,
+                last_n=last_n,
+                include_observation_dimensions=include_observation_dimensions,
+            )
+        if not unique:
+            raise AuseconValidationError("concept must name at least one concept.")
+        if len(unique) > MAX_CONCEPTS:
+            raise AuseconValidationError(
+                f"concept accepts at most {MAX_CONCEPTS} concepts in one call; got {len(unique)}."
+            )
+        for name, value in (
+            ("variant", variant),
+            ("geography", geography),
+            ("frequency", frequency),
+        ):
+            if value is not None:
+                raise AuseconValidationError(
+                    f"{name} applies to a single concept; with several concepts each concept "
+                    "uses its default."
+                )
+        results = await asyncio.gather(
+            *(
+                self.get_economic_series(
+                    concept,
+                    start=start,
+                    end=end,
+                    last_n=last_n,
+                    include_observation_dimensions=include_observation_dimensions,
+                )
+                for concept in unique
+            ),
+            return_exceptions=True,
+        )
+        for concept, result in zip(unique, results, strict=True):
+            if isinstance(result, BaseException):
+                named = _name_failed_concept(concept, result)
+                if named is result:
+                    raise result
+                raise named from result
+        return merge_concept_payloads(list(zip(unique, results, strict=True)))
+
     async def get_derived_series(
         self,
         concept: str,
@@ -1416,6 +1488,25 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
     _normalise_registered_tool_parameter_descriptions(mcp)
 
     return mcp
+
+
+def _name_failed_concept(concept: str, error: BaseException) -> BaseException:
+    """The same kind of error, with the failing concept named first so the caller can drop it."""
+    message = f"Concept '{concept}': {error}"
+    if isinstance(error, AuseconNotFoundError):
+        return AuseconNotFoundError(
+            message, status_code=error.status_code, body=error.body, url=error.url
+        )
+    if isinstance(error, AuseconUpstreamError):
+        return AuseconUpstreamError(message, status_code=error.status_code)
+    if isinstance(error, AuseconError):
+        try:
+            return type(error)(message)
+        except TypeError:
+            pass
+    if isinstance(error, Exception) and not isinstance(error, AuseconError):
+        return error
+    return AuseconValidationError(message)
 
 
 def _stamp_semantic_metadata(
