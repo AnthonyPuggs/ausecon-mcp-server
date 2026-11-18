@@ -89,7 +89,7 @@ the ABS, the RBA, or APRA. Ask for
     <td width="33%" valign="top">
       <h4>Works with your client</h4>
       Claude Desktop, Claude Code, Cursor, Windsurf, VS Code, Codex or Smithery.
-      stdio locally, Streamable HTTP when hosted. In claude.ai, curated-concept results appear as
+      stdio locally, Streamable HTTP when hosted. In claude.ai, data results appear as
       <a href="https://auseconmcp.com/user-guide/inline-charts/">interactive charts</a>.
     </td>
   </tr>

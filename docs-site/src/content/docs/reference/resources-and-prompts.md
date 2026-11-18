@@ -20,7 +20,7 @@ The server also publishes one MCP Apps UI resource, served as `text/html;profile
 
 | URI | Returns |
 | --- | --- |
-| `ui://ausecon/series-chart.html` | The self-contained chart page that MCP Apps clients render for `get_economic_series` and `get_derived_series` results. See [Inline Charts](/user-guide/inline-charts/). |
+| `ui://ausecon/series-chart.html` | The self-contained chart page that MCP Apps clients render for results from the five retrieval tools. See [Inline Charts](/user-guide/inline-charts/). |
 
 ## Prompts
 
