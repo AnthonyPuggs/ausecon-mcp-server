@@ -6,6 +6,11 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.20.1] - 2026-11-19
+
+Connector directory readiness: descriptive chart wording, a data licensing page and clearer
+independence disclaimers. Tool names, parameters and the response schema are unchanged.
+
 ### Added
 
 - A Data Sources and Licensing page in the docs (and a pointer from the README) covering the
@@ -1197,7 +1202,8 @@ Initial public release.
 - Initial curated catalogues for ABS and RBA, plus a four-concept
   `CURATED_SERIES` semantic shortcut map.
 
-[Unreleased]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.20.0...HEAD
+[Unreleased]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.20.1...HEAD
+[1.20.1]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.20.0...v1.20.1
 [1.20.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.19.0...v1.20.0
 [1.19.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.18.0...v1.19.0
 [1.18.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.17.0...v1.18.0
