@@ -42,7 +42,9 @@ MAX_CHART_SERIES = 8
 # result is what the model is reading when it decides.
 CHART_SHOWN_NOTE = (
     "This result is already displayed to the user as an interactive inline chart with a "
-    "data table. Do not create another chart of this data; summarise it in prose instead. "
+    "data table. The user's app told this server that it displays these charts, so the "
+    "chart is on screen now, on mobile as well as desktop; there is no need to check. "
+    "Do not create another chart of this data; summarise it in prose instead. "
     "Only draw a chart yourself if the user explicitly asks for a different chart."
 )
 
@@ -62,16 +64,28 @@ def load_chart_html() -> str:
     return (Path(__file__).resolve().parent / _STATIC_DIR / _CHART_FILE).read_text(encoding="utf-8")
 
 
-def chartable_series_count(payload: Any) -> int:
-    """Number of series in a retrieval payload with at least one numeric observation."""
+def numeric_points_by_series(payload: Any) -> dict[Any, int]:
+    """Count each series' numeric observations in a retrieval payload."""
+    counts: dict[Any, int] = {}
     if not isinstance(payload, dict):
-        return 0
-    series_ids = set()
+        return counts
     for observation in payload.get("observations") or ():
         value = observation.get("value") if isinstance(observation, dict) else None
         if isinstance(value, int | float) and not isinstance(value, bool):
-            series_ids.add(observation.get("series_id"))
-    return len(series_ids)
+            series_id = observation.get("series_id")
+            counts[series_id] = counts.get(series_id, 0) + 1
+    return counts
+
+
+def is_charted(payload: Any) -> bool:
+    """Whether the view draws a line chart of this payload.
+
+    It does for 1 to MAX_CHART_SERIES numeric series with at least one of them spanning two or
+    more observations. A single-date result (a last_n=1 lookup) is shown as a list of values
+    instead, and a wider result as a one-line "ask for fewer series" message.
+    """
+    counts = numeric_points_by_series(payload)
+    return 0 < len(counts) <= MAX_CHART_SERIES and max(counts.values()) > 1
 
 
 def chart_app_config() -> AppConfig:
@@ -98,8 +112,8 @@ def register_chart_resource(mcp: FastMCP) -> None:
 class ChartShownNoteMiddleware(Middleware):
     """Tell UI-rendering clients that a chart tool's result is already on screen.
 
-    Only added when the view will actually chart the result (1 to MAX_CHART_SERIES numeric
-    series). Text-only clients (Claude Code, most IDEs) get the tool's JSON unchanged.
+    Only added when the view will actually draw a chart of the result (see ``is_charted``).
+    Text-only clients (Claude Code, most IDEs) get the tool's JSON unchanged.
     """
 
     async def on_call_tool(
@@ -117,9 +131,7 @@ class ChartShownNoteMiddleware(Middleware):
             fastmcp_context is not None
             and fastmcp_context.client_supports_extension(UI_EXTENSION_ID)
         )
-        charted = renders_ui and 0 < chartable_series_count(result.structured_content) <= (
-            MAX_CHART_SERIES
-        )
+        charted = renders_ui and is_charted(result.structured_content)
         get_logger("ui").info(
             "chart_tool.result",
             extra={"tool": tool, "renders_ui": renders_ui, "charted": charted},

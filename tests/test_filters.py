@@ -1,5 +1,8 @@
 from copy import deepcopy
 
+import pytest
+
+from ausecon_mcp.errors import AuseconValidationError
 from ausecon_mcp.filters import filter_payload, strip_observation_dimensions
 
 
@@ -182,3 +185,54 @@ def test_strip_observation_dimensions_is_idempotent_on_slim_payloads() -> None:
     result = strip_observation_dimensions(strip_observation_dimensions(payload))
 
     assert result["observations"] == [{"date": "2024-01-01", "series_id": "A", "value": 1.0}]
+
+
+def _bond_payload() -> dict:
+    labels = {"FCMYGBAG2D": "2 year bond", "FCMYGBAG10D": "10 year bond"}
+    return {
+        "metadata": {"source": "rba", "dataset_id": "f2"},
+        "series": [
+            {"series_id": series_id, "label": label, "dimensions": {}}
+            for series_id, label in labels.items()
+        ],
+        "observations": [
+            {"date": "2026-11-11", "series_id": series_id, "value": 4.8} for series_id in labels
+        ],
+    }
+
+
+def test_filter_payload_rejects_series_ids_that_match_nothing() -> None:
+    # A guessed ID used to return an empty result, which gave the caller nothing to correct.
+    with pytest.raises(AuseconValidationError) as excinfo:
+        filter_payload(_bond_payload(), series_ids=["FCMYGBAG2", "FCMYGBAG10"])
+
+    message = str(excinfo.value)
+    assert "'FCMYGBAG2'" in message and "'FCMYGBAG10'" in message
+    assert "RBA f2" in message
+    assert "Did you mean FCMYGBAG2D, FCMYGBAG10D?" in message
+    assert "FCMYGBAG2D (2 year bond)" in message
+    assert "FCMYGBAG10D (10 year bond)" in message
+
+
+def test_filter_payload_warns_about_unknown_series_ids_alongside_known_ones() -> None:
+    payload = filter_payload(_bond_payload(), series_ids=["FCMYGBAG2D", "FCMYGBAG10"])
+
+    assert [item["series_id"] for item in payload["series"]] == ["FCMYGBAG2D"]
+    (warning,) = payload["metadata"]["warnings"]
+    assert "'FCMYGBAG10'" in warning
+    assert "FCMYGBAG10D" in warning
+
+
+def test_unknown_series_message_lists_a_bounded_number_of_series() -> None:
+    payload = _bond_payload()
+    payload["series"] = [
+        {"series_id": f"S{i:03d}", "label": f"Series {i}", "dimensions": {}} for i in range(500)
+    ]
+
+    with pytest.raises(AuseconValidationError) as excinfo:
+        filter_payload(payload, series_ids=["NOPE"])
+
+    message = str(excinfo.value)
+    assert "S000 (Series 0)" in message
+    assert "S499" not in message
+    assert "and 470 more" in message
