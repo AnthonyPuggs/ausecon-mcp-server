@@ -944,7 +944,9 @@
         if (p && p.value !== null) {
           dots[k].setAttribute("cx", cx);
           dots[k].setAttribute("cy", yOf(p.value));
-          dots[k].setAttribute("visibility", "visible");
+          // "inherit", not "visible": a child's own "visible" overrides the hidden hover layer,
+          // which left a stray dot (masking the line around it) after the pointer left.
+          dots[k].setAttribute("visibility", "inherit");
         } else {
           dots[k].setAttribute("visibility", "hidden");
         }
