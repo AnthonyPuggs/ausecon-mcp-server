@@ -9,7 +9,12 @@ export default defineConfig({
   integrations: [
     starlight({
       title: 'ausecon MCP Server',
-      description: 'Documentation for Australian economic data from the ABS and RBA over MCP.',
+      description:
+        'Documentation for ausecon, an independent MCP server for Australian economic data from the ABS, RBA and APRA.',
+      components: {
+        // Adds the independence disclaimer under every page.
+        Footer: './src/components/Footer.astro',
+      },
       logo: {
         src: './src/assets/logo.png',
         alt: 'ausecon logo',
@@ -78,6 +83,7 @@ export default defineConfig({
             { label: 'Caching and Logging', slug: 'operations/caching-and-logging' },
             { label: 'Hosted Deployment', slug: 'operations/hosted-deployment' },
             { label: 'Privacy Policy', slug: 'privacy' },
+            { label: 'Data Sources and Licensing', slug: 'data-sources' },
           ],
         },
         {

@@ -41,12 +41,15 @@ MAX_CHART_SERIES = 8
 # Added as metadata.chart_note to chart tool results for clients that render MCP Apps. The
 # tool description alone did not stop claude.ai's Claude drawing its own chart of the same
 # series; the result is what the model is reading when it decides.
+#
+# Kept descriptive on purpose: Anthropic's connector directory rejects tool text that tells
+# Claude how to behave or interferes with its other tools, so this states what is on screen
+# and leaves the decision to the model. Don't add imperatives ("Do not ...") back.
 CHART_SHOWN_NOTE = (
     "This result is already displayed to the user as an interactive inline chart with a "
-    "data table. The user's app told this server that it displays these charts, so the "
-    "chart is on screen now, on mobile as well as desktop; there is no need to check. "
-    "Do not create another chart of this data; summarise it in prose instead. "
-    "Only draw a chart yourself if the user explicitly asks for a different chart."
+    "data table, on mobile as well as desktop: the user's app told this server that it "
+    "displays these charts. Another chart of the same data would duplicate what is "
+    "already on screen."
 )
 
 _STATIC_DIR = "static"

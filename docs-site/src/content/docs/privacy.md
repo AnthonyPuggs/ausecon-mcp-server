@@ -6,8 +6,9 @@ description: What the hosted ausecon MCP server, the installable package, and th
 Last updated: 18 November 2026.
 
 ausecon is an independent, open-source project. It is not operated by, affiliated with, or endorsed
-by the Australian Bureau of Statistics (ABS), the Reserve Bank of Australia (RBA), or the Australian
-Prudential Regulation Authority (APRA). It retrieves data those agencies publish openly.
+by the Australian Government, the Australian Bureau of Statistics (ABS), the Reserve Bank of
+Australia (RBA), or the Australian Prudential Regulation Authority (APRA). It retrieves data those
+agencies publish openly.
 
 This policy covers three things:
 

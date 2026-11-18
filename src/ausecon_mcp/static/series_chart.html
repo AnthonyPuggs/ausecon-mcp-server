@@ -335,8 +335,8 @@
     const meta = payload.metadata || {};
     const lines = [
       "The user is viewing an interactive inline chart of this tool result,",
-      "with a hover readout and a data table. Do not create another chart of this data unless the user",
-      "explicitly asks for a different chart.",
+      "with a hover readout and a data table. Another chart of this data would duplicate what is",
+      "already on screen.",
       `Charted: ${model.plotted.map((s) => s.label).join("; ")}`,
     ];
     if (model.plotted.length === 1) {

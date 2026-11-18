@@ -16,7 +16,13 @@
 [![ausecon-mcp-server MCP server](https://glama.ai/mcp/servers/AnthonyPuggs/ausecon-mcp-server/badges/card.svg)](https://glama.ai/mcp/servers/AnthonyPuggs/ausecon-mcp-server)
 <p>
   <b>ausecon</b> is a Model Context Protocol server that gives an AI assistant structured access
-  to Australia&rsquo;s official economic and financial data, straight from the ABS, RBA, and APRA.
+  to Australian economic and financial data from official sources, straight from the ABS, RBA,
+  and APRA.
+</p>
+
+<p>
+  <sub>An independent open-source project. Not affiliated with, endorsed by or operated by the
+  Australian Government, the ABS, the RBA or APRA.</sub>
 </p>
 
 <p>
@@ -102,6 +108,8 @@ the ABS, the RBA, or APRA. Ask for
 | **ABS** &nbsp;·&nbsp; Australian Bureau of Statistics | National accounts, prices, labour force, population |
 | **RBA** &nbsp;·&nbsp; Reserve Bank of Australia | Cash rate, monetary & financial aggregates, exchange rates |
 | **APRA** &nbsp;·&nbsp; Aust. Prudential Regulation Authority | ADI & insurer statistics, with release-cadence estimates |
+
+All three agencies publish this data under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). If you republish figures, credit the agency, not ausecon. See [Data Sources and Licensing](https://auseconmcp.com/data-sources/) for the attribution wording and the licences' exceptions.
 
 ## Try it instantly (no install)
 
@@ -274,6 +282,18 @@ uv run --group evals python -m evals.run_eval --dry-run
 
 A full run makes paid API calls, so read the
 [evaluation harness guide](https://auseconmcp.com/maintainers/evaluation/) before starting one.
+
+## Disclaimer
+
+ausecon is an independent open-source project maintained by an individual. It is not affiliated
+with, endorsed by or operated by the Australian Government, the Australian Bureau of Statistics,
+the Reserve Bank of Australia or the Australian Prudential Regulation Authority. Their names are
+used only to identify where the data comes from.
+
+The data belongs to those agencies and is published under their own licences; see
+[Data Sources and Licensing](https://auseconmcp.com/data-sources/). ausecon passes it through as
+published, with no warranty. Check important figures against the original source, which every
+response links to in `metadata.retrieval_url`.
 
 ---
 

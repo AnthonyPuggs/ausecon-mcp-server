@@ -55,7 +55,8 @@ The chart follows your client's light or dark theme.
 
 When your client supports MCP Apps and the result has been charted, the tool result tells the
 model that the data is already on screen, in a `metadata.chart_note` field. The result stays a
-single JSON document, so code that reads it as data still works. The model then describes the data in prose, without
+single JSON document, so code that reads it as data still works. The note states what is on screen
+and leaves the decision to the model, which usually describes the data in prose rather than
 drawing a second chart of the same series. To get a different chart, such as trimmed mean against
 headline CPI, ask for it explicitly.
 

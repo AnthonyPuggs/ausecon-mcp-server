@@ -6,6 +6,25 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- A Data Sources and Licensing page in the docs (and a pointer from the README) covering the
+  ABS, RBA and APRA CC BY 4.0 licences, how to attribute each agency, and the exceptions in
+  their terms (third-party material, the RBA's cash rate and financial data terms).
+- Clearer independence disclaimers: ausecon is not affiliated with, endorsed by or operated by the
+  Australian Government, the ABS, the RBA or APRA. The statement now appears under the README
+  tagline and in a new README Disclaimer section, in a note on the docs homepage, in a footer on
+  every docs page, and in the PyPI and MCP registry descriptions. "Official Australian economic
+  data" is reworded to "Australian economic data from official sources".
+
+### Changed
+
+- The chart wording that the model reads (`metadata.chart_note`, the five chart tool
+  descriptions, and the chart view's context summary) now states that the data is already on
+  screen and that another chart would duplicate it, instead of telling the model not to draw
+  one. Anthropic's connector directory rejects tool text that instructs Claude or interferes
+  with its other tools; a test now guards against imperative wording returning.
+
 ## [1.20.0] - 2026-11-18
 
 Inline charts in claude.ai, Claude Desktop and other MCP Apps clients (#202-#212), plus two fixes
