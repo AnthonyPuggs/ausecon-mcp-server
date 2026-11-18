@@ -6,7 +6,7 @@ from fastmcp.exceptions import ResourceError
 from ausecon_mcp.catalogue.abs import ABS_CATALOGUE
 from ausecon_mcp.catalogue.apra import APRA_CATALOGUE
 from ausecon_mcp.catalogue.rba import RBA_CATALOGUE
-from ausecon_mcp.catalogue.resolver import list_economic_concepts
+from ausecon_mcp.catalogue.resolver import canonical_source_identifier, list_economic_concepts
 
 _CATALOGUE_SUMMARY_FIELDS = (
     "id",
@@ -60,7 +60,7 @@ def register_resources(mcp: FastMCP) -> None:
         mime_type="application/json",
     )
     def abs_entry(dataflow_id: str) -> dict:
-        entry = ABS_CATALOGUE.get(dataflow_id)
+        entry = ABS_CATALOGUE.get(canonical_source_identifier("abs", dataflow_id))
         if entry is None:
             raise ResourceError(f"Unknown ABS dataflow_id: {dataflow_id!r}")
         return entry
@@ -72,7 +72,7 @@ def register_resources(mcp: FastMCP) -> None:
         mime_type="application/json",
     )
     def rba_entry(table_id: str) -> dict:
-        entry = RBA_CATALOGUE.get(table_id)
+        entry = RBA_CATALOGUE.get(canonical_source_identifier("rba", table_id))
         if entry is None:
             raise ResourceError(f"Unknown RBA table_id: {table_id!r}")
         return entry
@@ -84,7 +84,7 @@ def register_resources(mcp: FastMCP) -> None:
         mime_type="application/json",
     )
     def apra_entry(publication_id: str) -> dict:
-        entry = APRA_CATALOGUE.get(publication_id)
+        entry = APRA_CATALOGUE.get(canonical_source_identifier("apra", publication_id))
         if entry is None:
             raise ResourceError(f"Unknown APRA publication_id: {publication_id!r}")
         return entry

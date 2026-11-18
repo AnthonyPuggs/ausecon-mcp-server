@@ -17,6 +17,7 @@ from starlette.types import ASGIApp, Message, Receive, Scope, Send
 from ausecon_mcp.bounds import NormalisedSemanticBounds, normalise_semantic_bounds
 from ausecon_mcp.catalogue.abs import ABS_CATALOGUE
 from ausecon_mcp.catalogue.resolver import (
+    canonical_source_identifier,
     concepts_for_dataset,
     resolve,
     resolve_abs_dataflow_id,
@@ -598,7 +599,9 @@ class AuseconService:
         )
 
     async def get_abs_dataset_structure(self, dataflow_id: str) -> dict:
-        validated_dataflow_id = validate_source_token("dataflow_id", dataflow_id)
+        validated_dataflow_id = canonical_source_identifier(
+            "abs", validate_source_token("dataflow_id", dataflow_id)
+        )
         structure_id = resolve_abs_structure_id(validated_dataflow_id)
         if structure_id == validated_dataflow_id:
             structure_id = resolve_abs_dataflow_id(validated_dataflow_id)
@@ -616,7 +619,9 @@ class AuseconService:
         *,
         latest_n: int | None = None,
     ) -> dict:
-        validated_dataflow_id = validate_source_token("dataflow_id", dataflow_id)
+        validated_dataflow_id = canonical_source_identifier(
+            "abs", validate_source_token("dataflow_id", dataflow_id)
+        )
         validated_key = validate_source_token("key", key)
         validated_start_period, validated_end_period = validate_abs_period_range(
             start_period,
@@ -664,7 +669,9 @@ class AuseconService:
         last_n: int | None = None,
         include_observation_dimensions: bool = False,
     ) -> dict:
-        validated_table_id = validate_source_token("table_id", table_id)
+        validated_table_id = canonical_source_identifier(
+            "rba", validate_source_token("table_id", table_id)
+        )
         validated_series_ids = validate_series_ids(series_ids)
         validated_start_date, validated_end_date = validate_iso_date_range(
             start_date,
@@ -696,7 +703,9 @@ class AuseconService:
         last_n: int | None = None,
         include_observation_dimensions: bool = False,
     ) -> dict:
-        validated_publication_id = validate_source_token("publication_id", publication_id)
+        validated_publication_id = canonical_source_identifier(
+            "apra", validate_source_token("publication_id", publication_id)
+        )
         validated_table_id = (
             None if table_id is None else validate_source_token("table_id", table_id)
         )
@@ -850,7 +859,9 @@ class AuseconService:
         validated_source = validate_source(source)
         if validated_source is None:
             raise ValueError("source must be one of: abs, apra, rba.")
-        validated_identifier = validate_source_token("identifier", identifier)
+        validated_identifier = canonical_source_identifier(
+            validated_source, validate_source_token("identifier", identifier)
+        )
         validated_key = validate_source_token("key", key)
         validated_count = validate_positive_int("count", count) or 1
 
@@ -909,7 +920,9 @@ class AuseconService:
         validated_source = validate_source(source)
         if validated_source is None:
             raise ValueError("source must be one of: abs, apra, rba.")
-        validated_identifier = validate_source_token("identifier", identifier)
+        validated_identifier = canonical_source_identifier(
+            validated_source, validate_source_token("identifier", identifier)
+        )
         validated_key = validate_source_token("key", key)
         validated_n = validate_positive_int("n", n) or 10
         if direction not in {"highest", "lowest"}:
@@ -981,7 +994,9 @@ class AuseconService:
         validated_source = validate_source(source)
         if validated_source is None:
             raise ValueError("source must be one of: abs, apra, rba.")
-        validated_identifier = validate_source_token("identifier", identifier)
+        validated_identifier = canonical_source_identifier(
+            validated_source, validate_source_token("identifier", identifier)
+        )
         validated_table_id = (
             None if table_id is None else validate_source_token("table_id", table_id)
         )
