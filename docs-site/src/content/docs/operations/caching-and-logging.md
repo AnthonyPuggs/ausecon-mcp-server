@@ -57,6 +57,16 @@ Key safety constraints:
 - The Smithery entrypoint binds `0.0.0.0` only inside the container so the platform can route to it.
 - CORS is wildcard but non-credentialed; `mcp-session-id` is transport state, not authentication.
 - Source-native identifiers reject URL and path characters before provider URL construction.
+- Request bodies over 1 MiB are rejected with HTTP 413.
+- At most 32 tool calls (POST requests) are handled at once. Beyond that the server answers
+  HTTP 503 with `{"error": "server_busy"}` and `Retry-After: 1` rather than queueing the work.
+  GET, HEAD and OPTIONS requests, including `/healthz`, are never limited, so health checks keep
+  passing under load. Set `AUSECON_HTTP_MAX_IN_FLIGHT` to change the limit.
+- A tool call's body must arrive in full within 10 seconds (HTTP 408 otherwise) and within 1 MiB,
+  including chunked bodies with no `Content-Length` (HTTP 413). The body is read before a slot is
+  taken, so slow clients cannot hold slots and lock out other users.
+- There is no per-client rate limiting. Hosted clients such as Claude.ai connectors reach the
+  server from shared addresses, so a per-IP limit would throttle unrelated users together.
 - Large unauthenticated requests remain the main residual risk, so callers should prefer `last_n`
   or explicit date bounds for broad datasets.
 
@@ -70,6 +80,13 @@ Set `AUSECON_CACHE_DISABLED` to disable all caching:
 | Variable | Purpose | Default |
 | --- | --- | --- |
 | `AUSECON_CACHE_DISABLED` | Set to `1`, `true`, or `yes` to disable memory and disk caching. | unset |
+| `AUSECON_CACHE_MAX_MEMORY_MB` | Memory budget for each source's cache, measured as serialised JSON. | `16` |
+
+The memory layer keeps the most recently used entries within its budget and drops the oldest when
+it is full. Parsed data takes roughly two to five times its JSON size, so the default keeps the
+whole process comfortably inside a 512 MB instance. A dropped entry is still on disk, so it costs
+only a disk read the next time it is requested. An entry larger than the whole budget is never held
+in memory and is always served from disk.
 
 The disk cache location is fixed to the platform application-cache directory:
 
@@ -87,6 +104,14 @@ available in that degraded mode.
 Upstream requests retry timeouts, connection errors, HTTP 5xx and HTTP 429 up to four attempts in
 total, with 0.5s, 1s and 2s backoff. A `Retry-After` header lengthens the wait, capped at 10
 seconds. When the retries run out, the error message names the upstream HTTP status.
+
+At most four requests are sent to each source (ABS, RBA, APRA) at once. Further requests wait for
+a free slot, which keeps a burst of tool calls from hammering the agencies. A request waiting out a
+retry backoff does not hold a slot.
+
+| Variable | Purpose | Default |
+| --- | --- | --- |
+| `AUSECON_UPSTREAM_CONCURRENCY` | Maximum simultaneous requests to each upstream source. | `4` |
 
 ## Stale fallback
 

@@ -72,6 +72,7 @@ export default defineConfig({
           items: [
             { label: 'Caching and Logging', slug: 'operations/caching-and-logging' },
             { label: 'Hosted Deployment', slug: 'operations/hosted-deployment' },
+            { label: 'Privacy Policy', slug: 'privacy' },
           ],
         },
         {

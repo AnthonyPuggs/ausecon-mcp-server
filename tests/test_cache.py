@@ -320,3 +320,80 @@ def test_set_returns_a_private_copy() -> None:
     returned["series"].append({"id": "mutated"})
 
     assert cache.get("k") == {"series": [{"id": "a"}]}
+
+
+def _drop_disk_copies(cache_dir: Path) -> None:
+    """Remove disk entries so a later get() can only be answered from memory."""
+    for file in cache_dir.glob("*.json"):
+        file.unlink()
+
+
+def _kb_value(tag: str) -> dict[str, str]:
+    # Roughly 1 KB of JSON once serialised, whatever the tag.
+    return {"tag": tag, "pad": "x" * 1000}
+
+
+def test_memory_layer_evicts_least_recently_used_entry_over_budget(
+    _isolated_cache_dir: Path,
+) -> None:
+    # A 2.5 KB budget fits two ~1 KB entries but not three.
+    cache = TTLCache(ttl_seconds=60, max_memory_bytes=2500)
+    cache.set("a", _kb_value("a"))
+    cache.set("b", _kb_value("b"))
+    assert cache.get("a") == _kb_value("a")  # "a" is now more recent than "b"
+
+    cache.set("c", _kb_value("c"))
+    _drop_disk_copies(_isolated_cache_dir)
+
+    assert cache.get("b") is None
+    assert cache.get("a") == _kb_value("a")
+    assert cache.get("c") == _kb_value("c")
+
+
+def test_memory_layer_skips_entry_larger_than_budget_but_disk_still_serves_it(
+    _isolated_cache_dir: Path,
+) -> None:
+    cache = TTLCache(ttl_seconds=60, max_memory_bytes=500)
+    cache.set("big", _kb_value("big"))
+
+    assert cache.get("big") == _kb_value("big")  # served from disk
+    _drop_disk_copies(_isolated_cache_dir)
+    assert cache.get("big") is None  # was never held in memory
+
+
+async def test_async_memory_layer_respects_budget(_isolated_cache_dir: Path) -> None:
+    cache = TTLCache(ttl_seconds=60, max_memory_bytes=2500)
+    for key in ("a", "b", "c"):
+        await cache.aset(key, _kb_value(key))
+    _drop_disk_copies(_isolated_cache_dir)
+
+    assert await cache.aget("a") is None
+    assert await cache.aget("b") == _kb_value("b")
+    assert await cache.aget("c") == _kb_value("c")
+
+
+def test_disk_promotion_counts_against_memory_budget(_isolated_cache_dir: Path) -> None:
+    writer = TTLCache(ttl_seconds=60)
+    for key in ("a", "b", "c"):
+        writer.set(key, _kb_value(key))
+
+    reader = TTLCache(ttl_seconds=60, max_memory_bytes=2500)
+    for key in ("a", "b", "c"):
+        assert reader.get(key) == _kb_value(key)  # each read promotes into memory
+    _drop_disk_copies(_isolated_cache_dir)
+
+    assert reader.get("a") is None
+    assert reader.get("b") == _kb_value("b")
+    assert reader.get("c") == _kb_value("c")
+
+
+def test_memory_budget_defaults_from_environment(_isolated_cache_dir: Path, monkeypatch) -> None:
+    # 0.002 MB = 2000 bytes: room for one ~1 KB entry, not two.
+    monkeypatch.setenv("AUSECON_CACHE_MAX_MEMORY_MB", "0.002")
+    cache = TTLCache(ttl_seconds=60)
+    cache.set("a", _kb_value("a"))
+    cache.set("b", _kb_value("b"))
+    _drop_disk_copies(_isolated_cache_dir)
+
+    assert cache.get("a") is None
+    assert cache.get("b") == _kb_value("b")

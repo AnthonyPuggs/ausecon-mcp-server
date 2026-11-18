@@ -5,6 +5,7 @@ import hashlib
 import json
 import os
 import tempfile
+from collections import OrderedDict
 from copy import deepcopy
 from dataclasses import dataclass
 from pathlib import Path
@@ -16,6 +17,12 @@ from platformdirs import user_cache_dir
 from ausecon_mcp.logging import get_logger
 
 _SCHEMA_VERSION = 1
+# Each cache keeps at most this much serialised JSON in memory. Parsed Python objects take
+# roughly 2-5x their JSON size and the hosted instance has 512 MB, so this stays well clear of
+# that even with every provider cache full. Disk remains the complete store; eviction only costs
+# a disk read on the next hit.
+_DEFAULT_MAX_MEMORY_BYTES = 16 * 1024 * 1024
+_MAX_MEMORY_ENV = "AUSECON_CACHE_MAX_MEMORY_MB"
 _logger = get_logger("cache")
 
 
@@ -23,11 +30,24 @@ def _default_disk_dir() -> Path:
     return Path(user_cache_dir("ausecon-mcp")).expanduser().resolve(strict=False)
 
 
+def _max_memory_bytes_from_env() -> int:
+    raw = os.environ.get(_MAX_MEMORY_ENV, "").strip()
+    if not raw:
+        return _DEFAULT_MAX_MEMORY_BYTES
+    try:
+        megabytes = float(raw)
+    except ValueError:
+        _logger.warning("cache.invalid_memory_budget", extra={"value": raw})
+        return _DEFAULT_MAX_MEMORY_BYTES
+    return max(0, int(megabytes * 1024 * 1024))
+
+
 @dataclass
 class _CacheEntry:
     cached_at: float
     expires_at: float
     value: Any
+    size: int = 0
 
 
 class TTLCache:
@@ -36,8 +56,15 @@ class TTLCache:
         *,
         disabled: bool | None = None,
         ttl_seconds: int = 3600,
+        max_memory_bytes: int | None = None,
     ) -> None:
-        self._entries: dict[str, _CacheEntry] = {}
+        # Least recently used first. Bounded by serialised size, not entry count, because one
+        # APRA table can be tens of MB while most entries are a few hundred KB.
+        self._entries: OrderedDict[str, _CacheEntry] = OrderedDict()
+        self._memory_bytes = 0
+        self._max_memory_bytes = (
+            _max_memory_bytes_from_env() if max_memory_bytes is None else max_memory_bytes
+        )
         self._ttl_seconds = ttl_seconds
         self._disk_enabled = True
 
@@ -56,8 +83,9 @@ class TTLCache:
         now = time()
         if entry is not None:
             if entry.expires_at >= now:
+                self._entries.move_to_end(key)
                 return deepcopy(entry.value)
-            self._entries.pop(key, None)
+            self._forget(key)
 
         if not self._disk_enabled:
             return None
@@ -68,7 +96,7 @@ class TTLCache:
         if disk.expires_at < now:
             return None
 
-        self._entries[key] = disk
+        self._remember(key, disk)
         return deepcopy(disk.value)
 
     def set(self, key: str, value: Any, ttl_seconds: int | None = None) -> Any:
@@ -79,8 +107,10 @@ class TTLCache:
         now = time()
         expires_at = now + ttl
         entry = _CacheEntry(cached_at=now, expires_at=expires_at, value=value)
-        self._entries[key] = entry
-        self._write_disk(key, entry)
+        serialised = self._serialise(entry)
+        entry.size = len(serialised)
+        self._remember(key, entry)
+        self._write_disk(key, serialised)
         # Return a private copy (as get() does) so callers may mutate the result
         # freely without aliasing the stored entry. The cache is the sole copy owner.
         return deepcopy(value)
@@ -92,14 +122,15 @@ class TTLCache:
         entry = self._entries.get(key)
         if entry is not None:
             if entry.expires_at >= now:
+                self._entries.move_to_end(key)
                 return deepcopy(entry.value)
-            self._entries.pop(key, None)
+            self._forget(key)
         if not self._disk_enabled:
             return None
         disk = await asyncio.to_thread(self._read_disk, key)
         if disk is None or disk.expires_at < now:
             return None
-        self._entries[key] = disk
+        self._remember(key, disk)
         return deepcopy(disk.value)
 
     async def aset(self, key: str, value: Any, ttl_seconds: int | None = None) -> Any:
@@ -108,8 +139,10 @@ class TTLCache:
         ttl = self._ttl_seconds if ttl_seconds is None else ttl_seconds
         now = time()
         entry = _CacheEntry(cached_at=now, expires_at=now + ttl, value=value)
-        self._entries[key] = entry
-        await asyncio.to_thread(self._write_disk, key, entry)
+        serialised = await asyncio.to_thread(self._serialise, entry)
+        entry.size = len(serialised)
+        self._remember(key, entry)
+        await asyncio.to_thread(self._write_disk, key, serialised)
         return deepcopy(value)
 
     def get_stale(self, key: str) -> dict[str, Any] | None:
@@ -129,6 +162,32 @@ class TTLCache:
             "expires_at": entry.expires_at,
         }
 
+    def _remember(self, key: str, entry: _CacheEntry) -> None:
+        self._forget(key)
+        if entry.size > self._max_memory_bytes:
+            return  # Too big to hold in memory; the disk copy still serves it.
+        self._entries[key] = entry
+        self._memory_bytes += entry.size
+        while self._memory_bytes > self._max_memory_bytes:
+            _, evicted = self._entries.popitem(last=False)
+            self._memory_bytes -= evicted.size
+
+    def _forget(self, key: str) -> None:
+        entry = self._entries.pop(key, None)
+        if entry is not None:
+            self._memory_bytes -= entry.size
+
+    @staticmethod
+    def _serialise(entry: _CacheEntry) -> str:
+        return json.dumps(
+            {
+                "schema": _SCHEMA_VERSION,
+                "cached_at": entry.cached_at,
+                "expires_at": entry.expires_at,
+                "value": entry.value,
+            }
+        )
+
     def _path_for(self, key: str) -> Path:
         digest = hashlib.sha256(key.encode("utf-8")).hexdigest()
         return self._disk_dir / f"{digest}.json"
@@ -145,13 +204,15 @@ class TTLCache:
         try:
             if not path.is_file():
                 return None
-            data = json.loads(path.read_text())
+            text = path.read_text()
+            data = json.loads(text)
             if data.get("schema") != _SCHEMA_VERSION:
                 raise ValueError(f"unsupported cache schema: {data.get('schema')!r}")
             return _CacheEntry(
                 cached_at=float(data["cached_at"]),
                 expires_at=float(data["expires_at"]),
                 value=data["value"],
+                size=len(text),
             )
         except PermissionError as exc:
             self._disable_disk("read", exc)
@@ -164,16 +225,10 @@ class TTLCache:
             self._unlink(path)
             return None
 
-    def _write_disk(self, key: str, entry: _CacheEntry) -> None:
+    def _write_disk(self, key: str, serialised: str) -> None:
         if not self._disk_enabled:
             return
         path = self._path_for(key)
-        payload = {
-            "schema": _SCHEMA_VERSION,
-            "cached_at": entry.cached_at,
-            "expires_at": entry.expires_at,
-            "value": entry.value,
-        }
         tmp_path: Path | None = None
         try:
             self._disk_dir.mkdir(parents=True, exist_ok=True)
@@ -186,7 +241,7 @@ class TTLCache:
                 delete=False,
             ) as fh:
                 tmp_path = self._checked_path(Path(fh.name))
-                json.dump(payload, fh)
+                fh.write(serialised)
             try:
                 os.replace(tmp_path, checked_path)
             except Exception:

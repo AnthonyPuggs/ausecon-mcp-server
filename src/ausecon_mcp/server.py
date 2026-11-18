@@ -12,7 +12,7 @@ from starlette.middleware import Middleware
 from starlette.middleware.cors import CORSMiddleware
 from starlette.requests import Request
 from starlette.responses import JSONResponse
-from starlette.types import ASGIApp, Receive, Scope, Send
+from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from ausecon_mcp.bounds import NormalisedSemanticBounds, normalise_semantic_bounds
 from ausecon_mcp.catalogue.abs import ABS_CATALOGUE
@@ -75,6 +75,11 @@ SERVER_DESCRIPTION = (
 )
 SERVER_LICENSE = "MIT"
 MAX_HTTP_REQUEST_BYTES = 1024 * 1024
+# Concurrent POSTs (tool calls) the HTTP server will work on at once; beyond this it sheds load
+# with a 503 rather than queueing work that could exhaust a small hosted instance.
+DEFAULT_HTTP_MAX_IN_FLIGHT = 32
+# A tool-call body is a few hundred bytes; ten seconds is generous for any real client.
+HTTP_BODY_TIMEOUT_SECONDS = 10.0
 TOOL_TITLES = {
     "search_datasets": "Search Datasets",
     "list_catalogue": "List Catalogue",
@@ -291,6 +296,109 @@ class RequestSizeLimitMiddleware:
             status_code=413,
         )
         await response(scope, receive, send)
+
+
+class ConcurrencyLimitMiddleware:
+    """Reject POSTs beyond ``max_in_flight`` concurrent ones with 503 + Retry-After.
+
+    Only POSTs count: they carry tool calls. GET/HEAD/OPTIONS (health checks, server card,
+    CORS preflight, long-lived MCP streams) always pass, so a burst of tool calls can never
+    fail the host's health check. uvicorn's ``limit_concurrency`` is not used because it also
+    counts idle keep-alive connections and rejects health checks.
+
+    The body is read in full, under a deadline and a byte cap, *before* a slot is taken.
+    Otherwise a client that sends headers and then trickles the body could hold every slot
+    and lock out real tool calls. The cap also covers chunked bodies, which carry no
+    Content-Length for ``RequestSizeLimitMiddleware`` to check.
+    """
+
+    def __init__(
+        self,
+        app: ASGIApp,
+        max_in_flight: int = DEFAULT_HTTP_MAX_IN_FLIGHT,
+        *,
+        body_timeout_seconds: float = HTTP_BODY_TIMEOUT_SECONDS,
+        max_body_bytes: int = MAX_HTTP_REQUEST_BYTES,
+    ) -> None:
+        self.app = app
+        self.max_in_flight = max_in_flight
+        self.body_timeout_seconds = body_timeout_seconds
+        self.max_body_bytes = max_body_bytes
+        self._in_flight = 0
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if scope["type"] != "http" or scope.get("method") != "POST":
+            await self.app(scope, receive, send)
+            return
+
+        try:
+            body = await asyncio.wait_for(self._read_body(receive), self.body_timeout_seconds)
+        except asyncio.TimeoutError:
+            await JSONResponse({"error": "request_timeout"}, status_code=408)(scope, receive, send)
+            return
+        except _BodyTooLarge:
+            await JSONResponse(
+                {"error": "request_too_large", "max_bytes": self.max_body_bytes},
+                status_code=413,
+            )(scope, receive, send)
+            return
+        if body is None:
+            return  # Client disconnected mid-body; nothing to answer.
+
+        if self._in_flight >= self.max_in_flight:
+            response = JSONResponse(
+                {
+                    "error": "server_busy",
+                    "message": "The server is handling too many requests; retry shortly.",
+                },
+                status_code=503,
+                headers={"Retry-After": "1"},
+            )
+            await response(scope, receive, send)
+            return
+
+        replayed = False
+
+        async def replay_receive() -> Message:
+            nonlocal replayed
+            if not replayed:
+                replayed = True
+                return {"type": "http.request", "body": body, "more_body": False}
+            return await receive()  # Later reads wait for the client's disconnect, as usual.
+
+        self._in_flight += 1
+        try:
+            await self.app(scope, replay_receive, send)
+        finally:
+            self._in_flight -= 1
+
+    async def _read_body(self, receive: Receive) -> bytes | None:
+        chunks: list[bytes] = []
+        size = 0
+        while True:
+            message = await receive()
+            if message["type"] == "http.disconnect":
+                return None
+            chunk = message.get("body", b"")
+            size += len(chunk)
+            if size > self.max_body_bytes:
+                raise _BodyTooLarge
+            chunks.append(chunk)
+            if not message.get("more_body", False):
+                return b"".join(chunks)
+
+
+class _BodyTooLarge(Exception):
+    pass
+
+
+def resolve_http_max_in_flight() -> int:
+    raw = os.environ.get("AUSECON_HTTP_MAX_IN_FLIGHT", "").strip()
+    try:
+        value = int(raw) if raw else DEFAULT_HTTP_MAX_IN_FLIGHT
+    except ValueError:
+        return DEFAULT_HTTP_MAX_IN_FLIGHT
+    return value if value > 0 else DEFAULT_HTTP_MAX_IN_FLIGHT
 
 
 def _content_length(scope: Scope) -> int | None:
@@ -1327,6 +1435,8 @@ def build_http_middleware() -> list[Middleware]:
             expose_headers=["mcp-session-id", "mcp-protocol-version"],
             max_age=86400,
         ),
+        # Inside CORS so browser clients can read the 503.
+        Middleware(ConcurrencyLimitMiddleware, max_in_flight=resolve_http_max_in_flight()),
     ]
 
 

@@ -6,6 +6,25 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+Hardening for the hosted HTTP server against bursts of traffic. Tool names, parameters and the
+response contract are unchanged.
+
+### Fixed
+
+- The in-memory cache no longer grows without limit. Cache keys include caller-chosen date ranges,
+  so cycling through ranges could exhaust a small hosted instance. Each source's memory cache now
+  holds at most 16 MB of serialised JSON (`AUSECON_CACHE_MAX_MEMORY_MB`) and drops the least
+  recently used entries first. Disk is still the complete store, so dropped entries are served
+  from disk.
+
+### Added
+
+- At most four requests are sent to each of ABS, RBA and APRA at once
+  (`AUSECON_UPSTREAM_CONCURRENCY`). Further requests queue rather than hammering the agencies.
+- The HTTP server answers tool calls beyond 32 concurrent ones with HTTP 503, `server_busy` and
+  `Retry-After: 1` (`AUSECON_HTTP_MAX_IN_FLIGHT`). Health checks and other GET requests are never
+  limited.
+
 ## [1.18.0] - 2026-11-12
 
 APRA matrix-table release (#193). Series ids change in seven APRA tables, because the old ids merged
