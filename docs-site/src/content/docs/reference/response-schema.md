@@ -39,6 +39,9 @@ Optional fields appear when relevant:
 - `selection`
 - `apra_url_resolution`
 - `framework_breaks` and `warnings`
+- `date_window` — the date bounds applied to an RBA or APRA download. Event-driven series
+  listed in `carried_in`, such as the cash rate target, also keep their last change before
+  `start`, because that value was still in effect when the window opens.
 - `chart_note`, only for clients that display [inline charts](/user-guide/inline-charts/), when
   the result is shown as a chart. It tells the model the chart is already on screen.
 - `stale`, `cached_at`, and `expires_at`

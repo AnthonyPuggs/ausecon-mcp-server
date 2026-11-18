@@ -6,6 +6,25 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- `metadata.date_window` on RBA and APRA responses with date bounds: the applied `start` and
+  `end` as ISO dates, and `carried_in`, the event-driven series that kept their last change
+  before `start`.
+
+### Fixed
+
+- Event-driven series such as the cash rate target now keep the value still in effect when a
+  date window opens. "Cash rate since 2019" used to begin at the June 2019 cut, leaving out the
+  1.50% in effect from August 2016, and a window with no rate change in it (such as 2024)
+  returned no observations at all.
+- Inline charts: an ABS series title such as "Unemployment rate / Persons / Total (age) /
+  Seasonally Adjusted / Australia / Monthly" is now shown as "Unemployment rate", with the other
+  dimensions on a smaller line underneath. All-caps RBA table titles are shown in title case.
+  ABS "Percent" and RBA "Per cent" now display as one unit, so they share an axis. A step line
+  starts at the window start and stops at the window end instead of running on to the
+  retrieval date.
+
 ## [1.20.1] - 2026-11-19
 
 Connector directory readiness: descriptive chart wording, a data licensing page and clearer

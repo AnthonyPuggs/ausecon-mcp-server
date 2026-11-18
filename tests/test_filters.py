@@ -248,3 +248,65 @@ def test_unknown_series_message_bounds_the_work_for_long_lists_of_unknown_ids() 
     assert "'BOGUS0009'" in message
     assert "'BOGUS0010'" not in message
     assert "and 1990 more" in message
+
+
+def _policy_rate_payload() -> dict:
+    return {
+        "metadata": {"source": "rba", "dataset_id": "a2"},
+        "series": [
+            {"series_id": "RATE", "label": "Cash rate target", "frequency": "As announced"},
+            {"series_id": "FLOW", "label": "Monthly flow", "frequency": "Monthly"},
+        ],
+        "observations": [
+            {"date": "2016-08-03", "series_id": "RATE", "value": 1.5},
+            {"date": "2019-06-05", "series_id": "RATE", "value": 1.25},
+            {"date": "2019-07-03", "series_id": "RATE", "value": 1.0},
+            {"date": "2018-12-01", "series_id": "FLOW", "value": 7.0},
+            {"date": "2019-01-01", "series_id": "FLOW", "value": 8.0},
+        ],
+    }
+
+
+def test_event_driven_series_keep_the_value_in_effect_at_the_window_start() -> None:
+    # "Cash rate since 2019" used to start at the June 2019 cut, hiding the 1.50% in effect
+    # from August 2016 until then.
+    payload = filter_payload(_policy_rate_payload(), start_date="2019-01-01")
+
+    rate = [o["date"] for o in payload["observations"] if o["series_id"] == "RATE"]
+    assert rate == ["2016-08-03", "2019-06-05", "2019-07-03"]
+    assert payload["metadata"]["date_window"] == {
+        "start": "2019-01-01",
+        "end": None,
+        "carried_in": ["RATE"],
+    }
+
+
+def test_periodic_series_are_not_carried_into_the_window() -> None:
+    payload = filter_payload(_policy_rate_payload(), start_date="2019-01-01")
+
+    flow = [o["date"] for o in payload["observations"] if o["series_id"] == "FLOW"]
+    assert flow == ["2019-01-01"]
+
+
+def test_event_driven_series_with_no_change_inside_the_window_still_have_a_value() -> None:
+    # No decision between June 2017 and June 2019: the series used to vanish entirely.
+    payload = filter_payload(_policy_rate_payload(), start_date="2017-06-01", end_date="2018-12-31")
+
+    rate = [o for o in payload["observations"] if o["series_id"] == "RATE"]
+    assert [(o["date"], o["value"]) for o in rate] == [("2016-08-03", 1.5)]
+    assert payload["metadata"]["date_window"]["end"] == "2018-12-31"
+    assert "RATE" in {s["series_id"] for s in payload["series"]}
+
+
+def test_no_carry_in_when_a_change_falls_on_the_window_start() -> None:
+    payload = filter_payload(_policy_rate_payload(), start_date="2019-06-05")
+
+    rate = [o["date"] for o in payload["observations"] if o["series_id"] == "RATE"]
+    assert rate == ["2019-06-05", "2019-07-03"]
+    assert payload["metadata"]["date_window"]["carried_in"] == []
+
+
+def test_unbounded_requests_get_no_date_window() -> None:
+    payload = filter_payload(_policy_rate_payload(), last_n=1)
+
+    assert "date_window" not in payload["metadata"]
