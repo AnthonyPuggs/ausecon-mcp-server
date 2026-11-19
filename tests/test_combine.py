@@ -107,7 +107,10 @@ def test_merge_keeps_each_concepts_metadata_in_components() -> None:
 
     assert [c["series_ids"] for c in components] == [["U"], ["R"]]
     assert components[1]["metadata"]["date_window"] == rba_cash_rate()["metadata"]["date_window"]
-    assert components[0]["metadata"]["retrieval_url"].startswith("https://data.api.abs.gov.au")
+    assert (
+        components[0]["metadata"]["retrieval_url"]
+        == abs_unemployment()["metadata"]["retrieval_url"]
+    )
     for component in components:
         assert "chart_note" not in component["metadata"]
         assert component["metadata"]["server_version"] == "1.20.1"
