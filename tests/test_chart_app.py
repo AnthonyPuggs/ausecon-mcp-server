@@ -163,6 +163,15 @@ def test_y_axis_ticks_stay_inside_the_domain() -> None:
         assert len(domain["ticks"]) >= 2, (low, high)
 
 
+def test_hover_dots_hide_with_the_hover_layer() -> None:
+    # In SVG a child's own visibility="visible" overrides a hidden parent, so hover dots set
+    # visible stayed on screen after the pointer left (a stray cash rate dot in claude.ai).
+    html = load_chart_html()
+
+    assert 'dots[k].setAttribute("visibility", "inherit")' in html
+    assert 'dots[k].setAttribute("visibility", "visible")' not in html
+
+
 def test_chart_view_can_shrink_after_content_collapses() -> None:
     # scrollHeight never drops below the iframe's current height, so a view sized from it
     # grows but never shrinks (collapsing the data table left blank space in claude.ai).

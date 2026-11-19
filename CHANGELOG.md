@@ -6,6 +6,17 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.21.1] - 2026-11-19
+
+A chart display fix (#216). Tool names, parameters and the response contract are unchanged.
+
+### Fixed
+
+- Hovering over an inline chart no longer leaves a dot behind when the pointer moves away. The
+  crosshair and readout disappeared, but each series' hover dot stayed, with its outline cutting
+  a gap in the line around it (a stray cash rate dot in a combined unemployment and cash rate
+  chart in claude.ai).
+
 ## [1.21.0] - 2026-11-19
 
 Combined charts: `get_economic_series` takes a list of concepts and returns them in one response,
@@ -1235,7 +1246,8 @@ Initial public release.
 - Initial curated catalogues for ABS and RBA, plus a four-concept
   `CURATED_SERIES` semantic shortcut map.
 
-[Unreleased]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.21.0...HEAD
+[Unreleased]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.21.1...HEAD
+[1.21.1]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.21.0...v1.21.1
 [1.21.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.20.1...v1.21.0
 [1.20.1]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.20.0...v1.20.1
 [1.20.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.19.0...v1.20.0
