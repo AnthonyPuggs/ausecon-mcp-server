@@ -834,3 +834,134 @@ def test_single_source_results_keep_full_series_labels() -> None:
         "Employed / Females / Trend",
         "Unemployment rate / Males / Trend",
     ]
+
+
+def _mixed() -> dict:
+    """Quarterly ABS saving ratio, RBA cash rate (step) and RBA monthly mortgage rate."""
+    from ausecon_mcp.combine import merge_concept_payloads
+
+    def part(source, dataset, concept, series_id, frequency, observations, window=None):
+        metadata = {
+            "source": source,
+            "dataset_id": dataset,
+            "title": dataset,
+            "semantic": {"concept": concept},
+            "retrieved_at": "2023-11-19T00:00:00Z",
+            "server_version": "test",
+            "truncated": False,
+        }
+        if window:
+            metadata["date_window"] = window
+        return (
+            concept,
+            {
+                "metadata": metadata,
+                "series": [
+                    {
+                        "series_id": series_id,
+                        "label": series_id,
+                        "unit": "Per cent",
+                        "frequency": frequency,
+                        "dimensions": {},
+                    }
+                ],
+                "observations": [
+                    {"date": d, "series_id": series_id, "value": v} for d, v in observations
+                ],
+            },
+        )
+
+    return merge_concept_payloads(
+        [
+            part(
+                "abs",
+                "ANA_AGG",
+                "household_saving_ratio",
+                "S",
+                "Quarterly",
+                [("2023-Q1", 2.3), ("2023-Q2", 2.0), ("2023-Q3", 1.8)],
+            ),
+            part(
+                "rba",
+                "a2",
+                "cash_rate_target",
+                "R",
+                "As announced",
+                [("2023-03-08", 3.6), ("2023-05-03", 3.85), ("2023-06-07", 4.1)],
+                {"start": "2023-01-01", "end": None, "carried_in": []},
+            ),
+            part(
+                "rba",
+                "f6",
+                "mortgage_rate",
+                "M",
+                "Monthly",
+                [("2023-05-31", 6.1), ("2023-06-30", 6.3)],
+            ),
+        ]
+    )
+
+
+def _hover(date: str) -> list:
+    payload = json.dumps(_mixed())
+    return _run_view(
+        f"hoverRows(buildModel({payload}).plotted, parsePeriod('{date}'))"
+        ".map((r) => [r.s.id, r.point ? r.point.value : null, r.period])"
+    )
+
+
+def test_hover_shows_the_quarter_covering_a_cash_rate_date() -> None:
+    # 7 Jun 2023 is a cash rate decision; the saving ratio's Q2 2023 value covers it.
+    assert _hover("2023-06-07") == [
+        ["S", 2.0, "Q2 2023"],
+        ["R", 4.1, None],
+        ["M", 6.3, "Jun 2023"],
+    ]
+
+
+def test_hover_on_a_quarter_carries_the_cash_rate_in_effect() -> None:
+    assert _hover("2023-04-01") == [
+        ["S", 2.0, None],
+        ["R", 3.6, None],
+        ["M", None, None],
+    ]
+
+
+def test_hover_outside_a_series_range_shows_no_value() -> None:
+    # After Q3 2023 ends there is no saving ratio; before 8 Mar there is no cash rate.
+    assert _hover("2023-10-02")[0] == ["S", None, None]
+    assert _hover("2023-01-01")[1] == ["R", None, None]
+
+
+def test_table_splits_series_with_different_frequencies() -> None:
+    payload = json.dumps(_mixed())
+    groups = _run_view(
+        f"tableGroups(buildModel({payload}).all)"
+        ".map((g) => [g.caption, g.series.map((s) => s.id), g.rows.map((r) => r.date)])"
+    )
+
+    assert groups == [
+        ["Quarterly", ["S"], ["Q3 2023", "Q2 2023", "Q1 2023"]],
+        ["As announced", ["R"], ["7 Jun 2023", "3 May 2023", "8 Mar 2023"]],
+        ["Monthly", ["M"], ["30 Jun 2023", "31 May 2023"]],
+    ]
+
+
+def test_table_keeps_one_uncaptioned_group_for_a_shared_frequency() -> None:
+    payload = json.dumps(_combined(rba_unit="Per cent", rba_frequency="Monthly"))
+    groups = _run_view(
+        f"tableGroups(buildModel({payload}).all).map((g) => [g.caption, g.series.length])"
+    )
+
+    assert groups == [[None, 2]]
+
+
+def test_table_lines_up_abs_and_rba_dates_in_the_same_month() -> None:
+    payload = _combined(rba_unit="Per cent", rba_frequency="Monthly")
+    for item in payload["observations"]:
+        if item["series_id"] == "R":
+            item["date"] = {"2016-08-03": "2019-01-31", "2019-06-05": "2019-02-28"}[item["date"]]
+    text = json.dumps(payload)
+    rows = _run_view(f"tableGroups(buildModel({text}).all)[0].rows.map((r) => r.values)")
+
+    assert rows == [[5.0, 1.25], [5.1, 1.5]]
