@@ -6,6 +6,12 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+
+- Interest rates in one inline chart now share a y-axis. The RBA gives the cash rate in "Per
+  cent" but lending rates and bond yields in "Per cent per annum", so a cash rate, mortgage rate
+  and 10-year yield comparison was drawn as two stacked panels instead of one.
+
 ## [1.21.1] - 2026-11-19
 
 A chart display fix (#216). Tool names, parameters and the response contract are unchanged.

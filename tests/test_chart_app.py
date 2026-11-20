@@ -704,6 +704,22 @@ def test_single_source_footer_is_one_line_without_a_source_prefix() -> None:
     assert lines[0]["url"] == "https://www.rba.gov.au/x.csv"
 
 
+def test_per_cent_per_annum_rates_share_the_per_cent_axis() -> None:
+    # The RBA labels the cash rate "Per cent" but lending rates and yields "Per cent per annum".
+    payload = json.dumps(_combined(rba_unit="Per cent per annum"))
+
+    assert _run_view(f"buildModel({payload}).panels.map((p) => p.unit)") == ["Per cent"]
+
+
+def test_a_panel_of_per_annum_rates_keeps_its_unit() -> None:
+    payload = _combined(rba_unit="Per cent per annum")
+    for series in payload["series"]:
+        series["unit"] = "Per cent per annum"
+    text = json.dumps(payload)
+
+    assert _run_view(f"buildModel({text}).panels.map((p) => p.unit)") == ["Per cent per annum"]
+
+
 def test_mixed_units_get_stacked_panels() -> None:
     payload = json.dumps(_combined(rba_unit="Number", rba_frequency="Monthly"))
 
