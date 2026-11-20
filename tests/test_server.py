@@ -1388,6 +1388,30 @@ async def test_service_forwards_default_abs_key_for_gdp_growth() -> None:
     assert abs_provider.last_get_data_kwargs["key"] == "M2.GPM.20.AUS.Q"
 
 
+class _ProportionABSProvider(StubABSProvider):
+    async def get_data(self, dataflow_id: str, **kwargs) -> dict:
+        payload = await super().get_data(dataflow_id, **kwargs)
+        payload["series"][0]["unit"] = "Proportion"
+        return payload
+
+
+async def test_saving_ratio_is_reported_in_per_cent() -> None:
+    # ABS labels the household saving ratio "Proportion", but the values are percentages (6.5).
+    service = AuseconService(abs_provider=_ProportionABSProvider(), rba_provider=StubRBAProvider())
+
+    result = await service.get_economic_series("household_saving_ratio")
+
+    assert [s["unit"] for s in result["series"]] == ["Per cent"]
+
+
+async def test_concepts_without_a_catalogue_unit_keep_the_source_unit() -> None:
+    service = AuseconService(abs_provider=_ProportionABSProvider(), rba_provider=StubRBAProvider())
+
+    result = await service.get_economic_series("real_net_national_disposable_income")
+
+    assert [s["unit"] for s in result["series"]] == ["Proportion"]
+
+
 @pytest.mark.asyncio
 async def test_service_normalises_semantic_abs_iso_bounds_for_quarterly_concept() -> None:
     abs_provider = StubABSProvider()

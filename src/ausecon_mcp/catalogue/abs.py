@@ -621,6 +621,8 @@ _RAW_ABS_CATALOGUE = {
                 "name": "household_saving_ratio",
                 "aliases": ["household saving ratio", "saving ratio", "savings ratio"],
                 "abs_key": "M7.HSR.20.AUS.Q",
+                # SDMX labels it "Proportion", but the values are percentages (6.5 = 6.5%).
+                "unit": "Per cent",
             },
             {
                 "name": "real_net_national_disposable_income",
