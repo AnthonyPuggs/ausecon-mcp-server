@@ -167,6 +167,7 @@
   .tt-break { margin-top: 4px; color: var(--ink-2); }
   details { margin-top: 14px; }
   summary { cursor: pointer; color: var(--ink-2); font-size: 12px; }
+  .table-caption { margin: 12px 0 0; color: var(--ink-2); font-size: 12px; font-weight: 600; }
   .table-wrap { margin-top: 8px; max-height: 280px; overflow: auto; border: 1px solid var(--border); border-radius: 6px; }
   table { border-collapse: collapse; width: 100%; font-size: 12px; font-variant-numeric: tabular-nums; }
   th, td { padding: 4px 8px; text-align: right; white-space: nowrap; border-bottom: 1px solid var(--border); }
@@ -403,6 +404,39 @@
     if ((m = /^(\d{4})-(\d{2})$/.exec(s))) return Date.UTC(+m[1], +m[2] - 1, 1);
     if ((m = /^(\d{4})$/.exec(s))) return Date.UTC(+m[1], 0, 1);
     return null;
+  }
+
+  // The period an observation stands for. The descriptor's frequency wins: RBA monthly series
+  // are dated at month end ("2023-06-30") but cover the whole month.
+  const KIND_LABELS = { day: "Daily", week: "Weekly", month: "Monthly", quarter: "Quarterly", half: "Half-yearly", year: "Annual" };
+
+  function periodKind(s) {
+    const f = String((s.desc && s.desc.frequency) || "").toLowerCase();
+    if (/daily|business day/.test(f)) return "day";
+    if (/week/.test(f)) return "week";
+    if (/month/.test(f)) return "month";
+    if (/quarter/.test(f)) return "quarter";
+    if (/semi|half|six/.test(f)) return "half";
+    if (/annual|year/.test(f)) return "year";
+    const date = String((s.points[0] && s.points[0].date) || "");
+    if (/^\d{4}-Q[1-4]$/.test(date)) return "quarter";
+    if (/^\d{4}-S[12]$/.test(date)) return "half";
+    if (/^\d{4}-\d{2}$/.test(date)) return "month";
+    if (/^\d{4}$/.test(date)) return "year";
+    return "day";
+  }
+
+  // Which period of the given kind a timestamp falls in (equal buckets = same period).
+  function periodBucket(t, kind) {
+    const d = new Date(t);
+    const y = d.getUTCFullYear();
+    const m = d.getUTCMonth();
+    if (kind === "month") return y * 12 + m;
+    if (kind === "quarter") return y * 4 + Math.floor(m / 3);
+    if (kind === "half") return y * 2 + Math.floor(m / 6);
+    if (kind === "year") return y;
+    const day = Math.floor(t / 86400000);
+    return kind === "week" ? Math.floor((day + 3) / 7) : day;
   }
 
   function formatPeriod(raw) {
@@ -715,6 +749,76 @@
 
   // ------------------------------------------------------------------ render
 
+  // The observation in effect at time t: a step series' latest change (until the line ends),
+  // otherwise the observation whose period contains t. Null outside the series' range.
+  function coveringPoint(s, t) {
+    let lo = 0;
+    let hi = s.points.length;
+    while (lo < hi) {
+      const mid = (lo + hi) >> 1;
+      if (s.points[mid].t <= t) lo = mid + 1;
+      else hi = mid;
+    }
+    const before = lo > 0 ? s.points[lo - 1] : null;
+    if (s.step) return before && t <= s.end ? before : null;
+    const kind = periodKind(s);
+    const bucket = periodBucket(t, kind);
+    for (const p of [before, s.points[lo]]) {
+      if (p && periodBucket(p.t, kind) === bucket) return p;
+    }
+    return null;
+  }
+
+  // Tooltip rows at time t. A value from another date (a quarter under a cash rate decision)
+  // names its own period; a step series' value is simply the one in effect.
+  function hoverRows(series, t) {
+    return series.map((s) => {
+      const p = coveringPoint(s, t);
+      const point = p && p.value !== null ? p : null;
+      let period = null;
+      if (point && !s.step && point.t !== t) {
+        // RBA monthly values are dated at month end; name the month, not the day.
+        const m = /^(\d{4})-(\d{2})-\d{2}$/.exec(point.date);
+        period = m && periodKind(s) === "month" ? `${MONTHS[+m[2] - 1]} ${m[1]}` : formatPeriod(point.date);
+      }
+      return { s, point, period };
+    });
+  }
+
+  // Data-table groups: series observed on the same schedule share a table. Rows are keyed by
+  // period, so an ABS "2019-01" and an RBA "2019-01-31" monthly value sit on one row. With a
+  // single group there is no caption, as before.
+  function tableGroups(series) {
+    const groups = [];
+    const byKey = new Map();
+    for (const s of series) {
+      const kind = periodKind(s);
+      const key = s.step ? "step" : kind;
+      if (!byKey.has(key)) {
+        const caption = String((s.desc && s.desc.frequency) || "").trim() || KIND_LABELS[kind];
+        const group = { key, kind, caption, series: [] };
+        byKey.set(key, group);
+        groups.push(group);
+      }
+      byKey.get(key).series.push(s);
+    }
+    for (const group of groups) {
+      const rows = new Map();
+      group.series.forEach((s, k) => {
+        for (const p of s.points) {
+          const rowKey = group.key === "step" ? p.t : periodBucket(p.t, group.kind);
+          if (!rows.has(rowKey)) {
+            rows.set(rowKey, { t: p.t, date: formatPeriod(p.date), values: new Array(group.series.length).fill(null) });
+          }
+          rows.get(rowKey).values[k] = p.value;
+        }
+      });
+      group.rows = [...rows.values()].sort((a, b) => b.t - a.t);
+      if (groups.length === 1) group.caption = null;
+    }
+    return groups;
+  }
+
   function render() {
     const data = payload;
     const meta = data.metadata || {};
@@ -907,7 +1011,6 @@
 
     // Hover layer: crosshair snaps to the nearest observation date across this panel.
     const times = [...new Set(panel.series.flatMap((s) => s.points.map((p) => p.t)))].sort((a, b) => a - b);
-    const lookup = panel.series.map((s) => new Map(s.points.map((p) => [p.t, p])));
     const hover = svg("g", { visibility: "hidden" });
     const cross = svg("line", { class: "crosshair", y1: margin.top, y2: margin.top + plotH });
     hover.append(cross);
@@ -947,21 +1050,24 @@
       const cx = xOf(t);
       cross.setAttribute("x1", cx);
       cross.setAttribute("x2", cx);
-      const rows = [];
+      // The header date is the snapped observation date; other series show the value in effect.
       let dateRaw = null;
-      panel.series.forEach((s, k) => {
-        const p = lookup[k].get(t);
-        if (p && p.value !== null) {
-          dots[k].setAttribute("cx", cx);
-          dots[k].setAttribute("cy", yOf(p.value));
+      for (const s of panel.series) {
+        const exact = s.points.find((p) => p.t === t);
+        if (exact) { dateRaw = exact.date; break; }
+      }
+      const rows = hoverRows(panel.series, t);
+      rows.forEach(({ s, point }, k) => {
+        if (point) {
+          // A step line is flat at the crosshair; other series mark their own observation.
+          dots[k].setAttribute("cx", s.step ? cx : xOf(point.t));
+          dots[k].setAttribute("cy", yOf(point.value));
           // "inherit", not "visible": a child's own "visible" overrides the hidden hover layer,
           // which left a stray dot (masking the line around it) after the pointer left.
           dots[k].setAttribute("visibility", "inherit");
         } else {
           dots[k].setAttribute("visibility", "hidden");
         }
-        if (p && !dateRaw) dateRaw = p.date;
-        rows.push({ s, value: p ? p.value : null });
       });
       hover.setAttribute("visibility", "visible");
       fillTooltip(formatPeriod(dateRaw), rows, breaks.filter((b) => Math.abs(xOf(b.t) - cx) < 6));
@@ -1013,12 +1119,13 @@
 
   function fillTooltip(dateText, rows, breaks) {
     const children = [el("div", "tt-date", dateText)];
-    for (const { s, value } of rows) {
+    for (const { s, point, period } of rows) {
       const row = el("div", "tt-row");
       const key = el("span", "key");
       key.style.background = s.color;
-      row.append(key, el("span", "tt-value", formatValue(value, s.decimals, s.unit)));
-      const label = el("span", "tt-label", rows.length > 1 ? s.display : "");
+      row.append(key, el("span", "tt-value", formatValue(point ? point.value : null, s.decimals, s.unit)));
+      const name = rows.length > 1 ? s.display : "";
+      const label = el("span", "tt-label", period ? `${name} (${period})`.trim() : name);
       label.title = s.label;
       row.append(label);
       children.push(row);
@@ -1042,38 +1149,34 @@
   function renderTable(model) {
     const details = el("details");
     details.append(el("summary", null, "Data table"));
-    const wrap = el("div", "table-wrap");
-    const table = el("table");
-    const head = el("tr");
-    head.append(el("th", null, "Date"));
-    for (const s of model.all) {
-      const th = el("th", null, s.display);
-      th.title = s.label;
-      head.append(th);
-    }
-    const thead = el("thead");
-    thead.append(head);
-
-    const dates = new Map();
-    model.all.forEach((s, k) => {
-      for (const p of s.points) {
-        if (!dates.has(p.t)) dates.set(p.t, { date: p.date, values: new Array(model.all.length).fill(null) });
-        dates.get(p.t).values[k] = p.value;
+    // Series on different schedules (quarterly beside cash rate decisions) get a table each, so
+    // no row is mostly blanks.
+    for (const group of tableGroups(model.all)) {
+      if (group.caption) details.append(el("p", "table-caption", group.caption));
+      const wrap = el("div", "table-wrap");
+      const table = el("table");
+      const head = el("tr");
+      head.append(el("th", null, "Date"));
+      for (const s of group.series) {
+        const th = el("th", null, s.display);
+        th.title = s.label;
+        head.append(th);
       }
-    });
-    const rows = [...dates.entries()].sort((a, b) => b[0] - a[0]).slice(0, MAX_TABLE_ROWS);
-    const tbody = el("tbody");
-    for (const [, row] of rows) {
-      const tr = el("tr");
-      tr.append(el("td", null, formatPeriod(row.date)));
-      row.values.forEach((v, k) => tr.append(el("td", null, formatValue(v, model.all[k].decimals, model.all[k].unit))));
-      tbody.append(tr);
-    }
-    table.append(thead, tbody);
-    wrap.append(table);
-    details.append(wrap);
-    if (dates.size > MAX_TABLE_ROWS) {
-      details.append(el("p", "notice info", `Showing the latest ${MAX_TABLE_ROWS} of ${dates.size} dates.`));
+      const thead = el("thead");
+      thead.append(head);
+      const tbody = el("tbody");
+      for (const row of group.rows.slice(0, MAX_TABLE_ROWS)) {
+        const tr = el("tr");
+        tr.append(el("td", null, row.date));
+        row.values.forEach((v, k) => tr.append(el("td", null, formatValue(v, group.series[k].decimals, group.series[k].unit))));
+        tbody.append(tr);
+      }
+      table.append(thead, tbody);
+      wrap.append(table);
+      details.append(wrap);
+      if (group.rows.length > MAX_TABLE_ROWS) {
+        details.append(el("p", "notice info", `Showing the latest ${MAX_TABLE_ROWS} of ${group.rows.length} dates.`));
+      }
     }
     // Re-renders (e.g. on resize) rebuild the table, so carry the reader's open/closed choice over.
     details.open = tableOpen;

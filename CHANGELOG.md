@@ -6,6 +6,22 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.21.3] - 2026-11-21
+
+A chart display fix for combined results with different frequencies. Tool names, parameters and
+the response contract are unchanged.
+
+### Fixed
+
+- Hovering over a chart that mixes frequencies now shows every series' value. The readout looked
+  up each series on the hovered date only, so a quarterly series showed "—" under a cash rate
+  decision date. Each series now shows the observation in effect, with its own period in brackets
+  when that differs (for example "2.0% Household saving ratio (Q2 2023)").
+- The data table no longer interleaves series observed on different schedules. Series that share
+  a frequency keep one table; otherwise each frequency gets its own captioned table ("Quarterly",
+  "As announced", "Daily"), so rows are no longer mostly blank. ABS and RBA monthly values for the
+  same month now share a row.
+
 ## [1.21.2] - 2026-11-21
 
 Inline chart unit fixes (#218). Tool names, parameters and the response contract are unchanged.
@@ -1259,7 +1275,8 @@ Initial public release.
 - Initial curated catalogues for ABS and RBA, plus a four-concept
   `CURATED_SERIES` semantic shortcut map.
 
-[Unreleased]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.21.2...HEAD
+[Unreleased]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.21.3...HEAD
+[1.21.3]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.21.2...v1.21.3
 [1.21.2]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.21.1...v1.21.2
 [1.21.1]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.21.0...v1.21.1
 [1.21.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.20.1...v1.21.0
