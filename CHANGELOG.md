@@ -6,6 +6,10 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.21.2] - 2026-11-21
+
+Inline chart unit fixes (#218). Tool names, parameters and the response contract are unchanged.
+
 ### Fixed
 
 - Interest rates in one inline chart now share a y-axis. The RBA gives the cash rate in "Per
@@ -1255,7 +1259,8 @@ Initial public release.
 - Initial curated catalogues for ABS and RBA, plus a four-concept
   `CURATED_SERIES` semantic shortcut map.
 
-[Unreleased]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.21.1...HEAD
+[Unreleased]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.21.2...HEAD
+[1.21.2]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.21.1...v1.21.2
 [1.21.1]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.21.0...v1.21.1
 [1.21.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.20.1...v1.21.0
 [1.20.1]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.20.0...v1.20.1
