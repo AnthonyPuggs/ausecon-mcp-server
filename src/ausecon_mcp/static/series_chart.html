@@ -497,6 +497,12 @@
     return unit;
   }
 
+  // Which y-axis a unit label plots on. The RBA gives the cash rate in "Per cent" but lending
+  // rates and yields in "Per cent per annum": the same scale, so they share an axis.
+  function axisKey(unit) {
+    return /^per cent per annum$/i.test(unit) ? "Per cent" : unit;
+  }
+
   function decimalsFor(values, desc) {
     if (Number.isInteger(desc && desc.decimals) && desc.decimals >= 0 && desc.decimals <= 6) {
       return desc.decimals;
@@ -624,12 +630,16 @@
     const panels = [];
     const panelByUnit = new Map();
     for (const s of plotted) {
-      if (!panelByUnit.has(s.unit)) {
+      const key = axisKey(s.unit);
+      if (!panelByUnit.has(key)) {
         const panel = { unit: s.unit, series: [] };
-        panelByUnit.set(s.unit, panel);
+        panelByUnit.set(key, panel);
         panels.push(panel);
       }
-      panelByUnit.get(s.unit).series.push(s);
+      const panel = panelByUnit.get(key);
+      // Mixed spellings on one axis ("Per cent" and "Per cent per annum") use the plain one.
+      if (panel.unit !== s.unit) panel.unit = "Per cent";
+      panel.series.push(s);
     }
 
     let t0 = Infinity;

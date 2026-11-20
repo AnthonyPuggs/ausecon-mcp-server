@@ -811,6 +811,7 @@ class AuseconService:
             last_n=validated_last_n,
             include_observation_dimensions=include_observation_dimensions,
         )
+        _apply_variant_unit(payload, resolved)
         _stamp_semantic_metadata(payload, validated_concept, resolved, bounds)
         return payload
 
@@ -1556,6 +1557,19 @@ def _name_failed_concept(concept: str, error: BaseException) -> BaseException:
     if isinstance(error, Exception) and not isinstance(error, AuseconError):
         return error
     return AuseconValidationError(message)
+
+
+def _apply_variant_unit(payload: dict, resolved: Any) -> None:
+    """Use the catalogue's unit for a concept whose upstream unit label is misleading.
+
+    The household saving ratio arrives as "Proportion" but its values are percentages. New
+    descriptor dicts are built so a cached upstream payload is never edited in place.
+    """
+    variants = resolved.entry.get("variants") or []
+    spec = next((v for v in variants if v.get("name") == resolved.variant), None)
+    unit = spec.get("unit") if spec else None
+    if unit:
+        payload["series"] = [{**series, "unit": unit} for series in payload.get("series") or []]
 
 
 def _stamp_semantic_metadata(

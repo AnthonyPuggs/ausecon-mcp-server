@@ -6,6 +6,15 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+
+- Interest rates in one inline chart now share a y-axis. The RBA gives the cash rate in "Per
+  cent" but lending rates and bond yields in "Per cent per annum", so a cash rate, mortgage rate
+  and 10-year yield comparison was drawn as two stacked panels instead of one.
+- `household_saving_ratio` now reports its unit as "Per cent". The ABS labels the series
+  "Proportion", but its values are percentages (6.5 means 6.5%), so charts showed it without a
+  % sign and on a separate axis from other rates.
+
 ## [1.21.1] - 2026-11-19
 
 A chart display fix (#216). Tool names, parameters and the response contract are unchanged.
