@@ -32,6 +32,7 @@ CHANGELOG = ROOT / "CHANGELOG.md"
 CONTRIBUTING = ROOT / "docs" / "contributing.md"
 CLIENT_SMOKE = ROOT / "scripts" / "mcp_client_smoke.py"
 DOCS_SITE = ROOT / "docs-site"
+RELEASING = ROOT / "docs" / "releasing.md"
 DOCS_SITE_CONTRIBUTING = DOCS_SITE / "src" / "content" / "docs" / "maintainers" / "contributing.md"
 DOCS_ICON = DOCS_SITE / "public" / "ausecon-icon.svg"
 HOSTED_DEPLOYMENT = DOCS_SITE / "src" / "content" / "docs" / "operations" / "hosted-deployment.md"
@@ -404,24 +405,6 @@ def test_hosted_deployment_checklist_is_documented_without_http_smoke_script() -
         assert "manual MCP tool-call smoke" in text
 
 
-def test_post_v11_roadmap_is_documented_and_contract_preserving() -> None:
-    docs_roadmap_text = (DOCS_SITE / "src/content/docs/maintainers/roadmap.md").read_text(
-        encoding="utf-8"
-    )
-
-    assert "v1.2" in docs_roadmap_text
-    assert "v1.3" in docs_roadmap_text
-    assert "v1.4" in docs_roadmap_text
-    assert "v1.5" in docs_roadmap_text
-    assert "v1.6" in docs_roadmap_text
-    assert "v2.0" in docs_roadmap_text
-    assert "current v1.14.x release line" in docs_roadmap_text
-    assert "APRA" in docs_roadmap_text
-    assert "APRA source-native foundation" in docs_roadmap_text
-    assert "{metadata, series, observations}" in docs_roadmap_text
-    assert "mcp_http_smoke.py" not in docs_roadmap_text
-
-
 def test_docs_site_documents_schema_and_preferred_rba_listing_surface() -> None:
     tools_text = (DOCS_SITE / "src/content/docs/reference/tools.md").read_text(encoding="utf-8")
     schema_text = (DOCS_SITE / "src/content/docs/reference/response-schema.md").read_text(
@@ -721,9 +704,7 @@ def test_python_version_story_is_consistent_across_docs_and_ci() -> None:
 def test_codeql_and_dependabot_are_configured_for_visible_security_automation() -> None:
     codeql_text = CODEQL_WORKFLOW.read_text(encoding="utf-8")
     dependabot_text = DEPENDABOT.read_text(encoding="utf-8")
-    releasing_text = (DOCS_SITE / "src/content/docs/maintainers/releasing.md").read_text(
-        encoding="utf-8"
-    )
+    releasing_text = RELEASING.read_text(encoding="utf-8")
 
     assert "name: CodeQL" in codeql_text
     assert "github/codeql-action/init@" in codeql_text
@@ -822,9 +803,7 @@ def test_smithery_deployment_docs_match_current_release_state() -> None:
 
 
 def test_readme_release_instructions_match_tag_derived_versioning() -> None:
-    releasing_text = (DOCS_SITE / "src/content/docs/maintainers/releasing.md").read_text(
-        encoding="utf-8"
-    )
+    releasing_text = RELEASING.read_text(encoding="utf-8")
 
     assert "version is derived from git tags via `hatch-vcs`" in releasing_text
     assert "ensure `pyproject.toml` contains the intended version" not in releasing_text

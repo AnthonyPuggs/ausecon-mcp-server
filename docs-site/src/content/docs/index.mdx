@@ -76,10 +76,27 @@ Version `1.21.3` is the current release line. The server remains intentionally s
 the main analyst workflows, supports stdio plus hosted Streamable HTTP, and does not aim to mirror
 every ABS, RBA, or APRA release.
 
-## Quick install
+## Quick start
+
+The fastest way to try it is the hosted server. Add this URL as a custom connector or remote MCP
+server in Claude, ChatGPT, Gemini or any other client that supports remote servers. There is
+nothing to install and no API key:
+
+```text
+https://mcp.auseconmcp.com/mcp
+```
+
+In Claude Code:
+
+```bash
+claude mcp add --transport http ausecon https://mcp.auseconmcp.com/mcp
+```
+
+To run it on your own machine instead, let your client launch it with
+[`uvx`](https://docs.astral.sh/uv/):
 
 ```bash
 uvx ausecon-mcp-server
 ```
 
-The server speaks MCP over standard input/output and is normally launched by your MCP client.
+[Client Setup](/client-setup/) has the steps for each client.

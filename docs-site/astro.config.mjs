@@ -3,6 +3,11 @@ import starlight from '@astrojs/starlight';
 
 export default defineConfig({
   site: 'https://auseconmcp.com',
+  // Retired maintainer pages; the release checklist now lives in the repository at docs/releasing.md.
+  redirects: {
+    '/maintainers/roadmap': '/',
+    '/maintainers/releasing': '/maintainers/contributing/',
+  },
   vite: {
     cacheDir: process.env.VITE_CACHE_DIR || 'node_modules/.vite',
   },
@@ -93,8 +98,6 @@ export default defineConfig({
           items: [
             { label: 'Contributing', slug: 'maintainers/contributing' },
             { label: 'Evaluation Harness', slug: 'maintainers/evaluation' },
-            { label: 'Releasing', slug: 'maintainers/releasing' },
-            { label: 'Roadmap', slug: 'maintainers/roadmap' },
           ],
         },
       ],

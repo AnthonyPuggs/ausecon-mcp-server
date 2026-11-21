@@ -1,7 +1,7 @@
----
-title: Releasing
-description: Release checklist for PyPI, GHCR, and MCP registry metadata.
----
+# Releasing
+
+Release checklist for PyPI, GHCR, and MCP registry metadata. This is maintainer documentation and
+is not published on the docs site.
 
 The package version is derived from git tags via `hatch-vcs`. Do not manually edit a target version
 in `pyproject.toml` when cutting a release.
