@@ -35,6 +35,13 @@
 <a href="https://auseconmcp.com/tools">Tool reference</a> &nbsp;·&nbsp;
 <a href="https://github.com/AnthonyPuggs/ausecon-mcp-server/blob/main/CHANGELOG.md">Changelog</a>
 
+<br/><br/>
+
+<img src="https://raw.githubusercontent.com/AnthonyPuggs/ausecon-mcp-server/main/assets/demo.gif" alt="Claude answering &quot;How has the household saving ratio moved alongside the cash rate since 2019?&quot; with one interactive chart of ABS and RBA data; hovering shows each series' value and source period" width="720" />
+
+<p><sub>One question in Claude: the hosted server fetches ABS and RBA data and draws them as one
+interactive chart.</sub></p>
+
 </div>
 
 ---
@@ -95,7 +102,7 @@ the ABS, the RBA, or APRA. Ask for
     <td width="33%" valign="top">
       <h4>Works with your client</h4>
       Claude Desktop, Claude Code, Cursor, Windsurf, VS Code, Codex or Smithery.
-      stdio locally, Streamable HTTP when hosted. In claude.ai, data results appear as
+      stdio locally, Streamable HTTP when hosted. In Claude (web, desktop and mobile), data results appear as
       <a href="https://auseconmcp.com/user-guide/inline-charts/">interactive charts</a>.
     </td>
   </tr>
