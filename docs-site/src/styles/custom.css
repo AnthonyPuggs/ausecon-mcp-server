@@ -1,0 +1,143 @@
+/*
+ * ausecon brand theme for Starlight. Colours come from the banner and logo:
+ * deep teal #0B2E33, mint #7FD1C2, gold #F5B841, grey-green #A9C2BE.
+ */
+
+/* Dark mode (Starlight's default). */
+:root {
+  --sl-color-accent-low: #0f3b39;
+  --sl-color-accent: #2f9e8f;
+  --sl-color-accent-high: #7fd1c2;
+
+  --sl-color-white: #ffffff;
+  --sl-color-gray-1: #e6efed;
+  --sl-color-gray-2: #bacbc7;
+  --sl-color-gray-3: #819c97;
+  --sl-color-gray-4: #4f6965;
+  --sl-color-gray-5: #2b4543;
+  --sl-color-gray-6: #142d30;
+  --sl-color-black: #0a1f23;
+
+  --ausecon-gold: #f5b841;
+  --ausecon-gold-low: #3a2e10;
+}
+
+:root[data-theme='light'] {
+  --sl-color-accent-low: #cdeee8;
+  --sl-color-accent: #1d7f72;
+  --sl-color-accent-high: #0e4d45;
+
+  --sl-color-white: #0b2226;
+  --sl-color-gray-1: #15302f;
+  --sl-color-gray-2: #27423f;
+  --sl-color-gray-3: #4b6662;
+  --sl-color-gray-4: #7c9692;
+  --sl-color-gray-5: #b6c6c3;
+  --sl-color-gray-6: #e2ecea;
+  --sl-color-gray-7: #f1f6f5;
+  --sl-color-black: #ffffff;
+
+  /* Gold text needs a darker shade to stay readable on white. */
+  --ausecon-gold: #8a5d00;
+  --ausecon-gold-low: #fbefd2;
+}
+
+/* ---- Home page ---------------------------------------------------------------------------- */
+
+/* A soft teal glow behind the hero, strongest where the map sits. */
+:root[data-has-hero] .main-frame {
+  background:
+    radial-gradient(60rem 32rem at 85% 0%, color-mix(in srgb, var(--sl-color-accent) 18%, transparent), transparent 70%),
+    var(--sl-color-bg);
+}
+
+:root[data-has-hero] .hero > img {
+  filter: drop-shadow(0 0 2.5rem color-mix(in srgb, var(--ausecon-gold) 12%, transparent));
+}
+
+/* Less space between the hero and the page content on wide screens. */
+@media (min-width: 50rem) {
+  :root[data-has-hero] .hero {
+    padding-bottom: 1.5rem;
+  }
+}
+
+/* The independence note: one quiet line under the hero, not a callout box. */
+.independent-note {
+  margin-top: 0 !important;
+  font-size: var(--sl-text-sm);
+  color: var(--sl-color-gray-3);
+}
+
+.independent-note p,
+.demo-caption p {
+  margin: 0;
+}
+
+.independent-note a {
+  color: inherit;
+}
+
+/* Headline numbers. */
+.stat-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(6.25rem, 1fr));
+  gap: 0.75rem;
+  margin-block: 2rem !important;
+}
+
+.stat-row > div {
+  margin: 0 !important; /* Starlight spaces consecutive blocks; the grid gap does that here. */
+  padding: 1rem 0.75rem;
+  border: 1px solid var(--sl-color-hairline-light);
+  border-radius: 0.75rem;
+  background: color-mix(in srgb, var(--sl-color-accent-low) 45%, transparent);
+  text-align: center;
+}
+
+.stat-row strong {
+  display: block;
+  margin: 0 !important;
+  font-size: var(--sl-text-3xl);
+  line-height: 1.1;
+  color: var(--ausecon-gold);
+}
+
+.stat-row span {
+  display: block;
+  margin: 0.25rem 0 0 !important;
+  font-size: var(--sl-text-sm);
+  color: var(--sl-color-gray-3);
+}
+
+/* The demo video, framed like the chart card it shows. */
+.demo-video {
+  display: block;
+  width: 100%;
+  max-width: 46rem;
+  margin-inline: auto;
+  height: auto;
+  border: 1px solid var(--sl-color-hairline-light);
+  border-radius: 0.75rem;
+  background: var(--sl-color-gray-6);
+}
+
+.demo-caption {
+  max-width: 46rem;
+  margin-inline: auto !important;
+  text-align: center;
+  font-size: var(--sl-text-sm);
+  color: var(--sl-color-gray-3);
+}
+
+/* Card icons in brand colours (Starlight cycles orange, purple, green and red). */
+.card {
+  --sl-card-border: var(--sl-color-accent-high);
+  --sl-card-bg: var(--sl-color-accent-low);
+}
+
+.card:nth-child(4n + 2),
+.card:nth-child(4n + 3) {
+  --sl-card-border: var(--ausecon-gold);
+  --sl-card-bg: var(--ausecon-gold-low);
+}
