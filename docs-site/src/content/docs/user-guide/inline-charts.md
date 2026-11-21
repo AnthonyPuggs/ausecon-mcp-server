@@ -8,6 +8,14 @@ results from the five retrieval tools are shown as an interactive chart in the c
 to the tool call: `get_economic_series`, `get_derived_series`, `get_rba_table`, `get_abs_data` and
 `get_apra_data`. Every other client receives the same JSON response as before.
 
+<video controls muted playsinline loop preload="metadata" poster="/media/inline-chart-demo-poster.jpg" width="1000" style="width: 100%; height: auto; border-radius: 8px;" aria-label="claude.ai answering a question about the household saving ratio and the cash rate with one interactive chart">
+  <source src="/media/inline-chart-demo.mp4" type="video/mp4" />
+</video>
+
+*Asking claude.ai "How has the household saving ratio moved alongside the cash rate since 2019?"
+returns ABS and RBA data in one chart. Hovering shows each series' value, with its own period
+when it differs from the date under the pointer.*
+
 ## Where charts appear
 
 | Client | What you see |

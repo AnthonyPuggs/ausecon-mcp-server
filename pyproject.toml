@@ -65,6 +65,10 @@ source = "vcs"
 [tool.hatch.build.hooks.vcs]
 version-file = "src/ausecon_mcp/_version.py"
 
+[tool.hatch.build.targets.sdist]
+# Demo media for the README and docs site; served from GitHub, not needed to build the package.
+exclude = ["assets/demo.gif", "docs-site/public/media"]
+
 [tool.hatch.build.targets.wheel]
 packages = ["src/ausecon_mcp"]
 

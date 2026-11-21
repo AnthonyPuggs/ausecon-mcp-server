@@ -35,6 +35,13 @@
 <a href="https://auseconmcp.com/tools">Tool reference</a> &nbsp;·&nbsp;
 <a href="https://github.com/AnthonyPuggs/ausecon-mcp-server/blob/main/CHANGELOG.md">Changelog</a>
 
+<br/><br/>
+
+<img src="https://raw.githubusercontent.com/AnthonyPuggs/ausecon-mcp-server/main/assets/demo.gif" alt="claude.ai answering &quot;How has the household saving ratio moved alongside the cash rate since 2019?&quot; with one interactive chart of ABS and RBA data; hovering shows each series' value and source period" width="720" />
+
+<p><sub>One question in claude.ai: the hosted server fetches ABS and RBA data and draws them as one
+interactive chart.</sub></p>
+
 </div>
 
 ---
