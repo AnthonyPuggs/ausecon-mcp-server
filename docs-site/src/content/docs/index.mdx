@@ -2,6 +2,14 @@
 title: Australian Economic Data MCP Server
 description: Structured ABS, RBA, and APRA data retrieval for MCP clients.
 template: splash
+# Brand first in the browser tab on the home page only; other pages keep "Page | ausecon MCP Server".
+head:
+  - tag: title
+    content: ausecon | Australian Economic Data MCP Server
+  - tag: meta
+    attrs:
+      property: og:title
+      content: ausecon | Australian Economic Data MCP Server
 hero:
   tagline: Open, free, no-API-key MCP access to Australian economic data from official sources — fresh and fully source-traceable, from the ABS, RBA, and APRA.
   image:
