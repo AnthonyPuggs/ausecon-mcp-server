@@ -22,7 +22,7 @@ when it differs from the date under the pointer.*
 | --- | --- |
 | Claude on the web, desktop and mobile, with the [hosted server](/getting-started/) added as a connector | The interactive chart. This is the setup the chart has been tested on. |
 | Other MCP Apps clients, and Claude Desktop running the server locally | Should show the chart, but these are not yet tested. |
-| Claude Code, Cursor, Codex, VS Code and other text-only clients | The JSON response, unchanged. |
+| Claude Code, Codex CLI, Cursor, VS Code and other text-only clients | The JSON response, unchanged. |
 
 ## Getting a chart
 

@@ -101,7 +101,7 @@ the ABS, the RBA, or APRA. Ask for
     </td>
     <td width="33%" valign="top">
       <h4>Works with your client</h4>
-      Claude, ChatGPT and Gemini through the hosted URL; Claude Code, Codex, Gemini CLI, Cursor,
+      Claude, ChatGPT and Gemini through the hosted URL; Claude Code, Codex CLI, Gemini CLI, Cursor,
       Windsurf and VS Code locally or hosted. stdio locally, Streamable HTTP when hosted. In Claude (web, desktop and mobile), data results appear as
       <a href="https://auseconmcp.com/user-guide/inline-charts/">interactive charts</a>.
     </td>
@@ -138,7 +138,7 @@ Point any MCP client that supports remote servers at that URL, with no authentic
   [custom app](https://support.google.com/gemini/answer/17209137) in the Gemini web app.
   Availability depends on your account and region.
 
-In Claude Code, Codex or Gemini CLI:
+In Claude Code, Codex CLI or Gemini CLI:
 
 ```bash
 claude mcp add --transport http ausecon https://mcp.auseconmcp.com/mcp
@@ -175,7 +175,7 @@ claude mcp add --transport stdio ausecon -- uvx ausecon-mcp-server
 </details>
 
 <details open>
-<summary><b>Codex</b></summary>
+<summary><b>Codex CLI</b></summary>
 
 ```bash
 codex mcp add ausecon -- uvx ausecon-mcp-server
