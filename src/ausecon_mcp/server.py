@@ -123,6 +123,13 @@ SourceSelector = Annotated[
 ]
 SearchQuery = Annotated[str, Field(min_length=1, description="Discovery query text.")]
 Identifier = Annotated[str, Field(min_length=1, description="Non-empty dataset or table id.")]
+ApraTableId = Annotated[
+    str,
+    Field(
+        min_length=1,
+        description="Table within an APRA publication, such as table_1 (APRA only).",
+    ),
+]
 AbsKey = Annotated[
     str,
     Field(min_length=1, description='ABS SDMX key, or "all" for all series.'),
@@ -1203,7 +1210,7 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
         include_discontinued: IncludeDiscontinued = False,
     ) -> list[dict]:
         """List curated ABS, RBA, and APRA catalogue entries, optionally filtered by source,
-        category, or tag. Unranked complement to ``search_datasets``."""
+        category, or tag. Unranked complement to search_datasets."""
         return await app_service.list_catalogue(
             source=source,
             category=category,
@@ -1258,6 +1265,10 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
     ) -> dict:
         """Expert/source-native ABS SDMX retrieval in a normalised response shape.
 
+        Curated indicators from ABS dataflows, such as CPI inflation, the unemployment rate and
+        GDP growth, are also available through get_economic_series, which can return several in
+        one result and one chart.
+
         In MCP Apps hosts (claude.ai, Claude Desktop) a result with up to eight series is
         already shown to the user as an interactive chart with a data table, so another chart
         of the same data would duplicate it.
@@ -1307,6 +1318,10 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
     ) -> dict:
         """Expert/source-native RBA statistical table retrieval in a normalised response shape.
 
+        Curated indicators from RBA tables, such as the cash rate target, mortgage rates, bond
+        yields and credit growth, are also available through get_economic_series, which can
+        return several in one result and one chart.
+
         In MCP Apps hosts (claude.ai, Claude Desktop) a result with up to eight series is
         already shown to the user as an interactive chart with a data table, so another chart
         of the same data would duplicate it.
@@ -1331,7 +1346,7 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
     @_caller_errors_without_traceback
     async def get_apra_data(
         publication_id: Identifier,
-        table_id: Identifier | None = None,
+        table_id: ApraTableId | None = None,
         series_ids: OptionalSeriesIdList = None,
         start_date: OptionalIsoDate = None,
         end_date: OptionalIsoDate = None,
@@ -1341,6 +1356,10 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
         """Expert/source-native APRA public XLSX publication retrieval.
 
         Only curated official APRA publication IDs are accepted; arbitrary URLs are not.
+
+        Curated indicators from APRA publications, such as bank capital ratios and housing loan
+        exposures, are also available through get_economic_series, which can return several in
+        one result and one chart.
 
         In MCP Apps hosts (claude.ai, Claude Desktop) a result with up to eight series is
         already shown to the user as an interactive chart with a data table, so another chart
@@ -1383,7 +1402,7 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
         last_n: OptionalPositiveInt = None,
         include_observation_dimensions: IncludeObservationDimensions = False,
     ) -> dict:
-        """Preferred analyst-facing retrieval tool for curated ABS/RBA economic concepts.
+        """Preferred analyst-facing retrieval tool for curated ABS, RBA and APRA concepts.
 
         Use list_economic_concepts for discovery. Date bounds accept YYYY, YYYY-QN,
         YYYY-SN, YYYY-MM, or YYYY-MM-DD and are normalised to the resolved source.
@@ -1463,7 +1482,7 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
         source: SourceSelector,
         identifier: Identifier,
         key: AbsKey = "all",
-        table_id: Identifier | None = None,
+        table_id: ApraTableId | None = None,
         series_ids: OptionalSeriesIdList = None,
         count: LatestCount = 1,
     ) -> dict:
@@ -1496,7 +1515,7 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
         n: PositiveCount = 10,
         direction: TopDirection = "highest",
         key: AbsKey = "all",
-        table_id: Identifier | None = None,
+        table_id: ApraTableId | None = None,
         series_ids: OptionalSeriesIdList = None,
         start_period: OptionalAbsPeriod = None,
         end_period: OptionalAbsPeriod = None,
@@ -1534,7 +1553,7 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
     async def describe_dataset(
         source: SourceSelector,
         identifier: Identifier,
-        table_id: Identifier | None = None,
+        table_id: ApraTableId | None = None,
         include_structure: IncludeStructure = False,
     ) -> dict:
         """Describe a source-native ABS, RBA, or APRA dataset without hiding native IDs."""

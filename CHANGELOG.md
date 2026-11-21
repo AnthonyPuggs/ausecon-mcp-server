@@ -11,6 +11,14 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - The hosted server serves the ausecon icon at `/favicon.ico`, so clients that show a connector's
   favicon no longer fall back to the hosting provider's logo.
 
+### Changed
+
+- `get_abs_data`, `get_rba_table` and `get_apra_data` now say which curated indicators they share
+  with `get_economic_series`, which returns several indicators in one result and one chart.
+- `get_economic_series` now describes its concepts as ABS, RBA and APRA (it said ABS/RBA). The
+  `table_id` parameter of `describe_dataset`, `get_apra_data`, `get_latest_observations` and
+  `get_top_observations` now says it selects a table within an APRA publication.
+
 ## [1.22.0] - 2026-11-21
 
 Guards against oversized requests and responses, clearer errors, and fixes for six RBA tables

@@ -1,4 +1,5 @@
 import asyncio
+import json
 from pathlib import Path
 
 import pytest
@@ -2317,3 +2318,40 @@ async def test_bounds_reach_every_concept() -> None:
 
     assert rba_provider.last_get_table_kwargs["start_date"] == "2020-01-01"
     assert abs_provider.last_get_data_kwargs["start_period"] is not None
+
+
+async def _listed_tools() -> dict:
+    async with Client(build_server()) as client:
+        return {tool.name: tool for tool in await client.list_tools()}
+
+
+async def test_raw_table_tools_mention_the_curated_concepts_they_overlap() -> None:
+    tools = await _listed_tools()
+
+    for name in ("get_abs_data", "get_rba_table", "get_apra_data"):
+        description = tools[name].description
+        assert "get_economic_series" in description, name
+        assert "one chart" in description, name
+
+
+async def test_economic_series_description_names_all_three_sources() -> None:
+    tools = await _listed_tools()
+
+    assert "ABS, RBA and APRA" in tools["get_economic_series"].description.split("\n")[0]
+
+
+async def test_tool_descriptions_carry_no_docstring_markup() -> None:
+    tools = await _listed_tools()
+
+    for name, tool in tools.items():
+        assert "``" not in (tool.description or ""), name
+
+
+async def test_table_id_parameters_say_they_select_an_apra_table() -> None:
+    tools = await _listed_tools()
+
+    for name in ("describe_dataset", "get_apra_data", "get_latest_observations"):
+        properties = tools[name].input_schema["properties"]
+        described = json.dumps(properties["table_id"])
+        assert "APRA" in described, name
+        assert "Non-empty dataset or table id" not in described, name
