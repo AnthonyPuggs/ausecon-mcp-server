@@ -14,6 +14,7 @@
 [![License](https://img.shields.io/badge/license-MIT-6a737d?labelColor=41464d)](LICENSE)
 
 [![ausecon-mcp-server MCP server](https://glama.ai/mcp/servers/AnthonyPuggs/ausecon-mcp-server/badges/card.svg)](https://glama.ai/mcp/servers/AnthonyPuggs/ausecon-mcp-server)
+
 <p>
   <b>ausecon</b> is a Model Context Protocol server that gives an AI assistant structured access
   to Australian economic and financial data from official sources, straight from the ABS, RBA,
@@ -34,8 +35,6 @@
 <a href="https://auseconmcp.com/getting-started">Getting started</a> &nbsp;·&nbsp;
 <a href="https://auseconmcp.com/tools">Tool reference</a> &nbsp;·&nbsp;
 <a href="https://github.com/AnthonyPuggs/ausecon-mcp-server/blob/main/CHANGELOG.md">Changelog</a>
-
-<br/><br/>
 
 <img src="https://raw.githubusercontent.com/AnthonyPuggs/ausecon-mcp-server/main/assets/demo.gif" alt="Claude answering &quot;How has the household saving ratio moved alongside the cash rate since 2019?&quot; with one interactive chart of ABS and RBA data; hovering shows each series' value and source period" width="720" />
 
