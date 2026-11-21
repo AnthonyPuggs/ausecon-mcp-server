@@ -44,11 +44,13 @@ To compare indicators from different sources, ask for them together. `get_econom
 list of up to eight concepts and returns them in one result, so they appear on one chart:
 
 ```text
-How have unemployment and the RBA cash rate moved since 2019?
+How have the cash rate, mortgage rates and the 10-year bond yield moved since 2019?
 ```
 
-Series in the same unit share one axis; series in different units get their own panel within the
-same chart.
+<img src="/media/combined-rates-chart.webp" width="1132" height="1110" loading="lazy" style="width: 100%; height: auto; border-radius: 8px;" alt="Claude answering the question above with one chart of the RBA cash rate target, the outstanding owner-occupier mortgage rate and the 10-year government bond yield since 2019, on a single per cent axis, with one source line each for RBA tables A2, F6 and F17" />
+
+Series in the same unit share one axis, as these three rates do; series in different units get
+their own panel within the same chart.
 
 ## What the chart shows
 
@@ -57,13 +59,17 @@ same chart.
 - **Headline:** for a single series, the latest value, its date, and the change from the
   previous observation. Changes in a per cent series are given in percentage points (`pts`).
 - **Line chart:** hover over the chart, or focus it and use the arrow keys, to read every series'
-  value at a date.
+  value at a date. When series have different frequencies, each shows the value in effect at that
+  date, with its own period in brackets when it differs (for example `Mortgage rate (Nov 2022)`
+  under a cash rate decision date).
 - **Event-driven series** such as the cash rate target are drawn as steps. Each value holds until
   the next change and runs through to the retrieval date.
 - **Units:** series with different units go in separate panels, never on a second axis.
 - **Notices:** cached data served while the source was unavailable, truncated results and source
   warnings appear above the chart. Known series breaks are marked with a dashed vertical line.
-- **Data table:** collapsed by default, showing the most recent 400 dates.
+- **Data table:** collapsed by default, showing the most recent 400 dates. Series with different
+  frequencies get a table each, captioned by frequency (for example `As announced`, `Monthly` and
+  `Daily`).
 - **Single-date results**, such as the latest value of each series, appear as a list of values
   instead of a chart.
 - **Footer:** publication and retrieval dates and a link to the source file, one line per source
