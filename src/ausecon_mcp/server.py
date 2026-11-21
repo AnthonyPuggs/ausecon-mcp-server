@@ -23,8 +23,11 @@ from starlette.types import ASGIApp, Message, Receive, Scope, Send
 from ausecon_mcp.bounds import NormalisedSemanticBounds, normalise_semantic_bounds
 from ausecon_mcp.catalogue.abs import ABS_CATALOGUE
 from ausecon_mcp.catalogue.resolver import (
+    FREQUENCY_NAMES,
     canonical_source_identifier,
+    concept_frequencies,
     concepts_for_dataset,
+    normalise_frequency,
     resolve,
     resolve_abs_dataflow_id,
     resolve_abs_structure_id,
@@ -260,8 +263,11 @@ OptionalFrequency = Annotated[
     str | None,
     Field(
         description=(
-            "Optional requested frequency for a curated concept, such as monthly, "
-            "quarterly, or annual."
+            "Optional published frequency for a curated concept: daily, monthly, quarterly, "
+            "annual or event-driven (or the codes D, M, Q, A, E). It selects among the "
+            "frequencies a concept is published at and does not resample. With several "
+            "concepts it applies to each concept published at that frequency; the others "
+            "keep their default, noted in metadata.warnings."
         ),
     ),
 ]
@@ -885,20 +891,36 @@ class AuseconService:
             raise AuseconValidationError(
                 f"concept accepts at most {MAX_CONCEPTS} concepts in one call; got {len(unique)}."
             )
-        for name, value in (
-            ("variant", variant),
-            ("geography", geography),
-            ("frequency", frequency),
-        ):
+        for name, value in (("variant", variant), ("geography", geography)):
             if value is not None:
                 raise AuseconValidationError(
                     f"{name} applies to a single concept; with several concepts each concept "
                     "uses its default."
                 )
+        # frequency applies to each concept published at it; the others keep their default.
+        code = normalise_frequency(frequency)
+        applied: dict[str, str | None] = {}
+        notes: list[str] = []
+        for concept in unique:
+            applied[concept] = code
+            if code is None:
+                continue
+            try:
+                published = concept_frequencies(concept)
+            except AuseconValidationError:
+                continue  # unknown concept: its own call raises the usual named error
+            if code not in published:
+                applied[concept] = None
+                names = " and ".join(FREQUENCY_NAMES.get(item, item) for item in published)
+                notes.append(
+                    f"{concept}: published {names} only, so frequency "
+                    f"{FREQUENCY_NAMES[code]!r} was not applied."
+                )
         results = await asyncio.gather(
             *(
                 self.get_economic_series(
                     concept,
+                    frequency=applied[concept],
                     start=start,
                     end=end,
                     last_n=last_n,
@@ -914,7 +936,10 @@ class AuseconService:
                 if named is result:
                     raise result
                 raise named from result
-        return merge_concept_payloads(list(zip(unique, results, strict=True)))
+        merged = merge_concept_payloads(list(zip(unique, results, strict=True)))
+        if notes:
+            merged["metadata"]["warnings"] = [*merged["metadata"].get("warnings", []), *notes]
+        return merged
 
     async def get_derived_series(
         self,

@@ -511,6 +511,7 @@ async def resolve(
     source, dataset_id, entry, default_variant = _match_concept(concept_text)
     applied_variant = _match_variant(entry, variant or default_variant)
     canonical_geography = normalise_geography(geography)
+    frequency = normalise_frequency(frequency)
 
     _validate_frequency(entry, frequency)
     _validate_geography(entry, canonical_geography)
@@ -721,14 +722,55 @@ def _match_variant(entry: dict[str, Any], variant: str | None) -> dict[str, Any]
     )
 
 
+FREQUENCY_NAMES = {
+    "D": "daily",
+    "M": "monthly",
+    "Q": "quarterly",
+    "A": "annual",
+    "E": "event-driven",
+}
+_FREQUENCY_ALIASES = {
+    **{code.lower(): code for code in FREQUENCY_NAMES},
+    **{name: code for code, name in FREQUENCY_NAMES.items()},
+    "annually": "A",
+    "yearly": "A",
+    "event": "E",
+    "event driven": "E",
+}
+
+
+def describe_frequencies(codes: list[str]) -> str:
+    """``["M", "Q"]`` -> ``"monthly (M), quarterly (Q)"``."""
+    return ", ".join(f"{FREQUENCY_NAMES.get(code, code)} ({code})" for code in codes) or "(none)"
+
+
+def normalise_frequency(frequency: str | None) -> str | None:
+    """Map a frequency name or code (``monthly``, ``Monthly``, ``m``, ``M``) to its code."""
+    if frequency is None:
+        return None
+    code = _FREQUENCY_ALIASES.get(str(frequency).strip().lower())
+    if code is None:
+        raise AuseconValidationError(
+            f"Unknown frequency {frequency!r}. Known frequencies: "
+            f"{describe_frequencies(list(FREQUENCY_NAMES))}."
+        )
+    return code
+
+
+def concept_frequencies(concept: str) -> list[str]:
+    """Frequency codes a curated concept is published at; raises for an unknown concept."""
+    _, _, entry, _ = _match_concept(concept.strip())
+    return list(entry.get("frequencies", []))
+
+
 def _validate_frequency(entry: dict[str, Any], frequency: str | None) -> None:
     if frequency is None:
         return
-    freqs = entry.get("frequencies", [])
+    freqs = list(entry.get("frequencies", []))
     if frequency not in freqs:
         raise AuseconValidationError(
-            f"Frequency {frequency!r} is not supported for {entry['id']!r}. "
-            f"Supported frequencies: {', '.join(freqs) or '(none)'}."
+            f"Frequency {FREQUENCY_NAMES.get(frequency, frequency)!r} is not supported for "
+            f"{entry['id']!r}. Supported frequencies: {describe_frequencies(freqs)}."
         )
 
 
