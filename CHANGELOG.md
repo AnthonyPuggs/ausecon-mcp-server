@@ -6,6 +6,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.22.1] - 2026-11-21
+
 ### Added
 
 - The hosted server serves the ausecon icon at `/favicon.ico`, so clients that show a connector's
@@ -1335,7 +1337,8 @@ Initial public release.
 - Initial curated catalogues for ABS and RBA, plus a four-concept
   `CURATED_SERIES` semantic shortcut map.
 
-[Unreleased]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.22.0...HEAD
+[Unreleased]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.22.1...HEAD
+[1.22.1]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.22.0...v1.22.1
 [1.22.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.21.3...v1.22.0
 [1.21.3]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.21.2...v1.21.3
 [1.21.2]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.21.1...v1.21.2
