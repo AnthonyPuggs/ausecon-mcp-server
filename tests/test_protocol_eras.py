@@ -16,6 +16,7 @@ from fastmcp import Client, FastMCP
 from fastmcp.exceptions import ToolError
 from mcp.server import _streamable_http_modern
 
+from ausecon_mcp import response_limits
 from ausecon_mcp.server import AuseconService, build_http_app, build_server
 
 ERAS = ["legacy", "2026-07-28"]
@@ -166,6 +167,9 @@ async def test_http_large_slow_result_reaches_a_default_capped_client(
     # SSE unless the server answers in JSON, and 2026-07-28 replies switch to SSE once a handler
     # runs past the SDK's ping interval (15 s; shortened here so a cold fetch fits in a test).
     monkeypatch.setattr(_streamable_http_modern, "_SSE_PING_INTERVAL", 0.1)
+    # A capped response can still pass 1 MiB (200 APRA series with long IDs); lift the
+    # observation cap so this payload stays well over that size.
+    monkeypatch.setattr(response_limits, "MAX_RESPONSE_OBSERVATIONS", LARGE_TABLE_OBSERVATIONS)
     service = AuseconService(rba_provider=_SlowLargeRBAProvider())
     http_server = _HttpServer(lambda: build_server(service))
     http_server.start()

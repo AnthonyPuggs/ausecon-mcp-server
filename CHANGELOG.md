@@ -6,6 +6,37 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+Guards against oversized requests and responses, clearer errors, and fixes for six RBA tables
+that failed to load. Tool names and parameters are unchanged; the response contract gains one
+optional field.
+
+### Fixed
+
+- A request for a whole ABS dataflow no longer crashes the hosted server. `get_abs_data` with no
+  `key` downloaded the full dataflow (75 MB for CPI) before applying `last_n`, and parsing it ran
+  the instance out of memory. ABS data downloads now stop at 5 MB and RBA table downloads at 8 MB,
+  with an error that says how to narrow the request.
+- Unfiltered retrievals return a bounded response. A whole RBA table such as F16 was over 100,000
+  observations (10 MB), and one APRA publication over 3,800 series. Retrieval, latest and top
+  tools now return at most 200 series and about 5,000 observations, keeping the most recent
+  observations of each series, with a warning that says how to choose the rest. Derived
+  indicators still compute from complete data.
+- RBA tables A5, C8, C9, D9 and D10 now load. They use layouts and date formats the parser did not
+  read: a "Mnemonic" series-ID row, labels split across rows, "Jun 1990", "30-Jun-21", and Excel
+  serial dates.
+- RBA table A3 now loads. The RBA split A3 into several files and retired `a3-data.csv`; the
+  catalogue entry now points at the current ES balances and repo agreements file.
+- A malformed ABS key now returns the ABS's reason ("Not enough key values in query, expecting 5
+  got 2") and how to build a key, instead of "failed with HTTP 403". An unknown RBA table now
+  points to `list_rba_tables` instead of "failed with HTTP 404".
+- Input mistakes such as an unknown concept are logged as one warning line instead of a full
+  traceback, so real failures stand out in the server logs.
+
+### Added
+
+- `metadata.series_dropped` in the response contract: how many series were left out when a
+  request matched more series than one response holds.
+
 ## [1.21.3] - 2026-11-21
 
 A chart display fix for combined results with different frequencies. Tool names, parameters and
