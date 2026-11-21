@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+import calendar
 import csv
-from datetime import datetime
+from datetime import date, datetime, timedelta
 from io import StringIO
 
 from ausecon_mcp.models import Observation, SeriesDescriptor, parse_float
@@ -15,7 +16,12 @@ _METADATA_KEYS = {
     "Source",
     "Publication date",
     "Series ID",
+    "Mnemonic",
 }
+# Most tables label the series-ID row "Series ID"; a few older layouts (A5, D10) use "Mnemonic".
+_SERIES_ID_KEYS = ("Series ID", "Mnemonic")
+# Excel's day zero: D9 writes its dates as serial day numbers counted from here.
+_EXCEL_EPOCH = date(1899, 12, 30)
 
 
 def parse_rba_csv(csv_text: str, table_id: str) -> dict:
@@ -25,9 +31,12 @@ def parse_rba_csv(csv_text: str, table_id: str) -> dict:
 
     table_title = rows[0][0].strip()
     metadata_rows = {}
+    label_fragments: list[list[str]] = []
     data_start = None
     for index, row in enumerate(rows[1:], start=1):
         if not row or not row[0].strip():
+            if any(cell.strip() for cell in row[1:]):
+                label_fragments.append([cell.strip() for cell in row[1:]])
             continue
         label = row[0].strip()
         if label in _METADATA_KEYS:
@@ -37,15 +46,18 @@ def parse_rba_csv(csv_text: str, table_id: str) -> dict:
             data_start = index
             break
 
-    if "Series ID" not in metadata_rows or data_start is None:
+    series_id_key = next((key for key in _SERIES_ID_KEYS if key in metadata_rows), None)
+    if series_id_key is None or data_start is None:
         raise ValueError("RBA CSV payload did not contain the expected header rows")
 
-    series_ids = metadata_rows["Series ID"]
-    titles = metadata_rows.get("Title", [])
+    series_ids = list(metadata_rows[series_id_key])
+    while series_ids and not series_ids[-1]:
+        series_ids.pop()  # trailing empty columns (C8 pads every row with commas)
+    titles = metadata_rows.get("Title") or _join_label_fragments(label_fragments)
     descriptions = metadata_rows.get("Description", [])
     frequencies = metadata_rows.get("Frequency", [])
     kinds = metadata_rows.get("Type", [])
-    units = metadata_rows.get("Units", [])
+    units = metadata_rows.get("Units") or _unit_under_title(rows, len(series_ids))
     sources = metadata_rows.get("Source", [])
     publication_dates = metadata_rows.get("Publication date", [])
 
@@ -71,7 +83,7 @@ def parse_rba_csv(csv_text: str, table_id: str) -> dict:
         if not row or not row[0].strip():
             continue
         date = _parse_rba_date(row[0].strip())
-        for idx, raw_value in enumerate(row[1:]):
+        for idx, raw_value in enumerate(row[1 : len(series_ids) + 1]):
             value, non_numeric_value = _parse_rba_observation_value(raw_value)
             if value is None and non_numeric_value is None:
                 continue
@@ -110,7 +122,45 @@ def _parse_rba_date(value: str) -> str:
             return datetime.strptime(value, fmt).date().isoformat()
         except ValueError:
             continue
+    try:
+        parsed = datetime.strptime(value, "%d-%b-%y").date()  # C9: "30-Jun-21"
+    except ValueError:
+        pass
+    else:
+        # strptime reads 00-68 as 2000-2068; an observation is never years in the future.
+        if parsed.year > date.today().year + 1:
+            parsed = parsed.replace(year=parsed.year - 100)
+        return parsed.isoformat()
+    try:
+        month = datetime.strptime(value, "%b %Y").date()
+    except ValueError:
+        pass
+    else:
+        # A month label ("Jun 1990") marks the month-end, like the rest of the RBA tables.
+        last_day = calendar.monthrange(month.year, month.month)[1]
+        return month.replace(day=last_day).isoformat()
+    if len(value) == 5 and value.isdigit():
+        return (_EXCEL_EPOCH + timedelta(days=int(value))).isoformat()
     raise ValueError(f"Unsupported RBA date format: {value}")
+
+
+def _join_label_fragments(fragments: list[list[str]]) -> list[str]:
+    """Series labels from the untitled layout (A5), split across rows with a blank first cell."""
+    width = max((len(row) for row in fragments), default=0)
+    return [
+        " ".join(row[idx] for row in fragments if idx < len(row) and row[idx])
+        for idx in range(width)
+    ]
+
+
+def _unit_under_title(rows: list[list[str]], series_count: int) -> list[str]:
+    """The untitled layout (A5) puts one unit for every series on the row under the title."""
+    if len(rows) < 2 or not rows[1] or any(cell.strip() for cell in rows[1][1:]):
+        return []
+    unit = rows[1][0].strip()
+    if not unit or unit in _METADATA_KEYS or _looks_like_date(unit):
+        return []
+    return [unit] * series_count
 
 
 def _parse_rba_observation_value(value: str) -> tuple[float | None, str | None]:

@@ -30,8 +30,10 @@ Common fields include:
 Optional fields appear when relevant:
 
 - `frequency`
-- `observations_dropped` — observations removed by `last_n` selection; `truncated` is
-  `true` when this is non-zero
+- `observations_dropped` — observations removed by `last_n` selection or the response limit
+  below; `truncated` is `true` when this is non-zero
+- `series_dropped` — series left out because the request matched more than one response holds
+  (see below); pass `series_ids` to choose which series to return
 - `updated_after`
 - `title` and `publication_date`
 - `semantic`
@@ -88,6 +90,20 @@ warnings flag known source reporting breaks such as the AASB 17 insurance perfor
 
 Observations are returned in chronological order (ascending by period end date), regardless of
 upstream row order. `last_n` selects the most recent N observations per series.
+
+## Response limits
+
+One tool response holds at most 200 series and about 5,000 observations. A request that matches
+more series returns the first 200 in source order and records the rest in `series_dropped`. A
+request with more observations keeps the same number of the most recent observations for every
+series, so the newest value of each series always comes back, and sets `truncated`. Either way a
+`warnings` entry says how to narrow the request: `series_ids` picks series, and a start date or
+`last_n` picks the window. Derived indicators compute from complete data before any limit
+applies.
+
+Upstream downloads are limited too: 5 MB for an ABS data request and 8 MB for an RBA table. A
+request over the limit, such as a whole ABS dataflow with no `key`, returns an error that says
+how to narrow it.
 
 Representative payloads live under
 [`examples/payloads/`](https://github.com/AnthonyPuggs/ausecon-mcp-server/tree/main/examples/payloads)

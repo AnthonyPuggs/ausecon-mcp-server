@@ -9,7 +9,12 @@ from xml.etree import ElementTree as ET
 import httpx
 
 from ausecon_mcp.cache import TTLCache
-from ausecon_mcp.errors import AuseconNotFoundError, AuseconParseError, AuseconUpstreamError
+from ausecon_mcp.errors import (
+    AuseconNotFoundError,
+    AuseconParseError,
+    AuseconUpstreamError,
+    AuseconValidationError,
+)
 from ausecon_mcp.filters import filter_payload
 from ausecon_mcp.logging import get_logger
 from ausecon_mcp.parsers.abs_availability import parse_abs_availability
@@ -20,6 +25,33 @@ from ausecon_mcp.providers._retry import get_with_retries, stamp_stale_metadata
 from ausecon_mcp.providers._single_flight import SingleFlight
 
 _logger = get_logger("providers.abs")
+
+# Parsing expands an ABS CSV about twentyfold in memory, so 5 MB (roughly 25,000
+# observations) peaks near 100 MB. A whole dataflow such as CPI is 75 MB.
+MAX_DATA_BYTES = 5 * 1024 * 1024
+
+
+def _upstream_reason(body: str | None) -> str | None:
+    """The ABS error body's first line, when it is short plain text (not an HTML page)."""
+    lines = (body or "").strip().splitlines()
+    line = lines[0].strip() if lines else ""
+    if not line or line.startswith("<") or len(line) > 200:
+        return None
+    return line.rstrip(".")
+
+
+def _too_large_hint(dataflow_id: str, key: str) -> str:
+    if key == "all":
+        return (
+            f"Narrow it with a key: get_abs_dataset_structure('{dataflow_id}') lists the "
+            "dimensions and their codes, one dot-separated position per dimension. A "
+            "start_period also helps, and get_latest_observations fetches only the most "
+            "recent values."
+        )
+    return (
+        "Narrow the key (get_abs_dataset_structure lists each dimension's codes) or add a "
+        "start_period. get_latest_observations fetches only the most recent values."
+    )
 
 
 def _no_records_payload(
@@ -109,11 +141,13 @@ class ABSProvider:
         client: httpx.AsyncClient | None = None,
         cache: TTLCache | None = None,
         ttl_seconds: int = 3600,
+        max_data_bytes: int = MAX_DATA_BYTES,
     ) -> None:
         self._owns_client = client is None
         self._client = client or build_client()
         self._cache = cache or TTLCache()
         self._ttl_seconds = ttl_seconds
+        self._max_data_bytes = max_data_bytes
         self._single_flight = SingleFlight()
 
     async def aclose(self) -> None:
@@ -235,6 +269,8 @@ class ABSProvider:
                 params=params,
                 source="abs",
                 identifier=dataflow_id,
+                max_bytes=self._max_data_bytes,
+                too_large_hint=_too_large_hint(dataflow_id, key),
             )
         except AuseconNotFoundError as exc:
             # The ABS API answers 404 both for unknown dataflows and for valid
@@ -266,6 +302,17 @@ class ABSProvider:
                     url=exc.url,
                 ) from exc
         except AuseconUpstreamError as exc:
+            if exc.status_code in (400, 403):
+                # The ABS answers a malformed key with 400/403 and a one-line reason such as
+                # "Not enough key values in query, expecting 5 got 2".
+                reason = _upstream_reason(exc.body)
+                raise AuseconValidationError(
+                    f"The ABS rejected the key '{key}' for '{dataflow_id}'"
+                    + (f": {reason}." if reason else ".")
+                    + f" get_abs_dataset_structure('{dataflow_id}') lists the dimensions and "
+                    "their codes; a key has one dot-separated position per dimension, and an "
+                    "empty position matches every code."
+                ) from exc
             stale = self._cache.get_stale(cache_key)
             if stale is None:
                 raise

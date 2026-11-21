@@ -66,9 +66,14 @@
           "type": "boolean"
         },
         "observations_dropped": {
-          "description": "Number of observations removed by last_n selection; truncated is true when this is non-zero.",
+          "description": "Number of observations removed by last_n selection or the per-response observation limit; truncated is true when this is non-zero.",
           "type": "integer",
           "minimum": 0
+        },
+        "series_dropped": {
+          "description": "Number of series left out because the request matched more series than one response holds; series_ids chooses which to return.",
+          "type": "integer",
+          "minimum": 1
         },
         "updated_after": {
           "type": ["string", "null"]

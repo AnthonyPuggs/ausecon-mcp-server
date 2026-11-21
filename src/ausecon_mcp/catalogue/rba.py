@@ -63,10 +63,10 @@ _RAW_RBA_CATALOGUE = {
     "a3": {
         "id": "a3",
         "source": "rba",
-        "name": "Monetary Policy Operations - Current",
+        "name": "Monetary Policy Operations - ES Balances and Repo Agreements",
         "description": (
-            "Current domestic monetary policy operations including open market operations "
-            "and liquidity settings."
+            "Daily Exchange Settlement balances and the Reserve Bank's open market and "
+            "standing facility repurchase agreements, by collateral type."
         ),
         "frequency": "Daily",
         "category": "monetary_policy",
@@ -84,11 +84,15 @@ _RAW_RBA_CATALOGUE = {
         ],
         "frequencies": ["D"],
         "geographies": ["national"],
+        "csv_path": "a3-es-balances-and-repo-agreements.csv",
         "variants": [],
         "audit": {
-            "last_audited": "2026-04-18",
-            "upstream_url": "https://www.rba.gov.au/statistics/tables/csv/a3-data.csv",
-            "upstream_title": "Monetary Policy Operations – Current",
+            "last_audited": "2026-11-21",
+            "upstream_url": (
+                "https://www.rba.gov.au/statistics/tables/csv/"
+                "a3-es-balances-and-repo-agreements.csv"
+            ),
+            "upstream_title": "Monetary Policy Operations – ES Balances and Repo Agreements",
         },
     },
     "a4": {

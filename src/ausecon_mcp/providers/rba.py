@@ -8,7 +8,7 @@ import httpx
 
 from ausecon_mcp.cache import TTLCache
 from ausecon_mcp.catalogue.rba import RBA_CATALOGUE
-from ausecon_mcp.errors import AuseconParseError, AuseconUpstreamError
+from ausecon_mcp.errors import AuseconNotFoundError, AuseconParseError, AuseconUpstreamError
 from ausecon_mcp.filters import filter_payload
 from ausecon_mcp.logging import get_logger
 from ausecon_mcp.parsers.rba_csv import parse_rba_csv
@@ -17,6 +17,9 @@ from ausecon_mcp.providers._retry import get_with_retries, stamp_stale_metadata
 from ausecon_mcp.providers._single_flight import SingleFlight
 
 _logger = get_logger("providers.rba")
+
+# The largest current RBA table CSV is about 2 MB (B3); the cap only stops a runaway download.
+MAX_TABLE_BYTES = 8 * 1024 * 1024
 
 
 class RBAProvider:
@@ -27,11 +30,13 @@ class RBAProvider:
         client: httpx.AsyncClient | None = None,
         cache: TTLCache | None = None,
         ttl_seconds: int = 3600,
+        max_table_bytes: int = MAX_TABLE_BYTES,
     ) -> None:
         self._owns_client = client is None
         self._client = client or build_client()
         self._cache = cache or TTLCache()
         self._ttl_seconds = ttl_seconds
+        self._max_table_bytes = max_table_bytes
         self._single_flight = SingleFlight()
 
     async def aclose(self) -> None:
@@ -113,10 +118,20 @@ class RBAProvider:
                 params=None,
                 source="rba",
                 identifier=table_id,
+                max_bytes=self._max_table_bytes,
             )
         except AuseconUpstreamError as exc:
             stale = self._cache.get_stale(cache_key)
             if stale is None:
+                if isinstance(exc, AuseconNotFoundError):
+                    raise AuseconNotFoundError(
+                        f"The RBA has no table '{table_id}' (HTTP 404 for {filename}). "
+                        "list_rba_tables lists the table IDs this server knows, and "
+                        "search_datasets finds them by topic.",
+                        status_code=exc.status_code,
+                        body=exc.body,
+                        url=exc.url,
+                    ) from exc
                 raise
             raw_payload = stale["value"]
             stale_meta = {**stale, "error": str(exc)}

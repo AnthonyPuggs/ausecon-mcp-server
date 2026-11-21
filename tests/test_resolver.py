@@ -385,6 +385,11 @@ def test_resolve_rba_csv_path_uses_explicit_csv_path_when_declared() -> None:
         del RBA_CATALOGUE["__test__"]
 
 
+def test_resolve_rba_csv_path_points_a3_at_its_current_file() -> None:
+    # The RBA split A3 into several files and retired a3-data.csv (HTTP 404).
+    assert resolve_rba_csv_path("a3") == "a3-es-balances-and-repo-agreements.csv"
+
+
 def test_concepts_for_dataset_returns_curated_concepts_for_apra_dataset() -> None:
     concepts = concepts_for_dataset("apra", "ADI_QUARTERLY_PERFORMANCE")
     assert "adi_capital_ratio" in concepts

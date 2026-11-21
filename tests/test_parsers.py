@@ -203,6 +203,104 @@ def test_parse_rba_csv_extracts_metadata_and_long_observations() -> None:
     assert parsed["observations"][-1]["value"] == 3.1
 
 
+def test_parse_rba_csv_accepts_mnemonic_row_as_series_ids() -> None:
+    # D10 labels its series-ID row "Mnemonic" instead of "Series ID".
+    parsed = parse_rba_csv(
+        "﻿D10 MARGIN LENDING\n"
+        "Title,Margin lending; Total,Margin lending; Total; Protected financing\n"
+        "Frequency,Quarterly,Quarterly\n"
+        "Units,$ million,$ million\n"
+        "\n"
+        'Source,"APRA, RBA","APRA, RBA"\n'
+        "Publication date,10-Sep-26,10-Sep-26\n"
+        "Mnemonic,DMLMLT,DMLMLPF\n"
+        "30/06/1999,4713,332\n",
+        table_id="d10",
+    )
+
+    assert [item["series_id"] for item in parsed["series"]] == ["DMLMLT", "DMLMLPF"]
+    assert parsed["series"][0]["label"] == "Margin lending; Total"
+    assert parsed["observations"][0] == {
+        **parsed["observations"][0],
+        "date": "1999-06-30",
+        "series_id": "DMLMLT",
+        "value": 4713.0,
+    }
+
+
+def test_parse_rba_csv_reads_untitled_layout_labels_and_unit() -> None:
+    # A5 has no Title or Units rows: the unit sits under the table title and the series
+    # label is split across rows whose first cell is blank.
+    parsed = parse_rba_csv(
+        "﻿A5 RESERVE BANK OF AUSTRALIA - DAILY FOREIGN EXCHANGE MARKET INTERVENTION "
+        "TRANSACTIONS\n"
+        "A$ million\n"
+        "\n"
+        ",Intervention\n"
+        ",Transactions\n"
+        "\n"
+        "Last updated:,08-Oct-25\n"
+        "Source,RBA\n"
+        "Mnemonic,ARBANFXM\n"
+        "02-Jan-1989,0.0\n"
+        "03-Jan-1989,88.0\n",
+        table_id="a5",
+    )
+
+    assert parsed["series"][0]["series_id"] == "ARBANFXM"
+    assert parsed["series"][0]["label"] == "Intervention Transactions"
+    assert parsed["series"][0]["unit"] == "A$ million"
+    assert [item["value"] for item in parsed["observations"]] == [0.0, 88.0]
+    assert parsed["observations"][1]["date"] == "1989-01-03"
+
+
+def test_parse_rba_csv_reads_month_year_dates_as_month_end() -> None:
+    parsed = parse_rba_csv(
+        "C8 POINTS OF ACCESS TO THE AUSTRALIAN PAYMENTS SYSTEM,,\n"
+        "Title,Bank branches,ATMs\n"
+        "Series ID,CPAAPSBB,CPAAPSATM\n"
+        "Jun 1990,6921,4636\n",
+        table_id="c8",
+    )
+
+    assert parsed["observations"][0]["date"] == "1990-06-30"
+
+
+def test_parse_rba_csv_reads_two_digit_year_dates() -> None:
+    parsed = parse_rba_csv(
+        "C9 DOMESTIC BANKING FEES CHARGED\n"
+        "Title,Fees charged to households\n"
+        "Series ID,CDBFCFHTDA\n"
+        "30-Jun-21,568\n",
+        table_id="c9",
+    )
+
+    assert parsed["observations"][0]["date"] == "2021-06-30"
+
+
+def test_parse_rba_csv_never_reads_a_two_digit_year_as_the_future() -> None:
+    parsed = parse_rba_csv(
+        "X1 TEST TABLE\nTitle,Series\nSeries ID,XSERIES\n30-Jun-65,1\n",
+        table_id="x1",
+    )
+
+    assert parsed["observations"][0]["date"] == "1965-06-30"
+
+
+def test_parse_rba_csv_reads_excel_serial_dates() -> None:
+    # D9 writes its dates as Excel serial day numbers.
+    parsed = parse_rba_csv(
+        "D9 RURAL DEBT BY LENDER\n"
+        "Title,Rural debt by; All banks\n"
+        "Series ID,DRDAB\n"
+        "23923,656\n"
+        "24288,742\n",
+        table_id="d9",
+    )
+
+    assert [item["date"] for item in parsed["observations"]] == ["1965-06-30", "1966-06-30"]
+
+
 def test_parse_rba_csv_supports_a2_event_format_and_range_cells() -> None:
     parsed = parse_rba_csv(
         (FIXTURES / "rba_a2_sample.csv").read_text(encoding="utf-8"), table_id="a2"

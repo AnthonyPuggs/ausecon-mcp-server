@@ -9,7 +9,11 @@ from typing import Any
 
 import httpx
 
-from ausecon_mcp.errors import AuseconNotFoundError, AuseconUpstreamError
+from ausecon_mcp.errors import (
+    AuseconNotFoundError,
+    AuseconResponseTooLargeError,
+    AuseconUpstreamError,
+)
 from ausecon_mcp.logging import get_logger
 
 _logger = get_logger("providers._retry")
@@ -51,6 +55,68 @@ def _upstream_slot(source: str) -> asyncio.Semaphore:
     if slot is None:
         slot = per_loop[source] = asyncio.Semaphore(_upstream_concurrency())
     return slot
+
+
+# Hop-by-hop and encoding headers that no longer describe a body rebuilt from decoded bytes.
+_DECODED_BODY_DROP_HEADERS = {"content-encoding", "content-length", "transfer-encoding"}
+
+
+def _too_large(source: str, identifier: str, max_bytes: int, hint: str | None) -> Exception:
+    _logger.warning(
+        "request.too_large",
+        extra={"source": source, "identifier": identifier, "max_bytes": max_bytes},
+    )
+    limit_mb = max_bytes / (1024 * 1024)
+    message = (
+        f"{source.upper()} response for '{identifier}' is larger than the "
+        f"{limit_mb:g} MB limit for one request."
+    )
+    if hint:
+        message += f" {hint}"
+    return AuseconResponseTooLargeError(message)
+
+
+async def _get_capped(
+    client: httpx.AsyncClient,
+    url: str,
+    *,
+    params: dict[str, str] | list[tuple[str, str]] | None,
+    max_bytes: int,
+    source: str,
+    identifier: str,
+    too_large_hint: str | None,
+) -> httpx.Response:
+    """GET that stops reading once the decoded body passes ``max_bytes``.
+
+    Parsing expands a CSV roughly twentyfold in memory, so an unbounded download (a whole ABS
+    dataflow is 75 MB) can exhaust a small hosted instance before any later check runs.
+    """
+    async with client.stream("GET", url, params=params) as streamed:
+        if streamed.is_error:
+            await streamed.aread()  # error bodies are small; raise_for_status reads them
+            return streamed
+        declared = streamed.headers.get("Content-Length", "")
+        # The declared length is the encoded size, never more than the decoded size.
+        if declared.isdigit() and int(declared) > max_bytes:
+            raise _too_large(source, identifier, max_bytes, too_large_hint)
+        chunks: list[bytes] = []
+        total = 0
+        async for chunk in streamed.aiter_bytes():
+            total += len(chunk)
+            if total > max_bytes:
+                raise _too_large(source, identifier, max_bytes, too_large_hint)
+            chunks.append(chunk)
+        headers = [
+            (name, value)
+            for name, value in streamed.headers.multi_items()
+            if name.lower() not in _DECODED_BODY_DROP_HEADERS
+        ]
+        return httpx.Response(
+            streamed.status_code,
+            headers=headers,
+            content=b"".join(chunks),
+            request=streamed.request,
+        )
 
 
 def _safe_body(response: httpx.Response) -> str | None:
@@ -103,6 +169,8 @@ async def get_with_retries(
     identifier: str,
     attempts: int | None = None,
     base_delay_seconds: float | None = None,
+    max_bytes: int | None = None,
+    too_large_hint: str | None = None,
 ) -> httpx.Response:
     if attempts is None:
         attempts = DEFAULT_ATTEMPTS
@@ -113,7 +181,18 @@ async def get_with_retries(
         wait = delay
         try:
             async with _upstream_slot(source):
-                response = await client.get(url, params=params)
+                if max_bytes is None:
+                    response = await client.get(url, params=params)
+                else:
+                    response = await _get_capped(
+                        client,
+                        url,
+                        params=params,
+                        max_bytes=max_bytes,
+                        source=source,
+                        identifier=identifier,
+                        too_large_hint=too_large_hint,
+                    )
             response.raise_for_status()
             return response
         except httpx.HTTPStatusError as exc:
@@ -146,7 +225,12 @@ async def get_with_retries(
                         body=_safe_body(exc.response),
                         url=str(exc.response.request.url),
                     ) from exc
-                raise AuseconUpstreamError(message, status_code=status_code) from exc
+                raise AuseconUpstreamError(
+                    message,
+                    status_code=status_code,
+                    body=_safe_body(exc.response),
+                    url=str(exc.response.request.url),
+                ) from exc
             retry_after = _retry_after_seconds(exc.response)
             if retry_after is not None:
                 wait = max(wait, retry_after)

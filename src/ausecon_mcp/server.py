@@ -1,12 +1,16 @@
 from __future__ import annotations
 
 import asyncio
+import functools
 import json
+import logging
 import os
+from collections.abc import Awaitable, Callable
 from typing import Annotated, Any, Literal
 
 import uvicorn
 from fastmcp import FastMCP
+from fastmcp.exceptions import ToolError
 from mcp.types import Icon, ToolAnnotations
 from pydantic import Field
 from starlette.middleware import Middleware
@@ -60,6 +64,7 @@ from ausecon_mcp.providers.apra import APRAProvider
 from ausecon_mcp.providers.rba import RBAProvider
 from ausecon_mcp.releases import ReleaseProvider, filter_release_events
 from ausecon_mcp.resources import register_resources
+from ausecon_mcp.response_limits import limit_response
 from ausecon_mcp.ui import ChartShownNoteMiddleware, chart_app_config, register_chart_resource
 from ausecon_mcp.validation import (
     require_non_empty,
@@ -272,6 +277,30 @@ OptionalDerivedStartEnd = Annotated[
         ),
     ),
 ]
+
+
+def _caller_errors_without_traceback(
+    fn: Callable[..., Awaitable[Any]],
+) -> Callable[..., Awaitable[Any]]:
+    """Report caller-side errors (bad input, unknown IDs, over-broad requests) as tool errors.
+
+    FastMCP logs any other exception from a tool with a full traceback, which buried real
+    failures among routine input mistakes. These keep their message for the client and log one
+    warning line instead; unexpected exceptions still log their traceback.
+    """
+
+    @functools.wraps(fn)
+    async def wrapper(*args: Any, **kwargs: Any) -> Any:
+        try:
+            return await fn(*args, **kwargs)
+        except (AuseconValidationError, AuseconNotFoundError) as exc:
+            get_logger("server").warning(
+                "tool.caller_error",
+                extra={"tool": fn.__name__, "error_type": type(exc).__name__, "error": str(exc)},
+            )
+            raise ToolError(str(exc), log_level=logging.DEBUG) from exc
+
+    return wrapper
 
 
 def _tool_annotations(title: str) -> ToolAnnotations:
@@ -1151,6 +1180,7 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
         annotations=_tool_annotations("Search Datasets"),
         output_schema=_list_output_schema("Ranked ABS, RBA, and APRA catalogue search results."),
     )
+    @_caller_errors_without_traceback
     async def search_datasets(
         query: SearchQuery,
         source: OptionalSourceFilter = None,
@@ -1163,6 +1193,7 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
         annotations=_tool_annotations("List Catalogue"),
         output_schema=_list_output_schema("Curated ABS, RBA, and APRA catalogue entries."),
     )
+    @_caller_errors_without_traceback
     async def list_catalogue(
         source: OptionalSourceFilter = None,
         category: OptionalCategory = None,
@@ -1185,6 +1216,7 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
         annotations=_tool_annotations("List Economic Concepts"),
         output_schema=_list_output_schema("Curated semantic economic concepts."),
     )
+    @_caller_errors_without_traceback
     async def list_economic_concepts(
         query: OptionalConceptQuery = None,
         source: OptionalSourceFilter = None,
@@ -1202,6 +1234,7 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
         annotations=_tool_annotations("Get ABS Dataset Structure"),
         output_schema=_abs_structure_output_schema(),
     )
+    @_caller_errors_without_traceback
     async def get_abs_dataset_structure(dataflow_id: Identifier) -> dict:
         """Get ABS SDMX dataset dimensions and codelists."""
         return await app_service.get_abs_dataset_structure(dataflow_id=dataflow_id)
@@ -1212,6 +1245,7 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
         output_schema=response_output_schema(),
         app=chart_app_config(),
     )
+    @_caller_errors_without_traceback
     async def get_abs_data(
         dataflow_id: Identifier,
         key: AbsKey = "all",
@@ -1227,14 +1261,16 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
         already shown to the user as an interactive chart with a data table, so another chart
         of the same data would duplicate it.
         """
-        return await app_service.get_abs_data(
-            dataflow_id=dataflow_id,
-            key=key,
-            start_period=start_period,
-            end_period=end_period,
-            last_n=last_n,
-            updated_after=updated_after,
-            include_observation_dimensions=include_observation_dimensions,
+        return limit_response(
+            await app_service.get_abs_data(
+                dataflow_id=dataflow_id,
+                key=key,
+                start_period=start_period,
+                end_period=end_period,
+                last_n=last_n,
+                updated_after=updated_after,
+                include_observation_dimensions=include_observation_dimensions,
+            )
         )
 
     @mcp.tool(
@@ -1242,6 +1278,7 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
         annotations=_tool_annotations("List RBA Tables"),
         output_schema=_list_output_schema("Curated RBA table catalogue entries."),
     )
+    @_caller_errors_without_traceback
     async def list_rba_tables(
         category: OptionalRbaCategoryFilter = None,
         include_discontinued: IncludeDiscontinued = False,
@@ -1258,6 +1295,7 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
         output_schema=response_output_schema(),
         app=chart_app_config(),
     )
+    @_caller_errors_without_traceback
     async def get_rba_table(
         table_id: Identifier,
         series_ids: OptionalSeriesIdList = None,
@@ -1272,13 +1310,15 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
         already shown to the user as an interactive chart with a data table, so another chart
         of the same data would duplicate it.
         """
-        return await app_service.get_rba_table(
-            table_id=table_id,
-            series_ids=series_ids,
-            start_date=start_date,
-            end_date=end_date,
-            last_n=last_n,
-            include_observation_dimensions=include_observation_dimensions,
+        return limit_response(
+            await app_service.get_rba_table(
+                table_id=table_id,
+                series_ids=series_ids,
+                start_date=start_date,
+                end_date=end_date,
+                last_n=last_n,
+                include_observation_dimensions=include_observation_dimensions,
+            )
         )
 
     @mcp.tool(
@@ -1287,6 +1327,7 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
         output_schema=response_output_schema(),
         app=chart_app_config(),
     )
+    @_caller_errors_without_traceback
     async def get_apra_data(
         publication_id: Identifier,
         table_id: Identifier | None = None,
@@ -1304,14 +1345,16 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
         already shown to the user as an interactive chart with a data table, so another chart
         of the same data would duplicate it.
         """
-        return await app_service.get_apra_data(
-            publication_id=publication_id,
-            table_id=table_id,
-            series_ids=series_ids,
-            start_date=start_date,
-            end_date=end_date,
-            last_n=last_n,
-            include_observation_dimensions=include_observation_dimensions,
+        return limit_response(
+            await app_service.get_apra_data(
+                publication_id=publication_id,
+                table_id=table_id,
+                series_ids=series_ids,
+                start_date=start_date,
+                end_date=end_date,
+                last_n=last_n,
+                include_observation_dimensions=include_observation_dimensions,
+            )
         )
 
     @mcp.tool(
@@ -1320,6 +1363,7 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
         output_schema=response_output_schema(),
         app=chart_app_config(),
     )
+    @_caller_errors_without_traceback
     async def get_economic_series(
         concept: Annotated[
             ConceptName
@@ -1352,8 +1396,21 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
         """
         concepts = _concept_list(concept)
         if concepts is not None:
-            return await app_service.get_economic_series_many(
-                concepts,
+            return limit_response(
+                await app_service.get_economic_series_many(
+                    concepts,
+                    variant=variant,
+                    geography=geography,
+                    frequency=frequency,
+                    start=start,
+                    end=end,
+                    last_n=last_n,
+                    include_observation_dimensions=include_observation_dimensions,
+                )
+            )
+        return limit_response(
+            await app_service.get_economic_series(
+                concept=concept,
                 variant=variant,
                 geography=geography,
                 frequency=frequency,
@@ -1362,15 +1419,6 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
                 last_n=last_n,
                 include_observation_dimensions=include_observation_dimensions,
             )
-        return await app_service.get_economic_series(
-            concept=concept,
-            variant=variant,
-            geography=geography,
-            frequency=frequency,
-            start=start,
-            end=end,
-            last_n=last_n,
-            include_observation_dimensions=include_observation_dimensions,
         )
 
     @mcp.tool(
@@ -1379,6 +1427,7 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
         output_schema=response_output_schema(),
         app=chart_app_config(),
     )
+    @_caller_errors_without_traceback
     async def get_derived_series(
         concept: Annotated[str, Field(min_length=1, description="Derived concept name.")],
         start: OptionalDerivedStartEnd = None,
@@ -1394,11 +1443,13 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
         already shown to the user as an interactive chart with a data table, so another chart
         of the same data would duplicate it.
         """
-        return await app_service.get_derived_series(
-            concept=concept,
-            start=start,
-            end=end,
-            last_n=last_n,
+        return limit_response(
+            await app_service.get_derived_series(
+                concept=concept,
+                start=start,
+                end=end,
+                last_n=last_n,
+            )
         )
 
     @mcp.tool(
@@ -1406,6 +1457,7 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
         annotations=_tool_annotations("Get Latest Observations"),
         output_schema=response_output_schema(),
     )
+    @_caller_errors_without_traceback
     async def get_latest_observations(
         source: SourceSelector,
         identifier: Identifier,
@@ -1420,13 +1472,15 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
         resolves one series; pass series_ids=[...] to narrow a broad dataset instead of
         returning every series it contains.
         """
-        return await app_service.get_latest_observations(
-            source=source,
-            identifier=identifier,
-            key=key,
-            table_id=table_id,
-            series_ids=series_ids,
-            count=count,
+        return limit_response(
+            await app_service.get_latest_observations(
+                source=source,
+                identifier=identifier,
+                key=key,
+                table_id=table_id,
+                series_ids=series_ids,
+                count=count,
+            )
         )
 
     @mcp.tool(
@@ -1434,6 +1488,7 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
         annotations=_tool_annotations("Get Top Observations"),
         output_schema=response_output_schema(),
     )
+    @_caller_errors_without_traceback
     async def get_top_observations(
         source: SourceSelector,
         identifier: Identifier,
@@ -1453,18 +1508,20 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
         resolves one series; pass series_ids=[...] to narrow a broad dataset instead of
         returning every series it contains.
         """
-        return await app_service.get_top_observations(
-            source=source,
-            identifier=identifier,
-            n=n,
-            direction=direction,
-            key=key,
-            table_id=table_id,
-            series_ids=series_ids,
-            start_period=start_period,
-            end_period=end_period,
-            start_date=start_date,
-            end_date=end_date,
+        return limit_response(
+            await app_service.get_top_observations(
+                source=source,
+                identifier=identifier,
+                n=n,
+                direction=direction,
+                key=key,
+                table_id=table_id,
+                series_ids=series_ids,
+                start_period=start_period,
+                end_period=end_period,
+                start_date=start_date,
+                end_date=end_date,
+            )
         )
 
     @mcp.tool(
@@ -1472,6 +1529,7 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
         annotations=_tool_annotations("Describe Dataset"),
         output_schema=_describe_output_schema(),
     )
+    @_caller_errors_without_traceback
     async def describe_dataset(
         source: SourceSelector,
         identifier: Identifier,
@@ -1491,6 +1549,7 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
         annotations=_tool_annotations("List Release Events"),
         output_schema=_list_output_schema("ABS, RBA, and APRA release calendar events."),
     )
+    @_caller_errors_without_traceback
     async def list_release_events(
         source: OptionalSourceFilter = None,
         query: OptionalConceptQuery = None,
