@@ -6,6 +6,7 @@ import json
 import logging
 import os
 from collections.abc import Awaitable, Callable
+from importlib import resources as importlib_resources
 from typing import Annotated, Any, Literal
 
 import uvicorn
@@ -16,7 +17,7 @@ from pydantic import Field
 from starlette.middleware import Middleware
 from starlette.middleware.cors import CORSMiddleware
 from starlette.requests import Request
-from starlette.responses import JSONResponse
+from starlette.responses import JSONResponse, Response
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from ausecon_mcp.bounds import NormalisedSemanticBounds, normalise_semantic_bounds
@@ -1719,6 +1720,20 @@ async def http_healthz(_request: Request) -> JSONResponse:
     return JSONResponse({"status": "ok"})
 
 
+@functools.cache
+def _favicon_bytes() -> bytes:
+    return importlib_resources.files("ausecon_mcp").joinpath("static/favicon.ico").read_bytes()
+
+
+async def http_favicon(_request: Request) -> Response:
+    # Clients that show a connector's favicon otherwise fall back to the host's (Render's).
+    return Response(
+        _favicon_bytes(),
+        media_type="image/x-icon",
+        headers={"Cache-Control": "public, max-age=86400"},
+    )
+
+
 def _json_metadata(value: Any) -> Any:
     # by_alias: MCP SDK v2 models use snake_case fields with the spec's camelCase as aliases.
     model_dump = getattr(value, "model_dump", None)
@@ -1829,6 +1844,7 @@ def build_http_app(server: FastMCP | None = None):
     )
     app.add_route("/", http_root, methods=["GET", "HEAD"])
     app.add_route("/healthz", http_healthz, methods=["GET", "HEAD"])
+    app.add_route("/favicon.ico", http_favicon, methods=["GET", "HEAD"])
 
     async def server_card(_request: Request) -> JSONResponse:
         return await build_server_card_response(active_server)

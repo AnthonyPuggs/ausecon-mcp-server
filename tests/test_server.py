@@ -434,6 +434,20 @@ def test_http_app_exposes_status_endpoints_for_hosted_publish_flow() -> None:
     assert health.json() == {"status": "ok"}
 
 
+def test_http_app_serves_the_ausecon_favicon() -> None:
+    # Without one, clients that show a connector's favicon fall back to the host's (Render's).
+    app = server_module.build_http_app(build_server())
+    docs_favicon = Path(__file__).resolve().parents[1] / "docs-site" / "public" / "favicon.ico"
+
+    with TestClient(app) as client:
+        favicon = client.get("/favicon.ico")
+
+    assert favicon.status_code == 200
+    assert favicon.headers["content-type"] == "image/x-icon"
+    assert "max-age" in favicon.headers["cache-control"]
+    assert favicon.content == docs_favicon.read_bytes()
+
+
 def test_http_app_rejects_oversized_mcp_requests_before_tool_handling() -> None:
     app = server_module.build_http_app(build_server())
 

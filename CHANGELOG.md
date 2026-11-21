@@ -6,6 +6,11 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- The hosted server serves the ausecon icon at `/favicon.ico`, so clients that show a connector's
+  favicon no longer fall back to the hosting provider's logo.
+
 ## [1.22.0] - 2026-11-21
 
 Guards against oversized requests and responses, clearer errors, and fixes for six RBA tables
