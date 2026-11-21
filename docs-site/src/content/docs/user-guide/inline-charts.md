@@ -1,6 +1,6 @@
 ---
 title: Inline Charts
-description: How MCP Apps clients such as claude.ai show retrieval results as an interactive chart.
+description: How MCP Apps clients such as Claude show retrieval results as an interactive chart.
 ---
 
 In clients that support [MCP Apps](https://modelcontextprotocol.io/docs/extensions/apps),
@@ -8,11 +8,11 @@ results from the five retrieval tools are shown as an interactive chart in the c
 to the tool call: `get_economic_series`, `get_derived_series`, `get_rba_table`, `get_abs_data` and
 `get_apra_data`. Every other client receives the same JSON response as before.
 
-<video controls muted playsinline loop preload="metadata" poster="/media/inline-chart-demo-poster.jpg" width="1000" style="width: 100%; height: auto; border-radius: 8px;" aria-label="claude.ai answering a question about the household saving ratio and the cash rate with one interactive chart">
+<video controls muted playsinline loop preload="metadata" poster="/media/inline-chart-demo-poster.jpg" width="1000" style="width: 100%; height: auto; border-radius: 8px;" aria-label="Claude answering a question about the household saving ratio and the cash rate with one interactive chart">
   <source src="/media/inline-chart-demo.mp4" type="video/mp4" />
 </video>
 
-*Asking claude.ai "How has the household saving ratio moved alongside the cash rate since 2019?"
+*Asking Claude "How has the household saving ratio moved alongside the cash rate since 2019?"
 returns ABS and RBA data in one chart. Hovering shows each series' value, with its own period
 when it differs from the date under the pointer.*
 
@@ -20,8 +20,8 @@ when it differs from the date under the pointer.*
 
 | Client | What you see |
 | --- | --- |
-| claude.ai, connected to the [hosted server](/getting-started/) | The interactive chart. This is the setup the chart has been tested on. |
-| Other MCP Apps clients, such as Claude Desktop | Should show the chart, but these are not yet tested. |
+| Claude on the web, desktop and mobile, with the [hosted server](/getting-started/) added as a connector | The interactive chart. This is the setup the chart has been tested on. |
+| Other MCP Apps clients, and Claude Desktop running the server locally | Should show the chart, but these are not yet tested. |
 | Claude Code, Cursor, Codex, VS Code and other text-only clients | The JSON response, unchanged. |
 
 ## Getting a chart
