@@ -4,6 +4,9 @@ description: Structured ABS, RBA, and APRA data retrieval for MCP clients.
 template: splash
 hero:
   tagline: Open, free, no-API-key MCP access to Australian economic data from official sources — fresh and fully source-traceable, from the ABS, RBA, and APRA.
+  image:
+    file: ../../assets/hero-map.svg
+    alt: A dot map of Australia with a rising gold data line
   actions:
     - text: Get started
       link: /getting-started/
@@ -12,35 +15,60 @@ hero:
     - text: View on GitHub
       link: https://github.com/AnthonyPuggs/ausecon-mcp-server
       icon: external
+      variant: secondary
 ---
 
-:::note[Independent project]
-ausecon is an independent open-source project. It is not affiliated with, endorsed by or operated
-by the Australian Government, the ABS, the RBA or APRA. See
-[Data Sources and Licensing](/data-sources/).
-:::
+import { Card, CardGrid } from '@astrojs/starlight/components';
 
-`ausecon-mcp-server` is the open, free, no-API-key way to get Australian economic data from official
-sources into any MCP client — with reliable discovery, fresh and fully source-traceable retrieval (any cache
-fallback is flagged, never silent), and stable JSON outputs in one consistent shape. It is built for
-analysts, economists, and MCP clients, not as a general economic chatbot.
+<div class="independent-note">
+  An independent open-source project, not affiliated with, endorsed by or operated by the
+  Australian Government, the ABS, the RBA or APRA. See <a href="/data-sources/">Data Sources and
+  Licensing</a>.
+</div>
 
-Every value is fetched live and stamped with its provenance, and the data is checked nightly against
-the official sources — see [Data freshness and provenance](/user-guide/data-freshness-and-provenance/).
+## See it in Claude
 
-## What it provides
+<video class="demo-video" controls muted playsinline loop preload="metadata" poster="/media/inline-chart-demo-poster.jpg" width="1000" aria-label="Claude answering a question about the household saving ratio and the cash rate with one interactive chart">
+  <source src="/media/inline-chart-demo.mp4" type="video/mp4" />
+</video>
 
-- Dataset discovery across curated Australian Bureau of Statistics (ABS), Reserve Bank of
-  Australia (RBA), and Australian Prudential Regulation Authority (APRA) entries.
-- Analyst-friendly semantic concepts such as CPI, GDP growth, unemployment, cash rate, yields,
-  credit, APRA banking and insurance ratios, and external-sector indicators.
-- Source-native retrieval tools for exact ABS SDMX keys, RBA statistical tables, and curated APRA
-  publications.
-- Normalised retrieval responses with explicit metadata, series descriptors, observations, and
-  server-version provenance.
-- Read-only MCP resources and prompt templates for common economist workflows.
-- [Inline charts](/user-guide/inline-charts/) of retrieval results in clients that support MCP
-  Apps, such as Claude.
+<div class="demo-caption">
+  One question: the server fetches the ABS household saving ratio and the RBA cash rate and draws
+  them as one <a href="/user-guide/inline-charts/">interactive chart</a>.
+</div>
+
+<div class="stat-row">
+  <div><strong>14</strong><span>read-only tools</span></div>
+  <div><strong>86</strong><span>economic concepts</span></div>
+  <div><strong>16</strong><span>derived indicators</span></div>
+  <div><strong>8</strong><span>prompt templates</span></div>
+  <div><strong>3</strong><span>official sources</span></div>
+</div>
+
+## What you get
+
+<CardGrid>
+  <Card title="Fresh and source-traceable" icon="approve-check">
+    Every value is fetched from the source and stamped with when it was retrieved. Any cache
+    fallback is flagged, never silent, and the data is checked nightly against the official
+    sources. See [Data freshness and provenance](/user-guide/data-freshness-and-provenance/).
+  </Card>
+  <Card title="Three sources, one shape" icon="puzzle">
+    ABS, RBA and APRA data all come back as `metadata · series · observations`, with explicit
+    series descriptors and server-version provenance.
+  </Card>
+  <Card title="Ask in plain language" icon="comment-alt">
+    Curated concepts such as CPI, GDP growth, unemployment, the cash rate, yields, credit and APRA
+    ratios, plus source-native tools for exact ABS keys, RBA tables and APRA publications.
+  </Card>
+  <Card title="Charts in Claude" icon="analytics">
+    In clients that support MCP Apps, such as Claude, results appear as an
+    [interactive chart](/user-guide/inline-charts/). Every other client gets the same JSON.
+  </Card>
+</CardGrid>
+
+It is built for analysts, economists, and MCP clients, not as a general economic chatbot.
+Read-only MCP resources and prompt templates cover common economist workflows.
 
 ## Current status
 

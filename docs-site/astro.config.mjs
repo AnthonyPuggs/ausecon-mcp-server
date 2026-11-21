@@ -15,6 +15,8 @@ export default defineConfig({
         // Adds the independence disclaimer under every page.
         Footer: './src/components/Footer.astro',
       },
+      // Brand colours (from the banner and logo) and the home page layout.
+      customCss: ['./src/styles/custom.css'],
       logo: {
         src: './src/assets/logo.png',
         alt: 'ausecon logo',
