@@ -116,8 +116,8 @@ SourceSelector = Annotated[
     Literal["abs", "rba", "apra"],
     Field(
         description=(
-            "Source selector. Use abs for Australian Bureau of Statistics, rba for "
-            "Reserve Bank of Australia, or apra for Australian Prudential Regulation Authority."
+            "Source selector: abs (Australian Bureau of Statistics), rba (Reserve Bank of "
+            "Australia) or apra (Australian Prudential Regulation Authority)."
         ),
     ),
 ]
@@ -140,9 +140,8 @@ OptionalSourceFilter = Annotated[
     Literal["abs", "rba", "apra"] | None,
     Field(
         description=(
-            "Optional source filter. Use abs for Australian Bureau of Statistics, rba "
-            "for Reserve Bank of Australia, or apra for Australian Prudential "
-            "Regulation Authority."
+            "Optional source filter: abs (Australian Bureau of Statistics), rba (Reserve "
+            "Bank of Australia) or apra (Australian Prudential Regulation Authority)."
         ),
     ),
 ]
@@ -239,7 +238,7 @@ TopDirection = Annotated[
 ]
 IncludeStructure = Annotated[
     bool,
-    Field(description="Whether ABS descriptions should include source-native structure details."),
+    Field(description="Whether ABS descriptions include source-native structure details."),
 ]
 OptionalSeriesIdList = Annotated[
     list[SeriesId] | None,
@@ -1295,7 +1294,8 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
         category: OptionalRbaCategoryFilter = None,
         include_discontinued: IncludeDiscontinued = False,
     ) -> list[dict]:
-        """Deprecated compatibility alias. Prefer list_catalogue(source="rba")."""
+        """Deprecated compatibility alias. list_catalogue(source="rba") returns the same
+        curated RBA tables."""
         return await app_service.list_rba_tables(
             category=category,
             include_discontinued=include_discontinued,
@@ -1402,9 +1402,9 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
         last_n: OptionalPositiveInt = None,
         include_observation_dimensions: IncludeObservationDimensions = False,
     ) -> dict:
-        """Preferred analyst-facing retrieval tool for curated ABS, RBA and APRA concepts.
+        """Main analyst-facing retrieval tool for curated ABS, RBA and APRA concepts.
 
-        Use list_economic_concepts for discovery. Date bounds accept YYYY, YYYY-QN,
+        list_economic_concepts lists the accepted concepts. Date bounds accept YYYY, YYYY-QN,
         YYYY-SN, YYYY-MM, or YYYY-MM-DD and are normalised to the resolved source.
 
         A list of up to eight concepts returns them together in one result, which MCP Apps
@@ -1488,9 +1488,9 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
     ) -> dict:
         """Source-aware convenience wrapper for the latest observations.
 
-        For a single curated indicator prefer get_economic_series(concept=...), which
-        resolves one series; pass series_ids=[...] to narrow a broad dataset instead of
-        returning every series it contains.
+        Without series_ids, a broad dataset returns every series it contains; series_ids
+        narrows it. get_economic_series(concept=...) returns a single curated indicator
+        as one series.
         """
         return limit_response(
             await app_service.get_latest_observations(
@@ -1524,9 +1524,9 @@ def build_server(service: AuseconService | None = None) -> FastMCP:
     ) -> dict:
         """Source-aware convenience wrapper for highest or lowest numeric observations.
 
-        For a single curated indicator prefer get_economic_series(concept=...), which
-        resolves one series; pass series_ids=[...] to narrow a broad dataset instead of
-        returning every series it contains.
+        Without series_ids, a broad dataset returns every series it contains; series_ids
+        narrows it. get_economic_series(concept=...) returns a single curated indicator
+        as one series.
         """
         return limit_response(
             await app_service.get_top_observations(

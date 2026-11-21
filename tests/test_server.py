@@ -1,5 +1,6 @@
 import asyncio
 import json
+import re
 from pathlib import Path
 
 import pytest
@@ -2345,6 +2346,27 @@ async def test_tool_descriptions_carry_no_docstring_markup() -> None:
 
     for name, tool in tools.items():
         assert "``" not in (tool.description or ""), name
+
+
+_DIRECTIVE_SENTENCE = re.compile(
+    r"(?:^|[.;:]\s+)(?:use|prefer|pass|call|do not|don't|always|never|avoid|make sure"
+    r"|ensure)\b"
+    r"|\b(?:should|must)\b",
+    re.IGNORECASE,
+)
+
+
+async def test_tool_and_parameter_descriptions_describe_rather_than_direct() -> None:
+    # Directory policy: tool text describes what tools do; it does not tell the model what to do.
+    tools = await _listed_tools()
+
+    for name, tool in tools.items():
+        texts = {"description": tool.description or ""}
+        for param, schema in tool.input_schema.get("properties", {}).items():
+            texts[param] = json.dumps(schema)
+        for where, text in texts.items():
+            flat = " ".join(text.split())
+            assert not _DIRECTIVE_SENTENCE.search(flat), f"{name}.{where}: {flat}"
 
 
 async def test_table_id_parameters_say_they_select_an_apra_table() -> None:

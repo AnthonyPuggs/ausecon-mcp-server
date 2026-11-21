@@ -18,6 +18,9 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - `get_economic_series` now describes its concepts as ABS, RBA and APRA (it said ABS/RBA). The
   `table_id` parameter of `describe_dataset`, `get_apra_data`, `get_latest_observations` and
   `get_top_observations` now says it selects a table within an APRA publication.
+- Tool and parameter descriptions now describe what each tool does rather than telling the model
+  which tool to use (for example, "Prefer list_catalogue" and "Use abs for ..." are rephrased).
+  A test checks every tool and parameter description for directive wording.
 
 ## [1.22.0] - 2026-11-21
 

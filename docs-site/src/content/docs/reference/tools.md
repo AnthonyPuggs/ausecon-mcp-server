@@ -16,7 +16,7 @@ and APRA data.
 | `list_rba_tables` | Deprecated compatibility alias for curated RBA tables. | `category`, `include_discontinued` |
 | `get_rba_table` | Retrieve an RBA statistical table in a normalised response shape. | `table_id`, `series_ids`, `start_date`, `end_date`, `last_n` |
 | `get_apra_data` | Retrieve a curated official APRA XLSX publication in a normalised response shape. | `publication_id`, `table_id`, `series_ids`, `start_date`, `end_date`, `last_n` |
-| `get_economic_series` | Preferred analyst-facing retrieval for curated concepts. `concept` also takes a list of up to eight, returned together in one response. | `concept` (or a list), `variant`, `geography`, `frequency`, `start`, `end`, `last_n` |
+| `get_economic_series` | Main analyst-facing retrieval for curated concepts. `concept` also takes a list of up to eight, returned together in one response. | `concept` (or a list), `variant`, `geography`, `frequency`, `start`, `end`, `last_n` |
 | `get_derived_series` | Retrieve transparent formula-based indicators derived from curated concepts. | `concept`, `start`, `end`, `last_n` |
 | `get_latest_observations` | Convenience wrapper for the latest source-native observations. | `source`, `identifier`, `key`, `table_id`, `series_ids`, `count` |
 | `get_top_observations` | Convenience wrapper for highest or lowest numeric source-native observations. | `source`, `identifier`, `n`, `direction`, `key`, `table_id`, `series_ids`, source-native bounds |
