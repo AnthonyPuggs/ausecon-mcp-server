@@ -101,8 +101,8 @@ the ABS, the RBA, or APRA. Ask for
     </td>
     <td width="33%" valign="top">
       <h4>Works with your client</h4>
-      Claude Desktop, Claude Code, Cursor, Windsurf, VS Code, Codex or Smithery.
-      stdio locally, Streamable HTTP when hosted. In Claude (web, desktop and mobile), data results appear as
+      Claude, ChatGPT and Gemini through the hosted URL; Claude Code, Codex, Gemini CLI, Cursor,
+      Windsurf and VS Code locally or hosted. stdio locally, Streamable HTTP when hosted. In Claude (web, desktop and mobile), data results appear as
       <a href="https://auseconmcp.com/user-guide/inline-charts/">interactive charts</a>.
     </td>
   </tr>
@@ -126,11 +126,27 @@ A hosted read-only, no-API-key instance speaks MCP over Streamable HTTP at:
 https://mcp.auseconmcp.com/mcp
 ```
 
-Point any MCP client that supports remote servers at that URL. In Claude Code:
+Point any MCP client that supports remote servers at that URL, with no authentication:
+
+- **Claude** (web, desktop and mobile): add it as a
+  [custom connector](https://support.claude.com/en/articles/11175166-getting-started-with-custom-connectors-using-remote-mcp).
+  Data results appear as interactive charts.
+- **ChatGPT**: add it as a
+  [custom MCP server](https://help.openai.com/en/articles/12584461) on the web. Availability
+  depends on your plan.
+- **Gemini**: add it as a
+  [custom app](https://support.google.com/gemini/answer/17209137) in the Gemini web app.
+  Availability depends on your account and region.
+
+In Claude Code, Codex or Gemini CLI:
 
 ```bash
 claude mcp add --transport http ausecon https://mcp.auseconmcp.com/mcp
+codex mcp add ausecon --url https://mcp.auseconmcp.com/mcp
+gemini mcp add --transport http ausecon https://mcp.auseconmcp.com/mcp
 ```
+
+See [Client Setup](https://auseconmcp.com/client-setup/) for more clients.
 
 > The hosted instance may take a few seconds to wake on the first request. The previous
 > `https://ausecon-mcp-server.onrender.com/mcp` URL continues to work and points at the
