@@ -57,11 +57,14 @@ tested in Claude only.
 claude mcp add --transport http ausecon https://mcp.auseconmcp.com/mcp
 ```
 
-### Codex
+### Codex CLI
 
 ```bash
 codex mcp add ausecon --url https://mcp.auseconmcp.com/mcp
 ```
+
+This is for OpenAI's command-line tool. The Codex desktop app is now part of the ChatGPT desktop
+app; for that, use the [ChatGPT](#chatgpt) steps above.
 
 ### Gemini CLI
 
@@ -100,7 +103,7 @@ The repository includes the same example at
 claude mcp add --transport stdio ausecon -- uvx ausecon-mcp-server
 ```
 
-### Codex (local)
+### Codex CLI (local)
 
 ```bash
 codex mcp add ausecon -- uvx ausecon-mcp-server

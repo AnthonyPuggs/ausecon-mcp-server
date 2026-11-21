@@ -47,7 +47,7 @@ ausecon speaks MCP over stdio, launched on demand with `uvx`.
 claude mcp add --transport stdio ausecon -- uvx ausecon-mcp-server
 ```
 
-**Codex**
+**Codex CLI**
 
 ```bash
 codex mcp add ausecon -- uvx ausecon-mcp-server
