@@ -6,6 +6,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.22.0] - 2026-11-21
+
 Guards against oversized requests and responses, clearer errors, and fixes for six RBA tables
 that failed to load. Tool names and parameters are unchanged; the response contract gains one
 optional field.
@@ -1306,7 +1308,8 @@ Initial public release.
 - Initial curated catalogues for ABS and RBA, plus a four-concept
   `CURATED_SERIES` semantic shortcut map.
 
-[Unreleased]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.21.3...HEAD
+[Unreleased]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.22.0...HEAD
+[1.22.0]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.21.3...v1.22.0
 [1.21.3]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.21.2...v1.21.3
 [1.21.2]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.21.1...v1.21.2
 [1.21.1]: https://github.com/AnthonyPuggs/ausecon-mcp-server/compare/v1.21.0...v1.21.1
