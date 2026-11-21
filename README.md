@@ -33,7 +33,7 @@
 
 <a href="https://auseconmcp.com"><b>Documentation</b></a> &nbsp;·&nbsp;
 <a href="https://auseconmcp.com/getting-started">Getting started</a> &nbsp;·&nbsp;
-<a href="https://auseconmcp.com/tools">Tool reference</a> &nbsp;·&nbsp;
+<a href="https://auseconmcp.com/reference/tools/">Tool reference</a> &nbsp;·&nbsp;
 <a href="https://github.com/AnthonyPuggs/ausecon-mcp-server/blob/main/CHANGELOG.md">Changelog</a>
 
 <img src="https://raw.githubusercontent.com/AnthonyPuggs/ausecon-mcp-server/main/assets/demo.gif" alt="Claude answering &quot;How has the household saving ratio moved alongside the cash rate since 2019?&quot; with one interactive chart of ABS and RBA data; hovering shows each series' value and source period" width="720" />
@@ -260,7 +260,8 @@ Or add to `.vscode/mcp.json` (workspace) or your user `mcp.json`:
 </details>
 
 > To host it yourself, `smithery.yaml` and `Dockerfile.smithery` ship a Streamable HTTP
-> deployment at `/mcp`. See the [Smithery guide](https://auseconmcp.com/smithery).
+> deployment at `/mcp`. The [self-hosting guide](https://auseconmcp.com/client-setup/#host-it-yourself)
+> covers the setup.
 
 ## A quick taste
 
@@ -312,8 +313,8 @@ with, endorsed by or operated by the Australian Government, the Australian Burea
 the Reserve Bank of Australia or the Australian Prudential Regulation Authority. Their names are
 used only to identify where the data comes from.
 
-The data belongs to those agencies and is published under their own licences; see
-[Data Sources and Licensing](https://auseconmcp.com/data-sources/). ausecon passes it through as
+The data belongs to those agencies and is published under their own licences (see
+[Data Sources and Licensing](https://auseconmcp.com/data-sources/) for details). ausecon passes it through as
 published, with no warranty. Check important figures against the original source, which every
 response links to in `metadata.retrieval_url`.
 

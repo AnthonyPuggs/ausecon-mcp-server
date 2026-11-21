@@ -1,0 +1,25 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "redirects": [
+    {
+      "source": "/tools",
+      "destination": "/reference/tools/",
+      "permanent": true
+    },
+    {
+      "source": "/smithery",
+      "destination": "/client-setup/#host-it-yourself",
+      "permanent": true
+    },
+    {
+      "source": "/:path*/:junk([\\x29.,;]+)",
+      "destination": "/:path*/",
+      "permanent": true
+    },
+    {
+      "source": "/:path+:junk([\\x29.,;]+)",
+      "destination": "/:path+/",
+      "permanent": true
+    }
+  ]
+}
