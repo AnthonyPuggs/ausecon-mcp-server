@@ -22,6 +22,17 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   which tool to use (for example, "Prefer list_catalogue" and "Use abs for ..." are rephrased).
   A test checks every tool and parameter description for directive wording.
 
+### Fixed
+
+- `get_economic_series` `frequency` now accepts names (`monthly`, `Quarterly`, `daily`, `annual`,
+  `event-driven`) as well as codes (`M`, `Q`, `D`, `A`, `E`). Its description offered "monthly",
+  but only the codes were accepted, so `frequency="monthly"` always failed. An unknown frequency
+  now lists the known ones, and an unsupported one names the concept's published frequency.
+- `frequency` with several concepts no longer fails the whole call. It applies to each concept
+  published at that frequency; the others keep their default, with a note in
+  `metadata.warnings`. A request for the cash rate, mortgage rate and 10-year yield with
+  `frequency="monthly"` now returns all three in one result and one chart.
+
 ## [1.22.0] - 2026-11-21
 
 Guards against oversized requests and responses, clearer errors, and fixes for six RBA tables

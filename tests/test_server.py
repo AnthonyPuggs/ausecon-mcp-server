@@ -2303,6 +2303,48 @@ async def test_variant_with_several_concepts_is_rejected() -> None:
         )
 
 
+def _capture_concept_calls(monkeypatch, service: AuseconService) -> dict[str, dict]:
+    calls: dict[str, dict] = {}
+
+    async def fake_get_economic_series(concept, **kwargs):
+        calls[concept] = kwargs
+        return {
+            "metadata": {"source": "rba", "dataset_id": concept, "frequency": "Monthly"},
+            "series": [{"series_id": concept}],
+            "observations": [],
+        }
+
+    monkeypatch.setattr(service, "get_economic_series", fake_get_economic_series)
+    return calls
+
+
+async def test_frequency_with_several_concepts_applies_where_published(monkeypatch) -> None:
+    service, _, _ = _stub_service()
+    calls = _capture_concept_calls(monkeypatch, service)
+
+    result = await service.get_economic_series_many(
+        ["cash_rate_target", "mortgage_rate", "government_bond_yield_10y"], frequency="monthly"
+    )
+
+    assert calls["mortgage_rate"]["frequency"] == "M"
+    assert calls["cash_rate_target"]["frequency"] is None
+    assert calls["government_bond_yield_10y"]["frequency"] is None
+    warnings = result["metadata"]["warnings"]
+    assert any(w.startswith("government_bond_yield_10y:") and "daily" in w for w in warnings)
+    assert any(w.startswith("cash_rate_target:") and "event-driven" in w for w in warnings)
+    assert not any(w.startswith("mortgage_rate:") for w in warnings)
+
+
+async def test_unknown_frequency_with_several_concepts_is_rejected(monkeypatch) -> None:
+    service, _, _ = _stub_service()
+    _capture_concept_calls(monkeypatch, service)
+
+    with pytest.raises(AuseconValidationError, match="fortnightly"):
+        await service.get_economic_series_many(
+            ["cash_rate_target", "mortgage_rate"], frequency="fortnightly"
+        )
+
+
 async def test_a_failing_concept_is_named_in_the_error() -> None:
     service, _, _ = _stub_service()
 

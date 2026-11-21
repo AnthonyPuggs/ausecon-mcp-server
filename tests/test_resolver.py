@@ -7,6 +7,7 @@ from ausecon_mcp.catalogue.rba import RBA_CATALOGUE
 from ausecon_mcp.catalogue.resolver import (
     CURATED_SHORTCUTS,
     build_abs_key,
+    concept_frequencies,
     concepts_for_dataset,
     list_economic_concepts,
     resolve,
@@ -197,6 +198,31 @@ async def test_resolve_unknown_variant_raises_with_known_list() -> None:
 async def test_resolve_frequency_validated_against_catalogue() -> None:
     with pytest.raises(ValueError, match="Frequency"):
         await resolve("trimmed_mean_inflation", frequency="D")
+
+
+@pytest.mark.parametrize("frequency", ["monthly", "Monthly", " MONTHLY ", "m", "M"])
+async def test_resolve_accepts_frequency_names_and_codes(frequency: str) -> None:
+    resolved = await resolve("mortgage_rate", frequency=frequency)
+
+    assert resolved.frequency == "M"
+
+
+async def test_unsupported_frequency_error_names_the_published_frequency() -> None:
+    with pytest.raises(ValueError, match=r"daily \(D\)"):
+        await resolve("government_bond_yield_10y", frequency="monthly")
+
+
+async def test_unknown_frequency_lists_the_known_frequencies() -> None:
+    with pytest.raises(ValueError, match="fortnightly") as excinfo:
+        await resolve("mortgage_rate", frequency="fortnightly")
+
+    assert "monthly (M)" in str(excinfo.value)
+    assert "quarterly (Q)" in str(excinfo.value)
+
+
+def test_concept_frequencies_reports_published_codes() -> None:
+    assert concept_frequencies("government_bond_yield_10y") == ["D"]
+    assert concept_frequencies("mortgage_rate") == ["M"]
 
 
 @pytest.mark.asyncio
