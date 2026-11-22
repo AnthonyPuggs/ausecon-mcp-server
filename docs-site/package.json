@@ -10,8 +10,8 @@
     "preview": "astro preview --host 127.0.0.1"
   },
   "dependencies": {
-    "@astrojs/starlight": "^0.42.10",
-    "astro": "^7.4.11"
+    "@astrojs/starlight": "^0.43.1",
+    "astro": "^7.4.13"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.12",
