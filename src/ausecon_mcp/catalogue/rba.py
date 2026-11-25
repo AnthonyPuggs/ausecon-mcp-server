@@ -92,7 +92,7 @@ _RAW_RBA_CATALOGUE = {
                 "https://www.rba.gov.au/statistics/tables/csv/"
                 "a3-es-balances-and-repo-agreements.csv"
             ),
-            "upstream_title": "Monetary Policy Operations – ES Balances and Repo Agreements",
+            "upstream_title": "Monetary Policy Operations – Current",
         },
     },
     "a4": {
