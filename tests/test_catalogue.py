@@ -268,6 +268,17 @@ def test_rba_j1_tracks_live_table_family_title_while_using_gdp_growth_csv() -> N
     assert entry["audit"]["upstream_title"] == "Market Economists’ Forecasts"
 
 
+def test_rba_a3_tracks_live_table_family_title_while_using_es_balances_csv() -> None:
+    # The RBA index titles the A3 table "Monetary Policy Operations – Current";
+    # "ES Balances and Repo Agreements" is only one of its CSV sub-files, so it
+    # belongs in the display name, not in the audit title the nightly audit diffs.
+    entry = RBA_CATALOGUE["a3"]
+
+    assert entry["name"] == "Monetary Policy Operations - ES Balances and Repo Agreements"
+    assert entry["csv_path"] == "a3-es-balances-and-repo-agreements.csv"
+    assert entry["audit"]["upstream_title"] == "Monetary Policy Operations – Current"
+
+
 def test_building_approvals_entry_has_wired_default_variant() -> None:
     entry = ABS_CATALOGUE["BUILDING_APPROVALS"]
 
