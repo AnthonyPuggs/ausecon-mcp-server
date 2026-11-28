@@ -441,6 +441,21 @@ async def test_abs_provider_unknown_dataflow_404_raises_not_found() -> None:
 
 
 @pytest.mark.asyncio
+async def test_abs_provider_unknown_structure_404_raises_actionable_not_found() -> None:
+    from ausecon_mcp.errors import AuseconNotFoundError
+
+    provider = ABSProvider()
+
+    with respx.mock(assert_all_called=True) as router:
+        router.get("https://data.api.abs.gov.au/rest/datastructure/ABS/NOPE").mock(
+            return_value=Response(404, text="No Results Found")
+        )
+
+        with pytest.raises(AuseconNotFoundError, match="search_datasets or list_catalogue"):
+            await provider.get_dataset_structure("NOPE")
+
+
+@pytest.mark.asyncio
 async def test_abs_provider_404_does_not_serve_stale(_isolated_cache_dir) -> None:
     from ausecon_mcp.cache import TTLCache
 

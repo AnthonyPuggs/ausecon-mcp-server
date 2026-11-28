@@ -61,7 +61,10 @@ class APRAProvider:
     ) -> dict[str, Any]:
         entry = self._catalogue.get(publication_id)
         if entry is None:
-            raise AuseconValidationError(f"Unknown APRA publication {publication_id!r}.")
+            raise AuseconValidationError(
+                f"Unknown APRA publication {publication_id!r}. list_catalogue(source='apra') "
+                "lists the publication ids this server knows."
+            )
         if table_id is not None and table_id not in entry["tables"]:
             known = ", ".join(sorted(entry["tables"]))
             raise AuseconValidationError(

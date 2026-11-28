@@ -98,7 +98,11 @@ def _entry(source: str, identifier: str) -> dict[str, Any]:
     catalogue = {"abs": ABS_CATALOGUE, "rba": RBA_CATALOGUE, "apra": APRA_CATALOGUE}[source]
     entry = catalogue.get(identifier)
     if entry is None:
-        raise AuseconValidationError(f"Unknown {source.upper()} dataset {identifier!r}.")
+        raise AuseconValidationError(
+            f"Unknown {source.upper()} dataset {identifier!r}. search_datasets finds datasets "
+            f"by topic, and list_catalogue(source={source!r}) lists every curated "
+            f"{source.upper()} id."
+        )
     return entry
 
 

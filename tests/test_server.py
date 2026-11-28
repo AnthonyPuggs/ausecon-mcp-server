@@ -1250,6 +1250,34 @@ async def test_service_get_derived_series_fetches_operands_and_applies_final_las
 
 
 @pytest.mark.asyncio
+async def test_service_get_derived_series_keeps_dimensions_on_the_series_only() -> None:
+    service = RecordingDerivedService(
+        {
+            "total_credit": _semantic_payload(
+                concept="total_credit",
+                source="rba",
+                dataset_id="d2",
+                series_id="DLCACS",
+                observations=[
+                    ("2023-01", 100.0),
+                    ("2023-02", 110.0),
+                    ("2024-01", 115.0),
+                    ("2024-02", 121.0),
+                ],
+                frequency="Monthly",
+                rba_series_ids=["DLCACS"],
+            )
+        }
+    )
+
+    result = await service.get_derived_series("credit_growth")
+
+    assert result["observations"]
+    assert all("dimensions" not in observation for observation in result["observations"])
+    assert result["series"][0]["dimensions"]["DERIVED_CONCEPT"]["code"] == "credit_growth"
+
+
+@pytest.mark.asyncio
 async def test_service_expands_quarterly_cpi_operand_for_real_wage_growth() -> None:
     service = RecordingDerivedService(
         {
