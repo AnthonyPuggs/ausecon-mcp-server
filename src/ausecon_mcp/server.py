@@ -564,12 +564,12 @@ def _describe_output_schema() -> dict[str, Any]:
 
 def _reject_parameter(name: str, value: object, *, source: str) -> None:
     if value is not None:
-        raise ValueError(f"{name} is not supported for source {source!r}.")
+        raise AuseconValidationError(f"{name} is not supported for source {source!r}.")
 
 
 def _reject_non_default_key(key: str, *, source: str) -> None:
     if key != "all":
-        raise ValueError(f"key is only supported for source 'abs', not {source!r}.")
+        raise AuseconValidationError(f"key is only supported for source 'abs', not {source!r}.")
 
 
 # Below this many series there is no firehose worth flagging; a caller who passes
@@ -974,7 +974,7 @@ class AuseconService:
         operands = {
             operand.name: payload for operand, payload in zip(operand_specs, fetched, strict=True)
         }
-        return derive_series(
+        payload = derive_series(
             validated_concept,
             operands,
             requested_start=start,
@@ -982,6 +982,8 @@ class AuseconService:
             last_n=validated_last_n,
             server_version=resolve_version(),
         )
+        # The one derived dimension stays on the series descriptor, as for the other tools.
+        return strip_observation_dimensions(payload)
 
     async def get_latest_observations(
         self,
@@ -994,7 +996,7 @@ class AuseconService:
     ) -> dict:
         validated_source = validate_source(source)
         if validated_source is None:
-            raise ValueError("source must be one of: abs, apra, rba.")
+            raise AuseconValidationError("source must be one of: abs, apra, rba.")
         validated_identifier = canonical_source_identifier(
             validated_source, validate_source_token("identifier", identifier)
         )
@@ -1055,14 +1057,14 @@ class AuseconService:
     ) -> dict:
         validated_source = validate_source(source)
         if validated_source is None:
-            raise ValueError("source must be one of: abs, apra, rba.")
+            raise AuseconValidationError("source must be one of: abs, apra, rba.")
         validated_identifier = canonical_source_identifier(
             validated_source, validate_source_token("identifier", identifier)
         )
         validated_key = validate_source_token("key", key)
         validated_n = validate_positive_int("n", n) or 10
         if direction not in {"highest", "lowest"}:
-            raise ValueError("direction must be either 'highest' or 'lowest'.")
+            raise AuseconValidationError("direction must be either 'highest' or 'lowest'.")
 
         if validated_source == "abs":
             _reject_parameter("series_ids", series_ids, source=validated_source)
@@ -1129,7 +1131,7 @@ class AuseconService:
     ) -> dict:
         validated_source = validate_source(source)
         if validated_source is None:
-            raise ValueError("source must be one of: abs, apra, rba.")
+            raise AuseconValidationError("source must be one of: abs, apra, rba.")
         validated_identifier = canonical_source_identifier(
             validated_source, validate_source_token("identifier", identifier)
         )
@@ -1141,7 +1143,9 @@ class AuseconService:
         structure = None
         if include_structure:
             if validated_source != "abs":
-                raise ValueError("include_structure is only supported for ABS descriptions.")
+                raise AuseconValidationError(
+                    "include_structure is only supported for ABS descriptions."
+                )
             structure = await self.get_abs_dataset_structure(validated_identifier)
         return describe_catalogue_dataset(
             validated_source,

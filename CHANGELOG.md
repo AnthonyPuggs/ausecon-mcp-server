@@ -6,6 +6,20 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+
+- `get_derived_series` no longer repeats the `DERIVED_CONCEPT` dimension on every observation.
+  It stays on the series descriptor, as for the other retrieval tools, which roughly halves the
+  response (the full `yield_curve_slope` history drops from about 460 KB to 240 KB).
+- `get_abs_dataset_structure` with an unknown dataflow id now says the dataflow appears unknown,
+  renamed or retired and names `search_datasets` and `list_catalogue`, as `get_abs_data` already
+  did. It previously returned only "failed with HTTP 404".
+- `describe_dataset` with an unknown dataset id and `get_apra_data` with an unknown publication
+  id now name the tools that list the valid ids.
+- A parameter that does not apply to the chosen source (for example `series_ids` with
+  `source="abs"`, or `include_structure` for an RBA table) now returns its message on its own,
+  without an "Error calling tool" prefix, and no longer logs a traceback on the server.
+
 ## [1.22.1] - 2026-11-21
 
 ### Added

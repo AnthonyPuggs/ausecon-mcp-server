@@ -40,6 +40,18 @@ def _upstream_reason(body: str | None) -> str | None:
     return line.rstrip(".")
 
 
+def _unknown_dataflow_error(dataflow_id: str, exc: AuseconNotFoundError) -> AuseconNotFoundError:
+    """A 404 that names the likely cause and the tools that list valid ids."""
+    return AuseconNotFoundError(
+        f"ABS request for '{dataflow_id}' failed with HTTP 404: the dataflow "
+        "appears unknown, renamed, or retired. Check the id with "
+        "search_datasets or list_catalogue.",
+        status_code=exc.status_code,
+        body=exc.body,
+        url=exc.url,
+    )
+
+
 def _too_large_hint(dataflow_id: str, key: str) -> str:
     if key == "all":
         return (
@@ -167,13 +179,16 @@ class ABSProvider:
             extra={"source": "abs", "identifier": dataflow_id, "url": url},
         )
         start = perf_counter()
-        response = await get_with_retries(
-            self._client,
-            url,
-            params={"references": "children"},
-            source="abs",
-            identifier=dataflow_id,
-        )
+        try:
+            response = await get_with_retries(
+                self._client,
+                url,
+                params={"references": "children"},
+                source="abs",
+                identifier=dataflow_id,
+            )
+        except AuseconNotFoundError as exc:
+            raise _unknown_dataflow_error(dataflow_id, exc) from exc
         _logger.info(
             "request.success",
             extra={
@@ -293,14 +308,7 @@ class ABSProvider:
                     if hint:
                         raw_payload["metadata"]["warnings"].append(hint)
             else:
-                raise AuseconNotFoundError(
-                    f"ABS request for '{dataflow_id}' failed with HTTP 404: the dataflow "
-                    "appears unknown, renamed, or retired. Check the id with "
-                    "search_datasets or list_catalogue.",
-                    status_code=exc.status_code,
-                    body=exc.body,
-                    url=exc.url,
-                ) from exc
+                raise _unknown_dataflow_error(dataflow_id, exc) from exc
         except AuseconUpstreamError as exc:
             if exc.status_code in (400, 403):
                 # The ABS answers a malformed key with 400/403 and a one-line reason such as
